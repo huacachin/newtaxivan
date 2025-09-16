@@ -23,17 +23,17 @@
                                         <div class="mb-3">
                                             <label for="username" class="form-label">Usuario</label>
                                             <input  wire:model.defer="username" id="username"  type="text" class="form-control">
-                                            @error('username') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
                                         </div>
                                         <div class="mb-3">
                                             <label for="password"  class="form-label">Contraseña</label>
                                             <input wire:model.defer="password" id="password" type="password" class="form-control">
-                                            @error('password') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
                                         </div>
                                         <div class="mb-3 form-check">
                                             <input wire:model="remember" type="checkbox" class="form-check-input" >
                                             <label class="form-check-label" for="formCheck1">Recordar contraseña</label>
                                         </div>
+
+                                        @error('username') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
 
                                         <div>
                                             <button type="submit" role="button" class="btn btn-primary w-100">Mantener sesión</button>
