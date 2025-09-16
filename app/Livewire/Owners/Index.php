@@ -15,7 +15,7 @@ class Index extends Component
 
     public $ownerId;
     public $name;
-    public $document_type;
+    public $document_type = '';
     public $document_number;
     public $document_expiration_date;
     public $birthdate;

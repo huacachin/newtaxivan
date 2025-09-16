@@ -158,7 +158,7 @@
     </div>
 
     <div class="modal fade" id="modalAddDriver" aria-hidden="true" tabindex="-1" data-bs-backdrop="static" wire:ignore.self>
-        <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Agregar Conductor</h5>
@@ -340,7 +340,7 @@
     </div>
 
     <div class="modal fade" id="modalEditDriver" aria-hidden="true" tabindex="-1" data-bs-backdrop="static" wire:ignore.self>
-        <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Editar Conductor</h5>

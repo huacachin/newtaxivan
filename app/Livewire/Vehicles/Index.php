@@ -3,6 +3,7 @@
 namespace App\Livewire\Vehicles;
 
 use App\Models\Driver;
+use App\Models\Headquarter;
 use App\Models\Owner;
 use App\Models\Vehicle;
 use Livewire\Component;
@@ -17,17 +18,18 @@ class Index extends Component
     public $drivers;
     public $listDrivers;
     public $listOwners;
+    public $listHeadquarters;
 
     public $vehicleId;
     public $plate;
     public $headquarter;
     public $entry_date;
     public $termination_date;
-    public $class;
-    public $brand;
+    public $class = '';
+    public $brand = '';
     public $year;
     public $model;
-    public $bodywork;
+    public $bodywork = '';
     public $color;
     public $type;
     public $affiliated_company;
@@ -73,6 +75,7 @@ class Index extends Component
 
         $this->listOwners = Owner::all();
         $this->listDrivers = Driver::all();
+        $this->listHeadquarters = Headquarter::all();
 
         $query = Vehicle::query()
             // status

@@ -151,7 +151,7 @@
     </div>
 
     <div class="modal fade" id="modalAddVehicle" aria-hidden="true" tabindex="-1" data-bs-backdrop="static" wire:ignore.self>
-        <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Agregar Vehiculo</h5>
@@ -171,8 +171,12 @@
                         <div class="col-md-4">
                             <div class="mb-3">
                                 <label for="headquarter" class="form-label">Sede</label>
-                                <input id="headquarter" type="text" class="form-control" placeholder="Ingresar sede"
-                                       wire:model="headquarter">
+                                <select name="headquarter" class="form-control" wire:model="headquarter" id="headquarter">
+                                    <option value="">Seleccione</option>
+                                    @foreach($listHeadquarters as $headquarter)
+                                        <option value="{{$headquarter->name}}">{{$headquarter->name}}</option>
+                                    @endforeach
+                                </select>
                                 @error('headquarter') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
@@ -193,15 +197,34 @@
                         <div class="col-md-4">
                             <div class="mb-3">
                                 <label for="class" class="form-label">Categoría</label>
-                                <input type="text" class="form-control" placeholder="Ingresar categoría"
-                                       wire:model="class">
+                                <select name="class" class="form-control" wire:model="class" id="class">
+                                    <option value="">Seleccione</option>
+                                    <option value="M1">M1</option>
+                                    <option value="M1-C3">M1-C3</option>
+                                    <option value="M2">M2</option>
+                                    <option value="MICROBUS">MICROBUS</option>
+                                    <option value="M3.C3">M3.C3</option>
+                                    <option value="M3.C1 OMNIBUS">M3.C1 OMNINUS</option>
+                                    <option value="M3-C3">M3-C3</option>
+                                    <option value="M2-C3">M2-C3</option>
+                                </select>
                                 @error('class') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="mb-3">
                                 <label for="brand" class="form-label">Marca</label>
-                                <input type="text" class="form-control" placeholder="Ingresar marca" wire:model="brand">
+                                <select name="brand" class="form-control" wire:model="brand" id="brand">
+                                    <option value="">Seleccione</option>
+                                    <option value="Hyunday">Hyundai</option>
+                                    <option value="Jac">Jac</option>
+                                    <option value="Changan">Changan</option>
+                                    <option value="DFSK">DFSK</option>
+                                    <option value="Change">Change</option>
+                                    <option value="Mitsubishi">Mitsubishi</option>
+                                    <option value="Faw">Faw</option>
+                                    <option value="Volkswagen">Volkswagen</option>
+                                </select>
                                 @error('brand') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
@@ -222,8 +245,12 @@
                         <div class="col-md-4">
                             <div class="mb-3">
                                 <label for="bodywork" class="form-label">Carrocería</label>
-                                <input type="text" class="form-control" placeholder="Ingresar carrocería"
-                                       wire:model="bodywork">
+                                <select name="bodywork" class="form-control" wire:model="bodywork" id="bodywork">
+                                    <option value="">Seleccione</option>
+                                    <option value="MULTIPROPOSITO">MULTIPROPOSITO</option>
+                                    <option value="MICROBUS">MICROBUS</option>
+                                    <option value="Minibus">Minibus</option>
+                                </select>
                                 @error('bodywork') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
@@ -271,7 +298,7 @@
                         <div class="col-md-4">
                             <div class="mb-3">
                                 <label for="affiliated_company" class="form-label">Empresa Afiliada</label>
-                                <input type="text" class="form-control" placeholder="Ingresar carrocería"
+                                <input type="text" class="form-control" placeholder="Ingresar empresa afiliada"
                                        wire:model="affiliated_company">
                                 @error('affiliated_company') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
@@ -279,8 +306,13 @@
                         <div class="col-md-4">
                             <div class="mb-3">
                                 <label for="condition" class="form-label">Condición</label>
-                                <input type="text" class="form-control" placeholder="Ingresar carrocería"
-                                       wire:model="condition">
+                                <select name="condition" class="form-control" id="condition" wire:model="condition">
+                                    <option value="">Seleccione</option>
+                                    <option value="DT">DT</option>
+                                    <option value="GN">GN</option>
+                                    <option value="EX">EX</option>
+                                    <option value="EX5">EX5</option>
+                                </select>
                                 @error('condition') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
@@ -359,7 +391,7 @@
         </div>
     </div>
     <div class="modal fade" id="modalEditVehicle" aria-hidden="true" tabindex="-1" data-bs-backdrop="static" wire:ignore.self>
-        <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Editar Vehiculo</h5>
@@ -379,8 +411,12 @@
                         <div class="col-md-4">
                             <div class="mb-3">
                                 <label for="headquarter" class="form-label">Sede</label>
-                                <input id="headquarter" type="text" class="form-control" placeholder="Ingresar sede"
-                                       wire:model="headquarter">
+                                <select name="headquarter" class="form-control" wire:model="headquarter" id="headquarter">
+                                    <option value="">Seleccione</option>
+                                    @foreach($listHeadquarters as $headquarter)
+                                        <option value="{{$headquarter->name}}">{{$headquarter->name}}</option>
+                                    @endforeach
+                                </select>
                                 @error('headquarter') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
@@ -401,15 +437,34 @@
                         <div class="col-md-4">
                             <div class="mb-3">
                                 <label for="class" class="form-label">Categoría</label>
-                                <input type="text" class="form-control" placeholder="Ingresar categoría"
-                                       wire:model="class">
+                                <select name="class" class="form-control" wire:model="class" id="class">
+                                    <option value="">Seleccione</option>
+                                    <option value="M1">M1</option>
+                                    <option value="M1-C3">M1-C3</option>
+                                    <option value="M2">M2</option>
+                                    <option value="MICROBUS">MICROBUS</option>
+                                    <option value="M3.C3">M3.C3</option>
+                                    <option value="M3.C1 OMNIBUS">M3.C1 OMNINUS</option>
+                                    <option value="M3-C3">M3-C3</option>
+                                    <option value="M2-C3">M2-C3</option>
+                                </select>
                                 @error('class') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="mb-3">
                                 <label for="brand" class="form-label">Marca</label>
-                                <input type="text" class="form-control" placeholder="Ingresar marca" wire:model="brand">
+                                <select name="brand" class="form-control" wire:model="brand" id="brand">
+                                    <option value="">Seleccione</option>
+                                    <option value="Hyunday">Hyundai</option>
+                                    <option value="Jac">Jac</option>
+                                    <option value="Changan">Changan</option>
+                                    <option value="DFSK">DFSK</option>
+                                    <option value="Change">Change</option>
+                                    <option value="Mitsubishi">Mitsubishi</option>
+                                    <option value="Faw">Faw</option>
+                                    <option value="Volkswagen">Volkswagen</option>
+                                </select>
                                 @error('brand') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
@@ -430,8 +485,12 @@
                         <div class="col-md-4">
                             <div class="mb-3">
                                 <label for="bodywork" class="form-label">Carrocería</label>
-                                <input type="text" class="form-control" placeholder="Ingresar carrocería"
-                                       wire:model="bodywork">
+                                <select name="bodywork" class="form-control" wire:model="bodywork" id="bodywork">
+                                    <option value="">Seleccione</option>
+                                    <option value="MULTIPROPOSITO">MULTIPROPOSITO</option>
+                                    <option value="MICROBUS">MICROBUS</option>
+                                    <option value="Minibus">Minibus</option>
+                                </select>
                                 @error('bodywork') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
@@ -479,7 +538,7 @@
                         <div class="col-md-4">
                             <div class="mb-3">
                                 <label for="affiliated_company" class="form-label">Empresa Afiliada</label>
-                                <input type="text" class="form-control" placeholder="Ingresar carrocería"
+                                <input type="text" class="form-control" placeholder="Ingresar empresa afiliada"
                                        wire:model="affiliated_company">
                                 @error('affiliated_company') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
@@ -487,8 +546,13 @@
                         <div class="col-md-4">
                             <div class="mb-3">
                                 <label for="condition" class="form-label">Condición</label>
-                                <input type="text" class="form-control" placeholder="Ingresar carrocería"
-                                       wire:model="condition">
+                                <select name="condition" class="form-control" id="condition" wire:model="condition">
+                                    <option value="">Seleccione</option>
+                                    <option value="DT">DT</option>
+                                    <option value="GN">GN</option>
+                                    <option value="EX">EX</option>
+                                    <option value="EX5">EX5</option>
+                                </select>
                                 @error('condition') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
