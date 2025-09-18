@@ -255,4 +255,9 @@ class Index extends Component
     {
         return view('livewire.drivers.index');
     }
+
+    public function export(){
+        $route = route('exports.drivers',["search" => $this->search, "filter" => $this->filter]);
+        $this->dispatch('url-open',["url" => $route]);
+    }
 }

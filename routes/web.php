@@ -74,4 +74,13 @@ Route::middleware('auth')->group(function () {
     Route::get('cash/report/est-sal-pag-cont',[CashController::class,'reportEstSalPagCont'])->name('cash.report.est-sal-pag-cont');
     Route::get('cash/report/est-caja-ma',[CashController::class,'reportEstCajaMa'])->name('cash.report.est-caja-ma');
 
+    //Exportar a excel
+    Route::get('/exports/vehicles', [VehicleController::class, 'export'])
+        ->name('exports.vehicles');
+    Route::get('/exports/owners', [OwnerController::class, 'export'])
+        ->name('exports.owners');
+    Route::get('/exports/drivers', [DriverController::class, 'export'])
+        ->name('exports.drivers');
+
+
 });

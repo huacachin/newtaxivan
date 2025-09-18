@@ -25,7 +25,7 @@
             <div class="card">
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-8 mb-2 mb-md-0">
+                        <div class="col-md-10 mb-2 mb-md-0">
                             <form class="app-form app-icon-form" action="#">
                                 <div class="position-relative">
                                     <input type="search" class="form-control" placeholder="Buscar..."
@@ -37,11 +37,6 @@
                         <div class="col-md-2 mb-2 mb-md-0">
                             <button class="btn btn-primary w-100" wire:click="openAddModal"><i class="ti ti-square-plus f-s-17"></i>
                                 Nuevo
-                            </button>
-                        </div>
-                        <div class="col-md-2 mb-2 mb-md-0">
-                            <button class="btn btn-primary w-100"><i class="ti ti-file-analytics f-s-17"></i>
-                                Exportar
                             </button>
                         </div>
 

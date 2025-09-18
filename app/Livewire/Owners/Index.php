@@ -171,4 +171,9 @@ class Index extends Component
     {
         return view('livewire.owners.index');
     }
+
+    public function export(){
+        $route = route('exports.owners',["search" => $this->search, "filter" => $this->filter]);
+        $this->dispatch('url-open',["url" => $route]);
+    }
 }

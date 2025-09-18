@@ -310,7 +310,9 @@ class Index extends Component
     }
 
     public function reportMonthly(){
-        dd('ik');
+        $route = route('departures.monthly');
+
+        $this->dispatch('url-open',["url" => $route]);
     }
 
 }

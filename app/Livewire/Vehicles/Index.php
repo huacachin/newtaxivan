@@ -66,6 +66,11 @@ class Index extends Component
         "detail" => "nullable|string"
     ];
 
+    public function export(){
+        $route = route('exports.vehicles',["search" => $this->search, "filter" => $this->filter, "status" => $this->status]);
+        $this->dispatch('url-open',["url" => $route]);
+    }
+
     public function mount()
     {
 

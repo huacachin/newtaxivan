@@ -47,7 +47,7 @@
                             </button>
                         </div>
                         <div class="col-xl-2 col-md-4 mb-2 mb-md-0">
-                            <button class="btn btn-primary w-100"><i class="ti ti-file-analytics f-s-17"></i>
+                            <button class="btn btn-primary w-100" wire:click="export"><i class="ti ti-file-analytics f-s-17"></i>
                                 Exportar
                             </button>
                         </div>
