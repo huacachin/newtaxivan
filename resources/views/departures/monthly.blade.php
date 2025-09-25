@@ -1,5 +1,5 @@
 @extends('layout.master')
-@section('title', 'Salidas')
+@section('title', 'Salidas Mensual')
 @section('css')
 
 @endsection

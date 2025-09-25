@@ -53,9 +53,12 @@ Route::middleware('auth')->group(function () {
     // Salidas
     Route::get('departures', [DepartureController::class,'index'])->name('departures.index');
     Route::get('departures/monthly', [DepartureController::class,'monthly'])->name('departures.monthly');
+    Route::get('departures/rmp', [DepartureController::class,'rmp'])->name('departures.rmp');
+    Route::get('departures/stats', [DepartureController::class,'stats'])->name('departures.stats');
 
     // Pagos
-    Route::resource('payments', PaymentController::class)->names('payments');
+    Route::get('payments', [PaymentController::class,'index'])->name('payments.index');
+    Route::get('payments/daily', [PaymentController::class,'daily'])->name('payments.daily');
 
     // Deudas
     Route::get('debts-per-days', [DebtController::class,'debtPerDays'])->name('debts.debt-per-days');
@@ -81,6 +84,30 @@ Route::middleware('auth')->group(function () {
         ->name('exports.owners');
     Route::get('/exports/drivers', [DriverController::class, 'export'])
         ->name('exports.drivers');
+    Route::get('/exports/departures', [DepartureController::class, 'export'])
+        ->name('exports.departures');
+    Route::get('/exports/incomes', [CashController::class, 'exportIncomes'])
+        ->name('exports.incomes');
+    Route::get('/exports/expenses', [CashController::class, 'exportExpenses'])
+        ->name('exports.expenses');
+    Route::get('/exports/payments', [PaymentController::class, 'export'])
+        ->name('exports.payments');
+    Route::get('/exports/debts-per-days', [DebtController::class, 'export'])
+        ->name('exports.debts-per-days');
+    Route::get('/exports/debts-per-days-detail', [DebtController::class, 'exportDetail'])
+        ->name('exports.debts-per-days-detail');
+    Route::get('/exports/debts-monthly', [DebtController::class, 'exportMonthly'])
+        ->name('exports.debts-monthly');
+    Route::get('/exports/cash-general-report', [CashController::class, 'exportGeneralReport'])
+        ->name('exports.cash-general-report');
+    Route::get('/exports/cash-draco-report', [CashController::class, 'exportDracoReport'])
+        ->name('exports.cash-draco-report');
+    Route::get('/exports/departures-monthly-export', [DepartureController::class, 'exportMonthly'])
+        ->name('exports.departures-monthly-export');
+    Route::get('/exports/departures-rmp-report', [DepartureController::class, 'exportRmp'])
+        ->name('exports.departures-rmp-report');
+    Route::get('/exports/departures-stats-report', [DepartureController::class, 'exportStats'])
+        ->name('exports.departures-stats-report');
 
 
 });

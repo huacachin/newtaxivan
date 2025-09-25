@@ -107,17 +107,20 @@
                             </button>
                         </div>
                         <div class="col-xl-2 col-md-4 mb-2 mb-md-0">
-                            <button class="btn btn-primary w-100"><i class="ti ti-file-analytics f-s-16"></i>
+                            <button class="btn btn-primary w-100" wire:click="export"><i
+                                    class="ti ti-file-analytics f-s-16"></i>
                                 Exportar
                             </button>
                         </div>
                         <div class="col-xl-2 col-md-4 mb-2 mb-md-0">
-                            <button class="btn btn-primary w-100"><i class="ti ti-square-plus f-s-16"></i>
+                            <button class="btn btn-primary w-100" wire:click="openAddModal"><i
+                                    class="ti ti-square-plus f-s-16"></i>
                                 Nuevo
                             </button>
                         </div>
                         <div class="col-xl-2 col-md-4 mb-2 mb-md-0">
-                            <button class="btn btn-primary w-100" id="down"><i class="ti ti-square-chevrons-down f-s-17"></i>
+                            <button class="btn btn-primary w-100" id="down"><i
+                                    class="ti ti-square-chevrons-down f-s-17"></i>
                             </button>
                         </div>
                     </div>
@@ -134,6 +137,7 @@
 
                             <thead class="table-primary text-center">
                             <tr>
+                                <th scope="col">Acción</th>
                                 <th scope="col">Id</th>
                                 <th scope="col">Placa</th>
                                 <th scope="col">Serie</th>
@@ -149,39 +153,366 @@
                             </thead>
 
                             <tbody class="text-center">
-                            @if($payments->count() > 0)
-                                @foreach($payments as $p)
-                                    <tr>
-                                        <td>{{$loop->iteration}}</td>
-                                        <td>{{$p->legacy_plate}}
-                                        <td>{{$p->serie}}</td>
-                                        <td>{{$p->date_register}}</td>
-                                        <td>{{$p->date_payment}}</td>
-                                        <td>{{$p->hour}}</td>
-                                        <td>{{$p->type}}</td>
-                                        <td>{{$p->headquarter->name}}</td>
-                                        <td>{{$p->user->name}}</td>
-                                        <td>{{$p->amount}}</td>
-                                        <td>
-                                            @if(!empty($p->latitude) && !empty($p->longitude))
-                                                <a href="https://maps.google.com/?q={{ $p->latitude }},{{ $p->longitude }}"
-                                                   target="_blank" class="underline">🌍</a>
-                                            @else
-                                                -
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            @else
+                            @forelse($payments as $p)
                                 <tr>
-                                    <td colspan="11">No se encontrarón resultados</td>
+                                    <td width="10">
+                                        <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
+                                           wire:click="openEditModal({{ $p->id }})"></i>
+                                    </td>
+                                    <td>{{ $loop->iteration }}</td>
+                                    <td>{{ $p->legacy_plate }}</td>
+                                    <td>{{ $p->serie }}</td>
+                                    <td>{{ optional($p->date_register)->format('Y-m-d') }}</td>
+                                    <td>{{ optional($p->date_payment)->format('Y-m-d') }}</td>
+                                    <td>{{ $p->hour }}</td>
+                                    <td>{{ $p->type }}</td>
+                                    <td>{{ $p->headquarter->name ?? '-' }}</td>
+                                    <td>{{ $p->user->name ?? '-' }}</td>
+                                    <td>{{ number_format($p->amount, 2) }}</td>
+                                    <td>
+                                        @if(!empty($p->latitude) && !empty($p->longitude))
+                                            <a href="https://maps.google.com/?q={{ $p->latitude }},{{ $p->longitude }}"
+                                               target="_blank" class="underline">🌍</a>
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
                                 </tr>
-                            @endif
+                            @empty
+                                <tr>
+                                    <td colspan="12">No se encontrarón resultados</td>
+                                </tr>
+                            @endforelse
                             </tbody>
+                            <tfoot class="table-light">
+                            <tr>
+                                {{-- Hay 12 columnas en total; la 11 es el monto.
+                                     Sumamos las 10 primeras como título, luego la del total y una vacía para "Map". --}}
+                                <th colspan="10" class="text-end">Total general:</th>
+                                <th class="text-center">{{ number_format($total_general, 2) }}</th>
+                                <th></th>
+                            </tr>
+                            </tfoot>
                         </table>
                     </div>
                 </div>
             </div>
         </div>
-        <!-- Simple Table end -->
+        {{-- Modal: Agregar Pago --}}
+        <div class="modal fade" id="modalAddPayment" aria-hidden="true" tabindex="-1" data-bs-backdrop="static" wire:ignore.self>
+            <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Agregar Pago</h5>
+                        <button type="button" class="btn-close m-0 fs-5" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        @if ($errors->any())
+                            <div class="alert alert-danger">
+                                <strong>Revisa los siguientes errores:</strong>
+                                <ul class="mb-0 mt-2 ps-3">
+                                    @foreach ($errors->all() as $error) <li>{{ $error }}</li> @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="pay_plate" class="form-label">Placa</label>
+                                    <input id="pay_plate" type="text" class="form-control" placeholder="ABC-123"
+                                           wire:model.live.debounce.300ms="plate">
+                                    @error('plate') <span class="text-danger">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Serie</label>
+                                    <input type="text" class="form-control" wire:model.defer="serie">
+                                    @error('serie') <span class="text-danger">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Sucursal</label>
+                                    <select class="form-select" wire:model.live="headquarter_id_form">
+                                        <option value="">Seleccionar</option>
+                                        @foreach($headquarters as $hq)
+                                            <option value="{{ $hq->id }}">{{ $hq->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('headquarter_id_form') <span class="text-danger">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Fecha Registro</label>
+                                    <input type="date" class="form-control"
+                                           wire:model.live="date_register" readonly>
+                                    @error('date_register') <span class="text-danger">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Fecha Pago</label>
+                                    <input type="date" class="form-control"
+                                           wire:model.live="date_payment"
+                                           @if($type_form === 'PAGO')
+                                               readonly
+                                           min="{{ now()->toDateString() }}"
+                                           max="{{ now()->toDateString() }}"
+                                           style="background:#eee; pointer-events:none;"
+                                        @endif
+                                    >
+                                    @error('date_payment') <span class="text-danger">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Hora</label>
+                                    <input type="time" class="form-control" wire:model.defer="hour">
+                                    @error('hour') <span class="text-danger">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Tipo</label>
+                                    <select class="form-select" wire:model.live="type_form">
+                                        <option value="">Seleccionar</option>
+                                        <option value="PAGO">Pago</option>
+                                        <option value="DEUDA">Deuda</option>
+                                        <option value="RETRASO">Retraso</option>
+                                    </select>
+                                    @error('type_form') <span class="text-danger">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label class="form-label">Monto (S/)</label>
+
+                                    <input type="number" step="0.01" min="0.01" class="form-control"
+                                           wire:model.defer="amount"
+                                           @if($type_form !== 'DEUDA' && !is_null($detected_cost)) readonly @endif>
+
+                                    @error('amount') <span class="text-danger">{{ $message }}</span> @enderror
+
+                                    @if($type_form === 'DEUDA')
+                                        @if(!is_null($pending_debt))
+                                            <small class="{{ $pending_debt > 0 ? 'text-muted' : 'text-warning' }}">
+                                                Deuda pendiente total: S/ {{ number_format($pending_debt, 2) }}
+                                            </small>
+                                        @endif
+                                    @else
+                                        @if(!is_null($detected_cost))
+                                            <small class="text-muted">
+                                                Costo detectado: S/ {{ number_format($detected_cost, 2) }} — Fecha: {{ $date_register }}
+                                            </small>
+                                        @else
+                                            <small class="text-warning">
+                                                No hay costo configurado para {{ $date_register }} y placa “{{ $plate }}”.
+                                            </small>
+                                        @endif
+                                    @endif
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light-primary" wire:click="save">Agregar</button>
+                        <button type="button" class="btn btn-light-secondary" wire:click="cancelAdd" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Modal: Editar Pago --}}
+        <div class="modal fade" id="modalEditPayment" aria-hidden="true" tabindex="-1" data-bs-backdrop="static" wire:ignore.self>
+            <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Editar Pago</h5>
+                        <button type="button" class="btn-close m-0 fs-5" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        @if ($errors->any())
+                            <div class="alert alert-danger">
+                                <strong>Revisa los siguientes errores:</strong>
+                                <ul class="mb-0 mt-2 ps-3">
+                                    @foreach ($errors->all() as $error) <li>{{ $error }}</li> @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="pay_plate_edit" class="form-label">Placa</label>
+                                    <input id="pay_plate" type="text" class="form-control" placeholder="ABC-123"
+                                           wire:model.live.debounce.300ms="plate">
+                                    @error('plate') <span class="text-danger">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Serie</label>
+                                    <input type="text" class="form-control" wire:model.defer="serie">
+                                    @error('serie') <span class="text-danger">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Sucursal</label>
+                                    <select class="form-select" wire:model.live="headquarter_id_form">
+                                        <option value="">Seleccionar</option>
+                                        @foreach($headquarters as $hq)
+                                            <option value="{{ $hq->id }}">{{ $hq->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('headquarter_id_form') <span class="text-danger">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Fecha Registro</label>
+                                    <input type="date" class="form-control"
+                                           wire:model.live="date_register" readonly>
+                                    @error('date_register') <span class="text-danger">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Fecha Pago</label>
+                                    <input type="date" class="form-control"
+                                           wire:model.live="date_payment"
+                                           @if($type_form === 'PAGO')
+                                               readonly
+                                           min="{{ now()->toDateString() }}"
+                                           max="{{ now()->toDateString() }}"
+                                           style="background:#eee; pointer-events:none;"
+                                        @endif
+                                    >
+                                    @error('date_payment') <span class="text-danger">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Hora</label>
+                                    <input type="time" class="form-control" wire:model.defer="hour">
+                                    @error('hour') <span class="text-danger">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Tipo</label>
+                                    <select class="form-select" wire:model.live="type_form">
+                                        <option value="">Seleccionar</option>
+                                        <option value="PAGO">Pago</option>
+                                        <option value="DEUDA">Deuda</option>
+                                        <option value="RETRASO">Retraso</option>
+                                    </select>
+                                    @error('type_form') <span class="text-danger">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label class="form-label">Monto (S/)</label>
+
+                                    <input type="number" step="0.01" min="0.01" class="form-control"
+                                           wire:model.defer="amount"
+                                           @if($type_form !== 'DEUDA' && !is_null($detected_cost)) readonly @endif>
+
+                                    @error('amount') <span class="text-danger">{{ $message }}</span> @enderror
+
+                                    @if($type_form === 'DEUDA')
+                                        @if(!is_null($pending_debt))
+                                            <small class="{{ $pending_debt > 0 ? 'text-muted' : 'text-warning' }}">
+                                                Deuda pendiente mes anterior ({{ \Carbon\Carbon::now()->subMonth()->format('Y-m') }}):
+                                                S/ {{ number_format($pending_debt, 2) }}
+                                            </small>
+                                        @endif
+                                    @else
+                                        @if(!is_null($detected_cost))
+                                            <small class="text-muted">
+                                                Costo detectado: S/ {{ number_format($detected_cost, 2) }} — Fecha: {{ $date_register }}
+                                            </small>
+                                        @else
+                                            <small class="text-warning">
+                                                No hay costo configurado para {{ $date_register }} y placa “{{ $plate }}”.
+                                            </small>
+                                        @endif
+                                    @endif
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light-primary" wire:click="update">Editar</button>
+                        <button type="button" class="btn btn-light-secondary" wire:click="cancelEdit" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
     </div>
+</div>
+@push('scripts')
+    <script>
+        (function () {
+            function setGeoOnComponent(lat, lng) {
+                // Busca el componente Livewire más cercano al modal abierto
+                const opened = document.querySelector('.modal.show');
+                if (!opened) return;
+                const compEl = opened.closest('[wire\\:id]');
+                if (!compEl) return;
+
+                const comp = Livewire.find(compEl.getAttribute('wire:id'));
+                if (!comp) return;
+
+                comp.set('latitude',  Number(lat.toFixed(6)));
+                comp.set('longitude', Number(lng.toFixed(6)));
+            }
+
+            function getGeoAndSet() {
+                if (!navigator.geolocation) return;
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => setGeoOnComponent(pos.coords.latitude, pos.coords.longitude),
+                    () => {}, // error silenciado
+                    { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                );
+            }
+
+            document.addEventListener('shown.bs.modal', function (e) {
+                const id = e.target?.id || '';
+                if (id === 'modalAddPayment' || id === 'modalEditPayment') getGeoAndSet();
+            });
+        })();
+
+        document.addEventListener('hidden.bs.modal', function (e) {
+            const id = e.target?.id || '';
+            if (id === 'modalAddPayment')  { Livewire.dispatch('call', { method: 'cancelAdd'  }); }
+            if (id === 'modalEditPayment') { Livewire.dispatch('call', { method: 'cancelEdit' }); }
+        });
+    </script>
+@endpush
+

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -43,6 +44,8 @@ class Vehicle extends Model
         'certificate_date'   => 'date',
         'technical_review'   => 'date',
     ];
+
+    protected $appends = ['badges'];
 
     // Relaciones
     public function owner(): BelongsTo
@@ -101,6 +104,70 @@ class Vehicle extends Model
     public function debtDays()
     {
         return $this->hasMany(\App\Models\DebtDay::class);
+    }
+
+    public function getBadgesAttribute(): array
+    {
+        $now    = Carbon::now();
+        $badges = [];
+
+        $add = function ($date, string $abbr, string $label) use (&$badges, $now) {
+            if (!$date) return;
+
+            $date = $date instanceof Carbon ? $date : Carbon::parse($date);
+            $days = $now->diffInDays($date, false); // negativo si ya venció
+
+            // Mostrar solo si faltan 0–10 días
+            if ($days < 0 || $days > 10) return;
+
+            $badges[] = [
+                'abbr'  => $abbr,
+                'title' => "{$label} vence en {$days} día(s)",
+                'class' => $days <= 5 ? 'bg-danger' : 'bg-warning',
+            ];
+        };
+
+        $add($this->soat_date,        'SD', 'SOAT');
+        $add($this->technical_review, 'RT', 'Revisión Técnica');
+        $add($this->certificate_date, 'CD', 'Certificado');
+
+        return $badges;
+    }
+
+    public function expiringAlerts(): array
+    {
+        $now = \Carbon\Carbon::now();
+        $alerts = [];
+
+        $add = function ($date, string $abbr, string $label) use (&$alerts, $now) {
+            if (!$date) return;
+
+            // diferencia en minutos, permitiendo negativos
+            $mins = $now->diffInMinutes($date, false);
+
+            // vencidos no se muestran (si quieres mostrarlos, quita este return)
+            if ($mins < 0) return;
+
+            // días restantes redondeados hacia arriba (0.1 día => 1 día)
+            $days = (int) ceil($mins / 1440);
+
+            if ($days > 10) return; // solo 0–10 días
+
+            $alerts[] = [
+                'plate'    => $this->plate,
+                'abbr'     => $abbr,                          // SD|RT|CD
+                'label'    => $label,                         // SOAT|Revisión Técnica|Certificado
+                'days'     => $days,                          // ENTERO
+                'due_date' => $date->format('Y-m-d'),
+                'color'    => $days <= 5 ? 'danger' : 'warning',
+            ];
+        };
+
+        $add($this->soat_date,        'SD', 'SOAT');
+        $add($this->technical_review, 'RT', 'Revisión Técnica');
+        $add($this->certificate_date, 'CD', 'Certificado');
+
+        return $alerts;
     }
 
 }

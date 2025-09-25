@@ -9,7 +9,13 @@ class Payment extends Model
     protected $fillable = [
         'id','serie','date_register','date_payment','vehicle_id','amount','type',
         'user_id','headquarter_id','hour','latitude','longitude',
-        'legacy_plate','is_support',
+        'legacy_plate','is_support'
+    ];
+
+    protected $casts = [
+        'date_register' => 'date',   // Carbon
+        'date_payment'  => 'date',   // Carbon
+        'amount'        => 'decimal:2',
     ];
 
     /* ---------- Relaciones ---------- */

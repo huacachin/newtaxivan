@@ -1,5 +1,5 @@
 @extends('layout.master')
-@section('title', 'Alert')
+@section('title', 'Rep Est Caja MA')
 @section('css')
 
 @endsection

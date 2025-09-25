@@ -3,28 +3,31 @@
 namespace App\Livewire\Debts;
 
 use App\Models\DebtDay;
-use App\Models\Payment;
-use App\Models\User;
 use App\Models\Vehicle;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Illuminate\Support\Facades\DB;
 
 class MonthlyDebt extends Component
-{ // Filtros / estado de UI
+{
+    // ======= Filtros / UI =======
     #[Url(as: 'month', history: true)]
-    public string $monthDate = ''; // YYYY-MM-DD (usamos el día 1 del mes)
+    public string $monthDate = ''; // YYYY-MM-DD (día 1 del mes)
 
-    // Filtros simples (opcionales)
     #[Url(as: 'q', history: true)]
-    public string $search = ''; // buscar por placa (incluye legacy_plate)
+    public string $search = '';
+
     #[Url(as: 'cond', history: true)]
     public string $condition = ''; // DT / GN / EX / EX5 / Exonerado / Amortizado
 
+    // Selects mes/año para homogeneizar con la vista
+    public int $month;            // 1..12
+    public int $year;             // p.ej. 2023..2028
+    public array $months = [];    // [1=>'ENERO', ...]
+    public array $years  = [];    // [2022,2023,2024,...]
+
+    // Datos de salida
     public array $rows = [];
     public array $totals = [
         'total'      => 0.0,
@@ -34,33 +37,50 @@ class MonthlyDebt extends Component
         'pending'    => 0.0,
     ];
 
+    // ======= Ciclo de vida =======
     public function mount(): void
     {
+        // monthDate por defecto: primer día del mes actual
         if (empty($this->monthDate)) {
-            // por defecto, día 1 del mes actual
             $this->monthDate = now()->startOfMonth()->toDateString();
         }
+
+        // Catálogo de meses (ES)
+        $this->months = [
+            1=>'ENERO', 2=>'FEBRERO', 3=>'MARZO', 4=>'ABRIL',
+            5=>'MAYO', 6=>'JUNIO', 7=>'JULIO', 8=>'AGOSTO',
+            9=>'SEPTIEMBRE', 10=>'OCTUBRE', 11=>'NOVIEMBRE', 12=>'DICIEMBRE',
+        ];
+
+        // Rango de años (ajústalo a tu gusto)
+        $yNow = (int) now()->year;
+        $this->years = range($yNow - 5, $yNow + 1);
+
+        // Sincronizar month/year a partir de monthDate
+        $this->syncMonthYearFromMonthDate();
+
         $this->loadData();
     }
 
-    public function updated($property): void
+    public function render()
     {
-        if (in_array($property, ['monthDate', 'search', 'condition'], true)) {
-            $this->loadData();
-        }
+        return view('livewire.debts.monthly-debt');
     }
 
-    public function prevMonth(): void
+    // ======= Sync helpers =======
+    private function syncMonthYearFromMonthDate(): void
     {
-        $this->monthDate = Carbon::parse($this->monthDate ?: now())->subMonthNoOverflow()->startOfMonth()->toDateString();
-
-        $this->loadData();
+        $d = Carbon::parse($this->monthDate ?: now())->startOfMonth();
+        $this->month = (int) $d->month;
+        $this->year  = (int) $d->year;
     }
 
-    public function nextMonth(): void
+    private function syncMonthDateFromParts(): void
     {
-        $this->monthDate = Carbon::parse($this->monthDate ?: now())->addMonthNoOverflow()->startOfMonth()->toDateString();
-        $this->loadData();
+        // Siempre usa día 1 del mes seleccionado
+        $m = max(1, min(12, (int)$this->month));
+        $y = (int) $this->year;
+        $this->monthDate = Carbon::create($y, $m, 1)->toDateString();
     }
 
     private function monthRange(): array
@@ -70,39 +90,74 @@ class MonthlyDebt extends Component
         return [$d1->toDateString(), $d2->toDateString()];
     }
 
-    public function render()
+    // ======= Listeners de UI =======
+    public function updated($prop): void
     {
-        return view('livewire.debts.monthly-debt');
+        if (in_array($prop, ['monthDate','search','condition'], true)) {
+            if ($prop === 'monthDate') {
+                $this->syncMonthYearFromMonthDate();
+            }
+            $this->loadData();
+        }
     }
 
+    // Cambios desde los selects
+    public function updatedMonth(): void
+    {
+        $this->syncMonthDateFromParts();
+        $this->loadData();
+    }
+    public function updatedYear(): void
+    {
+        $this->syncMonthDateFromParts();
+        $this->loadData();
+    }
+
+    public function prevMonth(): void
+    {
+        $this->monthDate = Carbon::parse($this->monthDate ?: now())
+            ->subMonthNoOverflow()
+            ->startOfMonth()
+            ->toDateString();
+
+        $this->syncMonthYearFromMonthDate();
+        $this->loadData();
+    }
+
+    public function nextMonth(): void
+    {
+        $this->monthDate = Carbon::parse($this->monthDate ?: now())
+            ->addMonthNoOverflow()
+            ->startOfMonth()
+            ->toDateString();
+
+        $this->syncMonthYearFromMonthDate();
+        $this->loadData();
+    }
+
+    // ======= Core =======
     public function loadData(): void
     {
         [$from, $to] = $this->monthRange();
 
-        // Base query a debt_days del mes
         $q = DebtDay::query()
             ->whereBetween('date', [$from, $to]);
 
-        // Filtro por “condición”
-        // - Si piden Exonerado → exonerated > 0
-        // - Si piden Amortizado → se resuelve luego (porque está en payments)
-        // - Si piden DT/GN/EX/EX5 → filtra por debt_days.condition
-        $filterAmortized = false;
+        // Filtro por condición
         if ($this->condition === 'Exonerado') {
             $q->where('exonerated', '>', 0);
         } elseif ($this->condition === 'Amortizado') {
-            $filterAmortized = true; // se aplicará tras traer amortizaciones
+            // Más simple y consistente con tu modelo: usa la columna amortized
+            $q->where('amortized', '>', 0);
         } elseif (!empty($this->condition)) {
             $q->where('condition', $this->condition);
         }
 
-        // Filtro por búsqueda de placa (en plate del vehicle o en legacy_plate)
+        // Filtro por búsqueda de placa (en legacy_plate o vehicles.plate)
         if (!empty($this->search)) {
             $needle = mb_strtolower(trim($this->search));
             $q->where(function ($w) use ($needle) {
-                // legacy_plate LIKE
                 $w->whereRaw('LOWER(legacy_plate) LIKE ?', ['%'.$needle.'%'])
-                    // o por vehicle_id a partir de vehicles.plate (usamos EXISTS)
                     ->orWhereExists(function ($sub) use ($needle) {
                         $sub->from('vehicles as v')
                             ->whereColumn('v.id', 'debt_days.vehicle_id')
@@ -111,61 +166,15 @@ class MonthlyDebt extends Component
             });
         }
 
-        // Traemos las filas del mes (sin N+1 de amortizaciones)
         $rows = $q->get();
 
-        // Mapear vehicles (para COD/PLACA/CONDICIÓN si aplica)
+        // Map vehículos para COD/PLACA/COND
         $vehicleIds = $rows->pluck('vehicle_id')->filter()->unique()->values();
         $vehicles = Vehicle::query()
             ->whereIn('id', $vehicleIds)
-            ->get(['id', 'sort_order', 'plate', 'condition'])
+            ->get(['id','sort_order','plate','condition'])
             ->keyBy('id');
 
-        // Armar set para amortizaciones: por vehicle_id y por legacy_plate (is_support=1)
-        $vehIdsForAmort = $rows->whereNotNull('vehicle_id')->pluck('vehicle_id')->unique()->values();
-        $platesForAmort = $rows->whereNull('vehicle_id')->where('is_support', 1)->pluck('legacy_plate')->filter()->unique()->values();
-
-        // Amortizaciones del mes (type='DEUDA'), usando COALESCE(date_payment, date_register)
-        $dateExpr = DB::raw('COALESCE(date_payment, date_register)');
-
-        $amortByVehicle = collect();
-        if ($vehIdsForAmort->isNotEmpty()) {
-            $amortByVehicle = Payment::query()
-                ->selectRaw('vehicle_id, SUM(amount) as sum_amount')
-                ->where('type', 'DEUDA')
-                ->whereIn('vehicle_id', $vehIdsForAmort)
-                ->whereBetween($dateExpr, [$from, $to])
-                ->groupBy('vehicle_id')
-                ->pluck('sum_amount', 'vehicle_id');
-        }
-
-        $amortByPlate = collect();
-        if ($platesForAmort->isNotEmpty()) {
-            $amortByPlate = Payment::query()
-                ->selectRaw('legacy_plate, SUM(amount) as sum_amount')
-                ->where('type', 'DEUDA')
-                ->whereNull('vehicle_id')
-                ->where('is_support', 1)
-                ->whereIn('legacy_plate', $platesForAmort)
-                ->whereBetween($dateExpr, [$from, $to])
-                ->groupBy('legacy_plate')
-                ->pluck('sum_amount', 'legacy_plate');
-        }
-
-        // Si pidieron "Amortizado", filtrar rows que tengan amortización > 0
-        if ($filterAmortized) {
-            $rows = $rows->filter(function ($r) use ($amortByVehicle, $amortByPlate) {
-                if ($r->vehicle_id) {
-                    return (float) ($amortByVehicle[$r->vehicle_id] ?? 0) > 0;
-                }
-                if ((int)$r->is_support === 1 && $r->legacy_plate) {
-                    return (float) ($amortByPlate[$r->legacy_plate] ?? 0) > 0;
-                }
-                return false;
-            })->values();
-        }
-
-        // Construcción de filas de salida + totales
         $out = [];
         $tt_total = 0.0;
         $tt_ex    = 0.0;
@@ -177,43 +186,35 @@ class MonthlyDebt extends Component
         foreach ($rows as $row) {
             $item++;
 
-            // COD/PLACA/COND
-            $id = $row->id;
             $veh      = $row->vehicle_id ? ($vehicles[$row->vehicle_id] ?? null) : null;
             $cod      = $veh->sort_order ?? '';
             $plateStr = $veh ? $veh->plate : ($row->legacy_plate ?? '');
             $cond     = $row->condition ?: ($veh->condition ?? '');
 
-            // Texto de días “X / X1”
             $daysText = $this->buildDaysLabel($row, $from);
 
-            // Amortización (S/)
-
-
-            // Totales por fila (unidades correctas)
-            $daysLate   = (int) $row->days_late;     // DÍAS
-            $total      = (float) $row->total;       // S/
-            $exonerated = (float) $row->exonerated;  // S/
-            $amort = (float) $row->amortized;
-            $toPay      = max(0.0, $total - $exonerated);            // S/
-            $pending    = max(0.0, $total - $exonerated - $amort);   // S/
+            $daysLate   = (int) $row->days_late;    // DÍAS
+            $total      = (float) $row->total;      // S/
+            $exonerated = (float) $row->exonerated; // S/
+            $amort      = (float) $row->amortized;  // S/
+            $toPay      = max(0.0, $total - $exonerated);          // S/
+            $pending    = max(0.0, $total - $exonerated - $amort); // S/
 
             $out[] = [
-                'id' => $id,
+                'id'          => $row->id,
                 'item'        => $item,
                 'cod'         => $cod,
                 'plate'       => $plateStr,
                 'condition'   => $cond,
                 'days_text'   => $daysText,
-                'days_late'   => $daysLate,    // T.D.N.T (días)
-                'total'       => $total,       // T.D (S/)
-                'exonerated'  => $exonerated,  // Ex (S/)
-                'to_pay'      => $toPay,       // T.D.x.P (S/)
-                'amortized'   => $amort,       // Amor (S/)
-                'pending'     => $pending,     // Pend (S/)
+                'days_late'   => $daysLate,
+                'total'       => $total,
+                'exonerated'  => $exonerated,
+                'to_pay'      => $toPay,
+                'amortized'   => $amort,
+                'pending'     => $pending,
             ];
 
-            // Acumular totales generales
             $tt_total += $total;
             $tt_ex    += $exonerated;
             $tt_toPay += $toPay;
@@ -231,15 +232,11 @@ class MonthlyDebt extends Component
         ];
     }
 
-    /**
-     * Construye el texto de días con “X” y “X1”:
-     * - “X”  → día sin pago con salidas
-     * - “X1” → lo mismo, destacado en azul (legacy)
-     */
+    /** Construye texto de días “X / X1” (azul en X1) */
     private function buildDaysLabel(DebtDay $row, string $fromDate): string
     {
-        $monthStart = Carbon::parse($fromDate)->startOfMonth();
-        $daysInMonth = $monthStart->daysInMonth;
+        $monthStart   = Carbon::parse($fromDate)->startOfMonth();
+        $daysInMonth  = $monthStart->daysInMonth;
 
         $parts = [];
         for ($d = 1; $d <= $daysInMonth; $d++) {
@@ -251,13 +248,33 @@ class MonthlyDebt extends Component
                 $parts[] = "{$d},";
             }
         }
-
         return implode('', $parts);
     }
 
-    public function detail($id){
-        $route = route('debts.monthly.detail',["id" => $id]);
+    public function detail($id): void
+    {
+        $route = route('debts.monthly.detail', ["id" => $id]);
+        $this->dispatch('url-open', ["url" => $route]);
+    }
 
-        $this->dispatch('url-open',["url" => $route]);
+    // ======= Export (ajusta route names si usas otros) =======
+    public function exportSummary(): void
+    {
+        $route = route('exports.debts.monthly', [
+            'month'     => $this->monthDate,
+            'search'    => $this->search,
+            'condition' => $this->condition,
+        ]);
+        $this->dispatch('url-open', ['url' => $route]);
+    }
+
+    public function export(): void
+    {
+        $route = route('exports.debts-monthly', [
+            'month'     => $this->monthDate,
+            'search'    => $this->search,
+            'condition' => $this->condition,
+        ]);
+        $this->dispatch('url-open', ['url' => $route]);
     }
 }

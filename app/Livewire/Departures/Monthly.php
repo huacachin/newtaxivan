@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Departures;
 
-
 use Carbon\Carbon;
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
@@ -10,10 +9,10 @@ use Illuminate\Support\Facades\Schema;
 
 class Monthly extends Component
 {
-    public string $selectedDate = '';
     public int $year = 0;
     public int $month = 0;
     public int $daysInMonth = 0;
+
     public array $days = [];
     public array $rows = [];
     public array $totalPerDay = [];
@@ -27,32 +26,22 @@ class Monthly extends Component
 
     public function mount(): void
     {
-        $this->selectedDate = now()->toDateString();
-        $this->setupMonth();
+        $now = Carbon::now();
+        $this->year  = (int) $now->year;
+        $this->month = (int) $now->month;
+
+        $this->setupDays();
         $this->detectCountColumn();
         $this->recalc();
     }
 
-    public function updatedSelectedDate(): void
+    /** Al cambiar año o mes, recalcula automáticamente */
+    public function updated($prop): void
     {
-        $this->setupMonth();
-        $this->recalc();
-    }
-
-    public function prevMonth(): void
-    {
-        $d = Carbon::parse($this->selectedDate)->startOfMonth()->subMonth();
-        $this->selectedDate = $d->toDateString();
-        $this->setupMonth();
-        $this->recalc();
-    }
-
-    public function nextMonth(): void
-    {
-        $d = Carbon::parse($this->selectedDate)->startOfMonth()->addMonth();
-        $this->selectedDate = $d->toDateString();
-        $this->setupMonth();
-        $this->recalc();
+        if (in_array($prop, ['year','month'], true)) {
+            $this->setupDays();
+            $this->recalc();
+        }
     }
 
     public function render()
@@ -62,11 +51,9 @@ class Monthly extends Component
 
     /* ===================== Core ===================== */
 
-    protected function setupMonth(): void
+    protected function setupDays(): void
     {
-        $d = Carbon::parse($this->selectedDate);
-        $this->year        = (int) $d->year;
-        $this->month       = (int) $d->month;
+        $d = Carbon::create($this->year, $this->month, 1);
         $this->daysInMonth = (int) $d->daysInMonth;
         $this->days        = range(1, $this->daysInMonth);
     }
@@ -171,5 +158,14 @@ class Monthly extends Component
             }
             $this->vehiclesWorkedPerDay[$d] = $worked;
         }
+    }
+
+    public function export(){
+        $route = route('exports.departures-monthly-export',
+            [   "year" => $this->year,
+                "month" => $this->month,
+            ]);
+
+        $this->dispatch('url-open',["url" => $route]);
     }
 }

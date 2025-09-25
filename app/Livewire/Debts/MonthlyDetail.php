@@ -6,6 +6,7 @@ use App\Models\DebtDay;
 use App\Models\DebtDayDetail;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
+use Illuminate\Validation\ValidationException;
 
 class MonthlyDetail extends Component
 {
@@ -15,7 +16,7 @@ class MonthlyDetail extends Component
     // Cabecera
     public string $date = '';
     public string $plate = '';
-    public int    $days = 0;
+    public int    $days = 0;        // <- ahora calculado desde d1..d31
     public float  $total = 0.0;
 
     // Inputs del formulario
@@ -59,19 +60,29 @@ class MonthlyDetail extends Component
     {
         $this->validate();
 
-        if ($this->exonerateInput <= 0 && $this->amortizeInput <= 0) {
+        $ex = (float)($this->exonerateInput ?: 0);
+        $am = (float)($this->amortizeInput ?: 0);
+
+        if ($ex <= 0 && $am <= 0) {
             $this->addError('exonerateInput', 'Debes ingresar exonerado y/o amortización.');
             return;
         }
 
-        DB::transaction(function () {
+        // Nueva validación conjunta (suma)
+        if (round($ex + $am, 2) > round($this->pending, 2)) {
+            throw ValidationException::withMessages([
+                'exonerateInput' => 'La suma de Exonerado + Amortización no puede superar el pendiente.',
+            ]);
+        }
+
+        DB::transaction(function () use ($ex, $am) {
             // 1) Crear detalle
             DebtDayDetail::create([
                 'debt_days_id' => $this->debtDay->id,
-                'exonerated'   => round($this->exonerateInput ?: 0, 2),
-                'amortized'    => round($this->amortizeInput ?: 0, 2),
+                'exonerated'   => round($ex, 2),
+                'amortized'    => round($am, 2),
                 'detail'       => trim($this->detailInput),
-                'user_id'      => 1,//optional(Auth::user())->id,
+                'user_id'      => 1, // TODO: usa Auth::id() cuando corresponda
                 'date'         => now()->toDateString(),
             ]);
 
@@ -121,9 +132,12 @@ class MonthlyDetail extends Component
 
         $this->date  = (string)$this->debtDay->date;
         $this->plate = $this->debtDay->vehicle?->plate ?: ($this->debtDay->legacy_plate ?? '');
-        $this->days  = (int)($this->debtDay->days ?? 0);
         $this->total = (float)($this->debtDay->total ?? 0);
 
+        // ✅ DÍAS NO TRABAJADOS: contar X / X1 en d1..d31
+        $this->days  = $this->countDaysFromColumns($this->debtDay);
+
+        // Totales desde detalles
         $this->sumExonerated = (float)$this->debtDay->details->sum('exonerated');
         $this->sumAmortized  = (float)$this->debtDay->details->sum('amortized');
         $this->pending       = max(0, round($this->total - $this->sumExonerated - $this->sumAmortized, 2));
@@ -141,6 +155,21 @@ class MonthlyDetail extends Component
             ])->all();
     }
 
+    /** Cuenta cuántos días d1..d31 están marcados con 'X' o 'X1'. */
+    private function countDaysFromColumns(DebtDay $row): int
+    {
+        $count = 0;
+        for ($i = 1; $i <= 31; $i++) {
+            $col = 'd'.$i;
+            $val = (string)($row->{$col} ?? '');
+            if ($val === 'X' || $val === 'X1') {
+                $count++;
+            }
+        }
+        return $count;
+    }
+
+    /** Texto de días “X / X1” (azul en X1) */
     public function getDaysStringProperty(): string
     {
         $out = [];

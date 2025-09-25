@@ -12,8 +12,10 @@ class CostPerPlateDay extends Model
         'amount' => 'decimal:2',
         'date'   => 'date',
         'year'   => 'integer',
-        'month'  => 'integer',
+        'month'  => 'integer'
     ];
+
+    public function headquarter(){ return $this->belongsTo(\App\Models\Headquarter::class); }
 
     public function vehicle()
     {

@@ -7,12 +7,11 @@ use App\Models\Headquarter;
 use App\Models\Owner;
 use App\Models\Vehicle;
 use Livewire\Component;
+use Livewire\Attributes\Url;
 
 class Index extends Component
 {
-    public $status = "active";
-    public $search;
-    public $filter = "plate";
+
     public $vehicles;
     public $owners;
     public $drivers;
@@ -21,7 +20,6 @@ class Index extends Component
     public $listHeadquarters;
 
     public $vehicleId;
-    public $plate;
     public $headquarter;
     public $entry_date;
     public $termination_date;
@@ -41,6 +39,11 @@ class Index extends Component
     public $technical_review;
     public $certificate_date;
     public $detail;
+
+    #[Url(except: '')]       public $search = '';
+    #[Url(except: 'plate')]  public $filter = 'plate';
+    #[Url(except: 'active')] public $status = 'active';
+
 
 
     protected $rules = [
@@ -82,6 +85,13 @@ class Index extends Component
         $this->listDrivers = Driver::all();
         $this->listHeadquarters = Headquarter::all();
 
+        if (!in_array($filter, ['plate','brand','year','owner','driver','condition','company','category','code'], true)) {
+            $filter = $this->filter = 'plate';
+        }
+        if (!in_array($status, ['active','inactive'], true)) {
+            $status = $this->status = 'active';
+        }
+
         $query = Vehicle::query()
             // status
             ->when(in_array($status, ['active', 'inactive'], true),
@@ -112,7 +122,7 @@ class Index extends Component
             ]);
 
         $this->vehicles = $query->get([
-            'id', 'owner_id', 'driver_id', 'plate', 'status', 'year', 'condition', 'affiliated_company','termination_date','year','brand','class','type','fuel'
+            'id', 'owner_id', 'driver_id', 'plate', 'status', 'year', 'condition', 'affiliated_company','termination_date','year','brand','class','type','fuel','soat_date','certificate_date','technical_review','detail'
         ]);
 
         $this->totals();

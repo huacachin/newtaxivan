@@ -22,13 +22,58 @@ class DebtPerDays extends Component
     public array $days = [];       // cabecera de días del mes
     public array $dayTotals = [];  // totales por día (conteo de P y montos)
 
-    public function mount(?string $monthDate = null, ?bool $onlyActive = true, ?string $condition = '')
+    public int $month;
+    public int $year;
+    public array $months = [];
+    public array $years  = [];
+
+// (opcional) persiste filtros en la URL:
+    protected $queryString = [
+        'onlyActive' => ['except' => true],
+        'condition'  => ['except' => ''],
+        'month'      => ['except' => null],
+        'year'       => ['except' => null],
+    ];
+
+    public function mount(?string $monthDate = null, ?bool $onlyActive = true, ?string $condition = ''): void
     {
         $this->monthDate  = $monthDate && preg_match('/^\d{4}-\d{2}-\d{2}$/', $monthDate)
             ? $monthDate : now()->toDateString();
         $this->onlyActive = (bool) ($onlyActive ?? true);
         $this->condition  = (string) ($condition ?? '');
+
+        $now = now(config('app.timezone','America/Lima'));
+        // si vienen en querystring, respétalos; si no, calcula desde monthDate
+        $seed = \Carbon\Carbon::parse($this->monthDate);
+        $this->month = $this->month ?? (int) $seed->month;
+        $this->year  = $this->year  ?? (int) $seed->year;
+
+        // etiquetas de meses (ES)
+        $this->months = [
+            1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
+            7=>'Julio',8=>'Agosto',9=>'Septiembre',10=>'Octubre',11=>'Noviembre',12=>'Diciembre'
+        ];
+        $this->years = range($now->year - 5, $now->year + 1);
+
+        $this->syncMonthDate(); // asegura que monthDate = primer día de (year, month)
     }
+
+    public function updatedMonth(): void
+    {
+        $this->syncMonthDate();
+    }
+
+    public function updatedYear(): void
+    {
+        $this->syncMonthDate();
+    }
+
+    private function syncMonthDate(): void
+    {
+        $dt = \Carbon\Carbon::create($this->year, $this->month, 1, 0, 0, 0, config('app.timezone','America/Lima'));
+        $this->monthDate = $dt->toDateString();
+    }
+
 
     /** Navegación de mes */
     public function prevMonth(): void
@@ -276,4 +321,15 @@ class DebtPerDays extends Component
         }
         return $days;
     }
+
+    public function exportSummary(){
+        $route = route('exports.debts-per-days',["monthDate" => $this->monthDate, "onlyActive" => $this->onlyActive, "condition" => $this->condition]);
+        $this->dispatch('url-open',["url" => $route]);
+    }
+
+    public function exportDetail(){
+        $route = route('exports.debts-per-days-detail',["monthDate" => $this->monthDate, "onlyActive" => $this->onlyActive, "condition" => $this->condition]);
+        $this->dispatch('url-open',["url" => $route]);
+    }
+
 }

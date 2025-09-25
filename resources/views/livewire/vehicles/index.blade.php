@@ -119,7 +119,15 @@
                                         </td>
 
                                         <td>{{$loop->iteration}}</td>
-                                        <td>{{$vehicle->plate}}</td>
+                                        <td>{{$vehicle->plate}} @if(!empty($vehicle->badges))
+                                                <span class="ms-2 d-inline-flex gap-1 align-items-center">
+            @foreach($vehicle->badges as $b)
+                                                        <span class="badge {{$b['class']}} text-white" title="{{$b['title']}}">
+                    {{$b['abbr']}}
+                </span>
+                                                    @endforeach
+        </span>
+                                            @endif</td>
                                         <td>{{$vehicle->brand}}</td>
                                         <td>{{$vehicle->year}}</td>
                                         <td>{{$vehicle->class}}</td>

@@ -63,12 +63,12 @@
                 <div class="card-body">
                     <div class="row justify-content-end g-2">
                         <div class="col-xl-2 col-md-4">
-                            <button class="btn btn-primary w-100">
+                            <button class="btn btn-primary w-100" wire:click="export">
                                 <i class="ti ti-file-analytics f-s-16"></i> Exportar
                             </button>
                         </div>
                         <div class="col-xl-2 col-md-4">
-                            <button class="btn btn-primary w-100">
+                            <button class="btn btn-primary w-100" wire:click="openAddModal">
                                 <i class="ti ti-square-plus f-s-16"></i> Nuevo
                             </button>
                         </div>
@@ -156,38 +156,151 @@
 
     </div>
 
-    <div class="modal fade" id="modalEditIncome" aria-hidden="true" tabindex="-1" data-bs-backdrop="static" wire:ignore.self>
-        <div class="modal-dialog modal-dialog-centered modal-xl">
+    {{-- ===== Modal: Nuevo Ingreso ===== --}}
+    <div class="modal fade" id="modalAddIncome" aria-hidden="true" tabindex="-1" data-bs-backdrop="static" wire:ignore.self>
+        <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Editar Vehiculo</h5>
+                    <h5 class="modal-title">Nuevo ingreso</h5>
                     <button type="button" class="btn-close m-0 fs-5" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
+                            aria-label="Close" wire:click="closeModal('modalAddIncome')"></button>
                 </div>
+
                 <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label for="plate" class="form-label">Placa</label>
-                                <input id="plate" type="text" class="form-control" placeholder="Ingresar placa"
-                                       wire:model="plate">
-                                @error('plate') <span class="text-danger">{{ $message }}</span> @enderror
-                            </div>
+                    @if ($errors->any())
+                        <div class="alert alert-danger">
+                            <strong>Corrige los siguientes errores:</strong>
+                            <ul class="mb-0 mt-2 ps-3">
+                                @foreach ($errors->all() as $error) <li>{{ $error }}</li> @endforeach
+                            </ul>
                         </div>
+                    @endif
+
+                    <div class="row g-3">
                         <div class="col-md-4">
-                            <div class="mb-3">
-                                <label for="income" class="form-label">Sede</label>
-                                <input id="income" type="text" class="form-control" placeholder="Ingresar sede"  >
-                                @error('income') <span class="text-danger">{{ $message }}</span> @enderror
-                            </div>
+                            <label class="form-label">Fecha</label>
+                            <input type="date" class="form-control" wire:model.live="date">
+                            @error('date') <span class="text-danger">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Moneda</label>
+                            <select class="form-select" wire:model.live="currency">
+                                <option value="Soles">Soles</option>
+                                <option value="Dolares">Dólares</option>
+                            </select>
+                            @error('currency') <span class="text-danger">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Monto</label>
+                            <input type="number" step="0.01" min="0.01" class="form-control"
+                                   placeholder="0.00" wire:model.live="amount_input">
+                            @error('amount_input') <span class="text-danger">{{ $message }}</span> @enderror
+                            @if(!is_null($converted_total))
+                                <small class="text-muted">Total en S/: {{ number_format($converted_total, 2) }}</small>
+                            @endif
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">A</label>
+                            <input type="text" class="form-control" placeholder="A quién / Área"
+                                   wire:model.defer="reason">
+                            @error('reason') <span class="text-danger">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Motivo</label>
+                            <input type="text" class="form-control" placeholder="Detalle"
+                                   wire:model.defer="detail">
+                            @error('detail') <span class="text-danger">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-text">TC usado (MVP): 3.80</div>
                         </div>
                     </div>
                 </div>
+
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-light-primary" wire:click="update">Editar</button>
-                    <button type="button" class="btn btn-light-secondary"
-                            data-bs-dismiss="modal">Cerrar
-                    </button>
+                    <button type="button" class="btn btn-light-primary" wire:click="save">Guardar</button>
+                    <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal"
+                            wire:click="closeModal('modalAddIncome')">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ===== Modal: Editar Ingreso ===== --}}
+    <div class="modal fade" id="modalEditIncome" aria-hidden="true" tabindex="-1" data-bs-backdrop="static" wire:ignore.self>
+        <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar ingreso</h5>
+                    <button type="button" class="btn-close m-0 fs-5" data-bs-dismiss="modal"
+                            aria-label="Close" wire:click="closeModal('modalEditIncome')"></button>
+                </div>
+
+                <div class="modal-body">
+                    @if ($errors->any())
+                        <div class="alert alert-danger">
+                            <strong>Corrige los siguientes errores:</strong>
+                            <ul class="mb-0 mt-2 ps-3">
+                                @foreach ($errors->all() as $error) <li>{{ $error }}</li> @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Fecha</label>
+                            <input type="date" class="form-control" wire:model.live="date">
+                            @error('date') <span class="text-danger">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Moneda</label>
+                            <select class="form-select" wire:model.live="currency">
+                                <option value="Soles">Soles</option>
+                                <option value="Dolares">Dólares</option>
+                            </select>
+                            @error('currency') <span class="text-danger">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Monto</label>
+                            <input type="number" step="0.01" min="0.01" class="form-control"
+                                   placeholder="0.00" wire:model.live="amount_input">
+                            @error('amount_input') <span class="text-danger">{{ $message }}</span> @enderror
+                            @if(!is_null($converted_total))
+                                <small class="text-muted">Total en S/: {{ number_format($converted_total, 2) }}</small>
+                            @endif
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">A</label>
+                            <input type="text" class="form-control" placeholder="A quién / Área"
+                                   wire:model.defer="reason">
+                            @error('reason') <span class="text-danger">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Motivo</label>
+                            <input type="text" class="form-control" placeholder="Detalle"
+                                   wire:model.defer="detail">
+                            @error('detail') <span class="text-danger">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-text">TC usado (MVP): 3.80</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light-primary" wire:click="update">Guardar cambios</button>
+                    <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal"
+                            wire:click="closeModal('modalEditIncome')">Cerrar</button>
                 </div>
             </div>
         </div>

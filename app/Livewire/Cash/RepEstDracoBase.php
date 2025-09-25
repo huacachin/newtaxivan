@@ -162,4 +162,9 @@ class RepEstDracoBase extends Component
             9 => 'SEPTIEMBRE', 10 => 'OCTUBRE', 11 => 'NOVIEMBRE', 12 => 'DICIEMBRE',
         ];
     }
+
+    public function export(): void{
+        $url = route('exports.cash-draco-report', ['year' => $this->year]);
+        $this->dispatch('url-open', ['url' => $url]);
+    }
 }
