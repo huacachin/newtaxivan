@@ -1,194 +1,234 @@
+{{-- resources/views/exports/departures.blade.php --}}
 @php
-    $title = 'Salidas';
-    $range = ($filters['fromDate'] ?? '') . ' al ' . ($filters['toDate'] ?? '');
-    $filterLabel = match((int)($filters['searchType'] ?? 1)) { 1=>'Placa',2=>'Usuario',3=>'Sucursal', default=>'Filtro' };
-    $isGrouped = (bool)($filters['groupMode'] ?? false);
+    $range = ($filters['fromDate'] ?: '—') . ' a ' . ($filters['toDate'] ?: '—');
+    $label = match((int)($filters['searchType'] ?? 1)) { 1 => 'Placa', 2 => 'Usuario', 3 => 'Sucursal', default => 'Búsqueda' };
+    $extra = trim((string)($filters['searchText'] ?? ''));
+    $groupMode = (bool) ($filters['groupMode'] ?? false);
 @endphp
 
 <table>
-    {{-- F1: Título --}}
+    {{-- Fila 1: Título + rango (mismo renglón) --}}
     <tr>
-        <td>{{ $title }}</td><td></td><td></td><td></td><td></td><td></td><td></td>
-        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-    </tr>
-
-    {{-- F2: Subtítulo --}}
-    <tr>
-        <td>
-            Rango: {{ $range }}
-            @if(!empty($filters['searchText'])) — {{ $filterLabel }}: “{{ $filters['searchText'] }}” @endif
-            — Modo: {{ $isGrouped ? 'Agrupado' : 'Detalle' }}
+        <td colspan="13" align="center">
+            SALIDAS | Rango: {{ $range }}
+            @if($extra !== '') | {{ $label }}: {{ $extra }} @endif
+            | Modo: {{ $groupMode ? 'Agrupado' : 'Detalle' }}
         </td>
-        @for($i=0;$i<13;$i++) <td></td> @endfor
     </tr>
 
-    {{-- F3: Blanco --}}
-    <tr>@for($i=0;$i<14;$i++) <td></td> @endfor</tr>
+    {{-- (QUITAMOS la línea de acento; no añadimos fila extra) --}}
 
-    {{-- ===== Sección 1: Registrados ===== --}}
-    {{-- F4: Título sección --}}
+    {{-- Sección 1: Vehículos registrados (continúa igual) --}}
     <tr>
-        <td>Salidas (vehículos registrados)</td>
-        @for($i=0;$i<13;$i++) <td></td> @endfor
+        <td colspan="13" align="center"><strong>Salidas (vehículos registrados)</strong></td>
     </tr>
+    {{-- ... resto tal como lo tienes ... --}}
 
-    {{-- F5: Header fila 1 (sin colspan) --}}
+    {{-- Fila 5: Encabezado 1 --}}
     <tr>
-        <td>N°</td><td>Placa</td><td>Fecha</td>
-        <td>Hora</td><td></td>
-        <td>Sucursal</td><td>Usuario</td>
-        <td>Empresa</td><td></td><td></td>
-        <td>Vehículo</td><td></td><td></td>
-        <td>Map</td>
+        <td rowspan="2" align="center"><strong>N°</strong></td>
+        <td rowspan="2" align="center"><strong>Placa</strong></td>
+        <td rowspan="2" align="center"><strong>Fecha</strong></td>
+
+        <td colspan="2" align="center"><strong>Hora</strong></td>
+
+        <td rowspan="2" align="center"><strong>Sucursal</strong></td>
+        <td rowspan="2" align="center"><strong>Usuario</strong></td>
+
+        <td colspan="3" align="center"><strong>Empresa</strong></td>
+        <td colspan="3" align="center"><strong>Vehículo</strong></td>
     </tr>
 
-    {{-- F6: Header fila 2 --}}
+    {{-- Fila 6: Encabezado 2 --}}
     <tr>
-        <td></td><td></td><td></td>
-        <td>Sal.</td><td>Frec.</td>
-        <td></td><td></td>
-        <td>Salida</td><td>T. S</td><td>S/</td>
-        <td>P.</td><td>PJ</td><td>S/</td>
-        <td></td>
+        <td align="center"><strong>Sal.</strong></td>
+        <td align="center"><strong>Frec.</strong></td>
+
+        <td align="center"><strong>Salida</strong></td>
+        <td align="center"><strong>T. S</strong></td>
+        <td align="center"><strong>S/</strong></td>
+
+        <td align="center"><strong>P.</strong></td>
+        <td align="center"><strong>PJ</strong></td>
+        <td align="center"><strong>S/</strong></td>
     </tr>
 
-    {{-- Body --}}
-    @php($n=1)
-    @forelse($rows as $r)
+    {{-- Cuerpo sección 1 (desde fila 7) --}}
+    @forelse($rows as $i => $d)
         <tr>
-            <td>{{ $n++ }}</td>
-            <td>{{ $r->plate }}</td>
-            <td>{{ $r->date ?? '' }}</td>
-            <td>{{ $isGrouped ? '-' : ($r->hour ?? '') }}</td>
-            <td>{{ $isGrouped ? '-' : ($r->freq ?? '0:00:00') }}</td>
-            <td>{{ $r->headquarter_name ?? '' }}</td>
-            <td>{{ $r->user_name ?? '' }}</td>
+            {{-- N° --}}
+            <td align="center">{{ $loop->iteration }}</td>
 
-            {{-- Empresa --}}
-            <td>{{ (int)($r->times ?? 0) }}</td>
-            <td>{{ (int)($r->times ?? 0) }}</td>
-            <td>{{ (float)($r->price ?? 0) }}</td>
+            {{-- Placa --}}
+            <td>{{ $d->plate ?? '-' }}</td>
 
-            {{-- Vehículo --}}
-            <td>{{ (int)($r->passenger ?? 0) }}</td>
-            <td>{{ (float)($r->passage ?? 0) }}</td>
-            <td>{{ (float)($r->total_pasaje ?? 0) }}</td>
-
-            {{-- Map --}}
-            <td>
-                @if(!empty($r->latitude) && !empty($r->longitude))
-                    https://maps.google.com/?q={{ $r->latitude }},{{ $r->longitude }}
+            {{-- Fecha --}}
+            <td align="center">
+                @if($groupMode)
+                    -
+                @else
+                    {{ \Illuminate\Support\Str::of($d->date ?? '')->substr(0,10) ?: '-' }}
                 @endif
             </td>
+
+            {{-- Hora Sal. --}}
+            <td align="center">
+                @if($groupMode) - @else {{ $d->hour ?? '-' }} @endif
+            </td>
+
+            {{-- Frecuencia --}}
+            <td align="center">
+                @if($groupMode) - @else {{ $d->freq ?? '0:00:00' }} @endif
+            </td>
+
+            {{-- Sucursal / Usuario --}}
+            <td align="center">{{ $d->headquarter_name ?? '-' }}</td>
+            <td align="center">{{ $d->user_name ?? '-' }}</td>
+
+            {{-- Empresa: Salida / T.S / S/ --}}
+            @php
+                $timesVal = (int) ($d->times ?? 0);
+                $priceVal = (float) ($d->price ?? 0);
+            @endphp
+            <td align="right">{{ number_format($timesVal) }}</td>
+            <td align="right">{{ number_format($timesVal) }}</td>
+            <td align="right">{{ number_format($priceVal, 2) }}</td>
+
+            {{-- Vehículo: P. / PJ / S/ --}}
+            @php
+                $passengers = (int) ($d->passenger ?? 0);
+                $passage    = (float) ($d->passage ?? 0);
+                $totPasaje  = (float) ($d->total_pasaje ?? 0);
+            @endphp
+            <td align="right">{{ number_format($passengers) }}</td>
+            <td align="right">{{ number_format($passage, 2) }}</td>
+            <td align="right">{{ number_format($totPasaje, 2) }}</td>
         </tr>
     @empty
+        {{-- Si no hay registros, deja una fila vacía (el AfterSheet se encarga del estilo) --}}
         <tr>
-            @for($i=0;$i<13;$i++) <td></td> @endfor
-            <td>Sin registros</td>
+            <td colspan="13" align="center">Sin datos</td>
         </tr>
     @endforelse
 
-    {{-- Totales registradas --}}
+    {{-- TFOOT sección 1 --}}
     <tr>
-        <td></td><td></td><td></td><td></td><td></td><td></td>
-        <td style="text-align:right">TOTAL</td>
-        <td>{{ (int)($totals->times_total ?? 0) }}</td>
-        <td>{{ (int)($totals->times_total ?? 0) }}</td>
-        <td>{{ (float)($totals->price_total ?? 0) }}</td>
-        <td>{{ (int)($totals->passengers_total ?? 0) }}</td>
-        <td>{{ (float)($totals->passage_total ?? 0) }}</td>
-        <td>{{ (float)($totals->total_pasaje_total ?? 0) }}</td>
-        <td></td>
+        <td colspan="7" align="right"><strong>TOTAL</strong></td>
+
+        <td align="right"><strong>{{ number_format((int) ($totals->times_total ?? 0)) }}</strong></td>
+        <td align="right"><strong>{{ number_format((int) ($totals->times_total ?? 0)) }}</strong></td>
+        <td align="right"><strong>{{ number_format((float) ($totals->price_total ?? 0), 2) }}</strong></td>
+
+        <td align="right"><strong>{{ number_format((int) ($totals->passengers_total ?? 0)) }}</strong></td>
+        <td align="right"><strong>{{ number_format((float) ($totals->passage_total ?? 0), 2) }}</strong></td>
+        <td align="right"><strong>{{ number_format((float) ($totals->total_pasaje_total ?? 0), 2) }}</strong></td>
     </tr>
 
-    {{-- Blanco --}}
-    <tr>@for($i=0;$i<14;$i++) <td></td> @endfor</tr>
+    {{-- separador --}}
+    <tr><td colspan="13"></td></tr>
 
-    {{-- ===== Sección 2: Apoyo ===== --}}
+    {{-- ================== SECCIÓN 2: VEHÍCULOS DE APOYO ================== --}}
     <tr>
-        <td>Vehículos de apoyo</td>
-        @for($i=0;$i<13;$i++) <td></td> @endfor
+        <td colspan="13" align="center"><strong>Vehículos de apoyo</strong></td>
     </tr>
 
-    {{-- Header 1 --}}
+    {{-- Encabezado 1 --}}
     <tr>
-        <td>N°</td><td>Placa</td><td>Fecha</td>
-        <td>Hora</td><td></td>
-        <td>Sucursal</td><td>Usuario</td>
-        <td>Empresa</td><td></td><td></td>
-        <td>Vehículo</td><td></td><td></td>
-        <td>Map</td>
+        <td rowspan="2" align="center"><strong>N°</strong></td>
+        <td rowspan="2" align="center"><strong>Placa</strong></td>
+        <td rowspan="2" align="center"><strong>Fecha</strong></td>
+
+        <td colspan="2" align="center"><strong>Hora</strong></td>
+
+        <td rowspan="2" align="center"><strong>Sucursal</strong></td>
+        <td rowspan="2" align="center"><strong>Usuario</strong></td>
+
+        <td colspan="3" align="center"><strong>Empresa</strong></td>
+        <td colspan="3" align="center"><strong>Vehículo</strong></td>
     </tr>
 
-    {{-- Header 2 --}}
+    {{-- Encabezado 2 --}}
     <tr>
-        <td></td><td></td><td></td>
-        <td>Sal.</td><td>Frec.</td>
-        <td></td><td></td>
-        <td>Salida</td><td>T. S</td><td>S/</td>
-        <td>P.</td><td>PJ</td><td>S/</td>
-        <td></td>
+        <td align="center"><strong>Sal.</strong></td>
+        <td align="center"><strong>Frec.</strong></td>
+
+        <td align="center"><strong>Salida</strong></td>
+        <td align="center"><strong>T. S</strong></td>
+        <td align="center"><strong>S/</strong></td>
+
+        <td align="center"><strong>P.</strong></td>
+        <td align="center"><strong>PJ</strong></td>
+        <td align="center"><strong>S/</strong></td>
     </tr>
 
-    {{-- Body apoyo --}}
-    @php($m=1)
-    @forelse($supportRows as $r)
+    {{-- Cuerpo sección 2 --}}
+    @forelse($supportRows as $i => $d)
         <tr>
-            <td>{{ $m++ }}</td>
-            <td>{{ $r->plate }}</td>
-            <td>{{ $r->date ?? '' }}</td>
-            <td>{{ $isGrouped ? '-' : ($r->hour ?? '') }}</td>
-            <td>{{ $isGrouped ? '-' : ($r->freq ?? '0:00:00') }}</td>
-            <td>{{ $r->headquarter_name ?? '' }}</td>
-            <td>{{ $r->user_name ?? '' }}</td>
+            <td align="center">{{ $loop->iteration }}</td>
+            <td>{{ $d->plate ?? '-' }}</td>
 
-            <td>{{ (int)($r->times ?? 0) }}</td>
-            <td>{{ (int)($r->times ?? 0) }}</td>
-            <td>{{ (float)($r->price ?? 0) }}</td>
-
-            <td>{{ (int)($r->passenger ?? 0) }}</td>
-            <td>{{ (float)($r->passage ?? 0) }}</td>
-            <td>{{ (float)($r->total_pasaje ?? 0) }}</td>
-
-            <td>
-                @if(!empty($r->latitude) && !empty($r->longitude))
-                    https://maps.google.com/?q={{ $r->latitude }},{{ $r->longitude }}
+            <td align="center">
+                @if($groupMode)
+                    -
+                @else
+                    {{ \Illuminate\Support\Str::of($d->date ?? '')->substr(0,10) ?: '-' }}
                 @endif
             </td>
+
+            <td align="center">@if($groupMode) - @else {{ $d->hour ?? '-' }} @endif</td>
+            <td align="center">@if($groupMode) - @else {{ $d->freq ?? '0:00:00' }} @endif</td>
+
+            <td align="center">{{ $d->headquarter_name ?? '-' }}</td>
+            <td align="center">{{ $d->user_name ?? '-' }}</td>
+
+            @php
+                $timesVal = (int) ($d->times ?? 0);
+                $priceVal = (float) ($d->price ?? 0);
+                $passengers = (int) ($d->passenger ?? 0);
+                $passage    = (float) ($d->passage ?? 0);
+                $totPasaje  = (float) ($d->total_pasaje ?? 0);
+            @endphp
+
+            <td align="right">{{ number_format($timesVal) }}</td>
+            <td align="right">{{ number_format($timesVal) }}</td>
+            <td align="right">{{ number_format($priceVal, 2) }}</td>
+
+            <td align="right">{{ number_format($passengers) }}</td>
+            <td align="right">{{ number_format($passage, 2) }}</td>
+            <td align="right">{{ number_format($totPasaje, 2) }}</td>
         </tr>
     @empty
         <tr>
-            @for($i=0;$i<13;$i++) <td></td> @endfor
-            <td>Sin registros</td>
+            <td colspan="13" align="center">Sin datos</td>
         </tr>
     @endforelse
 
-    {{-- Totales apoyo --}}
+    {{-- TFOOT sección 2 --}}
     <tr>
-        <td></td><td></td><td></td><td></td><td></td><td></td>
-        <td style="text-align:right">TOTAL</td>
-        <td>{{ (int)($supTotals->times_total ?? 0) }}</td>
-        <td>{{ (int)($supTotals->times_total ?? 0) }}</td>
-        <td>{{ (float)($supTotals->price_total ?? 0) }}</td>
-        <td>{{ (int)($supTotals->passengers_total ?? 0) }}</td>
-        <td>{{ (float)($supTotals->passage_total ?? 0) }}</td>
-        <td>{{ (float)($supTotals->total_pasaje_total ?? 0) }}</td>
-        <td></td>
+        <td colspan="7" align="right"><strong>TOTAL</strong></td>
+
+        <td align="right"><strong>{{ number_format((int) ($supTotals->times_total ?? 0)) }}</strong></td>
+        <td align="right"><strong>{{ number_format((int) ($supTotals->times_total ?? 0)) }}</strong></td>
+        <td align="right"><strong>{{ number_format((float) ($supTotals->price_total ?? 0), 2) }}</strong></td>
+
+        <td align="right"><strong>{{ number_format((int) ($supTotals->passengers_total ?? 0)) }}</strong></td>
+        <td align="right"><strong>{{ number_format((float) ($supTotals->passage_total ?? 0), 2) }}</strong></td>
+        <td align="right"><strong>{{ number_format((float) ($supTotals->total_pasaje_total ?? 0), 2) }}</strong></td>
     </tr>
 
-    {{-- Blanco --}}
-    <tr>@for($i=0;$i<14;$i++) <td></td> @endfor</tr>
+    {{-- separador --}}
+    <tr><td colspan="13"></td></tr>
 
-    {{-- Total General --}}
+    {{-- ================== TOTAL GENERAL ================== --}}
     <tr>
-        <td></td><td></td><td></td><td></td><td></td><td></td>
-        <td style="text-align:right">TOTAL GENERAL</td>
-        <td>{{ (int)($grand->times_total ?? 0) }}</td>
-        <td>{{ (int)($grand->times_total ?? 0) }}</td>
-        <td>{{ (float)($grand->price_total ?? 0) }}</td>
-        <td>{{ (int)($grand->passengers_total ?? 0) }}</td>
-        <td>{{ (float)($grand->passage_total ?? 0) }}</td>
-        <td>{{ (float)($grand->total_pasaje_total ?? 0) }}</td>
-        <td></td>
+        <td colspan="7" align="right"><strong>TOTAL GENERAL</strong></td>
+
+        <td align="right"><strong>{{ number_format((int) ($grand->times_total ?? 0)) }}</strong></td>
+        <td align="right"><strong>{{ number_format((int) ($grand->times_total ?? 0)) }}</strong></td>
+        <td align="right"><strong>{{ number_format((float) ($grand->price_total ?? 0), 2) }}</strong></td>
+
+        <td align="right"><strong>{{ number_format((int) ($grand->passengers_total ?? 0)) }}</strong></td>
+        <td align="right"><strong>{{ number_format((float) ($grand->passage_total ?? 0), 2) }}</strong></td>
+        <td align="right"><strong>{{ number_format((float) ($grand->total_pasaje_total ?? 0), 2) }}</strong></td>
     </tr>
 </table>

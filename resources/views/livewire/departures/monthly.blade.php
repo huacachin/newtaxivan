@@ -1,9 +1,35 @@
 @push('styles')
     <style>
+        /* Ajustes generales y compacidad */
         th, td { white-space: nowrap; vertical-align: middle; text-align: center; }
-        thead th.sticky { position: sticky; top: 0; z-index: 2; }
-        .table thead th { background:#0ea5e9; color:#fff; }
-        td.text-left, .text-start { text-align: left; }
+        .text-start { text-align: left !important; }
+
+        /* Contenedor para header sticky */
+        .tableFixHead thead th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background-color: #009BDC !important;
+            color: #fff !important;
+        }
+
+        /* Footer con mismo color que el thead */
+        .tableFixHead tfoot th,
+        .tableFixHead tfoot td {
+            background-color: #009BDC !important;
+            color: #fff !important;
+        }
+
+        /* Domingos */
+        .sunday { background-color: #ef4444 !important; color: #fff !important; }
+
+        /* Rayado sutil */
+        tbody tr:nth-child(even) td { background-color: #fafafa; }
+
+        /* Borde suave de toda la tabla */
+        .table-bordered > :not(caption) > * > * {
+            border-color: #cfd8dc !important;
+        }
     </style>
 @endpush
 
@@ -16,7 +42,7 @@
 @endphp
 
 <div class="container-fluid">
-    <!-- Header start -->
+    <!-- Header -->
     <div class="row">
         <div class="col-sm-6">
             <h4 class="main-title">Reporte mensual por placa – V.T</h4>
@@ -36,13 +62,11 @@
             </ul>
         </div>
     </div>
-    <!-- Header end -->
 
     <div class="row table-section">
-
-        <!-- Filtros start -->
+        <!-- Filtros -->
         <div class="col-12">
-            <div class="card">
+            <div class="card shadow-sm">
                 <div class="card-body pt-3 pb-3">
                     <div class="row g-3 align-items-end">
                         <div class="col-xl-3 col-md-6">
@@ -64,15 +88,14 @@
 
                         <div class="col-xl-3 col-md-6">
                             <label class="form-label d-block invisible">.</label>
-                            <a href="#" wire:click="export"
-                               class="btn btn-primary w-100">
+                            <a href="#" wire:click="export" class="btn btn-primary w-100">
                                 <i class="ti ti-file-analytics f-s-16"></i> Exportar
                             </a>
                         </div>
 
                         <div class="col-xl-3 col-md-6">
                             <label class="form-label d-block invisible">.</label>
-                            <a href="{{ route('departures.index') }}" class="btn btn-secondary w-100">
+                            <a href="{{ route('departures.index') }}" class="btn btn-primary w-100">
                                 <i class="ti ti-rotate-2 f-s-16"></i> Regresar
                             </a>
                         </div>
@@ -86,29 +109,27 @@
                 </div>
             </div>
         </div>
-        <!-- Filtros end -->
 
         <!-- Tabla mensual por placa -->
         <div class="col-xl-12">
-            <div class="card">
+            <div class="card shadow-sm">
                 <div class="card-header">
                     <h5 class="mb-0" style="color:#e11d48;">
                         REPORTE MENSUAL POR PLACA – V.T {{ $monthName }} {{ $year }}
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive">
-
+                    <div class="table-responsive tableFixHead">
                         <table class="table table-sm table-bordered table-striped table-hover">
                             <thead class="text-center">
                             <tr>
-                                <th class="sticky">Item</th>
-                                <th class="sticky">Placa</th>
+                                <th>Item</th>
+                                <th>Placa</th>
                                 @foreach($days as $d)
                                     @php $isSun = \Carbon\Carbon::create($year, $month, $d)->isSunday(); @endphp
-                                    <th class="sticky {{ $isSun ? 'bg-danger text-white' : '' }}">{{ $d }}</th>
+                                    <th class="{{ $isSun ? 'sunday' : '' }}">{{ $d }}</th>
                                 @endforeach
-                                <th class="sticky">T. Salida</th>
+                                <th>T. Salida</th>
                             </tr>
                             </thead>
 
@@ -126,14 +147,14 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="{{ 2 + count($days) + 1 }}" class="text-center">
+                                    <td colspan="{{ 2 + count($days) + 1 }}" class="text-center text-muted py-4">
                                         No se encontraron resultados
                                     </td>
                                 </tr>
                             @endforelse
                             </tbody>
 
-                            <tfoot class="table-primary text-center f-w-600">
+                            <tfoot class="text-center f-w-600">
                             <tr>
                                 <th colspan="2" class="text-start">Total Salidas</th>
                                 @foreach($days as $d)
@@ -150,11 +171,13 @@
                             </tr>
                             </tfoot>
                         </table>
-
                     </div>
+
+                    <small class="text-muted">
+                        * Encabezado y pie fijos al hacer scroll. Domingos resaltados en rojo.
+                    </small>
                 </div>
             </div>
         </div>
-        <!-- /Tabla -->
     </div>
 </div>

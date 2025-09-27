@@ -1,5 +1,38 @@
+@push('styles')
+    <style>
+        /* Encabezado y pie oscuros */
+        .tableFixHead thead th {
+            position: sticky; top: 0; z-index: 2;
+            background-color: #009BDC !important;
+            color: #fff !important;
+            vertical-align: middle;
+        }
+        .tableFixHead tfoot th,
+        .tableFixHead tfoot td {
+            background-color: #009BDC !important;
+            color: #fff !important;
+        }
+
+        /* Ajuste al mínimo del ancho: que no rompa líneas y se contraiga al contenido */
+        .tableFixHead table.table th,
+        .tableFixHead table.table td {
+            white-space: nowrap;
+        }
+
+        /* Zebra + hover suave */
+        .tableFixHead tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        /* Inputs con icono alineado */
+        .app-icon-form .ti { position: absolute; right: .75rem; top: 50%; transform: translateY(-50%); }
+
+        /* Botones iguales al resto del sistema (ya usas .btn-primary) */
+    </style>
+@endpush
+
 <div class="container-fluid">
-    <!-- Basic Table start -->
+    <!-- Header -->
     <div class="row">
         <div class="col-sm-6">
             <h4 class="main-title">Pagos</h4>
@@ -18,17 +51,16 @@
             </ul>
         </div>
     </div>
-    <!-- Basic Table end -->
+
     <div class="row table-section">
-        <!-- Simple Table start -->
+        <!-- Búsqueda / filtro -->
         <div class="col-12">
-            <div class="card">
+            <div class="card shadow-sm">
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-xl-9 col-md-6 mb-2 mb-md-0">
+                    <div class="row g-3">
+                        <div class="col-xl-9 col-md-6">
                             <label class="form-label">Buscar</label>
                             <form class="app-form app-icon-form" action="#">
-
                                 <div class="position-relative">
                                     <input type="search" class="form-control" placeholder="Buscar..."
                                            aria-label="Buscar" wire:model.live="search">
@@ -36,7 +68,7 @@
                                 </div>
                             </form>
                         </div>
-                        <div class="col-xl-3 col-md-4 mb-2 mb-md-0">
+                        <div class="col-xl-3 col-md-4">
                             <label class="form-label">Filtro</label>
                             <select class="form-select" aria-label="Selecciona item a filtrar" wire:model.live="filter">
                                 <option value="">Seleccione un filtro</option>
@@ -45,122 +77,114 @@
                                 <option value="3">Serie</option>
                             </select>
                         </div>
-
                     </div>
                 </div>
             </div>
         </div>
-        <!-- Simple Table end -->
-        <!-- Simple Table start -->
+
+        <!-- Filtros secundarios -->
         <div class="col-12">
-            <div class="card">
+            <div class="card shadow-sm">
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-xl-3 col-md-4 mb-2 mb-md-0">
+                    <div class="row g-3">
+                        <div class="col-xl-3 col-md-4">
                             <label class="form-label">Fecha Inicio</label>
                             <input type="date" class="form-control" wire:model.live="date_start">
                         </div>
-                        <div class="col-xl-3 col-md-4 mb-2 mb-md-0">
+                        <div class="col-xl-3 col-md-4">
                             <label class="form-label">Fecha Fin</label>
                             <input type="date" class="form-control" wire:model.live="date_end">
                         </div>
-                        <div class="col-xl-3 col-md-4 mb-2 mb-md-0">
+                        <div class="col-xl-3 col-md-4">
                             <label class="form-label">Sucursal</label>
-                            <select class="form-select" aria-label="Selecciona item a filtrar"
-                                    wire:model.live="headquarter_id">
+                            <select class="form-select" wire:model.live="headquarter_id" aria-label="Selecciona sucursal">
                                 <option value="">Todos</option>
                                 @foreach($headquarters as $h)
-
-                                    <option value="{{$h->id}}">{{$h->name}}</option>
-
+                                    <option value="{{ $h->id }}">{{ $h->name }}</option>
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-xl-3 col-md-4 mb-2 mb-md-0">
+                        <div class="col-xl-3 col-md-4">
                             <label class="form-label">Tipo</label>
-                            <select class="form-select" aria-label="Selecciona item a filtrar" wire:model.live="type">
+                            <select class="form-select" wire:model.live="type" aria-label="Selecciona tipo">
                                 <option value="">Todos</option>
                                 <option value="PAGO">Pago</option>
                                 <option value="DEUDA">Deuda</option>
-                                <option value="RETRASOr">Retraso</option>
+                                <option value="RETRASO">Retraso</option>
                             </select>
                         </div>
-
-
                     </div>
                 </div>
+
                 <div class="card-footer">
-                    <div class="row">
-                        <div class="col-xl-2 col-md-4 mb-2 mb-md-0">
-                            <button class="btn btn-primary w-100"><i class="ti ti-report-analytics f-s-16"></i>
-                                Diario
+                    <div class="row g-2">
+                        <div class="col-xl-2 col-md-4">
+                            <button class="btn btn-primary w-100" wire:click="daily">
+                                <i class="ti ti-report-analytics f-s-16"></i> Diario
                             </button>
                         </div>
-                        <div class="col-xl-2 col-md-4 mb-2 mb-md-0">
-                            <button class="btn btn-primary w-100"><i class="ti ti-report-analytics f-s-16"></i>
-                                Mensual
+                        <div class="col-xl-2 col-md-4">
+                            <button class="btn btn-primary w-100" wire:click="monthly">
+                                <i class="ti ti-report-analytics f-s-16"></i> Mensual
                             </button>
                         </div>
-                        <div class="col-xl-2 col-md-4 mb-2 mb-md-0">
-                            <button class="btn btn-primary w-100"><i class="ti ti-report-analytics f-s-16"></i>
-                                Estadis.
+                        <div class="col-xl-2 col-md-4">
+                            <button class="btn btn-primary w-100" wire:click="stats">
+                                <i class="ti ti-report-analytics f-s-16"></i> Estadis.
                             </button>
                         </div>
-                        <div class="col-xl-2 col-md-4 mb-2 mb-md-0">
-                            <button class="btn btn-primary w-100" wire:click="export"><i
-                                    class="ti ti-file-analytics f-s-16"></i>
-                                Exportar
+                        <div class="col-xl-2 col-md-4">
+                            <button class="btn btn-primary w-100" wire:click="export">
+                                <i class="ti ti-file-analytics f-s-16"></i> Exportar
                             </button>
                         </div>
-                        <div class="col-xl-2 col-md-4 mb-2 mb-md-0">
-                            <button class="btn btn-primary w-100" wire:click="openAddModal"><i
-                                    class="ti ti-square-plus f-s-16"></i>
-                                Nuevo
+                        <div class="col-xl-2 col-md-4">
+                            <button class="btn btn-primary w-100" wire:click="openAddModal">
+                                <i class="ti ti-square-plus f-s-16"></i> Nuevo
                             </button>
                         </div>
-                        <div class="col-xl-2 col-md-4 mb-2 mb-md-0">
-                            <button class="btn btn-primary w-100" id="down"><i
-                                    class="ti ti-square-chevrons-down f-s-17"></i>
+                        <div class="col-xl-2 col-md-4">
+                            <button class="btn btn-primary w-100" id="down">
+                                <i class="ti ti-square-chevrons-down f-s-17"></i>
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <!-- Simple Table end -->
-        <!-- Simple Table start -->
-        <div class="col-xl-12">
-            <div class="card">
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-sm table-bordered table-striped table-hover">
 
-                            <thead class="table-primary text-center">
+        <!-- Tabla -->
+        <div class="col-xl-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="table-responsive tableFixHead">
+                        <table class="table table-sm table-bordered table-striped table-hover align-middle">
+                            <thead class="text-center">
                             <tr>
-                                <th scope="col">Acción</th>
-                                <th scope="col">Id</th>
-                                <th scope="col">Placa</th>
-                                <th scope="col">Serie</th>
-                                <th scope="col">Fecha Registro</th>
-                                <th scope="col">Fecha Pago</th>
-                                <th scope="col">Hora</th>
-                                <th scope="col">Tipo</th>
-                                <th scope="col">Sucursal</th>
-                                <th scope="col">Usuario</th>
-                                <th scope="col">S/.</th>
-                                <th scope="col">Map</th>
+                                <th>Acción</th>
+                                <th>Ítem</th>
+                                <th>Placa</th>
+                                <th>Serie</th>
+                                <th>Fecha Registro</th>
+                                <th>Fecha Pago</th>
+                                <th>Hora</th>
+                                <th>Tipo</th>
+                                <th>Sucursal</th>
+                                <th>Usuario</th>
+                                <th>S/.</th>
+                                <th>Map</th>
                             </tr>
                             </thead>
 
                             <tbody class="text-center">
                             @forelse($payments as $p)
                                 <tr>
-                                    <td width="10">
+                                    <td>
                                         <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
                                            wire:click="openEditModal({{ $p->id }})"></i>
                                     </td>
                                     <td>{{ $loop->iteration }}</td>
-                                    <td>{{ $p->legacy_plate }}</td>
+                                    <td class="text-nowrap">{{ $p->legacy_plate }}</td>
                                     <td>{{ $p->serie }}</td>
                                     <td>{{ optional($p->date_register)->format('Y-m-d') }}</td>
                                     <td>{{ optional($p->date_payment)->format('Y-m-d') }}</td>
@@ -168,11 +192,11 @@
                                     <td>{{ $p->type }}</td>
                                     <td>{{ $p->headquarter->name ?? '-' }}</td>
                                     <td>{{ $p->user->name ?? '-' }}</td>
-                                    <td>{{ number_format($p->amount, 2) }}</td>
+                                    <td class="text-end">{{ number_format($p->amount, 2) }}</td>
                                     <td>
                                         @if(!empty($p->latitude) && !empty($p->longitude))
                                             <a href="https://maps.google.com/?q={{ $p->latitude }},{{ $p->longitude }}"
-                                               target="_blank" class="underline">🌍</a>
+                                               target="_blank" class="text-decoration-underline">🌍</a>
                                         @else
                                             -
                                         @endif
@@ -180,24 +204,30 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="12">No se encontrarón resultados</td>
+                                    <td colspan="12" class="py-4 text-muted">No se encontraron resultados</td>
                                 </tr>
                             @endforelse
                             </tbody>
-                            <tfoot class="table-light">
+
+                            <tfoot class="text-center fw-semibold">
                             <tr>
-                                {{-- Hay 12 columnas en total; la 11 es el monto.
-                                     Sumamos las 10 primeras como título, luego la del total y una vacía para "Map". --}}
                                 <th colspan="10" class="text-end">Total general:</th>
-                                <th class="text-center">{{ number_format($total_general, 2) }}</th>
+                                <th class="text-end">{{ number_format($total_general, 2) }}</th>
                                 <th></th>
                             </tr>
                             </tfoot>
                         </table>
                     </div>
+
+                    <div class="mt-2" wire:loading.delay>
+                        <span class="text-muted">
+                            <span class="spinner-border spinner-border-sm"></span> Cargando…
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
+
         {{-- Modal: Agregar Pago --}}
         <div class="modal fade" id="modalAddPayment" aria-hidden="true" tabindex="-1" data-bs-backdrop="static" wire:ignore.self>
             <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
@@ -218,6 +248,7 @@
                         @endif
 
                         <div class="row">
+                            {{-- === Campos iguales a tu versión original === --}}
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label for="pay_plate" class="form-label">Placa</label>
@@ -251,8 +282,7 @@
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label class="form-label">Fecha Registro</label>
-                                    <input type="date" class="form-control"
-                                           wire:model.live="date_register" readonly>
+                                    <input type="date" class="form-control" wire:model.live="date_register" readonly>
                                     @error('date_register') <span class="text-danger">{{ $message }}</span> @enderror
                                 </div>
                             </div>
@@ -297,11 +327,9 @@
                             <div class="col-md-8">
                                 <div class="mb-3">
                                     <label class="form-label">Monto (S/)</label>
-
                                     <input type="number" step="0.01" min="0.01" class="form-control"
                                            wire:model.defer="amount"
                                            @if($type_form !== 'DEUDA' && !is_null($detected_cost)) readonly @endif>
-
                                     @error('amount') <span class="text-danger">{{ $message }}</span> @enderror
 
                                     @if($type_form === 'DEUDA')
@@ -335,7 +363,7 @@
             </div>
         </div>
 
-        {{-- Modal: Editar Pago --}}
+        {{-- Modal: Editar Pago (idéntico a tu versión, conservando estilos) --}}
         <div class="modal fade" id="modalEditPayment" aria-hidden="true" tabindex="-1" data-bs-backdrop="static" wire:ignore.self>
             <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
                 <div class="modal-content">
@@ -355,6 +383,7 @@
                         @endif
 
                         <div class="row">
+                            {{-- mismos campos/validaciones que tu original --}}
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label for="pay_plate_edit" class="form-label">Placa</label>
@@ -388,8 +417,7 @@
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label class="form-label">Fecha Registro</label>
-                                    <input type="date" class="form-control"
-                                           wire:model.live="date_register" readonly>
+                                    <input type="date" class="form-control" wire:model.live="date_register" readonly>
                                     @error('date_register') <span class="text-danger">{{ $message }}</span> @enderror
                                 </div>
                             </div>
@@ -434,11 +462,9 @@
                             <div class="col-md-8">
                                 <div class="mb-3">
                                     <label class="form-label">Monto (S/)</label>
-
                                     <input type="number" step="0.01" min="0.01" class="form-control"
                                            wire:model.defer="amount"
                                            @if($type_form !== 'DEUDA' && !is_null($detected_cost)) readonly @endif>
-
                                     @error('amount') <span class="text-danger">{{ $message }}</span> @enderror
 
                                     @if($type_form === 'DEUDA')
@@ -472,36 +498,27 @@
                 </div>
             </div>
         </div>
-
-
     </div>
 </div>
+
 @push('scripts')
     <script>
         (function () {
             function setGeoOnComponent(lat, lng) {
-                // Busca el componente Livewire más cercano al modal abierto
-                const opened = document.querySelector('.modal.show');
-                if (!opened) return;
-                const compEl = opened.closest('[wire\\:id]');
-                if (!compEl) return;
-
-                const comp = Livewire.find(compEl.getAttribute('wire:id'));
-                if (!comp) return;
-
+                const opened = document.querySelector('.modal.show'); if (!opened) return;
+                const compEl = opened.closest('[wire\\:id]'); if (!compEl) return;
+                const comp   = Livewire.find(compEl.getAttribute('wire:id')); if (!comp) return;
                 comp.set('latitude',  Number(lat.toFixed(6)));
                 comp.set('longitude', Number(lng.toFixed(6)));
             }
-
             function getGeoAndSet() {
                 if (!navigator.geolocation) return;
                 navigator.geolocation.getCurrentPosition(
                     (pos) => setGeoOnComponent(pos.coords.latitude, pos.coords.longitude),
-                    () => {}, // error silenciado
+                    () => {},
                     { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
                 );
             }
-
             document.addEventListener('shown.bs.modal', function (e) {
                 const id = e.target?.id || '';
                 if (id === 'modalAddPayment' || id === 'modalEditPayment') getGeoAndSet();
@@ -515,4 +532,3 @@
         });
     </script>
 @endpush
-

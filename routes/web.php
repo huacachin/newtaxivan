@@ -59,6 +59,8 @@ Route::middleware('auth')->group(function () {
     // Pagos
     Route::get('payments', [PaymentController::class,'index'])->name('payments.index');
     Route::get('payments/daily', [PaymentController::class,'daily'])->name('payments.daily');
+    Route::get('payments/monthly', [PaymentController::class,'monthly'])->name('payments.monthly');
+    Route::get('payments/stats', [PaymentController::class,'stats'])->name('payments.stats');
 
     // Deudas
     Route::get('debts-per-days', [DebtController::class,'debtPerDays'])->name('debts.debt-per-days');
@@ -108,6 +110,15 @@ Route::middleware('auth')->group(function () {
         ->name('exports.departures-rmp-report');
     Route::get('/exports/departures-stats-report', [DepartureController::class, 'exportStats'])
         ->name('exports.departures-stats-report');
+
+    Route::get('/exports/payments-monthly', [PaymentController::class, 'exportMonthly'])
+        ->name('exports.payments-monthly');
+
+    Route::get('/exports/payments-daily', [PaymentController::class, 'exportDaily'])
+        ->name('exports.payments-daily');
+
+    Route::get('/exports/payments-stats', [PaymentController::class, 'exportStats'])
+        ->name('exports.payments-stats');
 
 
 });

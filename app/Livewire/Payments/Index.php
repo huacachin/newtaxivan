@@ -698,4 +698,25 @@ class Index extends Component
                 : '';
         }
     }
+
+    public function daily()
+    {
+        $route = route('payments.daily');
+
+        $this->dispatch('url-open', ["url" => $route]);
+    }
+
+    public function monthly()
+    {
+        $route = route('payments.monthly');
+
+        $this->dispatch('url-open', ["url" => $route]);
+    }
+
+    public function stats()
+    {
+        $route = route('payments.stats');
+
+        $this->dispatch('url-open', ["url" => $route]);
+    }
 }

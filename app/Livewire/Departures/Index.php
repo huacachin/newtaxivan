@@ -512,6 +512,12 @@ class Index extends Component
         $this->dispatch('url-open',["url" => $route]);
     }
 
+    public function reportStats(){
+        $route = route('departures.stats' );
+
+        $this->dispatch('url-open',["url" => $route]);
+    }
+
     public function export(){
         $route = route('exports.departures',
             [   "searchType" => $this->searchType,

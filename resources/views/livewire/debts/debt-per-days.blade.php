@@ -1,55 +1,72 @@
+
+
 @push('styles')
     <style>
-        /* ===== Compacto base ===== */
-        .compact-table-xxs{
-            font-size:11px; line-height:1.05; table-layout:fixed;
-        }
-        .compact-table-xxs th, .compact-table-xxs td{
-            padding:.18rem .25rem; white-space:nowrap; vertical-align:middle; text-align:center;
-        }
-        .compact-table-xxs thead th.sticky{ position:sticky; top:0; z-index:2; background:#e9f4ff; }
-
-        /* ===== Scroll horizontal siempre disponible ===== */
-        .x-scroll{ overflow-x:auto; overflow-y:visible; }
-
-        /* ===== Anchos compactados para fijas ===== */
-        .col-item{ width:40px; }
-        .col-cod{  width:50px; }
-        .col-plate{width:82px;}      /* ↓ antes 90 */
-        .col-cond{ width:66px; }
-        .col-tot{  width:72px;}      /* ↓ antes 100 */
-
-        /* ===== Días: dales más espacio (variable por viewport) ===== */
-        :root{ --day-w: 48px; }              /* default: cómodo en 14" */
-        @media (max-width: 1366px){ :root{ --day-w: 44px; } }  /* pantallas más chicas */
-        @media (min-width: 1600px){ :root{ --day-w: 52px; } }  /* monitores grandes */
-        .day-col{ width:var(--day-w); min-width:var(--day-w); }
 
         /* ===== Estados de celda ===== */
-        .cell-paid{  background:#ffe4e6; color:#065f46; font-weight:700; } /* P */
-        .cell-freq{  background:#ffe4e6; color:#991b1b; font-weight:700; } /* #salidas */
-        .cell-nopay{ background:#ffe4e6; color:#374151; }                  /* NT / exento */
-        .sun{ background:#ffe4e6; }                                        /* domingo */
+        .cell-paid{  background:#dcfce7; color:#166534; font-weight:700; } /* Pagado (P) */
+        .cell-freq{  background:#fef3c7; color:#92400e; font-weight:700; } /* #salidas */
+        .cell-nopay{ background:#e5e7eb; color:#374151; }                  /* Sin pago/Exento */
+
+        /* ===== Domingos en rojo (columna completa) ===== */
+        .sun-head{ background:#ef4444 !important; color:#fff !important; }
+        .sun-col{  background:#fee2e2 !important; } /* cuerpo de la columna domingo */
+
+        /* Encabezado y pie oscuros */
+        .tableFixHead thead th{
+            position: sticky; top: 0; z-index: 3;
+            background-color:#009BDC !important; color:#fff !important;
+            vertical-align: middle; text-align:center;
+        }
+        .tableFixHead tfoot th,
+        .tableFixHead tfoot td{
+            position: sticky; bottom: 0; z-index: 2;
+            background-color:#009BDC !important; color:#fff !important;
+        }
+
+        /* Columnas sticky (Item y Placa) — SIEMPRE BLANCAS en el cuerpo */
+        .sticky-col{  position:sticky; left:0;    z-index:4; }
+        .sticky-col-2{position:sticky; left:40px; z-index:4; }
+
+        /* Fondo BLANCO en tbody para que no transparente la “zebra” */
+        .tableFixHead tbody td.sticky-col,
+        .tableFixHead tbody td.sticky-col-2{
+            background-color:#fff !important;
+            background-clip: padding-box;
+            box-shadow: 1px 0 0 rgba(0,0,0,.06) inset;
+        }
+
+        /* Mantener fondo oscuro en thead para celdas sticky */
+        .tableFixHead thead th.sticky-col,
+        .tableFixHead thead th.sticky-col-2{
+            background-color:#009BDC !important; color:#fff !important;
+        }
+
+        /* (Opcional) si usas sticky en el footer, que también permanezca oscuro */
+        .tableFixHead tfoot td.sticky-col,
+        .tableFixHead tfoot td.sticky-col-2{
+            background-color:#009BDC !important; color:#fff !important;
+            box-shadow: none;
+        }
     </style>
 @endpush
+
+
 <div class="container-fluid">
 
     {{-- Header --}}
     <div class="row">
         <div class="col-sm-6">
             <h4 class="main-title">Deuda por días</h4>
+            <small class="text-muted">Resumen diario por placa</small>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
                 <li class="d-flex">
                     <i class="ti ti-settings f-s-16"></i>
-                    <a href="#" class="f-s-14 d-flex gap-2">
-                        <span class="d-none d-md-block">Caja</span>
-                    </a>
+                    <a href="#" class="f-s-14 d-flex gap-2"><span class="d-none d-md-block">Caja</span></a>
                 </li>
-                <li class="d-flex active">
-                    <a href="#" class="f-s-14">Deuda por días</a>
-                </li>
+                <li class="d-flex active"><a href="#" class="f-s-14">Deuda por días</a></li>
             </ul>
         </div>
     </div>
@@ -58,7 +75,7 @@
 
         {{-- Filtros / Controles --}}
         <div class="col-12">
-            <div class="card">
+            <div class="card shadow-sm">
                 <div class="card-body">
                     <div class="row g-2 align-items-end">
                         <div class="col-xl-4 col-md-4">
@@ -89,13 +106,14 @@
                                 <option value="EX5">EX5</option>
                             </select>
                         </div>
-
                     </div>
                 </div>
             </div>
         </div>
+
+        {{-- Exportes --}}
         <div class="col-12 mt-2">
-            <div class="card">
+            <div class="card shadow-sm">
                 <div class="card-body">
                     <div class="row justify-content-end g-2">
                         <div class="col-sm-3 col-md-2">
@@ -115,50 +133,40 @@
 
         {{-- Tabla --}}
         <div class="col-xl-12">
-            <div class="card">
+            <div class="card shadow-sm">
                 <div class="card-body table-responsive">
-
-                    {{-- estilos puntuales de la grilla --}}
-                    <style>
-                        th, td { white-space: nowrap; text-align: center; vertical-align: middle; }
-                        thead th.sticky { position: sticky; top: 0; background: var(--bs-primary-bg-subtle); z-index: 1; }
-                        /* Celdas estado */
-                        .cell-paid  { background: #ecfdf5; color:#065f46; font-weight:700; } /* Pagado (P) */
-                        .cell-freq  { background: #fff7ed; color:#9a3412; font-weight:700; } /* #salidas */
-                        .cell-nopay { background: #f3f4f6; color:#374151; }                  /* sin pago / exento */
-                        .cell-sun   { background: #f1f5f9 !important; }                      /* cabecera domingo */
-                    </style>
-
-                    <div class="table-responsive x-scroll">
-                        <table class="table table-sm table-bordered table-hover compact-table-xxs">
-                            <thead>
-                            <tr class="table-primary">
-                                <th class="sticky col-item p-0">ITEM</th>
-                                <th class="sticky col-cod  p-0">COD</th>
-                                <th class="sticky col-plate p-0">PLACA</th>
-                                <th class="sticky col-cond  p-0">CONDICIÓN</th>
+                    <div class="table-responsive x-scroll tableFixHead">
+                        <table class="table table-sm table-bordered table-hover compact-table-xxs align-middle">
+                            <thead class="text-center">
+                            <tr>
+                                <th class="sticky-col col-item">ITEM</th>
+                                <th class="col-cod">COD</th>
+                                <th class="sticky-col-2 col-plate">PLACA</th>
+                                <th class="col-cond">CONDICIÓN</th>
 
                                 @foreach($days as $d)
-                                    <th class="sticky p-0 day-col {{ $d['isSunday'] ? 'sun' : '' }}">{{ $d['n'] }}</th>
+                                    <th class="day-col {{ $d['isSunday'] ? 'sun-head' : '' }}">{{ $d['n'] }}</th>
                                 @endforeach
 
-                                <th class="sticky col-tot">PAGOS (D)</th>
-                                <th class="sticky col-tot">PAGOS (S/)</th>
-                                <th class="sticky col-tot">DEUDA (D)</th>
-                                <th class="sticky col-tot">DEUDA (S/)</th>
+                                <th class="col-tot">PAGOS (D)</th>
+                                <th class="col-tot">PAGOS (S/)</th>
+                                <th class="col-tot">DEUDA (D)</th>
+                                <th class="col-tot">DEUDA (S/)</th>
                             </tr>
                             </thead>
 
                             <tbody class="text-center">
                             @foreach($rows as $r)
                                 <tr>
-                                    <td>{{ $r['item'] }}</td>
+                                    <td class="sticky-col">{{ $r['item'] }}</td>
                                     <td>{{ $r['cod'] ?? '' }}</td>
-                                    <td><strong>{{ $r['plate'] }}</strong></td>
+                                    <td class="sticky-col-2"><strong>{{ $r['plate'] }}</strong></td>
                                     <td>{{ $r['condition'] }}</td>
 
-                                    @foreach($r['cells'] as $c)
-                                        <td class="day-col {{ 'cell-' . ($c['class'] ?? '') }}">{{ $c['txt'] }}</td>
+                                    @foreach($r['cells'] as $i => $c)
+                                        <td class="day-col {{ 'cell-' . ($c['class'] ?? '') }} {{ $days[$i]['isSunday'] ? 'sun-col' : '' }}">
+                                            {{ $c['txt'] }}
+                                        </td>
                                     @endforeach
 
                                     <td><strong>{{ $r['paid_days'] }}</strong></td>
@@ -169,25 +177,28 @@
                             @endforeach
                             </tbody>
 
-                            <tfoot class="table-primary">
+                            <tfoot class="text-center fw-semibold">
                             <tr>
-                                <td colspan="4" class="text-end"><strong>TOTAL</strong></td>
+                                <td class="sticky-col"></td>
+                                <td></td>
+                                <td class="sticky-col-2 text-end" colspan="2">TOTAL</td>
+
                                 @foreach($days as $d)
-                                    <td class="day-col"><strong>{{ number_format($dayTotals[$d['d']]['paid_amount'] ?? 0, 2) }}</strong></td>
+                                    <td class="day-col">{{ number_format($dayTotals[$d['d']]['paid_amount'] ?? 0, 2) }}</td>
                                 @endforeach
-                                <td><strong>{{ $summary['paid_days'] ?? 0 }}</strong></td>
-                                <td><strong>{{ number_format($summary['paid_amount'] ?? 0, 2) }}</strong></td>
-                                <td><strong>{{ $summary['debt_days'] ?? 0 }}</strong></td>
-                                <td><strong>{{ number_format($summary['debt_amount'] ?? 0, 2) }}</strong></td>
+
+                                <td>{{ $summary['paid_days'] ?? 0 }}</td>
+                                <td class="text-end">{{ number_format($summary['paid_amount'] ?? 0, 2) }}</td>
+                                <td>{{ $summary['debt_days'] ?? 0 }}</td>
+                                <td class="text-end">{{ number_format($summary['debt_amount'] ?? 0, 2) }}</td>
                             </tr>
                             </tfoot>
                         </table>
                     </div>
 
-
                     <div class="mt-2 small text-muted">
                         <div>En el pie por día se muestra la <b>suma de costos del día (S/)</b> de todos los vehículos que pagaron (P) ese día.</div>
-                        <div>Domingos no suman; “DÍAS DEUDA” cuenta celdas con número (salidas) y sin pago.</div>
+                        <div>Domingos resaltados en rojo; “DEUDA (D)” cuenta celdas con #salidas y sin pago.</div>
                     </div>
                 </div>
             </div>

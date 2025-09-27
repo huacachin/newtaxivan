@@ -1,33 +1,41 @@
-{{-- resources/views/livewire/debts/monthly-detail.blade.php --}}
 @push('styles')
     <style>
-        /* Tabla ultra compacta (línea de diseño de Payments / Deudas) */
-        .compact-table-xxs {
-            font-size: 11px;
-            line-height: 1.05;
-            table-layout: fixed;
+        /* ===== Encabezado y pie oscuros pegajosos (modelo Payments) ===== */
+        .tableFixHead thead,
+        .tableFixHead thead th{
+            background-color:#009BDC !important;
+            color:#fff !important;
         }
-        .compact-table-xxs th,
-        .compact-table-xxs td {
-            padding: .18rem .25rem;
-            white-space: nowrap;
+        .tableFixHead thead th{
+            position: sticky; top: 0; z-index: 2;
             vertical-align: middle;
-            text-align: center;
         }
-        .chip {
-            display:inline-block;
-            padding:.25rem .5rem;
-            border-radius:999px;
-            background:#f8fafc;
-            border:1px solid #e5e7eb;
-            font-size:.875rem;
-            font-weight:600;
+        .tableFixHead tfoot,
+        .tableFixHead tfoot th,
+        .tableFixHead tfoot td{
+            background-color:#009BDC !important;
+            color:#fff !important;
+        }
+
+        /* Compacta y no cortar líneas */
+        .tableFixHead table.table th,
+        .tableFixHead table.table td{
+            white-space: nowrap;
+        }
+
+        /* Hover suave */
+        .tableFixHead tbody tr:hover{ background:#f8fafc; }
+
+        /* Utilidades */
+        .text-end{ text-align:right !important; }
+        .chip{
+            display:inline-block; padding:.25rem .5rem; border-radius:999px;
+            background:#f8fafc; border:1px solid #e5e7eb; font-size:.875rem; font-weight:600;
         }
     </style>
 @endpush
 
 <div class="container-fluid">
-
     {{-- Header --}}
     <div class="row">
         <div class="col-sm-6">
@@ -37,16 +45,10 @@
             <ul class="breadcrumb breadcrumb-start float-sm-end">
                 <li class="d-flex">
                     <i class="ti ti-settings f-s-16"></i>
-                    <a href="#" class="f-s-14 d-flex gap-2">
-                        <span class="d-none d-md-block">Caja</span>
-                    </a>
+                    <a href="#" class="f-s-14 d-flex gap-2"><span class="d-none d-md-block">Caja</span></a>
                 </li>
-                <li class="d-flex">
-                    <a href="#" class="f-s-14">Deuda mensual</a>
-                </li>
-                <li class="d-flex active">
-                    <a href="#" class="f-s-14">Detalle</a>
-                </li>
+                <li class="d-flex"><a href="#" class="f-s-14">Deuda mensual</a></li>
+                <li class="d-flex active"><a href="#" class="f-s-14">Detalle</a></li>
             </ul>
         </div>
     </div>
@@ -83,7 +85,7 @@
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Deuda Total (S/)</label>
-                        <input type="text" class="form-control" value="{{ number_format($total,2) }}" readonly style="background:#eee;">
+                        <input type="text" class="form-control text-end" value="{{ number_format($total,2) }}" readonly style="background:#eee;">
                     </div>
 
                     <div class="col-12">
@@ -96,16 +98,16 @@
                     <div class="col-md-3">
                         <label class="form-label">Exonerado (S/)</label>
                         <input type="number" step="0.01"
-                               class="form-control @error('exonerateInput') is-invalid @enderror"
+                               class="form-control text-end @error('exonerateInput') is-invalid @enderror"
                                wire:model.live.debounce.400ms="exonerateInput">
                         @error('exonerateInput') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    {{-- Oculto (como legacy) --}}
+                    {{-- Oculto (legacy) --}}
                     <div class="col-md-3 d-none">
                         <label class="form-label">Amortización (S/)</label>
                         <input type="number" step="0.01"
-                               class="form-control @error('amortizeInput') is-invalid @enderror"
+                               class="form-control text-end @error('amortizeInput') is-invalid @enderror"
                                wire:model.live.debounce.400ms="amortizeInput">
                         @error('amortizeInput') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
@@ -127,14 +129,12 @@
                             <span class="chip">Pendiente: S/ {{ number_format($pending,2) }}</span>
                         </div>
                     </div>
-
-                    {{-- Botonera en card aparte (homologado) --}}
                 </div>
             </form>
         </div>
     </div>
 
-    {{-- Card: Acciones --}}
+    {{-- Card: Acciones (homologado) --}}
     <div class="card mb-3">
         <div class="card-body">
             <div class="row justify-content-end g-2">
@@ -144,7 +144,7 @@
                     </button>
                 </div>
                 <div class="col-xl-2 col-md-3">
-                    <a class="btn btn-outline-secondary w-100" href="{{ url()->previous() }}">
+                    <a class="btn btn-primary w-100" href="{{ url()->previous() }}">
                         <i class="ti ti-arrow-left f-s-16"></i> Regresar
                     </a>
                 </div>
@@ -157,17 +157,17 @@
         <div class="card-body">
             <h6 class="mb-2">Detalles</h6>
 
-            <div class="table-responsive">
-                <table class="table table-sm table-bordered table-striped align-middle compact-table-xxs">
-                    <thead class="table-primary text-center">
+            <div class="table-responsive tableFixHead">
+                <table class="table table-sm table-bordered table-striped table-hover align-middle">
+                    <thead class="text-center">
                     <tr>
+                        <th>Acción</th>
                         <th>ID</th>
                         <th>Fecha</th>
                         <th class="text-start">Detalle</th>
                         <th>Exonerado (S/)</th>
                         <th>Amortización (S/)</th>
                         <th>Usuario</th>
-                        <th>Opciones</th>
                     </tr>
                     </thead>
 
@@ -184,19 +184,20 @@
 
                     @forelse($details as $row)
                         <tr wire:loading.remove class="text-center">
-                            <td>{{ $row['id'] }}</td>
-                            <td>{{ $row['date'] }}</td>
-                            <td class="text-start">{{ $row['detail'] }}</td>
-                            <td>{{ $row['exonerated'] }}</td>
-                            <td>{{ $row['amortized'] }}</td>
-                            <td>{{ $row['user'] }}</td>
                             <td>
-                                <button class="btn btn-sm btn-outline-danger"
+                                {{-- Eliminar --}}
+                                <button class="btn btn-sm btn-danger ms-1"
                                         onclick="if(!confirm('¿Eliminar este detalle?')) return false;"
                                         wire:click="deleteDetail({{ $row['id'] }})">
                                     Eliminar
                                 </button>
                             </td>
+                            <td>{{ $row['id'] }}</td>
+                            <td>{{ $row['date'] }}</td>
+                            <td class="text-start">{{ $row['detail'] }}</td>
+                            <td class="text-end">{{ number_format($row['exonerated'], 2) }}</td>
+                            <td class="text-end">{{ number_format($row['amortized'], 2) }}</td>
+                            <td>{{ $row['user'] }}</td>
                         </tr>
                     @empty
                         <tr wire:loading.remove>
@@ -204,19 +205,23 @@
                         </tr>
                     @endforelse
                     </tbody>
-                    <tfoot class="table-primary fw-bold compact-table-xxs">
+
+                    <tfoot class="text-center fw-semibold">
                     <tr>
-                        <td colspan="3" class="text-end">Total general</td>
-                        <td class="text-center">{{ number_format($sumExonerated, 2) }}</td>
-                        <td class="text-center">{{ number_format($sumAmortized, 2) }}</td>
-                        <td colspan="2" class="text-center">
-                            Pendiente: S/ {{ number_format($pending, 2) }}
-                        </td>
+                        <th colspan="4" class="text-end">Total general:</th>
+                        <th class="text-end">{{ number_format($sumExonerated, 2) }}</th>
+                        <th class="text-end">{{ number_format($sumAmortized, 2) }}</th>
+                        <th>Pendiente: S/ {{ number_format($pending, 2) }}</th>
                     </tr>
                     </tfoot>
                 </table>
             </div>
 
+            <div class="mt-2" wire:loading.delay>
+                <span class="text-muted">
+                    <span class="spinner-border spinner-border-sm"></span> Cargando…
+                </span>
+            </div>
         </div>
     </div>
 </div>

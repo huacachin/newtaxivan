@@ -11,6 +11,7 @@ use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\RichText\RichText;
 
 class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
 {
@@ -58,90 +59,122 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
             AfterSheet::class => function (AfterSheet $e) {
                 $s = $e->sheet->getDelegate();
 
-                // Paleta
-                $bgTitle   = 'FF1F4E79'; // azul oscuro
-                $bgHeader  = 'FFD9E1F2'; // celeste claro
-                $bgTotal   = 'FFE2EFDA'; // verde claro
-                $fontWhite = 'FFFFFFFF';
+                // Paleta (ajusta a gusto)
+                $titleDark  = '2874A6'; // thead/tfoot/headers
+                $supportBg  = 'FFE5E7EB';
+                $borderSoft = 'FFCFD8DC';
+                $fontWhite  = 'FFFFFFFF';
 
-                // Filas (coinciden EXACTO con la vista)
-                $rTitle = 1; // A1..N1
-                $rSub   = 2; // A2..N2
-                $rBlank = 3;
+                // ========= Fila 1: Título + rango (RichText) =========
+                // Construir el texto completo
+                $range = ($this->fromDate ?: '—') . ' a ' . ($this->toDate ?: '—');
+                $label = match ((int)$this->searchType) {
+                    1 => 'Placa', 2 => 'Usuario', 3 => 'Sucursal', default => 'Búsqueda'
+                };
+                $extra = trim((string)($this->searchText ?? ''));
+                $mode  = $this->groupMode ? 'Agrupado' : 'Detalle';
 
+                $suffix = " | Rango: {$range}";
+                if ($extra !== '') $suffix .= " | {$label}: {$extra}";
+                $suffix .= " | Modo: {$mode}";
+
+                // RichText: "SALIDAS" en grande y el resto pequeño
+                $rt = new RichText();
+                $r1 = $rt->createTextRun('SALIDAS');
+                $r1->getFont()->setBold(true)->setSize(14)->getColor()->setARGB($fontWhite);
+                $r2 = $rt->createTextRun($suffix);
+                $r2->getFont()->setSize(10)->getColor()->setARGB($fontWhite);
+
+                // Asignar y estilizar la celda A1..M1
+                $s->mergeCells('A1:M1');
+                $s->setCellValue('A1', $rt);
+                $s->getStyle('A1:M1')->applyFromArray([
+                    'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$titleDark]],
+                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER, 'vertical'=>Alignment::VERTICAL_CENTER],
+                ]);
+                $s->getRowDimension(1)->setRowHeight(24);
+
+                // ========= Reindex: SIN línea de acento ni subtítulo =========
                 // Sección 1
-                $rSec1Title  = 4; // A4..N4
-                $rSec1Hdr1   = 5; // A5..N5
-                $rSec1Hdr2   = 6; // A6..N6
-                $rSec1Body1  = 7; // inicio cuerpo
-                $rSec1BodyN  = $rSec1Body1 + max(1, $this->countExisting) - 1;
-                $rSec1Total  = $rSec1BodyN + 1;
-                $rBlank2     = $rSec1Total + 1;
+                $rSec1Title = 2;      // "Salidas (vehículos registrados)"
+                $rSec1Hdr1  = 3;
+                $rSec1Hdr2  = 4;
+                $rSec1Body1 = 5;
+                $rSec1BodyN = $rSec1Body1 + max(1, $this->countExisting) - 1;
+                $rSec1Total = $rSec1BodyN + 1;
+                $rBlank2    = $rSec1Total + 1;
 
                 // Sección 2
-                $rSec2Title  = $rBlank2 + 1;
-                $rSec2Hdr1   = $rSec2Title + 1;
-                $rSec2Hdr2   = $rSec2Title + 2;
-                $rSec2Body1  = $rSec2Hdr2 + 1;
-                $rSec2BodyN  = $rSec2Body1 + max(1, $this->countSupport) - 1;
-                $rSec2Total  = $rSec2BodyN + 1;
-                $rBlank3     = $rSec2Total + 1;
+                $rSec2Title = $rBlank2 + 1;
+                $rSec2Hdr1  = $rSec2Title + 1;
+                $rSec2Hdr2  = $rSec2Title + 2;
+                $rSec2Body1 = $rSec2Hdr2 + 1;
+                $rSec2BodyN = $rSec2Body1 + max(1, $this->countSupport) - 1;
+                $rSec2Total = $rSec2BodyN + 1;
+                $rBlank3    = $rSec2Total + 1;
 
-                // Total general
-                $rGrand      = $rBlank3 + 1;
+                $rGrand     = $rBlank3 + 1;
+                $lastRow    = $rGrand;
 
-                // Última fila usada
-                $lastRow     = $rGrand;
-
-                // Merges de título y subtítulo
-                foreach ([$rTitle,$rSub,$rSec1Title,$rSec2Title] as $r) {
-                    $s->mergeCells("A{$r}:N{$r}");
+                // Merges de títulos de sección
+                foreach ([$rSec1Title, $rSec2Title] as $r) {
+                    $s->mergeCells("A{$r}:M{$r}");
                 }
 
-                // Encabezados (2 filas) — secciones 1 y 2
+                // Encabezados 2 filas (merge de grupos)
                 $this->mergeHeader($s, $rSec1Hdr1, $rSec1Hdr2);
                 $this->mergeHeader($s, $rSec2Hdr1, $rSec2Hdr2);
 
-                // Estilos: título
-                $s->getStyle("A{$rTitle}:N{$rTitle}")->applyFromArray([
-                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$bgTitle]],
-                    'font' => ['bold'=>true,'size'=>14,'color'=>['argb'=>$fontWhite]],
-                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
-                ]);
-                // Subtítulo
-                $s->getStyle("A{$rSub}:N{$rSub}")
-                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                // Títulos de sección (mismo color que cabeceras)
+                foreach ([$rSec1Title, $rSec2Title] as $rtx) {
+                    $s->getStyle("A{$rtx}:M{$rtx}")->applyFromArray([
+                        'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$titleDark]],
+                        'font' => ['bold'=>true, 'color'=>['argb'=>$fontWhite]],
+                        'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER, 'vertical'=>Alignment::VERTICAL_CENTER],
+                    ]);
+                    $s->getRowDimension($rtx)->setRowHeight(20);
+                }
 
-                // Headers
-                foreach ([[$rSec1Hdr1,$rSec1Hdr2],[$rSec2Hdr1,$rSec2Hdr2]] as [$h1,$h2]) {
-                    $s->getStyle("A{$h1}:N{$h2}")->applyFromArray([
-                        'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$bgHeader]],
-                        'font' => ['bold'=>true],
-                        'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER,'wrapText'=>true],
+                // THEAD (2 filas) + TFOOT con mismo color
+                foreach ([[$rSec1Hdr1,$rSec1Hdr2,$rSec1Total], [$rSec2Hdr1,$rSec2Hdr2,$rSec2Total]] as [$h1,$h2,$ft]) {
+                    $s->getStyle("A{$h1}:M{$h2}")->applyFromArray([
+                        'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$titleDark]],
+                        'font' => ['bold'=>true, 'color'=>['argb'=>$fontWhite]],
+                        'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER, 'vertical'=>Alignment::VERTICAL_CENTER, 'wrapText'=>true],
                     ]);
                     $s->getRowDimension($h1)->setRowHeight(22);
                     $s->getRowDimension($h2)->setRowHeight(20);
-                }
 
-                // Totales y total general (banda)
-                foreach ([$rSec1Total, $rSec2Total, $rGrand] as $rt) {
-                    $s->getStyle("A{$rt}:N{$rt}")->applyFromArray([
-                        'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$bgTotal]],
-                        'font' => ['bold'=>true],
+                    $s->getStyle("A{$ft}:M{$ft}")->applyFromArray([
+                        'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$titleDark]],
+                        'font' => ['bold'=>true, 'color'=>['argb'=>$fontWhite]],
                     ]);
                 }
 
-                // Bordes finos a todo el rango
-                $s->getStyle("A1:N{$lastRow}")->applyFromArray([
+                // Cuerpo “Vehículos de apoyo” (gris)
+                if ($this->countSupport > 0) {
+                    $s->getStyle("A{$rSec2Body1}:M{$rSec2BodyN}")->applyFromArray([
+                        'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$supportBg]],
+                    ]);
+                }
+
+                // Banda TOTAL GENERAL
+                $s->getStyle("A{$rGrand}:M{$rGrand}")->applyFromArray([
+                    'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$titleDark]],
+                    'font' => ['bold'=>true, 'color'=>['argb'=>$fontWhite]],
+                ]);
+
+                // Bordes finos
+                $s->getStyle("A1:M{$lastRow}")->applyFromArray([
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => Border::BORDER_THIN,
-                            'color' => ['argb' => 'FFBFBFBF']
+                            'color' => ['argb' => $borderSoft]
                         ]
                     ]
                 ]);
 
-                // Alineación derecha para números (H..M)
+                // Alineación numérica (H..M)
                 foreach (['H','I','J','K','L','M'] as $col) {
                     $s->getStyle("{$col}{$rSec1Body1}:{$col}{$rSec1Total}")
                         ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
@@ -151,22 +184,17 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
                         ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
                 }
 
-                // Congelar arriba de la primera cabecera
-                $s->freezePane("A7");
-
-                // Opcional: Autofiltro en la cabecera de la sección 1
-                // $s->setAutoFilter("A{$rSec1Hdr2}:N{$rSec1Hdr2}");
+                // Congelar arriba del cuerpo sección 1
+                $s->freezePane("A{$rSec1Body1}");
             },
         ];
     }
 
     private function mergeHeader($sheet, int $r1, int $r2): void
     {
-        // Vertical (A,B,C,F,G,N ocupan 2 filas)
-        foreach (['A','B','C','F','G','N'] as $col) {
+        foreach (['A','B','C','F','G'] as $col) {
             $sheet->mergeCells("{$col}{$r1}:{$col}{$r2}");
         }
-        // Grupos horizontales
         $sheet->mergeCells("D{$r1}:E{$r1}"); // Hora
         $sheet->mergeCells("H{$r1}:J{$r1}"); // Empresa
         $sheet->mergeCells("K{$r1}:M{$r1}"); // Vehículo
@@ -183,8 +211,8 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
             ->where('v.status', 'active');
 
         if ($this->fromDate && $this->toDate)       $q->whereBetween('d.date', [$this->fromDate, $this->toDate]);
-        elseif ($this->fromDate)                     $q->whereDate('d.date', '>=', $this->fromDate);
-        elseif ($this->toDate)                       $q->whereDate('d.date', '<=', $this->toDate);
+        elseif ($this->fromDate)                    $q->whereDate('d.date', '>=', $this->fromDate);
+        elseif ($this->toDate)                      $q->whereDate('d.date', '<=', $this->toDate);
 
         $term = trim((string)($this->searchText ?? ''));
         if ($term !== '') {
@@ -208,8 +236,8 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
             ->where('d.is_support', 1);
 
         if ($this->fromDate && $this->toDate)       $q->whereBetween('d.date', [$this->fromDate, $this->toDate]);
-        elseif ($this->fromDate)                     $q->whereDate('d.date', '>=', $this->fromDate);
-        elseif ($this->toDate)                       $q->whereDate('d.date', '<=', $this->toDate);
+        elseif ($this->fromDate)                    $q->whereDate('d.date', '>=', $this->fromDate);
+        elseif ($this->toDate)                      $q->whereDate('d.date', '<=', $this->toDate);
 
         $term = trim((string)($this->searchText ?? ''));
         if ($term !== '') {
@@ -247,7 +275,6 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
             return [$agg, $tot];
         }
 
-        // Detalle con frecuencia
         $inner = $this->baseExisting()
             ->selectRaw("
                 d.id, d.date, d.hour, d.times, d.price, d.passenger, d.passage,

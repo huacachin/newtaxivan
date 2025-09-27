@@ -10,36 +10,34 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
-use Maatwebsite\Excel\Events\AfterSheet;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class DeparturesMonthly implements FromArray, WithHeadings, WithStyles, WithEvents, ShouldAutoSize
 {
     public function __construct(
         protected int $year,
         protected int $month,
-        protected string $dateColumn = 'date',      // cambia si usas otro nombre de columna
-        protected ?string $countColumn = null       // si existe (p.ej. 'laps'), se suma; si no, COUNT(*)
+        protected string $dateColumn = 'date',
+        protected ?string $countColumn = null
     ) {}
 
     protected int   $daysInMonth = 0;
     protected array $days = [];
-    protected array $rows = [];                 // [ [plate, daily[1..n], total], ... ]
-    protected array $totalPerDay = [];
-    protected array $vehiclesWorkedPerDay = [];
-    protected array $sundayCols = [];           // índices (1-based) de columnas de domingo
+    protected array $rows = [];                 // [ vid => ['plate'=>..., 'daily'=>[1..n], 'total'=>int] ]
+    protected array $totalPerDay = [];          // suma por día
+    protected array $vehiclesWorkedPerDay = []; // # vehículos con salida por día
 
-    /* ----------------- Datos → headings / array ----------------- */
+    /* ----------------- Headings / Data ----------------- */
 
     public function headings(): array
     {
         $this->prepare();
         $head = ['Item', 'Placa'];
-        for ($d=1; $d <= $this->daysInMonth; $d++) $head[] = (string)$d;
+        for ($d = 1; $d <= $this->daysInMonth; $d++) $head[] = (string)$d;
         $head[] = 'T. Salida';
         return $head;
     }
@@ -53,174 +51,206 @@ class DeparturesMonthly implements FromArray, WithHeadings, WithStyles, WithEven
         foreach ($this->rows as $r) {
             $i++;
             $row = [$i, $r['plate']];
-            for ($d=1; $d <= $this->daysInMonth; $d++) $row[] = (int)($r['daily'][$d] ?? 0);
+            for ($d = 1; $d <= $this->daysInMonth; $d++) {
+                $row[] = (int)($r['daily'][$d] ?? 0);
+            }
             $row[] = (int)$r['total'];
             $data[] = $row;
         }
 
         if (!empty($data)) {
-            $data[] = array_fill(0, 2 + $this->daysInMonth + 1, ''); // separador
+            // separador visual
+            $data[] = array_fill(0, 2 + $this->daysInMonth + 1, '');
         }
 
         // Totales: “Total Salidas”
         $rowA = ['', 'Total Salidas'];
-        for ($d=1; $d <= $this->daysInMonth; $d++) $rowA[] = (int)($this->totalPerDay[$d] ?? 0);
+        for ($d = 1; $d <= $this->daysInMonth; $d++) $rowA[] = (int)($this->totalPerDay[$d] ?? 0);
         $rowA[] = array_sum($this->totalPerDay);
         $data[] = $rowA;
 
         // Totales: “Total V.T. (vehículos con salida)”
         $rowB = ['', 'Total V.T. (vehículos con salida)'];
-        for ($d=1; $d <= $this->daysInMonth; $d++) $rowB[] = (int)($this->vehiclesWorkedPerDay[$d] ?? 0);
+        for ($d = 1; $d <= $this->daysInMonth; $d++) $rowB[] = (int)($this->vehiclesWorkedPerDay[$d] ?? 0);
         $rowB[] = array_sum($this->vehiclesWorkedPerDay);
         $data[] = $rowB;
 
         return $data;
     }
 
-    /* ----------------- Estilos ----------------- */
+    /* ----------------- Styles básicos ----------------- */
 
     public function styles(Worksheet $sheet)
     {
-        // La cabecera quedará en fila 2 (inserto un título en fila 1 en AfterSheet)
+        // Con AfterSheet insertamos 2 filas (título y línea de diseño), por lo que:
+        // Encabezado real => fila 3. Datos => desde fila 4.
         $lastRow = $sheet->getHighestRow();
         $lastCol = $sheet->getHighestColumn();
 
         // Header bold + centrado
-        $sheet->getStyle("A2:{$lastCol}2")->getFont()->setBold(true);
-        $sheet->getStyle("A2:{$lastCol}2")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle("A3:{$lastCol}3")->getFont()->setBold(true);
+        $sheet->getStyle("A3:{$lastCol}3")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-        // Números centrados
-        $sheet->getStyle("A3:{$lastCol}{$lastRow}")
+        // Celdas (datos) centradas por defecto
+        $sheet->getStyle("A4:{$lastCol}{$lastRow}")
             ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-        // Placa alineada izquierda
-        $sheet->getStyle('B3:B'.$lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+        // Placa alineada a la izquierda
+        $sheet->getStyle("B4:B{$lastRow}")
+            ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
 
         return [];
     }
 
+    /* ----------------- AfterSheet: diseño avanzado ----------------- */
+
     public function registerEvents(): array
     {
         return [
-            AfterSheet::class => function(AfterSheet $e) {
+            \Maatwebsite\Excel\Events\AfterSheet::class => function ($e) {
                 $sheet = $e->sheet->getDelegate();
 
-                // Insertar título (fila 1)
-                $sheet->insertNewRowBefore(1, 1);
+                // Insertar 2 filas: 1) título, 2) línea de diseño
+                $sheet->insertNewRowBefore(1, 2);
                 $lastCol = $sheet->getHighestColumn();
                 $lastRow = $sheet->getHighestRow();
 
-                $title = 'REPORTE MENSUAL POR PLACA – V.T '.strtoupper($this->monthName()).' '.$this->year;
+                /* 1) Banda de título (fila 1) */
+                $title = 'REPORTE MENSUAL POR PLACA – V.T ' . strtoupper($this->monthName()) . ' ' . $this->year;
                 $sheet->setCellValue('A1', $title);
                 $sheet->mergeCells("A1:{$lastCol}1");
                 $sheet->getRowDimension(1)->setRowHeight(28);
                 $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14)->getColor()->setRGB('FFFFFF');
                 $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 $sheet->getStyle('A1')->getFill()->setFillType(Fill::FILL_SOLID)
-                    ->getStartColor()->setRGB('1F2937'); // banda oscura
+                    ->getStartColor()->setRGB('23242F'); // banda oscura
 
-                // Cabecera (fila 2) con color
+                /* 2) Línea de diseño (fila 2) */
+                $sheet->mergeCells("A2:{$lastCol}2");
+                $sheet->getRowDimension(2)->setRowHeight(6);
                 $sheet->getStyle("A2:{$lastCol}2")->getFill()->setFillType(Fill::FILL_SOLID)
-                    ->getStartColor()->setRGB('0EA5E9'); // celeste
-                $sheet->getStyle("A2:{$lastCol}2")->getFont()->getColor()->setRGB('FFFFFF');
+                    ->getStartColor()->setRGB('E11D48'); // acento
 
-                // AutoFilter + Freeze: 2 primeras columnas y encabezado
-                $sheet->setAutoFilter("A2:{$lastCol}2");
-                $sheet->freezePane('C3');
+                // Encabezado (fila 3) con color oscuro y texto blanco
+                $sheet->getStyle("A3:{$lastCol}3")->getFill()->setFillType(Fill::FILL_SOLID)
+                    ->getStartColor()->setRGB('23242F');
+                $sheet->getStyle("A3:{$lastCol}3")->getFont()->getColor()->setRGB('FFFFFF');
+                $sheet->getRowDimension(3)->setRowHeight(20);
 
-                // Anchos
+                // Congelar: encabezado + Item/Placa (dos primeras columnas)
+                $sheet->freezePane('C4');
+
+                // AutoFilter: SOLO en Item y Placa (sin filtros en días)
+                $sheet->setAutoFilter('A3:B3');
+
+                // Anchos de columnas
                 $sheet->getColumnDimension('A')->setWidth(8);   // Item
                 $sheet->getColumnDimension('B')->setWidth(18);  // Placa
 
-                // Bordes finos
-                $sheet->getStyle("A2:{$lastCol}{$lastRow}")
+                // Bordes finos para todo (encabezado + datos + totales)
+                $sheet->getStyle("A3:{$lastCol}{$lastRow}")
                     ->getBorders()->getAllBorders()
                     ->setBorderStyle(Border::BORDER_THIN)
                     ->getColor()->setRGB('D0D7E2');
 
-                // Cebra para columnas de días (C..penúltima)
-                $firstDayColIdx = 3; // A=1,B=2, días desde C
+                // Zebra para columnas de días (C .. penúltima); total queda fuera
+                $firstDayColIdx = 3; // A=1, B=2, días desde C
                 $lastColIdx     = Coordinate::columnIndexFromString($lastCol);
                 $totalColIdx    = $lastColIdx; // última = T. Salida
-                for ($c = $firstDayColIdx; $c <= $totalColIdx; $c++) {
+
+                // Rango de datos (sin totales): desde fila 4 hasta fin de registros
+                $dataRows     = count($this->rows);
+                $dataStartRow = 4;
+                $dataEndRow   = $dataRows > 0 ? ($dataStartRow + $dataRows - 1) : 3;
+
+                for ($c = $firstDayColIdx; $c < $totalColIdx; $c++) {
                     $col = Coordinate::stringFromColumnIndex($c);
-                    if ($c < $totalColIdx && (($c - $firstDayColIdx) % 2 === 1)) {
-                        $sheet->getStyle("{$col}3:{$col}{$lastRow}")
+
+                    // zebra: alterna gris suave
+                    if ((($c - $firstDayColIdx) % 2) === 1 && $dataRows > 0) {
+                        $sheet->getStyle("{$col}{$dataStartRow}:{$col}{$dataEndRow}")
                             ->getFill()->setFillType(Fill::FILL_SOLID)
                             ->getStartColor()->setRGB('F8FAFC');
                     }
-                    $sheet->getStyle("{$col}3:{$col}{$lastRow}")
+                    // formato entero para días
+                    if ($dataRows > 0) {
+                        $sheet->getStyle("{$col}{$dataStartRow}:{$col}{$dataEndRow}")
+                            ->getNumberFormat()->setFormatCode('0');
+                    }
+                }
+
+                // Total (última col) entero también en datos
+                $totalColLetter = Coordinate::stringFromColumnIndex($totalColIdx);
+                if ($dataRows > 0) {
+                    $sheet->getStyle("{$totalColLetter}{$dataStartRow}:{$totalColLetter}{$dataEndRow}")
                         ->getNumberFormat()->setFormatCode('0');
                 }
 
-                // Domingos en rojo (cabecera + columna completa)
-                foreach ($this->sundayCols as $colIdx) {
-                    $col = Coordinate::stringFromColumnIndex($colIdx);
-                    $sheet->getStyle("{$col}2:{$col}{$lastRow}")
+                // Filas de totales (dos últimas). Si hay separador, empiezan después.
+                $sep          = $dataRows ? 1 : 0; // agregamos una fila en blanco como separador
+                $startTotals  = $dataStartRow + $dataRows + $sep;
+                if ($dataRows === 0) $startTotals = 4;
+
+                // Footer con el MISMO color del header (#009BDC) y letras blancas
+                $footer1 = $startTotals;
+                $footer2 = $startTotals + 1;
+
+                foreach ([$footer1, $footer2] as $fr) {
+                    $sheet->getStyle("A{$fr}:{$lastCol}{$fr}")
                         ->getFill()->setFillType(Fill::FILL_SOLID)
-                        ->getStartColor()->setRGB('EF4444');
-                    $sheet->getStyle("{$col}2:{$col}{$lastRow}")
+                        ->getStartColor()->setRGB('23242F');
+                    $sheet->getStyle("A{$fr}:{$lastCol}{$fr}")
                         ->getFont()->getColor()->setRGB('FFFFFF');
+                    $sheet->getStyle("A{$fr}:{$lastCol}{$fr}")
+                        ->getFont()->setBold(true);
                 }
 
-                // Filas de totales (últimas 2)
-                // Detecta dónde empiezan (después de data + 1 sep)
-                $dataRows = count($this->rows);
-                $startTotals = 3 + $dataRows + ($dataRows ? 1 : 0);
-                if ($dataRows === 0) $startTotals = 3;
+                // Alineaciones de pie
+                $sheet->getStyle("A{$footer1}:B{$footer2}")
+                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+                $sheet->getStyle("C{$footer1}:{$lastCol}{$footer2}")
+                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-                // Total Salidas → azul claro
-                $sheet->getStyle("A{$startTotals}:{$lastCol}{$startTotals}")
-                    ->getFill()->setFillType(Fill::FILL_SOLID)
-                    ->getStartColor()->setRGB('E0F2FE');
-                $sheet->getStyle("A{$startTotals}:{$lastCol}{$startTotals}")
-                    ->getFont()->setBold(true);
-
-                // Total V.T. → lila claro
-                $sheet->getStyle("A".($startTotals+1).":{$lastCol}".($startTotals+1))
-                    ->getFill()->setFillType(Fill::FILL_SOLID)
-                    ->getStartColor()->setRGB('EDE9FE');
-                $sheet->getStyle("A".($startTotals+1).":{$lastCol}".($startTotals+1))
-                    ->getFont()->setBold(true);
+                // Formato entero para totales
+                $sheet->getStyle("C{$footer1}:{$lastCol}{$footer2}")
+                    ->getNumberFormat()->setFormatCode('0');
             }
         ];
     }
 
-    /* ----------------- Helpers & datos ----------------- */
+    /* ----------------- Datos & Helpers ----------------- */
 
     protected function prepare(): void
     {
         if ($this->daysInMonth > 0) return;
 
-        // Ajustes de columnas disponibles
+        // Asegurar columnas existentes
         if (!Schema::hasColumn('departures', $this->dateColumn)) {
             $this->dateColumn = 'date';
         }
         if ($this->countColumn === null) {
-            foreach (['num','quantity','laps','vueltas','count','total_turns'] as $c) {
+            foreach (['laps','num','quantity','vueltas','count','total_turns'] as $c) {
                 if (Schema::hasColumn('departures', $c)) { $this->countColumn = $c; break; }
             }
         }
 
         $start = Carbon::create($this->year, $this->month, 1)->startOfDay();
         $end   = (clone $start)->endOfMonth();
-        $this->daysInMonth = (int)$start->daysInMonth;
+        $this->daysInMonth = (int) $start->daysInMonth;
         $this->days        = range(1, $this->daysInMonth);
 
-        // columnas: A=1,B=2, días desde C=3
-        $firstDayColIdx = 3;
-        foreach ($this->days as $d) {
-            if ($start->copy()->day($d)->isSunday()) {
-                $this->sundayCols[] = $firstDayColIdx + ($d - 1);
-            }
+        // 1) Vehículos ACTIVOS en orden
+        $orderCol = Schema::hasColumn('vehicles', 'sort_order')
+            ? 'sort_order'
+            : (Schema::hasColumn('vehicles', 'order') ? 'order'
+                : (Schema::hasColumn('vehicles', 'orden') ? 'orden'
+                    : (Schema::hasColumn('vehicles','plate') ? 'plate' : 'id')));
+
+        $vehQ = DB::table('vehicles')->select('id', 'plate');
+        if (Schema::hasColumn('vehicles', 'status')) {
+            $vehQ->where('status', 'active');
         }
-
-        // 1) Traer vehículos en orden
-        $orderCol = Schema::hasColumn('vehicles', 'order')
-            ? 'order'
-            : (Schema::hasColumn('vehicles', 'orden') ? 'orden' : 'plate');
-
-        $vehicles = DB::table('vehicles')->select('id','plate')->orderBy($orderCol)->get();
+        $vehicles = $vehQ->orderBy($orderCol)->get();
 
         $this->rows = [];
         foreach ($vehicles as $v) {
@@ -231,8 +261,8 @@ class DeparturesMonthly implements FromArray, WithHeadings, WithStyles, WithEven
             ];
         }
 
-        // 2) Agregados de departures (COUNT(*) o SUM(col))
-        $dateCol = $this->dateColumn;
+        // 2) Agregados de departures (COUNT(*) o SUM(col)) dentro del mes
+        $dateCol   = $this->dateColumn;
         $selectRaw = $this->countColumn
             ? "vehicle_id, DAY($dateCol) as d, SUM({$this->countColumn}) as s"
             : "vehicle_id, DAY($dateCol) as d, COUNT(*) as s";
@@ -244,17 +274,17 @@ class DeparturesMonthly implements FromArray, WithHeadings, WithStyles, WithEven
             ->get();
 
         foreach ($aggs as $r) {
-            $vid = (int)$r->vehicle_id;
-            $d   = (int)$r->d;
-            $s   = (float)$r->s;
-            if (!isset($this->rows[$vid])) continue;
+            $vid = (int) $r->vehicle_id;
+            $d   = (int) $r->d;
+            $s   = (float) $r->s;
+            if (!isset($this->rows[$vid])) continue; // ignora vehículos no activos
 
-            // ÷2 con redondeo half-up (igual que en tu componente)
+            // ÷2 con redondeo half-up (misma lógica del módulo)
             $halved = (int) round($s / 2, 0, PHP_ROUND_HALF_UP);
             $this->rows[$vid]['daily'][$d] = $halved;
         }
 
-        // 3) Totales por fila y por día + vehículos trabajados
+        // 3) Totales por fila / día
         $this->totalPerDay = array_fill(1, $this->daysInMonth, 0);
         foreach ($this->rows as &$row) {
             $row['total'] = array_sum($row['daily']);
@@ -262,8 +292,9 @@ class DeparturesMonthly implements FromArray, WithHeadings, WithStyles, WithEven
         }
         unset($row);
 
+        // 4) Vehículos con salida por día (#daily > 0)
         $this->vehiclesWorkedPerDay = array_fill(1, $this->daysInMonth, 0);
-        for ($d=1; $d <= $this->daysInMonth; $d++) {
+        for ($d = 1; $d <= $this->daysInMonth; $d++) {
             $worked = 0;
             foreach ($this->rows as $row) if (($row['daily'][$d] ?? 0) > 0) $worked++;
             $this->vehiclesWorkedPerDay[$d] = $worked;

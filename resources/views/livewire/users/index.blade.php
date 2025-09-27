@@ -1,32 +1,64 @@
+{{-- resources/views/livewire/users/index.blade.php --}}
+@push('styles')
+    <style>
+        /* ===== Estilo matriz (igual a Pagos/Vehículos) ===== */
+        .tableFixHead thead th{
+            position: sticky; top: 0; z-index: 3;
+            background-color:#009BDC !important; color:#fff !important;
+            vertical-align: middle; text-align:center;
+        }
+        .tableFixHead tfoot th,
+        .tableFixHead tfoot td{
+            position: sticky; bottom: 0; z-index: 2;
+            background-color:#009BDC !important; color:#fff !important;
+        }
+
+        /* Zebra suave y ajustes */
+        .tableFixHead table.table th,
+        .tableFixHead table.table td{ white-space: nowrap; vertical-align: middle; }
+        tbody tr:nth-child(even) td{ background-color:#f9fafb; }
+
+        /* Sticky cols (Id + Nombres) */
+        :root{ --w-id:72px; --w-name:220px; }
+        .tableFixHead .sticky-col   { position: sticky; left: 0;             z-index: 4; width: var(--w-id); }
+        .tableFixHead .sticky-col-2 { position: sticky; left: var(--w-id);   z-index: 4; width: var(--w-name); }
+        .tableFixHead tbody td.sticky-col,
+        .tableFixHead tbody td.sticky-col-2{
+            background:#fff !important; background-clip: padding-box;
+            box-shadow: 1px 0 0 rgba(0,0,0,.06) inset;
+        }
+
+        .num{ text-align: right; }
+        .text-start{ text-align: left !important; }
+    </style>
+@endpush
+
 <div class="container-fluid">
-    <!-- Basic Table start -->
+    <!-- Header -->
     <div class="row">
         <div class="col-sm-6">
             <h4 class="main-title">Usuarios</h4>
+            <small class="text-muted">Listado general</small>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
                 <li class="d-flex">
                     <i class="ti ti-settings f-s-16"></i>
-                    <a href="#" class="f-s-14 d-flex gap-2">
-                        <span class="d-none d-md-block">Configuración</span>
-                    </a>
+                    <a href="#" class="f-s-14 d-flex gap-2"><span class="d-none d-md-block">Configuración</span></a>
                 </li>
-                <li class="d-flex active">
-                    <a href="#" class="f-s-14">Usuarios</a>
-                </li>
+                <li class="d-flex active"><a href="#" class="f-s-14">Usuarios</a></li>
             </ul>
         </div>
     </div>
-    <!-- Basic Table end -->
+
     <div class="row table-section">
-        <!-- Simple Table start -->
+        <!-- Filtros -->
         <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-10 mb-2 mb-md-0">
-                            <form class="app-form app-icon-form" action="#">
+            <div class="card shadow-sm">
+                <div class="card-body pt-3">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-10">
+                            <form class="app-form app-icon-form" action="#" onsubmit="return false;">
                                 <div class="position-relative">
                                     <input type="search" class="form-control" placeholder="Buscar..."
                                            aria-label="Buscar" wire:model.live="search">
@@ -34,112 +66,133 @@
                                 </div>
                             </form>
                         </div>
-                        <div class="col-md-2 mb-2 mb-md-0">
-                            <button class="btn btn-primary w-100" wire:click="openAddModal"><i class="ti ti-square-plus f-s-17"></i>
-                                Nuevo
+                        <div class="col-md-2 d-flex justify-content-md-end">
+                            <button class="btn btn-primary w-100" wire:click="openAddModal">
+                                <i class="ti ti-square-plus f-s-17"></i> Nuevo
                             </button>
                         </div>
+                    </div>
 
+                    <div class="mt-2" wire:loading.delay>
+                        <span class="text-muted"><span class="spinner-border spinner-border-sm"></span> Cargando…</span>
                     </div>
                 </div>
             </div>
         </div>
-        <!-- Simple Table end -->
-        <!-- Simple Table start -->
+
+        <!-- Tabla -->
         <div class="col-xl-12">
-            <div class="card">
+            <div class="card shadow-sm">
                 <div class="card-header">
-                    <h5>Usuarios</h5>
+                    <h5 class="mb-0" style="color:#e11d48;">LISTADO DE USUARIOS</h5>
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-sm table-bordered table-striped table-hover">
+                <div class="card-body pb-2">
+                    <div class="table-responsive tableFixHead">
+                        <table class="table table-sm table-bordered table-striped table-hover align-middle">
                             <thead>
                             <tr>
-                                <th scope="col">Id</th>
-                                <th scope="col">Nombres</th>
-                                <th scope="col">Usuario</th>
-                                <th scope="col">Teléfono</th>
-                                <th scope="col">Sede</th>
-                                <th scope="col">Permisos</th> {{-- antes decía "Rol" --}}
-                                <th scope="col">Acción</th>
+                                <th class="sticky-col">Id</th>
+                                <th class="sticky-col-2">Nombres</th>
+                                <th>Usuario</th>
+                                <th>Teléfono</th>
+                                <th>Sede</th>
+                                <th>Permisos</th>
+                                <th>Acción</th>
                             </tr>
                             </thead>
+
                             <tbody>
                             @if($users->count() > 0)
                                 @foreach($users as $user)
                                     <tr>
-                                        <td>{{$loop->iteration}}</td>
-                                        <td>{{$user->name}}</td>
-                                        <td>{{$user->username}}</td>
-                                        <td>{{$user->phone}}</td>
-                                        <td>{{$user->headquarter->name}}</td>
+                                        <td class="sticky-col text-center">{{ $loop->iteration }}</td>
+                                        <td class="sticky-col-2 text-start fw-semibold">{{ $user->name }}</td>
+                                        <td>{{ $user->username }}</td>
+                                        <td>{{ $user->phone ?: '—' }}</td>
+                                        <td class="text-start">{{ $user->headquarter->name ?? '—' }}</td>
                                         <td>
-                                            <span class="badge bg-dark">{{ $user->permissions->count() }} permisos</span>
+                                            <span class="badge bg-dark">
+                                                {{ $user->permissions->count() }} permisos
+                                            </span>
                                         </td>
-                                        <td width="10" class="text-center">
-                                            <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer" wire:click="openEditModal({{$user->id}})"></i>
+                                        <td class="text-center">
+                                            <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
+                                               wire:click="openEditModal({{ $user->id }})"></i>
                                         </td>
                                     </tr>
                                 @endforeach
                             @else
                                 <tr>
-                                    <td colspan="7" class="text-center">No se encontrarón resultados</td>
+                                    <td colspan="7" class="text-center py-4 text-muted">No se encontraron resultados</td>
                                 </tr>
                             @endif
                             </tbody>
+
+                            <tfoot class="fw-semibold">
+                            <tr>
+                                <td class="sticky-col"></td>
+                                <td class="sticky-col-2 text-start">TOTAL USUARIOS</td>
+                                <td colspan="3"></td>
+                                <td class="num">{{ number_format($users->count()) }}</td>
+                                <td></td>
+                            </tr>
+                            </tfoot>
                         </table>
+                    </div>
+
+                    <div class="mt-2" wire:loading.delay>
+                        <span class="text-muted"><span class="spinner-border spinner-border-sm"></span> Actualizando…</span>
                     </div>
                 </div>
             </div>
         </div>
-        <!-- Simple Table end -->
-
     </div>
 
-    {{-- MODAL: AGREGAR (sin permisos) --}}
+    {{-- MODAL: AGREGAR (todos los campos) --}}
     <div class="modal fade" id="modalAddUser" aria-hidden="true" tabindex="-1" data-bs-backdrop="static" wire:ignore.self>
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Agregar Usuario</h5>
-                    <button type="button" class="btn-close m-0 fs-5" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
+                    <button type="button" class="btn-close m-0 fs-5" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row">
+                        {{-- Campos --}}
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="name" class="form-label">Nombre</label>
-                                <input id="name" type="text" class="form-control" placeholder="Ingresar Usuario" wire:model.live="name">
+                                <input id="name" type="text" class="form-control" placeholder="Ingresar nombre" wire:model.live="name">
                                 @error('name') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="username" class="form-label">Usuario</label>
-                                <input id="username" type="text" class="form-control" placeholder="Ingresar Usuario" wire:model="username">
+                                <input id="username" type="text" class="form-control" placeholder="Ingresar usuario" wire:model="username">
                                 @error('username') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
+
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="pwd" class="form-label">Contraseña</label>
-                                <input id="pwd" type="text" class="form-control" placeholder="Ingresar Contraseña" wire:model.live="pwd">
+                                <input id="pwd" type="text" class="form-control" placeholder="Ingresar contraseña" wire:model.live="pwd">
                                 @error('pwd') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="email" class="form-label">Email</label>
-                                <input type="email" class="form-control" placeholder="Ingresar Email" wire:model="email">
+                                <input id="email" type="email" class="form-control" placeholder="Ingresar email" wire:model="email">
                                 @error('email') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
+
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="document_type" class="form-label">Tipo de Documento</label>
-                                <select class="form-select" id="document_type" wire:model="document_type">
+                                <select id="document_type" class="form-select" wire:model="document_type">
                                     <option value="dni">DNI</option>
                                     <option value="ruc">RUC</option>
                                     <option value="ce">CE</option>
@@ -150,83 +203,87 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="document_number" class="form-label">Número de Documento</label>
-                                <input id="document_number" type="text" class="form-control" placeholder="Ingresar Número de Documento" wire:model="document_number">
+                                <input id="document_number" type="text" class="form-control" placeholder="Ingresar número" wire:model="document_number">
                                 @error('document_number') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
+
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="phone" class="form-label">Télefono</label>
-                                <input id="phone" type="text" class="form-control" placeholder="Ingresar Teléfono" wire:model="phone">
+                                <label for="phone" class="form-label">Teléfono</label>
+                                <input id="phone" type="text" class="form-control" placeholder="Ingresar teléfono" wire:model="phone">
                                 @error('phone') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
+
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="headquarter" class="form-label">Sucursal</label>
-                                <select class="form-select" id="headquarter" wire:model="headquarter">
+                                <select id="headquarter" class="form-select" wire:model="headquarter">
                                     <option value="">Selecciona una sucursal</option>
                                     @foreach($headquartes as $h)
-                                        <option value="{{$h->id}}">{{$h->name}}</option>
+                                        <option value="{{ $h->id }}">{{ $h->name }}</option>
                                     @endforeach
                                 </select>
                                 @error('headquarter') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
-                    </div>
+                    </div> {{-- row --}}
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light-primary" wire:click="save">Agregar</button>
-                    <button type="button" class="btn btn-light-secondary"
-                            data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal">Cerrar</button>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- MODAL: EDITAR (con permisos) --}}
+    {{-- MODAL: EDITAR (todos los campos + permisos) --}}
     <div class="modal fade" id="modalEditUser" aria-hidden="true" tabindex="-1" data-bs-backdrop="static" wire:ignore.self>
         <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Agregar Usuario</h5>
-                    <button type="button" class="btn-close m-0 fs-5" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
+                    <h5 class="modal-title">Editar Usuario</h5>
+                    <button type="button" class="btn-close m-0 fs-5" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
+                    {{-- === Mismos campos que en Agregar === --}}
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="name" class="form-label">Nombre</label>
-                                <input id="name" type="text" class="form-control" placeholder="Ingresar Usuario" wire:model.live="name">
+                                <label for="name_e" class="form-label">Nombre</label>
+                                <input id="name_e" type="text" class="form-control" placeholder="Ingresar nombre" wire:model.live="name">
                                 @error('name') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="username" class="form-label">Usuario</label>
-                                <input id="username" type="text" class="form-control" placeholder="Ingresar Usuario" wire:model="username">
+                                <label for="username_e" class="form-label">Usuario</label>
+                                <input id="username_e" type="text" class="form-control" placeholder="Ingresar usuario" wire:model="username">
                                 @error('username') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
+
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="pwd" class="form-label">Contraseña</label>
-                                <input id="pwd" type="text" class="form-control" placeholder="Ingresar Contraseña" wire:model.live="pwd">
+                                <label for="pwd_e" class="form-label">Contraseña</label>
+                                <input id="pwd_e" type="text" class="form-control" placeholder="Nueva contraseña (opcional)" wire:model.live="pwd">
                                 @error('pwd') <span class="text-danger">{{ $message }}</span> @enderror
+                                <small class="text-muted">Déjalo en blanco para no cambiarla.</small>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="email" class="form-label">Email</label>
-                                <input type="email" class="form-control" placeholder="Ingresar Email" wire:model="email">
+                                <label for="email_e" class="form-label">Email</label>
+                                <input id="email_e" type="email" class="form-control" placeholder="Ingresar email" wire:model="email">
                                 @error('email') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
+
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="document_type" class="form-label">Tipo de Documento</label>
-                                <select class="form-select" id="document_type" wire:model="document_type">
+                                <label for="document_type_e" class="form-label">Tipo de Documento</label>
+                                <select id="document_type_e" class="form-select" wire:model="document_type">
                                     <option value="dni">DNI</option>
                                     <option value="ruc">RUC</option>
                                     <option value="ce">CE</option>
@@ -236,25 +293,27 @@
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="document_number" class="form-label">Número de Documento</label>
-                                <input id="document_number" type="text" class="form-control" placeholder="Ingresar Número de Documento" wire:model="document_number">
+                                <label for="document_number_e" class="form-label">Número de Documento</label>
+                                <input id="document_number_e" type="text" class="form-control" placeholder="Ingresar número" wire:model="document_number">
                                 @error('document_number') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
+
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="phone" class="form-label">Télefono</label>
-                                <input id="phone" type="text" class="form-control" placeholder="Ingresar Teléfono" wire:model="phone">
+                                <label for="phone_e" class="form-label">Teléfono</label>
+                                <input id="phone_e" type="text" class="form-control" placeholder="Ingresar teléfono" wire:model="phone">
                                 @error('phone') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
+
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="headquarter" class="form-label">Sucursal</label>
-                                <select class="form-select" id="headquarter" wire:model="headquarter">
+                                <label for="headquarter_e" class="form-label">Sucursal</label>
+                                <select id="headquarter_e" class="form-select" wire:model="headquarter">
                                     <option value="">Selecciona una sucursal</option>
                                     @foreach($headquartes as $h)
-                                        <option value="{{$h->id}}">{{$h->name}}</option>
+                                        <option value="{{ $h->id }}">{{ $h->name }}</option>
                                     @endforeach
                                 </select>
                                 @error('headquarter') <span class="text-danger">{{ $message }}</span> @enderror
@@ -315,8 +374,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light-primary" wire:click="update">Actualizar</button>
-                    <button type="button" class="btn btn-light-secondary"
-                            data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal">Cerrar</button>
                 </div>
             </div>
         </div>

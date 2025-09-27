@@ -141,136 +141,141 @@ class MonthlyDebtExport implements FromArray, ShouldAutoSize, WithHeadings, With
         return [1 => ['font' => ['bold' => true]]];
     }
 
-    /** estilos “bonitos” */
+    /** ===== Estilo “Payments” ===== */
     public function registerEvents(): array
     {
         return [
             AfterSheet::class => function (AfterSheet $e) {
                 $ws = $e->sheet->getDelegate();
 
-                // Filas para título y subtítulo
+                // Insertar 2 filas para título/subtítulo
                 $ws->insertNewRowBefore(1, 2);
+
                 $headerRow    = 3;  // headings()
                 $dataStartRow = 4;
                 $lastRow      = $dataStartRow + max(0, $this->rowCount) - 1;
                 $lastCol      = 'L'; // A..L
 
-                // Título
-                $ws->setCellValue('A1', 'Deuda Mensual por Placa');
+                // ===== TÍTULO (oscuro, centrado) =====
+                $ws->setCellValue('A1', 'REPORTE DE DEUDA MENSUAL');
                 $ws->mergeCells("A1:{$lastCol}1");
-                $ws->getStyle('A1')->getFont()->setBold(true)->setSize(14);
-                $ws->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+                $ws->getRowDimension(1)->setRowHeight(24);
+                $ws->getStyle('A1')->getFont()->setBold(true)->setSize(14)->getColor()->setARGB('FFFFFFFF');
+                $ws->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setVertical(Alignment::VERTICAL_CENTER);
+                $ws->getStyle('A1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF1F2937');
 
-                // Subtítulo (mes + filtros)
+                // ===== SUBTÍTULO (filtros) — mismo fondo oscuro =====
                 $seed   = Carbon::parse($this->monthDate)->startOfMonth();
                 $monthL = $seed->locale('es')->translatedFormat('F Y');
                 $sub = "Mes: {$monthL}";
-                if (trim($this->search) !== '')   $sub .= " | Búsqueda: {$this->search}";
+                if (trim($this->search) !== '')    $sub .= " | Búsqueda: {$this->search}";
                 if (trim($this->condition) !== '') $sub .= " | Condición: {$this->condition}";
+
                 $ws->setCellValue('A2', $sub);
                 $ws->mergeCells("A2:{$lastCol}2");
-                $ws->getStyle('A2')->getFont()->setItalic(true)->setSize(10);
+                $ws->getRowDimension(2)->setRowHeight(18);
+                $ws->getStyle('A2')->getFont()->setItalic(true)->setSize(10)->getColor()->setARGB('FFFFFFFF');
+                $ws->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setVertical(Alignment::VERTICAL_CENTER);
+                $ws->getStyle('A2')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF1F2937');
 
-                // Encabezado con color
+                // ===== THEAD oscuro (igual Payments) =====
                 $ws->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")
-                    ->getFill()->setFillType(Fill::FILL_SOLID)
-                    ->getStartColor()->setARGB('FFDBEAFE'); // indigo-100
+                    ->getFont()->getColor()->setARGB('FFFFFFFF');
                 $ws->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")
-                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)
-                    ->setVertical(Alignment::VERTICAL_CENTER)
-                    ->setWrapText(true);
-                $ws->getRowDimension($headerRow)->setRowHeight(22);
+                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setVertical(Alignment::VERTICAL_CENTER);
+                $ws->getRowDimension($headerRow)->setRowHeight(20);
+                $ws->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")
+                    ->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF23242F');
 
-                // Freeze pane (debajo del encabezado)
+                // Freeze pane justo debajo del header
                 $ws->freezePane("A{$dataStartRow}");
 
-                // Autofiltro
+                // ===== AutoFilter =====
                 if ($lastRow >= $dataStartRow) {
                     $ws->setAutoFilter("A{$headerRow}:{$lastCol}{$lastRow}");
                 } else {
                     $ws->setAutoFilter("A{$headerRow}:{$lastCol}{$headerRow}");
                 }
 
-                // Zebra stripes
+                // ===== Zebra (gris muy suave) =====
                 if ($lastRow >= $dataStartRow) {
                     $cond = new Conditional();
                     $cond->setConditionType(Conditional::CONDITION_EXPRESSION);
                     $cond->setConditions(['MOD(ROW(),2)=0']);
                     $cond->getStyle()->getFill()->setFillType(Fill::FILL_SOLID)
-                        ->getStartColor()->setARGB('FFF8FAFC');
+                        ->getStartColor()->setARGB('FFF9FAFB');
                     $rangeData = "A{$dataStartRow}:{$lastCol}{$lastRow}";
                     $styles = $ws->getStyle($rangeData)->getConditionalStyles();
                     $styles[] = $cond;
                     $ws->getStyle($rangeData)->setConditionalStyles($styles);
                 }
 
-                // Bordes
+                // ===== Bordes finos =====
                 $ws->getStyle("A{$headerRow}:{$lastCol}" . max($headerRow, $lastRow))
                     ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)
-                    ->getColor()->setARGB('FFCBD5E1');
+                    ->getColor()->setARGB('FFCFD8DC');
 
-                // Anchos de columnas (Item angosto, textos más cómodos)
+                // ===== Anchos de columnas =====
                 $ws->getColumnDimension('A')->setWidth(6);   // Item
                 $ws->getColumnDimension('B')->setWidth(8);   // Cod
                 $ws->getColumnDimension('C')->setWidth(12);  // Placa
                 $ws->getColumnDimension('D')->setWidth(12);  // Condición
-                $ws->getColumnDimension('E')->setWidth(22);  // Días (X)
-                $ws->getColumnDimension('F')->setWidth(22);  // Días X1
+                $ws->getColumnDimension('E')->setWidth(24);  // Días (X)
+                $ws->getColumnDimension('F')->setWidth(24);  // Días X1
                 $ws->getColumnDimension('G')->setWidth(10);  // Días deuda
-                $ws->getColumnDimension('H')->setWidth(14);  // Total
-                $ws->getColumnDimension('I')->setWidth(14);  // Exonerado
-                $ws->getColumnDimension('J')->setWidth(14);  // A pagar
-                $ws->getColumnDimension('K')->setWidth(14);  // Amortizado
-                $ws->getColumnDimension('L')->setWidth(14);  // Pendiente
+                foreach (['H','I','J','K','L'] as $col) {
+                    $ws->getColumnDimension($col)->setWidth(14); // Montos
+                }
 
-                // Alineaciones y formatos
+                // ===== Alineaciones / formatos =====
                 if ($lastRow >= $dataStartRow) {
                     // Centrados
                     $ws->getStyle("A{$dataStartRow}:D{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                     $ws->getStyle("G{$dataStartRow}:G{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-
-                    // Moneda S/ para importes
+                    // Texto con wrap en columnas de días
+                    $ws->getStyle("E{$dataStartRow}:F{$lastRow}")->getAlignment()->setWrapText(true);
+                    // Moneda S/ (igual Payments)
                     foreach (['H','I','J','K','L'] as $col) {
                         $ws->getStyle("{$col}{$dataStartRow}:{$col}{$lastRow}")
                             ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
                         $ws->getStyle("{$col}{$dataStartRow}:{$col}{$lastRow}")
                             ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
                     }
-
-                    // Envolver texto en columnas de días
-                    $ws->getStyle("E{$dataStartRow}:F{$lastRow}")->getAlignment()->setWrapText(true);
                 }
 
-                // Totales al final
+                // ===== Totales (pie oscuro como thead) =====
                 $totalRow = ($lastRow >= $dataStartRow) ? $lastRow + 1 : $headerRow + 1;
                 $ws->mergeCells("A{$totalRow}:G{$totalRow}");
                 $ws->setCellValue("A{$totalRow}", 'TOTAL');
+
                 if ($lastRow >= $dataStartRow) {
-                    // Sumas de importes
                     $ws->setCellValue("H{$totalRow}", "=SUM(H{$dataStartRow}:H{$lastRow})");
                     $ws->setCellValue("I{$totalRow}", "=SUM(I{$dataStartRow}:I{$lastRow})");
                     $ws->setCellValue("J{$totalRow}", "=SUM(J{$dataStartRow}:J{$lastRow})");
                     $ws->setCellValue("K{$totalRow}", "=SUM(K{$dataStartRow}:K{$lastRow})");
                     $ws->setCellValue("L{$totalRow}", "=SUM(L{$dataStartRow}:L{$lastRow})");
                 } else {
-                    $ws->setCellValue("H{$totalRow}", 0);
-                    $ws->setCellValue("I{$totalRow}", 0);
-                    $ws->setCellValue("J{$totalRow}", 0);
-                    $ws->setCellValue("K{$totalRow}", 0);
-                    $ws->setCellValue("L{$totalRow}", 0);
+                    foreach (['H','I','J','K','L'] as $col) {
+                        $ws->setCellValue("{$col}{$totalRow}", 0);
+                    }
                 }
-                $ws->getStyle("A{$totalRow}:L{$totalRow}")->getFont()->setBold(true);
+
                 $ws->getStyle("A{$totalRow}:L{$totalRow}")
-                    ->getFill()->setFillType(Fill::FILL_SOLID)
-                    ->getStartColor()->setARGB('FFCEE7FF');
+                    ->getFont()->setBold(true)->getColor()->setARGB('FFFFFFFF');
+                $ws->getStyle("A{$totalRow}:L{$totalRow}")
+                    ->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF23242F');
+                $ws->getStyle("A{$totalRow}:L{$totalRow}")
+                    ->getBorders()->getTop()->setBorderStyle(Border::BORDER_MEDIUM);
+
+                $ws->getStyle("A{$totalRow}:G{$totalRow}")
+                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+
                 foreach (['H','I','J','K','L'] as $col) {
                     $ws->getStyle("{$col}{$totalRow}")
                         ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
                     $ws->getStyle("{$col}{$totalRow}")
                         ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
                 }
-                $ws->getStyle("A{$totalRow}:G{$totalRow}")
-                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
             },
         ];
     }

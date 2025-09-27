@@ -1,29 +1,23 @@
 @push('styles')
     <style>
-        /* ===== Compacto, igual que DebtsPerDays ===== */
-        .compact-table-xxs{ font-size:11px; line-height:1.05; table-layout:fixed; }
-        .compact-table-xxs th,.compact-table-xxs td{
-            padding:.18rem .25rem; white-space:nowrap; vertical-align:middle; text-align:center;
+        /* Encabezado/foot oscuros y pegajosos — igual que Payments */
+        .tableFixHead thead th{
+            position: sticky; top: 0; z-index: 2;
+            background-color:#009BDC !important; color:#fff !important; vertical-align: middle;
         }
-        .compact-table-xxs thead th.sticky{ position:sticky; top:0; z-index:2; background:#e9f4ff; }
+        .tableFixHead tfoot th,
+        .tableFixHead tfoot td{
+            background-color:#009BDC !important; color:#fff !important;
+        }
 
-        /* Contenedor con scroll horizontal cuando no alcance */
-        .x-scroll{ overflow-x:auto; overflow-y:visible; }
-
-        /* Anchos consistentes */
-        .col-edit{ width:42px; }
-        .col-cod{  width:60px; }
-        .col-plate{width:92px; }
-        .col-cond{ width:72px; }
-        .col-dayslbl{ min-width:160px; }   /* “Días NO trabajados” */
-        .col-dnum{ width:72px; }           /* T. d.n.t (DÍAS) */
-        .col-money{ width:92px; }          /* montos S/ */
-        .text-end{ text-align:right !important; }
+        /* Ajuste al contenido y números alineados a la derecha */
+        .tableFixHead table.table th,
+        .tableFixHead table.table td{ white-space:nowrap; }
+        .num{ text-align:right; }
     </style>
 @endpush
 
 <div class="container-fluid">
-
     {{-- Header / migas --}}
     <div class="row">
         <div class="col-sm-6">
@@ -45,11 +39,10 @@
     </div>
 
     <div class="row table-section">
-
-        {{-- Filtros (arriba) --}}
+        {{-- Filtros --}}
         <div class="col-12">
-            <div class="card">
-                <div class="card-body">
+            <div class="card shadow-sm">
+                <div class="card-body pt-3">
                     <div class="row g-2 align-items-end">
                         <div class="col-xl-3 col-md-4">
                             <label class="form-label">Mes</label>
@@ -85,13 +78,19 @@
                             </select>
                         </div>
                     </div>
+
+                    <div class="mt-2" wire:loading.delay>
+                        <span class="text-muted">
+                            <span class="spinner-border spinner-border-sm"></span> Cargando…
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
 
-        {{-- Acciones (abajo), como en Payments/DebtsPerDays --}}
+        {{-- Acciones --}}
         <div class="col-12 mt-2">
-            <div class="card">
+            <div class="card shadow-sm">
                 <div class="card-body">
                     <div class="row justify-content-end g-2">
                         <div class="col-sm-3 col-md-2">
@@ -100,7 +99,7 @@
                             </button>
                         </div>
                         <div class="col-sm-2 col-md-1">
-                            <button id="down" class="btn btn-primary w-100">
+                            <button id="down" class="btn btn-primary w-100" title="Ir al final">
                                 <i class="ti ti-square-chevrons-down f-s-17"></i>
                             </button>
                         </div>
@@ -110,26 +109,25 @@
             <div id="bottom"></div>
         </div>
 
-        {{-- Tabla --}}
+        {{-- Tabla (estilo Payments) --}}
         <div class="col-xl-12">
-            <div class="card">
+            <div class="card shadow-sm">
                 <div class="card-body">
-
-                    <div class="table-responsive x-scroll">
-                        <table class="table table-sm table-bordered table-striped align-middle compact-table-xxs">
-                            <thead class="table-primary">
+                    <div class="table-responsive tableFixHead">
+                        <table class="table table-sm table-bordered table-striped table-hover align-middle">
+                            <thead class="text-center">
                             <tr>
-                                <th class="sticky col-edit">Op</th>
-                                <th class="sticky col-cod">Cod</th>
-                                <th class="sticky col-plate">Placa</th>
-                                <th class="sticky col-cond">Condición</th>
-                                <th class="sticky col-dayslbl" title="Días NO trabajados">Días NO trabajados</th>
-                                <th class="sticky col-dnum" title="Total Días no Trabajados">T. d.n.t</th>
-                                <th class="sticky col-money" title="Total Deuda (S/)">T. D. (S/)</th>
-                                <th class="sticky col-money text-danger" title="Exonerado (S/)">Ex (S/)</th>
-                                <th class="sticky col-money" title="Total por pagar (S/)">T. D.x.P (S/)</th>
-                                <th class="sticky col-money" title="Amortización (S/)">Amor (S/)</th>
-                                <th class="sticky col-money" title="Pendiente (S/)">Pend (S/)</th>
+                                <th>Op</th>
+                                <th>Cod</th>
+                                <th>Placa</th>
+                                <th>Condición</th>
+                                <th title="Días NO trabajados">Días NO trabajados</th>
+                                <th title="Total Días no Trabajados">T. d.n.t</th>
+                                <th title="Total Deuda (S/)" class="num">T. D. (S/)</th>
+                                <th title="Exonerado (S/)" class="num">Ex (S/)</th>
+                                <th title="Total por pagar (S/)" class="num">T. D.x.P (S/)</th>
+                                <th title="Amortización (S/)" class="num">Amor (S/)</th>
+                                <th title="Pendiente (S/)" class="num">Pend (S/)</th>
                             </tr>
                             </thead>
 
@@ -147,23 +145,23 @@
                             {{-- filas --}}
                             @forelse($rows as $r)
                                 <tr wire:key="row-{{ $r['item'] }}" wire:loading.class="d-none">
-                                    <td>
+                                    <td class="text-center">
                                         @if(($r['total'] ?? 0) > 0)
                                             <a href="#" title="Editar" wire:click.prevent="detail({{ $r['id'] }})">
                                                 <i class="ti ti-edit"></i>
                                             </a>
                                         @endif
                                     </td>
-                                    <td>{{ $r['cod'] }}</td>
-                                    <td><strong>{{ $r['plate'] }}</strong></td>
-                                    <td>{{ $r['condition'] }}</td>
+                                    <td class="text-center">{{ $r['cod'] }}</td>
+                                    <td class="text-center"><strong>{{ $r['plate'] }}</strong></td>
+                                    <td class="text-center">{{ $r['condition'] }}</td>
                                     <td class="text-start">{!! $r['days_text'] !!}</td>
-                                    <td>{{ $r['days_late'] }}</td>
-                                    <td class="text-end">{{ number_format($r['total'], 2) }}</td>
-                                    <td class="text-end text-danger">{{ number_format($r['exonerated'], 2) }}</td>
-                                    <td class="text-end">{{ number_format($r['to_pay'], 2) }}</td>
-                                    <td class="text-end">{{ number_format($r['amortized'], 2) }}</td>
-                                    <td class="text-end">{{ number_format($r['pending'], 2) }}</td>
+                                    <td class="text-center">{{ $r['days_late'] }}</td>
+                                    <td class="num">{{ number_format($r['total'], 2) }}</td>
+                                    <td class="num text-danger">{{ number_format($r['exonerated'], 2) }}</td>
+                                    <td class="num">{{ number_format($r['to_pay'], 2) }}</td>
+                                    <td class="num">{{ number_format($r['amortized'], 2) }}</td>
+                                    <td class="num">{{ number_format($r['pending'], 2) }}</td>
                                 </tr>
                             @empty
                                 <tr wire:loading.class="d-none">
@@ -172,14 +170,14 @@
                             @endforelse
                             </tbody>
 
-                            <tfoot class="table-primary fw-bold">
+                            <tfoot class="text-center fw-semibold">
                             <tr>
-                                <td colspan="6" class="text-center">Total General</td>
-                                <td class="text-end">{{ number_format($totals['total'] ?? 0, 2) }}</td>
-                                <td class="text-end">{{ number_format($totals['exonerated'] ?? 0, 2) }}</td>
-                                <td class="text-end">{{ number_format($totals['to_pay'] ?? 0, 2) }}</td>
-                                <td class="text-end">{{ number_format($totals['amortized'] ?? 0, 2) }}</td>
-                                <td class="text-end">{{ number_format($totals['pending'] ?? 0, 2) }}</td>
+                                <td colspan="6">TOTAL GENERAL</td>
+                                <td class="num">{{ number_format($totals['total'] ?? 0, 2) }}</td>
+                                <td class="num">{{ number_format($totals['exonerated'] ?? 0, 2) }}</td>
+                                <td class="num">{{ number_format($totals['to_pay'] ?? 0, 2) }}</td>
+                                <td class="num">{{ number_format($totals['amortized'] ?? 0, 2) }}</td>
+                                <td class="num">{{ number_format($totals['pending'] ?? 0, 2) }}</td>
                             </tr>
                             </tfoot>
                         </table>
@@ -192,8 +190,6 @@
                 </div>
             </div>
         </div>
-
-
 
     </div>
 </div>

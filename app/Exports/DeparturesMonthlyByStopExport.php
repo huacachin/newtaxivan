@@ -4,7 +4,6 @@
 namespace App\Exports;
 
 use Carbon\CarbonImmutable;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -12,12 +11,11 @@ use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Events\AfterSheet;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Border;
-use PhpOffice\PhpSpreadsheet\Style\Color;
-
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
 class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyles, WithEvents, ShouldAutoSize
 {
@@ -34,7 +32,7 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
     protected int   $grandTE = 0;
     protected int   $grandTA = 0;
     protected int   $grandVT = 0;
-    protected array $sundayCols = []; // índices de columna (1-based) a colorear
+    protected array $sundayCols = []; // índices 1-based de columna (encabezado de días)
 
     public function headings(): array
     {
@@ -44,13 +42,6 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
         $head[] = 'TOTAL';
         return $head;
     }
-
-    protected function monthName(): string
-    {
-        $m = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',7=>'Julio',8=>'Agosto',9=>'Septiembre',10=>'Octubre',11=>'Noviembre',12=>'Diciembre'];
-        return $m[$this->month] ?? '';
-    }
-
 
     public function array(): array
     {
@@ -71,7 +62,7 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
             $data[] = $row;
         }
 
-        // Fila vacía separadora (opcional)
+        // Fila separadora (opcional)
         if (!empty($data)) $data[] = array_fill(0, 3 + $this->daysInMonth + 1, '');
 
         // Totales T.E
@@ -97,19 +88,21 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
 
     public function styles(Worksheet $sheet)
     {
-        // (La cabecera real quedará en la fila 2 porque insertaremos un título arriba)
+        // La cabecera final quedará en la fila 2 (insertamos título en AfterSheet)
         $lastRow = $sheet->getHighestRow();
         $lastCol = $sheet->getHighestColumn();
 
-        // Centrar header y números
-        $sheet->getStyle('A2:'.$lastCol.'2')->getFont()->setBold(true);
-        $sheet->getStyle('A2:'.$lastCol.'2')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle("A3:{$lastCol}{$lastRow}")
-            ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        // Encabezado centrado y en negrita
+        $sheet->getStyle("A2:{$lastCol}2")->getFont()->setBold(true);
+        $sheet->getStyle("A2:{$lastCol}2")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-        // A/B alineadas a la izquierda
-        $sheet->getStyle('A3:A'.$lastRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
-        $sheet->getStyle('B3:B'.$lastRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+        // Cuerpo centrado
+        $sheet->getStyle("A3:{$lastCol}{$lastRow}")
+            ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        // CONTROLADOR y PARADERO a la izquierda
+        $sheet->getStyle("A3:A{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+        $sheet->getStyle("B3:B{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
 
         return [];
     }
@@ -118,123 +111,99 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
     {
         return [
             AfterSheet::class => function(AfterSheet $e) {
-                $sheet    = $e->sheet->getDelegate();
+                $s = $e->sheet->getDelegate();
 
-                // ==== Insertar título (fila 1) y mover todo hacia abajo ====
-                $sheet->insertNewRowBefore(1, 1);
-                $lastCol = $sheet->getHighestColumn();
-                $lastRow = $sheet->getHighestRow();
+                // Paleta de la “línea de diseño”
+                $bgDark   = 'FF23242F'; // header/footer oscuro
+                $fontW    = 'FFFFFFFF';
+                $borderC  = 'FFCFD8DC';
+                $sunRed   = 'FFEF4444';
 
+                // Insertar título (fila 1)
+                $s->insertNewRowBefore(1, 1);
+                $lastCol = $s->getHighestColumn();
+                $lastRow = $s->getHighestRow();
+
+                // Título
                 $title = 'RMP V.T – '.$this->monthName().' '.$this->year;
-                $sheet->setCellValue('A1', $title);
-                $sheet->mergeCells("A1:{$lastCol}1");
+                $s->setCellValue('A1', $title);
+                $s->mergeCells("A1:{$lastCol}1");
+                $s->getRowDimension(1)->setRowHeight(28);
+                $s->getStyle('A1')->applyFromArray([
+                    'font' => ['bold'=>true,'size'=>14,'color'=>['argb'=>$fontW]],
+                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
+                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$bgDark]],
+                ]);
 
-                // Estilo título
-                $sheet->getRowDimension(1)->setRowHeight(28);
-                $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14)->getColor()->setRGB('FFFFFF');
-                $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-                $sheet->getStyle('A1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-                    ->getStartColor()->setRGB('1F2937'); // gris-azulado oscuro
+                // Thead con mismo color del título
+                $s->getStyle("A2:{$lastCol}2")->applyFromArray([
+                    'font' => ['bold'=>true,'color'=>['argb'=>$fontW]],
+                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
+                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$bgDark]],
+                ]);
 
-                // ==== Cabecera (fila 2) con banda azul suave ====
-                $sheet->getStyle("A2:{$lastCol}2")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-                    ->getStartColor()->setRGB('DBEAFE'); // azul muy claro
-                $sheet->getStyle("A2:{$lastCol}2")->getFont()->setBold(true);
+                // **Domingos**: solo encabezado de días en rojo
+                foreach ($this->sundayCols as $colIdx) {
+                    $col = Coordinate::stringFromColumnIndex($colIdx);
+                    $s->getStyle("{$col}2")->applyFromArray([
+                        'font' => ['bold'=>true,'color'=>['argb'=>$fontW]],
+                        'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$sunRed]],
+                    ]);
+                }
 
-                // AutoFilter sobre la cabecera
-                $sheet->setAutoFilter("A2:{$lastCol}2");
-
-                // ==== Congelar: encabezado (fila 2) y 3 primeras columnas ====
-                $sheet->freezePane('D3');
-
-                // ==== Anchos recomendados primeras columnas ====
-                $sheet->getColumnDimension('A')->setWidth(30); // CONTROLADOR
-                $sheet->getColumnDimension('B')->setWidth(24); // PARADERO
-                $sheet->getColumnDimension('C')->setWidth(10); // TIPO
-
-                // ==== Bordes finos para toda la tabla ====
-                $sheet->getStyle("A2:{$lastCol}{$lastRow}")
+                // Bordes finos a todo el rango
+                $s->getStyle("A2:{$lastCol}{$lastRow}")
                     ->getBorders()->getAllBorders()
                     ->setBorderStyle(Border::BORDER_THIN)
-                    ->getColor()->setRGB('D0D7E2');
+                    ->getColor()->setARGB($borderC);
 
-                // ==== Estética de columnas de días: cebra (col D..Total) ====
-                // Índices de columnas: A=1,B=2,C=3, días inician en D=4
-                $firstDayColIdx = 4;
-                $lastColIdx     = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($lastCol);
-                $totalColIdx    = $lastColIdx; // la última es TOTAL
+                // Anchos sugeridos en las primeras columnas
+                $s->getColumnDimension('A')->setWidth(30); // CONTROLADOR
+                $s->getColumnDimension('B')->setWidth(24); // PARADERO
+                $s->getColumnDimension('C')->setWidth(10); // TIPO
 
-                for ($c = $firstDayColIdx; $c <= $totalColIdx; $c++) {
-                    $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($c);
-                    // cebra suave en columnas de días (pares)
-                    if ($c < $totalColIdx && (($c - $firstDayColIdx) % 2 === 1)) {
-                        $sheet->getStyle("{$colLetter}3:{$colLetter}{$lastRow}")
-                            ->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-                            ->getStartColor()->setRGB('F8FAFC'); // gris clarito
+                // Congelar arriba (título+encabezado) y 3 primeras columnas
+                // D3 = mantiene visibles filas 1-2 y columnas A-C
+                $s->freezePane('D3');
+
+                // Filas de totales (tfoot): mismo color oscuro que el header
+                $dataRows   = count($this->rows);
+                $hasSep     = $dataRows > 0 ? 1 : 0; // fila separadora si hubo data
+                $totStart   = ($dataRows === 0) ? 3 : 3 + $dataRows + $hasSep;
+
+                for ($r = $totStart; $r <= $totStart + 2; $r++) {
+                    $s->getStyle("A{$r}:{$lastCol}{$r}")->applyFromArray([
+                        'font' => ['bold'=>true,'color'=>['argb'=>$fontW]],
+                        'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
+                        'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$bgDark]],
+                    ]);
+                }
+
+                // Formato numérico entero para celdas de días + total (filas de datos y totales)
+                $firstDayColIdx = 4; // A=1,B=2,C=3, días desde D
+                $lastColIdx     = Coordinate::columnIndexFromString($lastCol);
+                for ($c=$firstDayColIdx; $c <= $lastColIdx; $c++) {
+                    $colL = Coordinate::stringFromColumnIndex($c);
+                    // filas de datos
+                    if ($dataRows > 0) {
+                        $s->getStyle("{$colL}3:{$colL}".(2+$dataRows))
+                            ->getNumberFormat()->setFormatCode('0');
                     }
-                    // Formato numérico entero
-                    $sheet->getStyle("{$colLetter}3:{$colLetter}{$lastRow}")
+                    // filas de totales
+                    $s->getStyle("{$colL}{$totStart}:{$colL}".($totStart+2))
                         ->getNumberFormat()->setFormatCode('0');
-                }
-
-                // ==== Domingos en rojo (sobrescribe la cebra) ====
-                foreach ($this->sundayCols as $colIdx) {
-                    // OJO: sumamos +1 porque insertamos el título: la fila de cabecera ahora es la 2
-                    $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIdx);
-                    $sheet->getStyle("{$colLetter}2:{$colLetter}{$lastRow}")
-                        ->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-                        ->getStartColor()->setRGB('EF4444');
-                    $sheet->getStyle("{$colLetter}2:{$colLetter}{$lastRow}")
-                        ->getFont()->getColor()->setRGB('FFFFFF');
-                }
-
-                // ==== Colorear filas Emp/Apoyo en columnas fijas + TOTAL (no tapa domingos) ====
-                $dataStartRow = 3; // primera fila de datos
-                $dataRows     = count($this->rows); // incluye Emp y Apoyo
-                $hasSepRow    = $dataRows > 0 ? 1 : 0; // en tu array() pusiste fila separadora si hay data
-
-                for ($i = 0; $i < $dataRows; $i++) {
-                    $rowNum = $dataStartRow + $i;
-                    $type   = $this->rows[$i]['type'] ?? 'Emp';
-                    $color  = ($type === 'Emp') ? 'E8F5E9' : 'FFF7ED'; // verde/crema claro
-
-                    // A..C (cols fijas)
-                    $sheet->getStyle("A{$rowNum}:C{$rowNum}")
-                        ->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-                        ->getStartColor()->setRGB($color);
-                    // TOTAL (última col)
-                    $sheet->getStyle("{$lastCol}{$rowNum}:{$lastCol}{$rowNum}")
-                        ->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-                        ->getStartColor()->setRGB($color);
-                }
-
-                // ==== Colores de Totales (TE, TA, VT) ====
-                // Fila de inicio de totales:
-                $totalsStart = $dataStartRow + $dataRows + $hasSepRow;
-                if ($dataRows === 0) { $totalsStart = 3; } // si no hubo filas, totales arrancan en 3
-
-                // TE
-                $sheet->getStyle("A{$totalsStart}:{$lastCol}{$totalsStart}")
-                    ->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-                    ->getStartColor()->setRGB('E0F2FE'); // celeste claro
-                // TA
-                $sheet->getStyle("A".($totalsStart+1).":{$lastCol}".($totalsStart+1))
-                    ->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-                    ->getStartColor()->setRGB('FFF7ED'); // crema (naranja muy claro)
-                // VT
-                $sheet->getStyle("A".($totalsStart+2).":{$lastCol}".($totalsStart+2))
-                    ->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-                    ->getStartColor()->setRGB('EDE9FE'); // lila muy claro
-
-                // Negrita en las filas de totales
-                for ($r = $totalsStart; $r <= $totalsStart+2; $r++) {
-                    $sheet->getStyle("A{$r}:{$lastCol}{$r}")->getFont()->setBold(true);
                 }
             }
         ];
     }
 
-    /* ---------------------- helpers ---------------------- */
+    /* --------------- helpers / datos --------------- */
+
+    protected function monthName(): string
+    {
+        $m = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',7=>'Julio',8=>'Agosto',9=>'Septiembre',10=>'Octubre',11=>'Noviembre',12=>'Diciembre'];
+        return $m[$this->month] ?? '';
+    }
 
     protected function prepareDataIfNeeded(): void
     {
@@ -252,7 +221,7 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
             }
         }
 
-        // === SQL: Emp. (existe en vehicles id/plate), Apoyo (no existe) ===
+        // === SQL: contar distintos por controlador/paradero/día separando Emp (match con vehicles) y Apoyo ===
         $sql = <<<SQL
 WITH RECURSIVE days(d) AS (
   SELECT 1
@@ -375,17 +344,5 @@ SQL;
                 'total'      => $apoTotal,
             ];
         }
-    }
-
-    protected function colLetter(int $index): string
-    {
-        // 1 -> A, 2 -> B, ...
-        $letter = '';
-        while ($index > 0) {
-            $mod = ($index - 1) % 26;
-            $letter = chr(65 + $mod) . $letter;
-            $index = intdiv($index - 1, 26);
-        }
-        return $letter;
     }
 }

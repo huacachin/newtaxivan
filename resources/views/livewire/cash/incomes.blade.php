@@ -1,5 +1,6 @@
 <div class="container-fluid">
 
+    {{-- ===== Header & Breadcrumb ===== --}}
     <div class="row">
         <div class="col-sm-6">
             <h4 class="main-title">Ingresos</h4>
@@ -21,29 +22,30 @@
 
     <div class="row table-responsive">
 
+        {{-- ===== Filters ===== --}}
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
-                    <div class="row">
+                    <div class="row g-3">
                         <div class="col-xl-6 col-md-6 mb-2 mb-md-0">
-                            <form class="app-form app-icon-form" action="#">
+                            <form class="app-form app-icon-form" action="#" onsubmit="return false;">
                                 <label class="form-label">Buscar: </label>
                                 <div class="position-relative">
-
-                                    <input type="search" class="form-control" placeholder="Buscar..."
-                                           aria-label="Buscar" wire:model.live.debounce.400ms="search" >
+                                    <input type="search" class="form-control" placeholder="Buscar..." aria-label="Buscar" wire:model.live.debounce.400ms="search">
                                     <i class="ti ti-search text-dark"></i>
                                 </div>
                             </form>
                         </div>
+
                         <div class="col-xl-2 col-md-4">
                             <label class="form-label">Filtro</label>
-                            <select class="form-select" aria-label="Estado del vehiculo" wire:model.live="filterType">
-                                <option value="1" >A</option>
-                                <option value="2" >Motivo</option>
-                                <option value="3" >Usuario</option>
+                            <select class="form-select" aria-label="Filtro" wire:model.live="filterType">
+                                <option value="1">A</option>
+                                <option value="2">Motivo</option>
+                                <option value="3">Usuario</option>
                             </select>
                         </div>
+
                         <div class="col-xl-2 col-md-4 mb-2 mb-md-0">
                             <label class="form-label">Fecha Inicio</label>
                             <input type="date" class="form-control" wire:model.live="date_start">
@@ -52,12 +54,12 @@
                             <label class="form-label">Fecha Fin</label>
                             <input type="date" class="form-control" wire:model.live="date_end">
                         </div>
-
                     </div>
                 </div>
             </div>
         </div>
 
+        {{-- ===== Top actions ===== --}}
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
@@ -73,7 +75,7 @@
                             </button>
                         </div>
                         <div class="col-xl-1 col-md-4">
-                            <button id="down" class="btn btn-primary w-100">
+                            <button id="down" class="btn btn-primary w-100" wire:click="downloadLast">
                                 <i class="ti ti-square-chevrons-down f-s-17"></i>
                             </button>
                         </div>
@@ -82,12 +84,13 @@
             </div>
         </div>
 
+        {{-- ===== Table ===== --}}
         <div class="col-xl-12">
             <div class="card">
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-sm table-bordered table-striped table-hover">
-                            <thead class="table-primary">
+                            <thead class="bg-primary text-white">
                             <tr>
                                 <th>Op</th>
                                 <th>Item</th>
@@ -112,24 +115,14 @@
                             @forelse($incomes as $i)
                                 <tr>
                                     <td data-label="Opciones">
-                                        <i wire:ignore class="ti ti-edit f-s-18 text-success" style="cursor:pointer" wire:click="openEditModal({{$i->id}})"></i>
+                                        <i wire:ignore class="ti ti-edit f-s-18 text-success" style="cursor:pointer" wire:click="openEditModal({{ $i->id }})"></i>
                                     </td>
                                     <td>{{ $incomes->firstItem() + $loop->index }}</td>
-                                    <td data-label="Fecha">
-                                        {{ \Carbon\Carbon::parse($i->date)->format('d/m/Y') }}
-                                    </td>
-                                    <td data-label="Respons.">
-                                        {{ $i->user->name ?? '-' }}
-                                    </td>
-                                    <td data-label="A">
-                                        {{ $i->reason }}
-                                    </td>
-                                    <td data-label="Motivo">
-                                        {{ $i->detail }}
-                                    </td>
-                                    <td class="text-end" data-label="S/">
-                                        {{ number_format($i->total, 2) }}
-                                    </td>
+                                    <td data-label="Fecha">{{ \Carbon\Carbon::parse($i->date)->format('d/m/Y') }}</td>
+                                    <td data-label="Usuario">{{ $i->user->name ?? '-' }}</td>
+                                    <td data-label="A">{{ $i->reason }}</td>
+                                    <td data-label="Motivo">{{ $i->detail }}</td>
+                                    <td class="text-end" data-label="S/">{{ number_format($i->total, 2) }}</td>
                                 </tr>
                             @empty
                                 <tr wire:loading.remove>
@@ -137,17 +130,19 @@
                                 </tr>
                             @endforelse
                             </tbody>
-                            <tfoot>
+                            <tfoot class="bg-primary text-white">
                             <tr>
                                 <td colspan="6" class="f-fw-700 text-end">Total General</td>
                                 <td class="f-fw-700 text-end">{{ number_format($totalGeneral, 2) }}</td>
                             </tr>
                             </tfoot>
                         </table>
+                    </div>
 
-
-
-
+                    {{-- Paginación --}}
+                    <div class="mt-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div class="small text-muted">Mostrando {{ $incomes->firstItem() }}–{{ $incomes->lastItem() }} de {{ $incomes->total() }}</div>
+                        <div>{{ $incomes->onEachSide(1)->links() }}</div>
                     </div>
 
                 </div>
@@ -162,8 +157,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Nuevo ingreso</h5>
-                    <button type="button" class="btn-close m-0 fs-5" data-bs-dismiss="modal"
-                            aria-label="Close" wire:click="closeModal('modalAddIncome')"></button>
+                    <button type="button" class="btn-close btn-close-white m-0 fs-5" data-bs-dismiss="modal" aria-label="Close" wire:click="closeModal('modalAddIncome')"></button>
                 </div>
 
                 <div class="modal-body">
@@ -171,7 +165,9 @@
                         <div class="alert alert-danger">
                             <strong>Corrige los siguientes errores:</strong>
                             <ul class="mb-0 mt-2 ps-3">
-                                @foreach ($errors->all() as $error) <li>{{ $error }}</li> @endforeach
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
                             </ul>
                         </div>
                     @endif
@@ -194,8 +190,7 @@
 
                         <div class="col-md-4">
                             <label class="form-label">Monto</label>
-                            <input type="number" step="0.01" min="0.01" class="form-control"
-                                   placeholder="0.00" wire:model.live="amount_input">
+                            <input type="number" step="0.01" min="0.01" class="form-control" placeholder="0.00" wire:model.live="amount_input">
                             @error('amount_input') <span class="text-danger">{{ $message }}</span> @enderror
                             @if(!is_null($converted_total))
                                 <small class="text-muted">Total en S/: {{ number_format($converted_total, 2) }}</small>
@@ -204,15 +199,13 @@
 
                         <div class="col-md-6">
                             <label class="form-label">A</label>
-                            <input type="text" class="form-control" placeholder="A quién / Área"
-                                   wire:model.defer="reason">
+                            <input type="text" class="form-control" placeholder="A quién / Área" wire:model.defer="reason">
                             @error('reason') <span class="text-danger">{{ $message }}</span> @enderror
                         </div>
 
                         <div class="col-md-6">
                             <label class="form-label">Motivo</label>
-                            <input type="text" class="form-control" placeholder="Detalle"
-                                   wire:model.defer="detail">
+                            <input type="text" class="form-control" placeholder="Detalle" wire:model.defer="detail">
                             @error('detail') <span class="text-danger">{{ $message }}</span> @enderror
                         </div>
 
@@ -223,9 +216,8 @@
                 </div>
 
                 <div class="modal-footer">
+                    <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal" wire:click="closeModal('modalAddIncome')">Cerrar</button>
                     <button type="button" class="btn btn-light-primary" wire:click="save">Guardar</button>
-                    <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal"
-                            wire:click="closeModal('modalAddIncome')">Cerrar</button>
                 </div>
             </div>
         </div>
@@ -237,8 +229,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Editar ingreso</h5>
-                    <button type="button" class="btn-close m-0 fs-5" data-bs-dismiss="modal"
-                            aria-label="Close" wire:click="closeModal('modalEditIncome')"></button>
+                    <button type="button" class="btn-close btn-close-white m-0 fs-5" data-bs-dismiss="modal" aria-label="Close" wire:click="closeModal('modalEditIncome')"></button>
                 </div>
 
                 <div class="modal-body">
@@ -246,7 +237,9 @@
                         <div class="alert alert-danger">
                             <strong>Corrige los siguientes errores:</strong>
                             <ul class="mb-0 mt-2 ps-3">
-                                @foreach ($errors->all() as $error) <li>{{ $error }}</li> @endforeach
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
                             </ul>
                         </div>
                     @endif
@@ -269,8 +262,7 @@
 
                         <div class="col-md-4">
                             <label class="form-label">Monto</label>
-                            <input type="number" step="0.01" min="0.01" class="form-control"
-                                   placeholder="0.00" wire:model.live="amount_input">
+                            <input type="number" step="0.01" min="0.01" class="form-control" placeholder="0.00" wire:model.live="amount_input">
                             @error('amount_input') <span class="text-danger">{{ $message }}</span> @enderror
                             @if(!is_null($converted_total))
                                 <small class="text-muted">Total en S/: {{ number_format($converted_total, 2) }}</small>
@@ -279,15 +271,13 @@
 
                         <div class="col-md-6">
                             <label class="form-label">A</label>
-                            <input type="text" class="form-control" placeholder="A quién / Área"
-                                   wire:model.defer="reason">
+                            <input type="text" class="form-control" placeholder="A quién / Área" wire:model.defer="reason">
                             @error('reason') <span class="text-danger">{{ $message }}</span> @enderror
                         </div>
 
                         <div class="col-md-6">
                             <label class="form-label">Motivo</label>
-                            <input type="text" class="form-control" placeholder="Detalle"
-                                   wire:model.defer="detail">
+                            <input type="text" class="form-control" placeholder="Detalle" wire:model.defer="detail">
                             @error('detail') <span class="text-danger">{{ $message }}</span> @enderror
                         </div>
 
@@ -298,12 +288,13 @@
                 </div>
 
                 <div class="modal-footer">
+                    <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal" wire:click="closeModal('modalEditIncome')">Cerrar</button>
                     <button type="button" class="btn btn-light-primary" wire:click="update">Guardar cambios</button>
-                    <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal"
-                            wire:click="closeModal('modalEditIncome')">Cerrar</button>
                 </div>
             </div>
         </div>
     </div>
 
 </div>
+
+

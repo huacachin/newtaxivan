@@ -135,7 +135,7 @@
   --font-light-color: #a0a0b0;
   --grid_color: rgba(144, 164, 246, 0.21);
   --border_color: rgba(0, 0, 0, 0.21);
-  --primary: 5, 100, 100;
+  --primary: #009BDC;
   --secondary: 116, 120, 141;
   --success: 15, 180, 80;
   --danger: 234, 86, 89;
@@ -181,7 +181,7 @@
 }
 
 .default {
-  --primary: 5, 100, 100;
+  --primary: #009BDC;
   --secondary: 116, 120, 141;
 }
 
@@ -196,7 +196,7 @@
 }
 
 .happy {
-  --primary: 36,114,145;
+  --primary: #009BDC;
   --secondary: 116, 120, 141;
 }
 

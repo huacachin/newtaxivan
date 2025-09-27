@@ -65,15 +65,7 @@ class IncomesExport implements
     /** ========================= LAYOUT / MAPPING ========================= */
     public function headings(): array
     {
-        return [
-            'ID',
-            'Fecha',
-            'Motivo',
-            'Detalle',
-            'Total',
-            'Usuario',
-            'Creado',
-        ];
+        return ['ID','Fecha','Motivo','Detalle','Total','Usuario','Creado'];
     }
 
     public function map($row): array
@@ -94,8 +86,8 @@ class IncomesExport implements
         // A B C D E F G
         return [
             'B' => NumberFormat::FORMAT_DATE_YYYYMMDD2, // Fecha
-            // 'E' moneda S/ la seteamos en AfterSheet para el rango de datos
             'G' => NumberFormat::FORMAT_DATE_DATETIME,  // Creado
+            // 'E' moneda se setea abajo en AfterSheet
         ];
     }
 
@@ -112,17 +104,25 @@ class IncomesExport implements
             AfterSheet::class => function (AfterSheet $e) {
                 $ws = $e->sheet->getDelegate();
 
+                // Paleta final
+                $PRIMARY   = 'FF212529';   // #212529 (ARGB)
+                $PRIMARYLT = 'FFEDEEEF';   // gris suave p/ bloque de títulos
+                $WHITE     = 'FFFFFFFF';
+                $BORDER    = 'FFCFD8DC';
+                $ZEBRA     = 'FFF9FAFB';
+
                 // Insertar 2 filas para Título (1) y Subtítulo (2)
                 $ws->insertNewRowBefore(1, 2);
 
-                // Título
-                $title = 'Reporte de Ingresos';
-                $ws->setCellValue('A1', $title);
+                // Título (centrado)
+                $ws->setCellValue('A1', 'Reporte de Ingresos');
                 $ws->mergeCells('A1:G1');
                 $ws->getStyle('A1')->getFont()->setBold(true)->setSize(14);
-                $ws->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+                $ws->getStyle('A1')->getAlignment()
+                    ->setVertical(Alignment::VERTICAL_CENTER)
+                    ->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-                // Subtítulo con filtros
+                // Subtítulo (centrado)
                 $rangeText = ($this->date_start ?: '—') . ' a ' . ($this->date_end ?: '—');
                 $label = match ((int)$this->filterType) {
                     1 => 'Motivo',
@@ -137,32 +137,44 @@ class IncomesExport implements
                 $ws->setCellValue('A2', $filters);
                 $ws->mergeCells('A2:G2');
                 $ws->getStyle('A2')->getFont()->setItalic(true)->setSize(10);
-                $ws->getStyle('A2')->getAlignment()->setWrapText(true);
+                $ws->getStyle('A2')->getAlignment()
+                    ->setVertical(Alignment::VERTICAL_CENTER)
+                    ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+                    ->setWrapText(true);
 
-                // Luego de insertar filas:
+                // Fondo suave al bloque de títulos
+                $ws->getStyle('A1:G2')->getFill()->setFillType(Fill::FILL_SOLID)
+                    ->getStartColor()->setARGB($PRIMARYLT);
+
+                // Fila de encabezados y de datos
                 $headerRow    = 3;  // fila del encabezado (headings)
                 $dataStartRow = 4;  // primera fila de datos
                 $last         = $ws->getHighestRow();
 
-                // Estilo de encabezado
-                $ws->getStyle("A{$headerRow}:G{$headerRow}")->getFont()->setBold(true);
+                // THEAD (bg #212529 + texto blanco, centrado)
+                $ws->getStyle("A{$headerRow}:G{$headerRow}")->getFont()
+                    ->setBold(true)->getColor()->setARGB($WHITE);
                 $ws->getStyle("A{$headerRow}:G{$headerRow}")->getAlignment()
                     ->setVertical(Alignment::VERTICAL_CENTER)
                     ->setHorizontal(Alignment::HORIZONTAL_CENTER)
                     ->setWrapText(true);
-                $ws->getRowDimension($headerRow)->setRowHeight(20);
-                $ws->getStyle("A{$headerRow}:G{$headerRow}")
-                    ->getFill()->setFillType(Fill::FILL_SOLID)
-                    ->getStartColor()->setARGB('FFE5E7EB'); // gris claro
+                $ws->getStyle("A{$headerRow}:G{$headerRow}")->getFill()
+                    ->setFillType(Fill::FILL_SOLID)
+                    ->getStartColor()->setARGB($PRIMARY);
+                $ws->getRowDimension($headerRow)->setRowHeight(22);
 
-                // Anchos sugeridos
-                $ws->getColumnDimension('A')->setWidth(8);
-                $ws->getColumnDimension('B')->setWidth(12);
-                $ws->getColumnDimension('C')->setWidth(20);
-                $ws->getColumnDimension('D')->setWidth(40);
-                $ws->getColumnDimension('E')->setWidth(14);
-                $ws->getColumnDimension('F')->setWidth(22);
-                $ws->getColumnDimension('G')->setWidth(18);
+                // Anchos mínimos (setWidth prevalece sobre ShouldAutoSize)
+                $ws->getColumnDimension('A')->setWidth(10); // ID
+                $ws->getColumnDimension('B')->setWidth(12); // Fecha
+                $ws->getColumnDimension('C')->setWidth(22); // Motivo
+                $ws->getColumnDimension('D')->setWidth(44); // Detalle
+                $ws->getColumnDimension('E')->setWidth(16); // Total
+                $ws->getColumnDimension('F')->setWidth(24); // Usuario
+                $ws->getColumnDimension('G')->setWidth(20); // Creado
+
+                // Wrap en columnas de texto largas
+                $ws->getStyle("C{$dataStartRow}:D" . max($dataStartRow, $last))
+                    ->getAlignment()->setWrapText(true);
 
                 // Congelar por debajo del header
                 $ws->freezePane("A{$dataStartRow}");
@@ -181,7 +193,7 @@ class IncomesExport implements
                 $cond->setConditionType(Conditional::CONDITION_EXPRESSION);
                 $cond->setConditions(['MOD(ROW(),2)=0']);
                 $cond->getStyle()->getFill()->setFillType(Fill::FILL_SOLID)
-                    ->getStartColor()->setARGB('FFF9FAFB'); // gris muy suave
+                    ->getStartColor()->setARGB($ZEBRA);
                 $rangeData = "A{$dataStartRow}:G{$last}";
                 $styles = $ws->getStyle($rangeData)->getConditionalStyles();
                 $styles[] = $cond;
@@ -190,36 +202,46 @@ class IncomesExport implements
                 // Bordes finos para header + datos
                 $ws->getStyle("A{$headerRow}:G{$last}")
                     ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)
-                    ->getColor()->setARGB('FFCFD8DC');
+                    ->getColor()->setARGB($BORDER);
 
                 // Alineación: números a la derecha en Total
                 $ws->getStyle("E{$dataStartRow}:E{$last}")
                     ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
 
-                // Formatos reforzados (por si cultura local)
-                $ws->getStyle("B{$dataStartRow}:B{$last}")->getNumberFormat()->setFormatCode('yyyy-mm-dd');
-                $ws->getStyle("G{$dataStartRow}:G{$last}")->getNumberFormat()->setFormatCode('yyyy-mm-dd hh:mm');
-                // Moneda S/ para Total (col E)
+                // Formatos (separados de la alineación para evitar el error)
+                $ws->getStyle("B{$dataStartRow}:B{$last}")
+                    ->getNumberFormat()->setFormatCode('yyyy-mm-dd');
+                $ws->getStyle("G{$dataStartRow}:G{$last}")
+                    ->getNumberFormat()->setFormatCode('yyyy-mm-dd hh:mm');
                 $ws->getStyle("E{$dataStartRow}:E{$last}")
                     ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
 
-                // Fila TOTAL
+                // Fila TOTAL (mismo fondo que thead: #212529; texto blanco)
                 $totalRow = $last + 1;
                 $ws->mergeCells("A{$totalRow}:D{$totalRow}");
                 $ws->setCellValue("A{$totalRow}", 'TOTAL');
                 $ws->setCellValue("E{$totalRow}", "=SUM(E{$dataStartRow}:E{$last})");
 
-                // Estilo de la fila de totales
-                $ws->getStyle("A{$totalRow}:G{$totalRow}")->getFont()->setBold(true);
-                $ws->getStyle("A{$totalRow}:G{$totalRow}")
-                    ->getFill()->setFillType(Fill::FILL_SOLID)
-                    ->getStartColor()->setARGB('FFF3F4F6'); // gris clarito
-                $ws->getStyle("A{$totalRow}:G{$totalRow}")
-                    ->getBorders()->getTop()->setBorderStyle(Border::BORDER_MEDIUM);
-                $ws->getStyle("E{$totalRow}")
-                    ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
+                $ws->getStyle("A{$totalRow}:G{$totalRow}")->getFont()
+                    ->setBold(true)->getColor()->setARGB($WHITE);
+                // Etiqueta TOTAL a la derecha, monto a la derecha
                 $ws->getStyle("A{$totalRow}:D{$totalRow}")
                     ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+                $ws->getStyle("E{$totalRow}")
+                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+                // Formato moneda (separado de la alineación para no encadenar)
+                $ws->getStyle("E{$totalRow}")
+                    ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
+
+                // Mismo color de fondo que el thead
+                $ws->getStyle("A{$totalRow}:G{$totalRow}")->getFill()
+                    ->setFillType(Fill::FILL_SOLID)
+                    ->getStartColor()->setARGB($PRIMARY);
+
+                // Borde superior marcado
+                $ws->getStyle("A{$totalRow}:G{$totalRow}")
+                    ->getBorders()->getTop()->setBorderStyle(Border::BORDER_MEDIUM)
+                    ->getColor()->setARGB($BORDER);
             },
         ];
     }

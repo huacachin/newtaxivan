@@ -1,15 +1,47 @@
 {{-- resources/views/livewire/reports/departures-stats-monthly.blade.php --}}
 @push('styles')
     <style>
-        th, td { white-space: nowrap; vertical-align: middle; text-align: center; }
-        thead th.sticky { position: sticky; top: 0; z-index: 2; }
-        .table thead th { background:#0ea5e9; color:#fff; }
-        .text-start { text-align: left; }
+        /* ===== Estilo matriz común ===== */
+        .tableFixHead thead th{
+            position: sticky; top: 0; z-index: 3;
+            background:#009BDC !important; color:#fff !important;
+            vertical-align: middle; text-align:center;
+        }
+        .tableFixHead tfoot th,
+        .tableFixHead tfoot td{
+            position: sticky; bottom: 0; z-index: 2;
+            background:#009BDC !important; color:#fff !important;
+            text-align:center;
+        }
+        .tableFixHead table.table th,
+        .tableFixHead table.table td{ white-space: nowrap; }
+
+        .num{ text-align:right; }
+        .text-start{ text-align:left !important; }
+
+        /* Domingos */
+        .sunday{ background:#ef4444 !important; color:#fff !important; }
+
+        /* Sticky cols para CONTROLADOR y PARADERO */
+        :root{
+            --w-col1: 180px; /* CONTROLADOR */
+            --w-col2: 220px; /* PARADERO */
+        }
+        .sticky-col{ position:sticky; left:0; z-index:4; min-width:var(--w-col1); }
+        .sticky-col-2{ position:sticky; left:var(--w-col1); z-index:4; min-width:var(--w-col2); }
+
+        /* Fondo blanco en sticky del body para que no “traspase” rayado */
+        tbody td.sticky-col,
+        tbody td.sticky-col-2{
+            background:#fff !important; background-clip:padding-box;
+            box-shadow: 1px 0 0 rgba(0,0,0,.06) inset;
+        }
     </style>
 @endpush
 
 @php
     $monthName = $months[$month] ?? '';
+    $days = range(1, $daysInMonth);
 @endphp
 
 <div class="container-fluid">
@@ -37,7 +69,7 @@
     <div class="row table-section">
         <!-- Filtros -->
         <div class="col-12">
-            <div class="card">
+            <div class="card shadow-sm">
                 <div class="card-body pt-3 pb-3">
                     <div class="row g-3 align-items-end">
                         <div class="col-xl-3 col-md-4">
@@ -58,18 +90,16 @@
                         </div>
                         <div class="col-xl-3 col-md-4">
                             <label class="form-label d-block invisible">.</label>
-                            <a href="#" wire:click="export"
-                               class="btn btn-primary w-100">
+                            <a href="#" wire:click="export" class="btn btn-primary w-100">
                                 <i class="ti ti-file-analytics f-s-16"></i> Exportar
                             </a>
                         </div>
                         <div class="col-xl-3 col-md-4">
                             <label class="form-label d-block invisible">.</label>
-                            <a href="{{ route('departures.index') }}" class="btn btn-secondary w-100">
+                            <a href="{{ route('departures.index') }}" class="btn btn-primary w-100">
                                 <i class="ti ti-rotate-2 f-s-16"></i> Regresar
                             </a>
                         </div>
-
                     </div>
 
                     <div class="mt-2" wire:loading.delay>
@@ -83,83 +113,91 @@
 
         <!-- Tabla -->
         <div class="col-xl-12">
-            <div class="card">
+            <div class="card shadow-sm">
                 <div class="card-header">
                     <h5 class="mb-0" style="color:#e11d48;">
                         REPORTE ESTADÍSTICO DE SALIDAS – {{ $monthName }} {{ $year }}
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-sm table-bordered table-striped table-hover">
-                            <thead class="text-center">
+                    <div class="table-responsive tableFixHead">
+                        <table class="table table-sm table-bordered table-striped table-hover align-middle">
+                            <thead>
                             <tr>
-                                <th class="sticky">CONTROLADOR</th>
-                                <th class="sticky">PARADERO</th>
-                                <th class="sticky">TIPO</th>
-                                @for($d=1;$d<=$daysInMonth;$d++)
+                                <th class="sticky-col">CONTROLADOR</th>
+                                <th class="sticky-col-2">PARADERO</th>
+                                <th>TIPO</th>
+                                @foreach($days as $d)
                                     @php $isSun = \Carbon\Carbon::create($year,$month,$d)->isSunday(); @endphp
-                                    <th class="sticky {{ $isSun ? 'bg-danger text-white' : '' }}">{{ $d }}</th>
-                                @endfor
-                                <th class="sticky">SALIDAS</th>
-                                <th class="sticky">S/</th>
+                                    <th class="{{ $isSun ? 'sunday' : '' }}">{{ $d }}</th>
+                                @endforeach
+                                <th>SALIDAS</th>
+                                <th>S/</th>
                             </tr>
                             </thead>
 
                             <tbody>
                             @forelse($rows as $r)
                                 <tr class="text-center">
-                                    <td class="text-start">{{ $r['controller'] }}</td>
-                                    <td class="text-start">{{ $r['stop'] }}</td>
+                                    <td class="sticky-col text-start">{{ $r['controller'] }}</td>
+                                    <td class="sticky-col-2 text-start">{{ $r['stop'] }}</td>
                                     <td>{{ $r['type'] }}</td>
 
-                                    @for($d=1;$d<=$daysInMonth;$d++)
-                                        <td>
-                                            @php $val = $r['days'][$d] ?? 0; @endphp
+                                    @foreach($days as $d)
+                                        @php $val = $r['days'][$d] ?? 0; @endphp
+                                        <td class="num">
                                             {{ $r['type']==='S/' ? number_format($val,2) : number_format($val) }}
                                         </td>
-                                    @endfor
+                                    @endforeach
 
-                                    <td class="f-w-600">
+                                    <td class="num f-w-600">
                                         {{ $r['total_sal'] !== null ? number_format($r['total_sal']) : '' }}
                                     </td>
-                                    <td class="f-w-600 text-danger">
+                                    <td class="num f-w-600">
                                         {{ $r['total_soles'] !== null ? number_format($r['total_soles'],2) : '' }}
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="{{ 3 + $daysInMonth + 2 }}" class="text-center">
+                                    <td colspan="{{ 3 + $daysInMonth + 2 }}" class="py-4 text-muted text-center">
                                         No se encontraron resultados
                                     </td>
                                 </tr>
                             @endforelse
-
-                            {{-- Totales inferiores --}}
-                            @if($daysInMonth>0)
-                                <tr class="table-primary text-center f-w-600">
-                                    <td colspan="3" class="text-start">TOTAL GENERAL — Salidas</td>
-                                    @for($d=1;$d<=$daysInMonth;$d++)
-                                        <td>{{ number_format($totalsSalidas[$d] ?? 0) }}</td>
-                                    @endfor
-                                    <td>{{ number_format($grandSalidas) }}</td>
-                                    <td></td>
-                                </tr>
-                                <tr class="table-primary text-center f-w-600">
-                                    <td colspan="3" class="text-start">TOTAL GENERAL — S/</td>
-                                    @for($d=1;$d<=$daysInMonth;$d++)
-                                        <td>{{ number_format($totalsMonto[$d] ?? 0, 2) }}</td>
-                                    @endfor
-                                    <td></td>
-                                    <td class="text-danger">{{ number_format($grandMonto,2) }}</td>
-                                </tr>
-                            @endif
                             </tbody>
+
+                            @if($daysInMonth>0)
+                                <tfoot class="fw-semibold">
+                                <tr>
+                                    <td class="sticky-col"></td>
+                                    <td class="sticky-col-2 text-start">TOTAL GENERAL — Salidas</td>
+                                    <td></td>
+                                    @foreach($days as $d)
+                                        <td class="num">{{ number_format($totalsSalidas[$d] ?? 0) }}</td>
+                                    @endforeach
+                                    <td class="num">{{ number_format($grandSalidas) }}</td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td class="sticky-col"></td>
+                                    <td class="sticky-col-2 text-start">TOTAL GENERAL — S/</td>
+                                    <td></td>
+                                    @foreach($days as $d)
+                                        <td class="num">{{ number_format($totalsMonto[$d] ?? 0, 2) }}</td>
+                                    @endforeach
+                                    <td></td>
+                                    <td class="num">{{ number_format($grandMonto,2) }}</td>
+                                </tr>
+                                </tfoot>
+                            @endif
                         </table>
                     </div>
+
+                    <small class="text-muted">
+                        * Domingos se resaltan en rojo para referencia visual.
+                    </small>
                 </div>
             </div>
         </div>
-
     </div>
 </div>

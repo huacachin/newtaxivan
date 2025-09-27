@@ -8,7 +8,7 @@
     --grid_color: rgba(144, 164, 246, 0.21);
     --border_color: rgba(0, 0, 0, 0.21);
 
-    --primary: 5, 100, 100;
+    --primary: 0, 155, 220;
     --secondary: 116, 120, 141;
     --success: 15, 180, 80;
     --danger: 234, 86, 89;
@@ -80,7 +80,7 @@
     --bs-accordion-inner-border-radius: 0.5rem;
 }
 .default{
-    --primary: 5, 100, 100;
+    --primary: 0, 155, 220;
     --secondary: 116, 120, 141;
 }
 .gold{
@@ -92,7 +92,7 @@
     --secondary: 111,90,126;
 }
 .happy{
-    --primary: 36,114,145;
+    --primary: 0, 155, 220;
     --secondary: 116, 120, 141;
 }
 .nature{
@@ -113,7 +113,7 @@ nav.dark-sidebar,body[class='ltr dark'],body[class='ltr dark modal-open'] {
     //--white: #2d2f39;
     --white: #2d2f39;
     --black: #DCE2F0;
-    --bodybg-color: #23242f;
+    --bodybg-color: #009BDC;
     --bs-body-bg: #2d2f39;
     --font-color: #fff;
     --box-shadow: 0px 0px 21px 3px rgba(119, 82, 254, 0.05);
