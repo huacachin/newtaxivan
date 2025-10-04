@@ -30,6 +30,18 @@
 
         .num{ text-align: right; }
         .text-start{ text-align: left !important; }
+
+        .screen-overlay {
+            position: fixed;
+            inset: 0;                 /* full viewport */
+            display: none;            /* Livewire lo pondrá en flex */
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,.35);
+            backdrop-filter: blur(2px);
+            z-index: 2000;            /* sobre modals/backdrops de Bootstrap */
+            pointer-events: all;      /* bloquea clics */
+        }
     </style>
 @endpush
 
@@ -71,10 +83,6 @@
                                 <i class="ti ti-square-plus f-s-17"></i> Nuevo
                             </button>
                         </div>
-                    </div>
-
-                    <div class="mt-2" wire:loading.delay>
-                        <span class="text-muted"><span class="spinner-border spinner-border-sm"></span> Cargando…</span>
                     </div>
                 </div>
             </div>
@@ -148,10 +156,6 @@
                             </tfoot>
                         </table>
                     </div>
-
-                    <div class="mt-2" wire:loading.delay>
-                        <span class="text-muted"><span class="spinner-border spinner-border-sm"></span> Actualizando…</span>
-                    </div>
                 </div>
             </div>
         </div>
@@ -222,19 +226,6 @@
                                 <label for="phone" class="form-label">Teléfono</label>
                                 <input id="phone" type="text" class="form-control" placeholder="Ingresar teléfono" wire:model="phone">
                                 @error('phone') <span class="text-danger">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="headquarter" class="form-label">Sucursal</label>
-                                <select id="headquarter" class="form-select" wire:model="headquarter">
-                                    <option value="">Selecciona una sucursal</option>
-                                    @foreach($headquartes as $h)
-                                        <option value="{{ $h->id }}">{{ $h->name }}</option>
-                                    @endforeach
-                                </select>
-                                @error('headquarter') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
 
@@ -377,19 +368,6 @@
                                 @error('phone') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
-
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="headquarter_e" class="form-label">Sucursal</label>
-                                <select id="headquarter_e" class="form-select" wire:model="headquarter">
-                                    <option value="">Selecciona una sucursal</option>
-                                    @foreach($headquartes as $h)
-                                        <option value="{{ $h->id }}">{{ $h->name }}</option>
-                                    @endforeach
-                                </select>
-                                @error('headquarter') <span class="text-danger">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
                     </div>
 
                     {{-- Sucursales (múltiple) + Primaria --}}
@@ -519,6 +497,17 @@
                     <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal">Cerrar</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="screen-overlay"
+         wire:loading.delay.flex
+         wire:target="fromDate,toDate,searchText,searchType,groupMode,
+                  reportMonthly,reportRmp,reportStats,export,
+                  openAddModal,openEditModal,toggleGroup,save,update">
+        <div class="text-center">
+            <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
+            <div class="mt-2 text-white fw-semibold">Cargando…</div>
         </div>
     </div>
 </div>

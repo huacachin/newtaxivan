@@ -30,27 +30,6 @@
         .ta-center { text-align: center; }
         .f-w-600 { font-weight: 600; }
 
-        /* Overlay de card */
-        .card-loading { position: relative; }
-        .card-loading .overlay {
-            position: absolute;
-            inset: 0;                /* cubre todo el card */
-            display: none;           /* Livewire lo vuelve flex cuando hay request */
-            align-items: center;
-            justify-content: center;
-            background: rgba(15, 23, 42, .2);
-            z-index: 50;
-            pointer-events: all;     /* bloquea clicks */
-            border-radius: inherit;
-        }
-        .card-loading .spinner {
-            width: 40px; height: 40px; border-radius: 50%;
-            border: 4px solid rgba(255,255,255,.35);
-            border-top-color: #fff;
-            animation: spin .8s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
         .screen-overlay {
             position: fixed;
             inset: 0;                 /* full viewport */
@@ -90,7 +69,7 @@
 
         <!-- Tabla principal -->
         <div class="col-xl-12">
-            <div class="card card-loading">
+            <div class="card">
                 <div class="card-body">
                     <div class="row mb-2">
                         @if($searchType != 3)
