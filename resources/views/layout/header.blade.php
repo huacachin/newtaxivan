@@ -147,25 +147,25 @@
                                         <div class="flex-shrink-0 dropdown">
                                             <a href="#" class="d-block head-icon pe-0" data-bs-toggle="dropdown"
                                                aria-expanded="false">
-                                                <img src="{{asset('assets/images/avtar/woman.jpg')}}" alt="mdo"
+                                                <img src="{{auth()->user()->avatar_url}}" alt="mdo"
                                                      class="rounded-circle h-35 w-35">
                                             </a>
                                             <ul class="dropdown-menu dropdown-menu-end header-card border-0 px-2">
                                                 <li class="dropdown-item d-flex align-items-center p-2">
                                   <span class="h-35 w-35 d-flex-center b-r-50 position-relative">
-                                    <img src="{{asset('assets/images/avtar/woman.jpg')}}" alt=""
+                                    <img src="{{auth()->user()->avatar_url}}" alt=""
                                          class="img-fluid b-r-50">
                                     <span
                                         class="position-absolute top-0 end-0 p-1 bg-success border border-light rounded-circle animate__animated animate__fadeIn animate__infinite animate__fast"></span>
                                   </span>
                                                     <div class="flex-grow-1 ps-2">
-                                                        <h6 class="mb-0"> Ninja Monaldo</h6>
-                                                        <p class="f-s-12 mb-0 text-secondary">Web Designer</p>
+                                                        <h6 class="mb-0"> {{auth()->user()->name}}</h6>
+                                                        <p class="f-s-12 mb-0 text-secondary">{{auth()->user()->roles->first()->name}}</p>
                                                     </div>
                                                 </li>
 
                                                 <li class="app-divider-v dotted py-1"></li>
-                                                <li>
+                                                <!--li>
                                                     <a class="dropdown-item" href="{{route('logout')}}">
                                                         <i class="ti ti-user-circle pe-1 f-s-18"></i> Profile Detaiils
                                                     </a>
@@ -192,12 +192,12 @@
                                                         <i class="ti ti-currency-dollar pe-1 f-s-18"></i> Pricing
                                                     </a>
                                                 </li>
-                                                <li class="app-divider-v dotted py-1"></li>
+                                                <li class="app-divider-v dotted py-1"></li-->
                                                 <li class="btn-light-danger b-r-5">
                                                     <form action="{{ route('logout') }}" method="POST">
                                                         @csrf
                                                         <button type="submit" class="dropdown-item mb-0 text-danger">
-                                                            <i class="ti ti-logout pe-1 f-s-18 text-danger"></i> Log Out
+                                                            <i class="ti ti-logout pe-1 f-s-18 text-danger"></i> Cerrar Sesión
                                                         </button>
                                                     </form>
                                                 </li>

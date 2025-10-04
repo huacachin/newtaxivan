@@ -51,8 +51,8 @@
             'icon'     => 'ti ti-currency-dollar-off',
             'canAny'   => ['debts.report','debts.view'],
             'children' => [
-                ['title' => 'Deuda x Días',  'route' => 'debts.debt-per-days', 'can' => 'debts.report'],
-                ['title' => 'Deuda Mensual', 'route' => 'debts.monthly',       'can' => 'debts.report'],
+                ['title' => 'Deuda x Días',  'route' => 'debts.debt-per-days', 'can' => 'debts.view'],
+                ['title' => 'Deuda Mensual', 'route' => 'debts.monthly',       'can' => 'debts.view'],
                 // agrega más si los usas:
                 // ['title' => 'Generar deuda', 'route' => 'debts.generate', 'can' => 'debts.create'],
                 // ['title' => 'Eliminar deuda','route' => 'debts.delete',  'can' => 'debts.delete'],

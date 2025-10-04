@@ -118,6 +118,7 @@
 
                 <div class="card-footer">
                     <div class="row g-2">
+                        @role('admin')
                         <div class="col-xl-2 col-md-4">
                             <button class="btn btn-primary w-100" wire:click="daily">
                                 <i class="ti ti-report-analytics f-s-16"></i> Diario
@@ -138,6 +139,7 @@
                                 <i class="ti ti-file-analytics f-s-16"></i> Exportar
                             </button>
                         </div>
+                        @endrole
                         <div class="col-xl-2 col-md-4">
                             <button class="btn btn-primary w-100" wire:click="openAddModal">
                                 <i class="ti ti-square-plus f-s-16"></i> Nuevo

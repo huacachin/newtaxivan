@@ -13,6 +13,7 @@ class PaymentController extends Controller
 {
     public function __construct(){
         $this->middleware(['auth','permission:payments.view'])->only(['index']);
+        $this->middleware(['auth', 'role:admin'])->only(['monthly','daily','stats']);
     }
     public function index()
     {

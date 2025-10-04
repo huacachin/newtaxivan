@@ -16,6 +16,7 @@ class DepartureController extends Controller
     public function __construct()
     {
         $this->middleware(['auth', 'permission:departures.view'])->only(['index']);
+        $this->middleware(['auth', 'role:admin'])->only(['monthly','rmp','stats']);
     }
 
     public function index()

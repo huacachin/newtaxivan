@@ -115,21 +115,23 @@
                         </div>
                     </div>
                     <div class="row g-2 mb-2">
-                        <div class="col-xl-2 col-md-2">
-                            <button wire:click="reportMonthly" class="btn btn-primary w-100">
-                                <i class="ti ti-report-analytics f-s-16"></i> Mensual
-                            </button>
-                        </div>
-                        <div class="col-xl-2 col-md-2">
-                            <button wire:click="reportRmp" class="btn btn-primary w-100">
-                                <i class="ti ti-report-analytics f-s-16"></i> RMP V.T
-                            </button>
-                        </div>
-                        <div class="col-xl-2 col-md-2">
-                            <button wire:click="reportStats" class="btn btn-primary w-100">
-                                <i class="ti ti-report-analytics f-s-16"></i> Estadis.
-                            </button>
-                        </div>
+                        @role('admin')
+                            <div class="col-xl-2 col-md-2">
+                                <button wire:click="reportMonthly" class="btn btn-primary w-100">
+                                    <i class="ti ti-report-analytics f-s-16"></i> Mensual
+                                </button>
+                            </div>
+                            <div class="col-xl-2 col-md-2">
+                                <button wire:click="reportRmp" class="btn btn-primary w-100">
+                                    <i class="ti ti-report-analytics f-s-16"></i> RMP V.T
+                                </button>
+                            </div>
+                            <div class="col-xl-2 col-md-2">
+                                <button wire:click="reportStats" class="btn btn-primary w-100">
+                                    <i class="ti ti-report-analytics f-s-16"></i> Estadis.
+                                </button>
+                            </div>
+                        @endrole
                         <div class="col-xl-2 col-md-2">
                             <button class="btn btn-primary w-100" wire:click="export">
                                 <i class="ti ti-file-analytics f-s-16"></i> Exportar

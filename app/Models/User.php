@@ -83,6 +83,11 @@ class User extends Authenticatable
         return $this->belongsToMany(\App\Models\User::class)->withTimestamps()->withPivot('is_default');
     }
 
+    public function getAvatarUrlAttribute()
+    {
+        return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&size=128&background=0D8ABC&color=fff';
+    }
+
 
 
 }
