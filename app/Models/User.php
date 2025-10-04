@@ -74,4 +74,15 @@ class User extends Authenticatable
     {
         return $this->hasMany(\App\Models\Income::class);
     }
+
+    public function headquarters() {
+        return $this->belongsToMany(\App\Models\Headquarter::class)->withTimestamps()->withPivot('is_default');
+    }
+
+    public function users() {
+        return $this->belongsToMany(\App\Models\User::class)->withTimestamps()->withPivot('is_default');
+    }
+
+
+
 }

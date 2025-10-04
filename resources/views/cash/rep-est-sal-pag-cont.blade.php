@@ -5,7 +5,7 @@
 @endsection
 
 @section('main-content')
-    <h1>Rep esp Sal Pag Cont</h1>
+    <livewire:cash.rep-est-pag-cont />
 @endsection
 
 @section('script')

@@ -65,14 +65,14 @@
             'icon'     => 'ti ti-home-dollar',
             'canAny'   => ['cash.view','cash.report'],
             'children' => [
-                ['title' => 'Apertura Caja',         'route' => 'cash.open',                  'can' => 'cash.view'],
+               // ['title' => 'Apertura Caja',         'route' => 'cash.open',                  'can' => 'cash.view'],
                 ['title' => 'Ingreso',               'route' => 'cash.incomes',               'can' => 'cash.view'],
                 ['title' => 'Egreso',                'route' => 'cash.expenses',              'can' => 'cash.view'],
-                ['title' => 'Reporte Movimiento',    'route' => 'cash.report.movement',       'can' => 'cash.report'],
+                //['title' => 'Reporte Movimiento',    'route' => 'cash.report.movement',       'can' => 'cash.report'],
                 ['title' => 'Reporte General',       'route' => 'cash.report.general',        'can' => 'cash.report'],
                 ['title' => 'Rep Est Draco Base',    'route' => 'cash.report.est-draco-base', 'can' => 'cash.report'],
-                ['title' => 'Rep Esp Sal Pag Cont',  'route' => 'cash.report.est-sal-pag-cont','can' => 'cash.report'],
-                ['title' => 'Rep Est Caja M.A',      'route' => 'cash.report.est-caja-ma',     'can' => 'cash.report'],
+               // ['title' => 'Rep Esp Sal Pag Cont',  'route' => 'cash.report.est-sal-pag-cont','can' => 'cash.report'],
+                // ['title' => 'Rep Est Caja M.A',      'route' => 'cash.report.est-caja-ma',     'can' => 'cash.report'],
             ],
         ],
     ];

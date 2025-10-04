@@ -113,6 +113,52 @@ class Index extends Component
         ];
     }
 
+    // ==============================
+    // === INTEGRACIÓN ROLES/SEDES: helpers de rol y sedes del usuario
+    // ==============================
+
+    /** IDs de sedes asignadas al usuario autenticado (pivote + primaria por compatibilidad) */
+    private array $userHqIds = [];
+
+    /** Retorna true si el usuario autenticado tiene el rol indicado (insensible a mayúsculas). */
+    private function userHasRole(string $needle): bool
+    {
+        $u = Auth::user();
+        if (!$u) return false;
+
+        $needle = mb_strtolower($needle);
+        return $u->getRoleNames()
+            ->map(fn ($r) => mb_strtolower($r))
+            ->contains($needle);
+    }
+
+    /** Atajos legibles */
+    private function isAdmin(): bool
+    {
+        // agrega otras variantes si existiesen
+        return $this->userHasRole('admin');
+    }
+    private function isController(): bool
+    {
+        return $this->userHasRole('controller');
+    }
+
+    /** Carga ids de sedes asignadas al usuario (N:N + primaria en users.headquarter_id) */
+    private function loadUserHeadquarters(): void
+    {
+        $u = Auth::user();
+        if (!$u) {
+            $this->userHqIds = [];
+            return;
+        }
+
+        $ids = $u->headquarters()->pluck('headquarters.id')->map(fn($v)=>(int)$v)->all();
+        if ($u->headquarter_id && !in_array((int)$u->headquarter_id, $ids, true)) {
+            $ids[] = (int)$u->headquarter_id;
+        }
+        $this->userHqIds = $ids;
+    }
+
     // ===== Ciclo de vida =====
     public function mount(): void
     {
@@ -128,8 +174,17 @@ class Index extends Component
 
         $this->hour          = $now->format('H:i');
 
-        $this->headquarters = Headquarter::where('status','active')
-            ->orderBy('name')->get(['id','name']);
+        // === INTEGRACIÓN ROLES/SEDES: catálogo de sedes para filtros y formularios
+        $this->loadUserHeadquarters();
+        if ($this->isAdmin()) {
+            $this->headquarters = Headquarter::where('status','active')
+                ->orderBy('name')->get(['id','name']);     // ✅ modelos Eloquent (no arrays)
+        } else {
+            $ids = $this->userHqIds ?: [-1];
+            $this->headquarters = Headquarter::where('status','active')
+                ->whereIn('id', $ids)
+                ->orderBy('name')->get(['id','name']);     // ✅ modelos Eloquent (no arrays)
+        }
     }
 
     // ===== Helpers =====
@@ -400,7 +455,6 @@ class Index extends Component
 
         $this->prefillAmountFromCost();
 
-
         $this->dispatch('open-modal', ['name' => 'modalAddPayment', 'focus' => 'pay_plate']);
     }
 
@@ -470,13 +524,22 @@ class Index extends Component
     // ===== Guardar / Actualizar =====
     public function save(): void
     {
-
         $today = now(config('app.timezone','America/Lima'))->toDateString();
         $this->date_register = $today;
         if ($this->type_form === 'PAGO') {
             $today = now(config('app.timezone','America/Lima'))->toDateString();
             $this->date_register = $today;
             $this->date_payment  = $today;
+        }
+
+        // === INTEGRACIÓN ROLES/SEDES: controller solo puede usar sedes asignadas
+        if (
+            !$this->isAdmin()
+            && $this->headquarter_id_form
+            && !in_array((int)$this->headquarter_id_form, $this->userHqIds, true)
+        ) {
+            $this->addError('headquarter_id_form', 'No tienes acceso a esta sucursal.');
+            return;
         }
 
         // Calcular auxiliares y validar
@@ -538,6 +601,16 @@ class Index extends Component
             $today = now(config('app.timezone','America/Lima'))->toDateString();
             $this->date_register = $today;
             $this->date_payment  = $today;
+        }
+
+        // === INTEGRACIÓN ROLES/SEDES: controller solo puede usar sedes asignadas
+        if (
+            !$this->isAdmin()
+            && $this->headquarter_id_form
+            && !in_array((int)$this->headquarter_id_form, $this->userHqIds, true)
+        ) {
+            $this->addError('headquarter_id_form', 'No tienes acceso a esta sucursal.');
+            return;
         }
 
         $this->recalcPendingDebt();
@@ -636,6 +709,11 @@ class Index extends Component
                 }
             });
 
+        // === INTEGRACIÓN ROLES/SEDES: admin ve todo; controller solo sus propios registros
+        if (!$this->isAdmin()) {
+            $q->where('user_id', Auth::id());
+        }
+
         // Datos para la tabla
         $payments = (clone $q)->orderBy('date_register')->orderBy('hour')->get();
 
@@ -643,8 +721,8 @@ class Index extends Component
         $total_general = (clone $q)->sum('amount');
 
         return view('livewire.payments.index', [
-            'payments'     => $payments,
-            'headquarters' => $this->headquarters,
+            'payments'      => $payments,
+            'headquarters'  => $this->headquarters,
             'total_general' => $total_general
         ]);
     }

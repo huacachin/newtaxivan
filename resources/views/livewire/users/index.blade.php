@@ -96,6 +96,7 @@
                                 <th>Usuario</th>
                                 <th>Teléfono</th>
                                 <th>Sede</th>
+                                <th>Rol</th>
                                 <th>Permisos</th>
                                 <th>Acción</th>
                             </tr>
@@ -109,7 +110,15 @@
                                         <td class="sticky-col-2 text-start fw-semibold">{{ $user->name }}</td>
                                         <td>{{ $user->username }}</td>
                                         <td>{{ $user->phone ?: '—' }}</td>
-                                        <td class="text-start">{{ $user->headquarter->name ?? '—' }}</td>
+                                        <td class="text-start">
+                                            {{ $user->headquarters->pluck('name')->implode(', ') ?: '—' }}
+                                            @if($user->headquarter)
+                                                <br><small class="text-muted">Primaria: {{ $user->headquarter->name }}</small>
+                                            @endif
+                                        </td>
+                                        <td class="text-start">
+                                            {{ optional($user->roles->first())->name ?? '—' }}
+                                        </td>
                                         <td>
                                             <span class="badge bg-dark">
                                                 {{ $user->permissions->count() }} permisos
@@ -123,7 +132,7 @@
                                 @endforeach
                             @else
                                 <tr>
-                                    <td colspan="7" class="text-center py-4 text-muted">No se encontraron resultados</td>
+                                    <td colspan="8" class="text-center py-4 text-muted">No se encontraron resultados</td>
                                 </tr>
                             @endif
                             </tbody>
@@ -132,8 +141,8 @@
                             <tr>
                                 <td class="sticky-col"></td>
                                 <td class="sticky-col-2 text-start">TOTAL USUARIOS</td>
-                                <td colspan="3"></td>
-                                <td class="num">{{ number_format($users->count()) }}</td>
+                                <td colspan="4"></td>
+                                <td class="num text-center">{{ number_format($users->count()) }}</td>
                                 <td></td>
                             </tr>
                             </tfoot>
@@ -228,6 +237,68 @@
                                 @error('headquarter') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
+
+                        {{-- Sucursales (múltiple) + Primaria --}}
+                        <div class="col-12">
+                            <label class="form-label">Sucursales</label>
+                            <div class="row g-2">
+                                @foreach($headquartes as $h)
+                                    <div class="col-12 col-md-6 col-lg-4">
+                                        <div class="border rounded p-2 d-flex align-items-center justify-content-between">
+                                            <label class="form-check-label d-flex align-items-center gap-2 mb-0">
+                                                <input class="form-check-input"
+                                                       type="checkbox"
+                                                       value="{{ $h->id }}"
+                                                       wire:model="selectedHeadquarters">
+                                                <span>{{ $h->name }}</span>
+                                            </label>
+
+                                            {{-- Radio para marcar como primaria --}}
+                                            <div class="form-check mb-0" title="Marcar como sede primaria">
+                                                <input class="form-check-input"
+                                                       type="radio"
+                                                       name="default_hq"
+                                                       value="{{ $h->id }}"
+                                                       wire:model="defaultHeadquarter">
+                                                <small class="text-muted">Primaria</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+
+                            @error('selectedHeadquarters') <span class="text-danger d-block mt-1">{{ $message }}</span> @enderror
+                            @error('defaultHeadquarter')  <span class="text-danger d-block mt-1">{{ $message }}</span> @enderror
+
+                            <small class="text-muted d-block mt-1">
+                                Selecciona una o más sucursales y elige cuál será la <strong>primaria</strong>.
+                            </small>
+                        </div>
+
+
+                        <div class="col-12 mt-2">
+                            <h6 class="mb-2">Rol</h6>
+                            <div class="row g-2">
+                                @forelse($roles as $r)
+                                    <div class="col-6 col-md-3">
+                                        <label class="form-check-label">
+                                            <input class="form-check-input"
+                                                   type="radio"
+                                                   name="role_single_add"
+                                                   value="{{ $r->id }}"
+                                                   wire:model="selectedRoleId">
+                                            <span class="ms-1">{{ $r->name }}</span>
+                                        </label>
+                                    </div>
+                                @empty
+                                    <div class="col-12">
+                                        <div class="alert alert-warning mb-0">No hay roles definidos.</div>
+                                    </div>
+                                @endforelse
+                            </div>
+                            @error('selectedRoleId') <span class="text-danger">{{ $message }}</span> @enderror
+                        </div>
+
                     </div> {{-- row --}}
                 </div>
                 <div class="modal-footer">
@@ -320,6 +391,77 @@
                             </div>
                         </div>
                     </div>
+
+                    {{-- Sucursales (múltiple) + Primaria --}}
+                    <div class="col-12">
+                        <label class="form-label">Sucursales</label>
+                        <div class="row g-2">
+                            @foreach($headquartes as $h)
+                                <div class="col-12 col-md-6 col-lg-4">
+                                    <div class="border rounded p-2 d-flex align-items-center justify-content-between">
+                                        <label class="form-check-label d-flex align-items-center gap-2 mb-0">
+                                            <input class="form-check-input"
+                                                   type="checkbox"
+                                                   value="{{ $h->id }}"
+                                                   wire:model="selectedHeadquarters">
+                                            <span>{{ $h->name }}</span>
+                                        </label>
+
+                                        {{-- Radio para marcar como primaria --}}
+                                        <div class="form-check mb-0" title="Marcar como sede primaria">
+                                            <input class="form-check-input"
+                                                   type="radio"
+                                                   name="default_hq"
+                                                   value="{{ $h->id }}"
+                                                   wire:model="defaultHeadquarter">
+                                            <small class="text-muted">Primaria</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        @error('selectedHeadquarters') <span class="text-danger d-block mt-1">{{ $message }}</span> @enderror
+                        @error('defaultHeadquarter')  <span class="text-danger d-block mt-1">{{ $message }}</span> @enderror
+
+                        <small class="text-muted d-block mt-1">
+                            Selecciona una o más sucursales y elige cuál será la <strong>primaria</strong>.
+                        </small>
+                    </div>
+
+                    {{-- === ROLES (crear/editar) === --}}
+                    <div class="row mt-2">
+                        <div class="col-12">
+                            <h6 class="mb-2">Rol</h6>
+                        </div>
+                        <div class="col-12">
+                            <div class="card border">
+                                <div class="card-body">
+                                    <div class="row g-2">
+                                        @forelse($roles as $r)
+                                            <div class="col-6 col-md-3">
+                                                <label class="form-check-label">
+                                                    <input class="form-check-input"
+                                                           type="radio"
+                                                           name="role_single_edit"
+                                                           value="{{ $r->id }}"
+                                                           wire:model="selectedRoleId">
+                                                    <span class="ms-1">{{ $r->name }}</span>
+                                                </label>
+                                            </div>
+                                        @empty
+                                            <div class="col-12">
+                                                <div class="alert alert-warning mb-0">No hay roles definidos.</div>
+                                            </div>
+                                        @endforelse
+                                    </div>
+                                    @error('selectedRoleId') <span class="text-danger">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- === /ROLES === --}}
 
                     {{-- === PERMISOS (solo en EDITAR) === --}}
                     <div class="row mt-2">

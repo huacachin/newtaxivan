@@ -5,6 +5,9 @@ namespace App\Livewire\Departures;
 use App\Models\Departure;
 use App\Models\Headquarter;
 use App\Models\Vehicle;
+use Illuminate\Contracts\View\View;
+use Illuminate\Database\Query\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -12,18 +15,61 @@ use Illuminate\Support\Facades\Schema;
 use Livewire\Component;
 use Livewire\WithPagination;
 
+/**
+ * Componente Livewire para gestionar y listar "salidas" (departures).
+ *
+ * Ofrece:
+ * - Filtros por fecha, placa, usuario y sede.
+ * - Modo agrupado/detalle.
+ * - Creación/edición con autocompletado de vehículo por placa.
+ * - Totales y totales combinados de registros "apoyo" (sin vehicle_id).
+ */
 class Index extends Component
 {
-    // Filtros
-    public int $searchType = 1;      // 1=Placa, 2=Usuario, 3=Sucursal
+    // ==============================
+    // Estado / Filtros de la pantalla
+    // ==============================
+
+    /**
+     * Tipo de búsqueda: 1=Placa, 2=Usuario, 3=Sucursal.
+     * @var int
+     */
+    public int $searchType = 1;
+
+    /**
+     * Texto de búsqueda libre (según $searchType).
+     * @var string|null
+     */
     public ?string $searchText = null;
 
-    public ?string $fromDate = null; // YYYY-MM-DD
-    public ?string $toDate   = null; // YYYY-MM-DD
+    /**
+     * Fecha inicial del rango (YYYY-MM-DD).
+     * @var string|null
+     */
+    public ?string $fromDate = null;
+
+    /**
+     * Fecha final del rango (YYYY-MM-DD).
+     * @var string|null
+     */
+    public ?string $toDate = null;
+
+    /**
+     * Colección de sedes activas para combos y filtros.
+     * @var \Illuminate\Support\Collection|array
+     */
     public $headquarters;
 
-    public bool $groupMode = false;  // Agrupado ON/OFF
+    /**
+     * Modo de agrupación ON/OFF (false=Detalle, true=Agrupado).
+     * @var bool
+     */
+    public bool $groupMode = false;
 
+    /**
+     * Estado sincronizado con query string.
+     * @var array<string, array<string, mixed>>
+     */
     protected $queryString = [
         'searchType' => ['except' => 1],
         'searchText' => ['except' => null],
@@ -32,24 +78,82 @@ class Index extends Component
         'groupMode'  => ['except' => false],
     ];
 
-    public ?string $plate = null;
-    public ?string $date = null;
-    public ?int    $headquarter_id = null;
-    public ?float  $price = 0;
-    public ?int    $passenger = 0;
-    public ?float  $passage = 0;
+    // ==============================
+    // Campos del formulario (crear/editar)
+    // ==============================
 
-    /** Autollenados */
-    public ?string $hour = null;           // HH:MM
+    /**
+     * Placa ingresada (se resuelve a vehicle_id o queda como legacy_plate).
+     * @var string|null
+     */
+    public ?string $plate = null;
+
+    /**
+     * Fecha del servicio (YYYY-MM-DD).
+     * @var string|null
+     */
+    public ?string $date = null;
+
+    /**
+     * ID de sede (headquarters.id).
+     * @var int|null
+     */
+    public ?int $headquarter_id = null;
+
+    /**
+     * Precio del servicio (monto cobrado).
+     * @var float|null
+     */
+    public ?float $price = 0;
+
+    /**
+     * Número de pasajeros.
+     * @var int|null
+     */
+    public ?int $passenger = 0;
+
+    /**
+     * Precio por pasajero (para total_pasaje).
+     * @var float|null
+     */
+    public ?float $passage = 0;
+
+    /** Autollenados desde cliente o server */
+
+    /**
+     * Hora del servicio (HH:MM).
+     * @var string|null
+     */
+    public ?string $hour = null;
+
+    /**
+     * Latitud desde geolocalización del navegador.
+     * @var string|null
+     */
     public ?string $latitude = null;
+
+    /**
+     * Longitud desde geolocalización del navegador.
+     * @var string|null
+     */
     public ?string $longitude = null;
 
-    /** Para editar */
+    /**
+     * Id del registro a editar (si aplica).
+     * @var int|null
+     */
     public ?int $depId = null;
 
-    /** Listas para selects */
+    /**
+     * Lista simple de sedes para selects (id, name).
+     * @var \Illuminate\Support\Collection|array
+     */
     public $listHeadquarters = [];
 
+    /**
+     * Reglas de validación para crear/actualizar.
+     * @return array<string, array<int, string>>
+     */
     protected function rules()
     {
         return [
@@ -62,6 +166,10 @@ class Index extends Component
         ];
     }
 
+    /**
+     * Mensajes personalizados de validación.
+     * @return array<string, string>
+     */
     protected function messages(): array
     {
         return [
@@ -83,18 +191,84 @@ class Index extends Component
         ];
     }
 
+    // ==============================
+    // === INTEGRACIÓN ROLES/SEDES: helpers de rol y sedes del usuario
+    // ==============================
 
+    /** IDs de sedes asignadas al usuario autenticado (pivote + primaria por compatibilidad) */
+    private array $userHqIds = [];
 
+    /** Retorna true si el usuario autenticado tiene el rol indicado (insensible a mayúsculas). */
+    private function userHasRole(string $needle): bool
+    {
+        $u = Auth::user();
+        if (!$u) return false;
+
+        $needle = mb_strtolower($needle);
+        return $u->getRoleNames()
+            ->map(fn ($r) => mb_strtolower($r))
+            ->contains($needle);
+    }
+
+    /** Atajos legibles */
+    private function isAdmin(): bool
+    {
+        // Agrega otras variantes si existiesen (p.ej. "super admin")
+        return $this->userHasRole('admin');
+    }
+    private function isController(): bool
+    {
+        return $this->userHasRole('controller');
+    }
+
+    /** Carga ids de sedes asignadas al usuario (N:N + primaria en users.headquarter_id) */
+    private function loadUserHeadquarters(): void
+    {
+        $u = Auth::user();
+        if (!$u) {
+            $this->userHqIds = [];
+            return;
+        }
+
+        $ids = $u->headquarters()->pluck('headquarters.id')->map(fn($v)=>(int)$v)->all();
+        if ($u->headquarter_id && !in_array((int)$u->headquarter_id, $ids, true)) {
+            $ids[] = (int)$u->headquarter_id;
+        }
+        $this->userHqIds = $ids;
+    }
+
+    // ==============================
+    // Ciclo de vida
+    // ==============================
+
+    /**
+     * Inicializa estado del componente:
+     * - Rango de fechas por defecto (hoy..hoy).
+     * - Carga de sedes activas (limitadas para controller en UI).
+     * - Defaults del formulario (fecha/hora actuales).
+     * @return void
+     */
     public function mount(): void
     {
+        // === INTEGRACIÓN ROLES/SEDES: preparar sedes para filtros/combos
+        $this->loadUserHeadquarters();
+
         // Default: hoy (America/Lima)
         $today = now(config('app.timezone', 'America/Lima'))->toDateString();
         $this->fromDate ??= $today;
         $this->toDate   ??= $today;
-        $this->headquarters = Headquarter::where('status', 'active')->get();
 
-        $this->listHeadquarters = Headquarter::where('status','active')
-            ->orderBy('name')->get(['id','name']);
+        // Catálogo de sedes que verá el usuario en filtros/combos:
+        if ($this->isAdmin()) {
+            $this->headquarters = Headquarter::where('status', 'active')
+                ->orderBy('name')->get(['id','name']);
+            $this->listHeadquarters = $this->headquarters;
+        } else {
+            $ids = $this->userHqIds ?: [-1];
+            $this->headquarters = Headquarter::where('status','active')
+                ->whereIn('id', $ids)->orderBy('name')->get(['id','name']);
+            $this->listHeadquarters = $this->headquarters;
+        }
 
         // defaults para el form
         $now = now(config('app.timezone','America/Lima'));
@@ -102,7 +276,15 @@ class Index extends Component
         $this->hour = $this->hour ?: $now->format('H:i');
     }
 
-    /** Abrir modal "Nuevo" (misma línea que Vehicles) */
+    // ==============================
+    // Acciones UI: abrir modales
+    // ==============================
+
+    /**
+     * Abre el modal de creación, resetea validaciones y formulario.
+     * Dispara evento JS para enfoque y geolocalización.
+     * @return void
+     */
     public function openAddModal(): void
     {
         $this->resetValidation();
@@ -111,20 +293,36 @@ class Index extends Component
         // el JS del modal obtendrá geolocalización y actualizará latitude/longitude
     }
 
-    /** Guardar NUEVO con autocompletados */
+    // ==============================
+    // Persistencia: crear / actualizar
+    // ==============================
+
+    /**
+     * Crea un nuevo registro en departures:
+     * - Valida inputs.
+     * - Resuelve vehicle_id/is_support según placa.
+     * - Inserta registro y notifica.
+     * @return void
+     */
     public function save(): void
     {
         $this->validate();
+
+        // === INTEGRACIÓN ROLES/SEDES: controller solo puede usar sedes asignadas
+        if (!$this->isAdmin() && $this->headquarter_id && !in_array((int)$this->headquarter_id, $this->userHqIds, true)) {
+            $this->addError('headquarter_id', 'No tienes acceso a esta sucursal.');
+            return;
+        }
 
         // Normaliza y resuelve vehículo
         ['vehicle_id' => $vehicleId, 'is_support' => $isSupport, 'legacy_plate' => $legacyPlate, 'norm_plate' => $normPlate]
             = $this->resolveVehicleByPlate($this->plate);
 
-        $userId = \Illuminate\Support\Facades\Auth::id();
+        $userId = Auth::id();
         $now    = now(config('app.timezone','America/Lima'));
         $hour   = $this->hour ?: $now->format('H:i');
 
-        \Illuminate\Support\Facades\DB::table('departures')->insert([
+        DB::table('departures')->insert([
             'is_support'     => $isSupport,          // <-- se calcula aquí
             'date'           => $this->date,
             'hour'           => $hour,
@@ -136,7 +334,7 @@ class Index extends Component
             'price'          => $this->price,
             'passenger'      => $this->passenger,
             'passage'        => $this->passage,
-            'latitude'       => $this->latitude,     // <-- se setean desde geoloc del navegador
+            'latitude'       => $this->latitude,     // <-- geoloc navegador
             'longitude'      => $this->longitude,
             'created_at'     => now(),
             'updated_at'     => now(),
@@ -148,8 +346,11 @@ class Index extends Component
         $this->dispatch('successAlert', ['message' => 'Salida creada correctamente']);
     }
 
-
-    /** Abrir modal "Editar" */
+    /**
+     * Abre modal de edición y precarga el formulario desde BD.
+     * @param int $id ID del departure a editar
+     * @return void
+     */
     public function openEditModal(int $id): void
     {
         $this->resetValidation();
@@ -177,11 +378,22 @@ class Index extends Component
         $this->dispatch('open-modal', ['name' => 'modalEditDeparture', 'focus' => 'dep_plate']);
     }
 
-    /** Actualizar con autocompletados */
+    /**
+     * Actualiza un registro existente:
+     * - Valida inputs.
+     * - Recalcula vehicle_id/is_support según placa.
+     * @return void
+     */
     public function update(): void
     {
         $this->validate();
         if (!$this->depId) return;
+
+        // === INTEGRACIÓN ROLES/SEDES: controller solo puede usar sedes asignadas
+        if (!$this->isAdmin() && $this->headquarter_id && !in_array((int)$this->headquarter_id, $this->userHqIds, true)) {
+            $this->addError('headquarter_id', 'No tienes acceso a esta sucursal.');
+            return;
+        }
 
         ['vehicle_id' => $vehicleId, 'is_support' => $isSupport, 'legacy_plate' => $legacyPlate, 'norm_plate' => $normPlate]
             = $this->resolveVehicleByPlate($this->plate);
@@ -189,14 +401,14 @@ class Index extends Component
         $now  = now(config('app.timezone','America/Lima'));
         $hour = $this->hour ?: $now->format('H:i');
 
-        \Illuminate\Support\Facades\DB::table('departures')->where('id', $this->depId)->update([
+        DB::table('departures')->where('id', $this->depId)->update([
             'is_support'     => $isSupport,      // <-- recalculado según placa actual
             'date'           => $this->date,
             'hour'           => $hour,
             'vehicle_id'     => $vehicleId,
             'legacy_plate'   => $legacyPlate,
             'headquarter_id' => $this->headquarter_id,
-            // 'user_id'     => Auth::id(), // si prefieres NO cambiar el user histórico, déjalo comentado
+            // 'user_id'     => Auth::id(), // conservar histórico: dejar comentado
             'times'          => 1,
             'price'          => $this->price,
             'passenger'      => $this->passenger,
@@ -212,7 +424,14 @@ class Index extends Component
         $this->dispatch('successAlert', ['message' => 'Salida actualizada correctamente']);
     }
 
+    // ==============================
+    // Helpers UI/estado
+    // ==============================
 
+    /**
+     * Restablece el formulario a valores por defecto (fecha/hora actuales, montos en 0).
+     * @return void
+     */
     private function resetForm(): void
     {
         $now = now(config('app.timezone','America/Lima'));
@@ -228,18 +447,28 @@ class Index extends Component
         $this->longitude = null;
     }
 
-    // Reacciona SIEMPRE que cambie cualquiera de las fechas
+    /**
+     * Hook Livewire: al cambiar fromDate normaliza el rango.
+     * @return void
+     */
     public function updatedFromDate(): void
     {
         $this->normalizeRange();
     }
 
+    /**
+     * Hook Livewire: al cambiar toDate normaliza el rango.
+     * @return void
+     */
     public function updatedToDate(): void
     {
         $this->normalizeRange();
     }
 
-    // Corrige si el usuario invierte el rango
+    /**
+     * Corrige si el usuario invierte el rango (fromDate > toDate).
+     * @return void
+     */
     private function normalizeRange(): void
     {
         if ($this->fromDate && $this->toDate && $this->fromDate > $this->toDate) {
@@ -247,8 +476,18 @@ class Index extends Component
         }
     }
 
-    /** Base query con joins y filtros comunes */
-    private function baseQuery()
+    // ==============================
+    // Construcción de consultas (Query Builders)
+    // ==============================
+
+    /**
+     * Base genérica con joins para listar departures + vehículo/usuario/sede.
+     * Aplica filtros de fecha y de búsqueda (placa/usuario/sede).
+     * Descarta vehículos inactivos.
+     *
+     * @return \Illuminate\Database\Query\Builder
+     */
+    private function baseQuery(): Builder
     {
         $q = DB::table('departures as d')
             ->leftJoin('vehicles as v', 'v.id', '=', 'd.vehicle_id')
@@ -282,10 +521,18 @@ class Index extends Component
             }
         }
 
+        // === INTEGRACIÓN ROLES/SEDES: admin ve todo; controller solo lo suyo
+        if (!$this->isAdmin()) {
+            $q->where('d.user_id', Auth::id());
+        }
+
         return $q;
     }
 
-    /** Totales del dataset filtrado completo */
+    /**
+     * Calcula totales (conteo y sumas) del dataset filtrado por baseQuery().
+     * @return object{records:int,times_total:int,price_total:float,passengers_total:int,passage_total:float,total_pasaje_total:float}
+     */
     private function totals(): object
     {
         $base = $this->baseQuery();
@@ -301,7 +548,6 @@ class Index extends Component
         ')
             ->first();
 
-        // Si por cualquier motivo viniera null, devolvemos un objeto “cero”
         return $row ?: (object) [
             'records'             => 0,
             'times_total'         => 0,
@@ -312,13 +558,24 @@ class Index extends Component
         ];
     }
 
+    /**
+     * Cambia entre modo Detalle y Agrupado.
+     * @return void
+     */
     public function toggleGroup(): void
     {
         $this->groupMode = !$this->groupMode;
     }
 
+    // ==============================
+    // Render principal (arma datasets y pasa al Blade)
+    // ==============================
 
-    public function render()
+    /**
+     * Construye datasets (principal y apoyo), totales y renderiza la vista.
+     * @return \Illuminate\Contracts\View\View
+     */
+    public function render(): View
     {
         // Siempre inicializa para evitar “undefined variable”
         $rows          = collect();
@@ -415,7 +672,7 @@ class Index extends Component
                 ->get();
         }
         $supportTotals = $this->totalsFor($this->supportBase());
-        $grandTotals = $this->sumTotals($totals, $supportTotals);
+        $grandTotals   = $this->sumTotals($totals, $supportTotals);
 
         // Pasa SIEMPRE todas las variables al Blade
         return view('livewire.departures.index', [
@@ -428,7 +685,17 @@ class Index extends Component
         ]);
     }
 
-    private function supportBase()
+    // ==============================
+    // Bases específicas: apoyo / existentes
+    // ==============================
+
+    /**
+     * Base de registros de apoyo (is_support=1), sin join con vehicles.
+     * Aplica filtros de fecha y texto (legacy_plate / usuario / sede).
+     *
+     * @return \Illuminate\Database\Query\Builder
+     */
+    private function supportBase(): Builder
     {
         $q = DB::table('departures as d')
             ->leftJoin('users as u', 'u.id', '=', 'd.user_id')
@@ -450,9 +717,22 @@ class Index extends Component
                     break;
             }
         }
+
+        // === INTEGRACIÓN ROLES/SEDES: admin ve todo; controller solo lo suyo
+        if (!$this->isAdmin()) {
+            $q->where('d.user_id', Auth::id());
+        }
+
         return $q;
     }
 
+    /**
+     * Calcula totales para una base dada (existingBase o supportBase).
+     * Clona sin 'orders'/'columns' para evitar conflictos.
+     *
+     * @param \Illuminate\Database\Query\Builder $base
+     * @return object{records:int,times_total:int,price_total:float,passengers_total:int,passage_total:float,total_pasaje_total:float}
+     */
     private function totalsFor($base): object
     {
         $row = $base->cloneWithout(['orders','columns'])
@@ -472,7 +752,13 @@ class Index extends Component
         ];
     }
 
-    private function existingBase()
+    /**
+     * Base de registros con vehicle_id (JOIN vehicles) y vehicles.status='active'.
+     * Aplica filtros de fecha y de búsqueda (placa/usuario/sede).
+     *
+     * @return \Illuminate\Database\Query\Builder
+     */
+    private function existingBase(): Builder
     {
         $q = DB::table('departures as d')
             ->join('vehicles as v', 'v.id', '=', 'd.vehicle_id')
@@ -497,28 +783,55 @@ class Index extends Component
                     break;
             }
         }
+
+        // === INTEGRACIÓN ROLES/SEDES: admin ve todo; controller solo lo suyo
+        if (!$this->isAdmin()) {
+            $q->where('d.user_id', Auth::id());
+        }
+
         return $q;
     }
 
-    public function reportMonthly(){
+    // ==============================
+    // Acciones de reporte/export
+    // ==============================
+
+    /**
+     * Abre reporte mensual (GET a route('departures.monthly')).
+     * @return void
+     */
+    public function reportMonthly(): void
+    {
         $route = route('departures.monthly');
-
         $this->dispatch('url-open',["url" => $route]);
     }
 
-    public function reportRmp(){
+    /**
+     * Abre reporte RMP (GET a route('departures.rmp')).
+     * @return void
+     */
+    public function reportRmp(): void
+    {
         $route = route('departures.rmp' );
-
         $this->dispatch('url-open',["url" => $route]);
     }
 
-    public function reportStats(){
+    /**
+     * Abre reporte estadístico (GET a route('departures.stats')).
+     * @return void
+     */
+    public function reportStats(): void
+    {
         $route = route('departures.stats' );
-
         $this->dispatch('url-open',["url" => $route]);
     }
 
-    public function export(){
+    /**
+     * Exporta (GET a route('exports.departures')) con filtros actuales.
+     * @return void
+     */
+    public function export(): void
+    {
         $route = route('exports.departures',
             [   "searchType" => $this->searchType,
                 "searchText" => $this->searchText,
@@ -530,13 +843,29 @@ class Index extends Component
         $this->dispatch('url-open',["url" => $route]);
     }
 
+    // ==============================
+    // Utilidades de dominio
+    // ==============================
+
+    /**
+     * Normaliza la placa y resuelve vehicle_id:
+     * - Si existe vehículo: is_support=0 y legacy_plate=null
+     * - Si no existe: is_support=1 y se usa legacy_plate
+     *
+     * @param string|null $rawPlate Placa ingresada por el usuario
+     * @return array{
+     *     vehicle_id:int|null,
+     *     is_support:int,
+     *     legacy_plate:string|null,
+     *     norm_plate:string
+     * }
+     */
     private function resolveVehicleByPlate(?string $rawPlate): array
     {
         $plate = strtoupper(trim((string)$rawPlate));              // normaliza
-        // opcional: normaliza espacios múltiples o guiones
         $plate = preg_replace('/\s+/','',$plate);                  // quita espacios internos
 
-        $vehicle = \App\Models\Vehicle::whereRaw('UPPER(TRIM(plate)) = ?', [$plate])->first();
+        $vehicle = Vehicle::whereRaw('UPPER(TRIM(plate)) = ?', [$plate])->first();
 
         if ($vehicle) {
             return [
@@ -555,6 +884,13 @@ class Index extends Component
         ];
     }
 
+    /**
+     * Suma dos objetos de totales (principal + apoyo).
+     *
+     * @param object $a
+     * @param object $b
+     * @return object{records:int,times_total:int,price_total:float,passengers_total:int,passage_total:float,total_pasaje_total:float}
+     */
     private function sumTotals(object $a, object $b): object
     {
         return (object)[
@@ -566,7 +902,4 @@ class Index extends Component
             'total_pasaje_total' => (float) (($a->total_pasaje_total ?? 0) + ($b->total_pasaje_total ?? 0)),
         ];
     }
-
-
-
 }
