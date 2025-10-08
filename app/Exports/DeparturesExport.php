@@ -59,44 +59,30 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
             AfterSheet::class => function (AfterSheet $e) {
                 $s = $e->sheet->getDelegate();
 
-                // Paleta (ajusta a gusto)
-                $titleDark  = '2874A6'; // thead/tfoot/headers
-                $supportBg  = 'FFE5E7EB';
-                $borderSoft = 'FFCFD8DC';
+                // Paleta
+                $blueDark   = 'FF2874A6'; // encabezados
+                $footerFill = 'FFCEE7FF'; // totales
                 $fontWhite  = 'FFFFFFFF';
+                $fontBlack  = 'FF000000';
+                $fontRed    = 'FFCC0000';
+                $borderSoft = 'FFCFD8DC';
 
-                // ========= Fila 1: Título + rango (RichText) =========
-                // Construir el texto completo
-                $range = ($this->fromDate ?: '—') . ' a ' . ($this->toDate ?: '—');
-                $label = match ((int)$this->searchType) {
-                    1 => 'Placa', 2 => 'Usuario', 3 => 'Sucursal', default => 'Búsqueda'
-                };
-                $extra = trim((string)($this->searchText ?? ''));
-                $mode  = $this->groupMode ? 'Agrupado' : 'Detalle';
-
-                $suffix = " | Rango: {$range}";
-                if ($extra !== '') $suffix .= " | {$label}: {$extra}";
-                $suffix .= " | Modo: {$mode}";
-
-                // RichText: "SALIDAS" en grande y el resto pequeño
-                $rt = new RichText();
-                $r1 = $rt->createTextRun('SALIDAS');
-                $r1->getFont()->setBold(true)->setSize(14)->getColor()->setARGB($fontWhite);
-                $r2 = $rt->createTextRun($suffix);
-                $r2->getFont()->setSize(10)->getColor()->setARGB($fontWhite);
-
-                // Asignar y estilizar la celda A1..M1
+                // ===== Encabezado compacto (A1:M1) =====
                 $s->mergeCells('A1:M1');
-                $s->setCellValue('A1', $rt);
+                $s->setCellValue('A1', 'LISTADO GENERAL DE SALIDA');
                 $s->getStyle('A1:M1')->applyFromArray([
-                    'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$titleDark]],
-                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER, 'vertical'=>Alignment::VERTICAL_CENTER],
+                    'fill' => ['fillType'=>\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
+                    'alignment' => [
+                        'horizontal'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                        'vertical'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                    ],
+                    'font' => ['bold'=>true, 'color'=>['argb'=>$fontWhite], 'size'=>10],
                 ]);
-                $s->getRowDimension(1)->setRowHeight(24);
+                $s->getRowDimension(1)->setRowHeight(18); // más compacto
 
-                // ========= Reindex: SIN línea de acento ni subtítulo =========
-                // Sección 1
-                $rSec1Title = 2;      // "Salidas (vehículos registrados)"
+                // ===== Reindex sin títulos de sección visibles =====
+                // Antes había una fila de título para cada sección; ahora la ocultamos.
+                $rSec1Title = 2;      // (oculto)
                 $rSec1Hdr1  = 3;
                 $rSec1Hdr2  = 4;
                 $rSec1Body1 = 5;
@@ -104,8 +90,7 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
                 $rSec1Total = $rSec1BodyN + 1;
                 $rBlank2    = $rSec1Total + 1;
 
-                // Sección 2
-                $rSec2Title = $rBlank2 + 1;
+                $rSec2Title = $rBlank2 + 1; // (oculto)
                 $rSec2Hdr1  = $rSec2Title + 1;
                 $rSec2Hdr2  = $rSec2Title + 2;
                 $rSec2Body1 = $rSec2Hdr2 + 1;
@@ -116,79 +101,97 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
                 $rGrand     = $rBlank3 + 1;
                 $lastRow    = $rGrand;
 
-                // Merges de títulos de sección
+                // Ocultar filas de “título de sección”
                 foreach ([$rSec1Title, $rSec2Title] as $r) {
                     $s->mergeCells("A{$r}:M{$r}");
+                    $s->setCellValue("A{$r}", '');           // sin texto
+                    $s->getRowDimension($r)->setRowHeight(0); // oculto/compacto
                 }
 
-                // Encabezados 2 filas (merge de grupos)
+                // Cabeceras de 2 niveles
                 $this->mergeHeader($s, $rSec1Hdr1, $rSec1Hdr2);
                 $this->mergeHeader($s, $rSec2Hdr1, $rSec2Hdr2);
 
-                // Títulos de sección (mismo color que cabeceras)
-                foreach ([$rSec1Title, $rSec2Title] as $rtx) {
-                    $s->getStyle("A{$rtx}:M{$rtx}")->applyFromArray([
-                        'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$titleDark]],
-                        'font' => ['bold'=>true, 'color'=>['argb'=>$fontWhite]],
-                        'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER, 'vertical'=>Alignment::VERTICAL_CENTER],
-                    ]);
-                    $s->getRowDimension($rtx)->setRowHeight(20);
-                }
-
-                // THEAD (2 filas) + TFOOT con mismo color
-                foreach ([[$rSec1Hdr1,$rSec1Hdr2,$rSec1Total], [$rSec2Hdr1,$rSec2Hdr2,$rSec2Total]] as [$h1,$h2,$ft]) {
+                // THEADs en azul, 10pt, compacto
+                foreach ([[$rSec1Hdr1,$rSec1Hdr2], [$rSec2Hdr1,$rSec2Hdr2]] as [$h1,$h2]) {
                     $s->getStyle("A{$h1}:M{$h2}")->applyFromArray([
-                        'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$titleDark]],
-                        'font' => ['bold'=>true, 'color'=>['argb'=>$fontWhite]],
-                        'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER, 'vertical'=>Alignment::VERTICAL_CENTER, 'wrapText'=>true],
+                        'fill' => ['fillType'=>\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
+                        'font' => ['bold'=>true, 'color'=>['argb'=>$fontWhite], 'size'=>10],
+                        'alignment' => [
+                            'horizontal'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                            'vertical'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                            'wrapText'=>true
+                        ],
                     ]);
-                    $s->getRowDimension($h1)->setRowHeight(22);
-                    $s->getRowDimension($h2)->setRowHeight(20);
-
-                    $s->getStyle("A{$ft}:M{$ft}")->applyFromArray([
-                        'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$titleDark]],
-                        'font' => ['bold'=>true, 'color'=>['argb'=>$fontWhite]],
-                    ]);
+                    $s->getRowDimension($h1)->setRowHeight(18);
+                    $s->getRowDimension($h2)->setRowHeight(16);
                 }
 
-                // Cuerpo “Vehículos de apoyo” (gris)
+                // Cuerpo “Apoyo” con texto rojo
                 if ($this->countSupport > 0) {
-                    $s->getStyle("A{$rSec2Body1}:M{$rSec2BodyN}")->applyFromArray([
-                        'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$supportBg]],
-                    ]);
+                    $s->getStyle("A{$rSec2Body1}:M{$rSec2BodyN}")
+                        ->getFont()->getColor()->setARGB($fontRed);
                 }
 
-                // Banda TOTAL GENERAL
-                $s->getStyle("A{$rGrand}:M{$rGrand}")->applyFromArray([
-                    'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$titleDark]],
-                    'font' => ['bold'=>true, 'color'=>['argb'=>$fontWhite]],
-                ]);
+                // Totales de cada bloque con #CEE7FF (10pt)
+                foreach ([$rSec1Total, $rSec2Total] as $ft) {
+                    $s->getStyle("A{$ft}:M{$ft}")->applyFromArray([
+                        'fill' => ['fillType'=>\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor'=>['argb'=>$footerFill]],
+                        'font' => ['bold'=>true, 'color'=>['argb'=>$fontBlack], 'size'=>10],
+                        'alignment' => [
+                            'horizontal'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                            'vertical'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                        ],
+                        'borders' => [
+                            'outline' => [
+                                'borderStyle'=>\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                                'color'=>['argb'=>$blueDark]
+                            ]
+                        ]
+                    ]);
+                    $s->getRowDimension($ft)->setRowHeight(18);
+                }
 
-                // Bordes finos
+                // TOTAL GENERAL en #CEE7FF destacado (10pt)
+                $s->getStyle("A{$rGrand}:M{$rGrand}")->applyFromArray([
+                    'fill' => ['fillType'=>\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor'=>['argb'=>$footerFill]],
+                    'font' => ['bold'=>true, 'color'=>['argb'=>$fontBlack], 'size'=>10],
+                    'borders' => [
+                        'outline' => [
+                            'borderStyle'=>\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM,
+                            'color'=>['argb'=>$blueDark]
+                        ]
+                    ],
+                ]);
+                $s->getRowDimension($rGrand)->setRowHeight(18);
+
+                // Bordes finos a toda la grilla
                 $s->getStyle("A1:M{$lastRow}")->applyFromArray([
                     'borders' => [
                         'allBorders' => [
-                            'borderStyle' => Border::BORDER_THIN,
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
                             'color' => ['argb' => $borderSoft]
                         ]
                     ]
                 ]);
 
-                // Alineación numérica (H..M)
+                // Alinear números a la derecha (H..M)
                 foreach (['H','I','J','K','L','M'] as $col) {
                     $s->getStyle("{$col}{$rSec1Body1}:{$col}{$rSec1Total}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+                        ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
                     $s->getStyle("{$col}{$rSec2Body1}:{$col}{$rSec2Total}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+                        ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
                     $s->getStyle("{$col}{$rGrand}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+                        ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
                 }
 
-                // Congelar arriba del cuerpo sección 1
+                // Congelar al inicio del cuerpo
                 $s->freezePane("A{$rSec1Body1}");
             },
         ];
     }
+
+
 
     private function mergeHeader($sheet, int $r1, int $r2): void
     {

@@ -73,7 +73,8 @@
                 <div class="card-body">
                     <div class="row mb-2">
                         @if($searchType != 3)
-                            <div class="col-xl-5 col-md-3 mb-2 mb-md-0">
+                            {{-- Ajuste a col-4 para dejar espacio al botón Aplicar --}}
+                            <div class="col-xl-4 col-md-3 mb-2 mb-md-0">
                                 <label class="form-label">Buscar</label>
                                 <form class="app-form app-icon-form" action="#">
                                     <div class="position-relative">
@@ -84,7 +85,7 @@
                                 </form>
                             </div>
                         @else
-                            <div class="col-xl-5 col-md-3 mb-2 mb-md-0">
+                            <div class="col-xl-4 col-md-3 mb-2 mb-md-0">
                                 <label class="form-label">Selecciona una sucursal</label>
                                 <select class="form-select" aria-label="Selecciona item a filtrar"
                                         wire:model.live="searchText">
@@ -107,49 +108,59 @@
                         </div>
                         <div class="col-xl-2 col-md-3 mb-2 mb-md-0">
                             <label class="form-label">Fecha Inicio</label>
-                            <input type="date" class="form-control" wire:model.live.debounce="fromDate">
+                            {{-- UI sin disparar consulta: uiFromDate --}}
+                            <input type="date" class="form-control" wire:model.defer="uiFromDate">
                         </div>
                         <div class="col-xl-2 col-md-3 mb-2 mb-md-0">
                             <label class="form-label">Fecha Fin</label>
-                            <input type="date" class="form-control" wire:model.live.debounce="toDate">
+                            {{-- UI sin disparar consulta: uiToDate --}}
+                            <input type="date" class="form-control" wire:model.defer="uiToDate">
+                        </div>
+                        <div class="col-xl-1 col-md-3 mb-2 mb-md-0 d-flex align-items-end">
+                            <button class="btn btn-primary btn-xs w-100"
+                                    wire:click="applyDateRange"
+                                    wire:loading.attr="disabled"
+                                    wire:target="applyDateRange">
+                                <i class="ti ti-search f-s-16"></i>
+                            </button>
                         </div>
                     </div>
                     <div class="row g-2 mb-2">
                         @role('admin')
-                            <div class="col-xl-2 col-md-2">
-                                <button wire:click="reportMonthly" class="btn btn-primary w-100">
-                                    <i class="ti ti-report-analytics f-s-16"></i> Mensual
-                                </button>
-                            </div>
-                            <div class="col-xl-2 col-md-2">
-                                <button wire:click="reportRmp" class="btn btn-primary w-100">
-                                    <i class="ti ti-report-analytics f-s-16"></i> RMP V.T
-                                </button>
-                            </div>
-                            <div class="col-xl-2 col-md-2">
-                                <button wire:click="reportStats" class="btn btn-primary w-100">
-                                    <i class="ti ti-report-analytics f-s-16"></i> Estadis.
-                                </button>
-                            </div>
+                        <div class="col-xl-2 col-lg-2 col-md-1">
+                            <button wire:click="reportMonthly" class="btn btn-primary w-100 btn-xs">
+                                <i class="ti ti-report-analytics f-s-16 text--"></i> Mensual
+                            </button>
+                        </div>
+                        <div class="col-xl-2 col-md-2">
+                            <button wire:click="reportRmp" class="btn btn-primary w-100 btn-xs">
+                                <i class="ti ti-report-analytics f-s-16"></i> RMP V.T
+                            </button>
+                        </div>
+                        <div class="col-xl-2 col-md-2">
+                            <button wire:click="reportStats" class="btn btn-primary w-100 btn-xs">
+                                <i class="ti ti-report-analytics f-s-16"></i> Estadis.
+                            </button>
+                        </div>
                         @endrole
                         <div class="col-xl-2 col-md-2">
-                            <button class="btn btn-primary w-100" wire:click="export">
+                            <button class="btn btn-primary w-100 btn-xs" wire:click="export">
                                 <i class="ti ti-file-analytics f-s-16"></i> Exportar
                             </button>
                         </div>
                         <div class="col-xl-2 col-md-2">
-                            <button class="btn btn-primary w-100" wire:click="openAddModal">
+                            <button class="btn btn-primary w-100 btn-xs" wire:click="openAddModal">
                                 <i class="ti ti-square-plus f-s-16"></i> Nuevo
                             </button>
                         </div>
                         <div class="col-xl-1 col-md-1">
-                            <button class="btn btn-primary w-100" id="down">
+                            <button class="btn btn-primary w-100 btn-xs" id="down">
                                 <i class="ti ti-square-chevrons-down f-s-17"></i>
                             </button>
                         </div>
                         <div class="col-xl-1 col-md-1">
                             <button
-                                class="btn w-100 {{ $groupMode ? 'btn-success' : 'btn-primary' }}"
+                                class="btn w-100 {{ $groupMode ? 'btn-success' : 'btn-primary' }} btn-xs"
                                 wire:click="toggleGroup"
                                 aria-pressed="{{ $groupMode ? 'true' : 'false' }}"
                                 title="{{ $groupMode ? 'Agrupado: ON' : 'Agrupado: OFF' }}"
@@ -627,11 +638,13 @@
             </div>
         </div>
     </div>
+
+    {{-- Overlay de carga scopeado (ya no targetea fromDate/toDate) --}}
     <div class="screen-overlay"
          wire:loading.delay.flex
-         wire:target="fromDate,toDate,searchText,searchType,groupMode,
-                  reportMonthly,reportRmp,reportStats,export,
-                  openAddModal,openEditModal,toggleGroup,save,update">
+         wire:target="applyDateRange,searchText,searchType,groupMode,
+                      reportMonthly,reportRmp,reportStats,export,
+                      openAddModal,openEditModal,toggleGroup,save,update">
         <div class="text-center">
             <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
             <div class="mt-2 text-white fw-semibold">Cargando…</div>

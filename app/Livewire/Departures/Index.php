@@ -55,6 +55,20 @@ class Index extends Component
     public ?string $toDate = null;
 
     /**
+     * Fechas del UI (no disparan consulta hasta presionar "Aplicar").
+     * @var string|null
+     */
+    public ?string $uiFromDate = null;
+    public ?string $uiToDate   = null;
+
+    /**
+     * Último rango aplicado (para mostrar “cambios sin aplicar” si lo deseas).
+     * @var string|null
+     */
+    public ?string $lastAppliedFrom = null;
+    public ?string $lastAppliedTo   = null;
+
+    /**
      * Colección de sedes activas para combos y filtros.
      * @var \Illuminate\Support\Collection|array
      */
@@ -257,6 +271,14 @@ class Index extends Component
         $today = now(config('app.timezone', 'America/Lima'))->toDateString();
         $this->fromDate ??= $today;
         $this->toDate   ??= $today;
+
+        // UI desacoplado del rango aplicado
+        $this->uiFromDate = $this->fromDate;
+        $this->uiToDate   = $this->toDate;
+
+        // Marcadores de “aplicado”
+        $this->lastAppliedFrom = $this->fromDate;
+        $this->lastAppliedTo   = $this->toDate;
 
         // Catálogo de sedes que verá el usuario en filtros/combos:
         if ($this->isAdmin()) {
@@ -474,6 +496,46 @@ class Index extends Component
         if ($this->fromDate && $this->toDate && $this->fromDate > $this->toDate) {
             [$this->fromDate, $this->toDate] = [$this->toDate, $this->fromDate];
         }
+    }
+
+    /**
+     * UI: normaliza el rango ingresado en los inputs de UI.
+     */
+    public function updatedUiFromDate(): void { $this->normalizeUiRange(); }
+    public function updatedUiToDate(): void   { $this->normalizeUiRange(); }
+    private function normalizeUiRange(): void
+    {
+        if ($this->uiFromDate && $this->uiToDate && $this->uiFromDate > $this->uiToDate) {
+            [$this->uiFromDate, $this->uiToDate] = [$this->uiToDate, $this->uiFromDate];
+        }
+    }
+
+    /**
+     * Aplica el rango de fechas desde los inputs de UI al filtro real.
+     */
+    public function applyDateRange(): void
+    {
+        $this->validate([
+            'uiFromDate' => ['required','date'],
+            'uiToDate'   => ['required','date'],
+        ], [], [
+            'uiFromDate' => 'fecha inicio',
+            'uiToDate'   => 'fecha fin',
+        ]);
+
+        $from = $this->uiFromDate;
+        $to   = $this->uiToDate;
+        if ($from && $to && $from > $to) {
+            [$from, $to] = [$to, $from];
+        }
+
+        // Asigna al filtro “aplicado” (estos sí afectan las queries)
+        $this->fromDate = $from;
+        $this->toDate   = $to;
+
+        // Marca como aplicado
+        $this->lastAppliedFrom = $from;
+        $this->lastAppliedTo   = $to;
     }
 
     // ==============================
