@@ -16,6 +16,7 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
 
 class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyles, WithEvents, ShouldAutoSize
 {
@@ -34,12 +35,14 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
     protected int   $grandVT = 0;
     protected array $sundayCols = []; // índices 1-based de columna (encabezado de días)
 
+    /* ====================== Headings & Data ====================== */
+
     public function headings(): array
     {
         $this->prepareDataIfNeeded();
         $head = ['CONTROLADOR','PARADERO','TIPO'];
         for ($d=1; $d <= $this->daysInMonth; $d++) { $head[] = (string)$d; }
-        $head[] = 'TOTAL';
+        $head[] = 'V.T';
         return $head;
     }
 
@@ -48,7 +51,6 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
         $this->prepareDataIfNeeded();
 
         $data = [];
-        // Filas Emp./Apoyo
         foreach ($this->rows as $r) {
             $row = [
                 $r['controller'],
@@ -56,14 +58,11 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
                 ($r['type'] === 'Emp' ? 'Emp.' : 'Apoyo.'),
             ];
             for ($d=1; $d <= $this->daysInMonth; $d++) {
-                $row[] = (int)($r['days'][$d] ?? 0);
+                $row[] = (int)($r['days'][$d] ?? 0); // siempre numérico → muestra 0
             }
             $row[] = (int)$r['total'];
             $data[] = $row;
         }
-
-        // Fila separadora (opcional)
-        if (!empty($data)) $data[] = array_fill(0, 3 + $this->daysInMonth + 1, '');
 
         // Totales T.E
         $rowTE = ['', '', 'T.E'];
@@ -86,26 +85,9 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
         return $data;
     }
 
-    public function styles(Worksheet $sheet)
-    {
-        // La cabecera final quedará en la fila 2 (insertamos título en AfterSheet)
-        $lastRow = $sheet->getHighestRow();
-        $lastCol = $sheet->getHighestColumn();
+    public function styles(Worksheet $sheet) { return []; }
 
-        // Encabezado centrado y en negrita
-        $sheet->getStyle("A2:{$lastCol}2")->getFont()->setBold(true);
-        $sheet->getStyle("A2:{$lastCol}2")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-
-        // Cuerpo centrado
-        $sheet->getStyle("A3:{$lastCol}{$lastRow}")
-            ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-
-        // CONTROLADOR y PARADERO a la izquierda
-        $sheet->getStyle("A3:A{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-        $sheet->getStyle("B3:B{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-
-        return [];
-    }
+    /* ====================== Diseño (AfterSheet) ====================== */
 
     public function registerEvents(): array
     {
@@ -113,91 +95,216 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
             AfterSheet::class => function(AfterSheet $e) {
                 $s = $e->sheet->getDelegate();
 
-                // Paleta de la “línea de diseño”
-                $bgDark   = 'FF23242F'; // header/footer oscuro
-                $fontW    = 'FFFFFFFF';
-                $borderC  = 'FFCFD8DC';
-                $sunRed   = 'FFEF4444';
+                // Paleta exacta
+                $blueDark   = 'FF2874A6'; // encabezados / títulos
+                $footerFill = 'FFCEE7FF'; // pies (totales)
+                $fontW      = 'FFFFFFFF';
+                $fontB      = 'FF000000';
+                $borderC    = 'FFCFD8DC';
+                $sunRed     = 'FFEF4444'; // domingos (header de días)
 
-                // Insertar título (fila 1)
+                // Tipografía compacta
+                $s->getParent()->getDefaultStyle()->getFont()->setSize(10);
+
+                // ===== Título (fila 1)
                 $s->insertNewRowBefore(1, 1);
                 $lastCol = $s->getHighestColumn();
-                $lastRow = $s->getHighestRow();
-
-                // Título
-                $title = 'RMP V.T – '.$this->monthName().' '.$this->year;
-                $s->setCellValue('A1', $title);
+                $title   = 'REPORTE MENSUAL POR PARADERO V.T. — ' . mb_strtoupper($this->monthName()) . ' ' . $this->year;
                 $s->mergeCells("A1:{$lastCol}1");
-                $s->getRowDimension(1)->setRowHeight(28);
-                $s->getStyle('A1')->applyFromArray([
-                    'font' => ['bold'=>true,'size'=>14,'color'=>['argb'=>$fontW]],
-                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
-                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$bgDark]],
+                $s->setCellValue('A1', $title);
+                $s->getRowDimension(1)->setRowHeight(18);
+                $s->getStyle("A1:{$lastCol}1")->applyFromArray([
+                    'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
+                    'font' => ['bold'=>true, 'size'=>10, 'color'=>['argb'=>$fontW]],
+                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER, 'vertical'=>Alignment::VERTICAL_CENTER],
                 ]);
 
-                // Thead con mismo color del título
-                $s->getStyle("A2:{$lastCol}2")->applyFromArray([
-                    'font' => ['bold'=>true,'color'=>['argb'=>$fontW]],
-                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
-                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$bgDark]],
+                // ===== Cabecera (fila 2)
+                $headerRow    = 2;
+                $dataStartRow = 3;
+                $s->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->applyFromArray([
+                    'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
+                    'font' => ['bold'=>true, 'size'=>10, 'color'=>['argb'=>$fontW]],
+                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER, 'vertical'=>Alignment::VERTICAL_CENTER],
                 ]);
+                $s->getRowDimension($headerRow)->setRowHeight(18);
 
-                // **Domingos**: solo encabezado de días en rojo
+                // Domingos en rojo (solo header de días)
+                $firstDayColIdx = 4; // días desde D
                 foreach ($this->sundayCols as $colIdx) {
                     $col = Coordinate::stringFromColumnIndex($colIdx);
-                    $s->getStyle("{$col}2")->applyFromArray([
-                        'font' => ['bold'=>true,'color'=>['argb'=>$fontW]],
-                        'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$sunRed]],
+                    $s->getStyle("{$col}{$headerRow}")->applyFromArray([
+                        'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$sunRed]],
+                        'font' => ['bold'=>true, 'color'=>['argb'=>$fontW]],
                     ]);
                 }
 
-                // Bordes finos a todo el rango
-                $s->getStyle("A2:{$lastCol}{$lastRow}")
-                    ->getBorders()->getAllBorders()
-                    ->setBorderStyle(Border::BORDER_THIN)
-                    ->getColor()->setARGB($borderC);
-
-                // Anchos sugeridos en las primeras columnas
-                $s->getColumnDimension('A')->setWidth(30); // CONTROLADOR
-                $s->getColumnDimension('B')->setWidth(24); // PARADERO
-                $s->getColumnDimension('C')->setWidth(10); // TIPO
-
-                // Congelar arriba (título+encabezado) y 3 primeras columnas
-                // D3 = mantiene visibles filas 1-2 y columnas A-C
+                // Congelar filas 1-2 y columnas A-C
                 $s->freezePane('D3');
 
-                // Filas de totales (tfoot): mismo color oscuro que el header
-                $dataRows   = count($this->rows);
-                $hasSep     = $dataRows > 0 ? 1 : 0; // fila separadora si hubo data
-                $totStart   = ($dataRows === 0) ? 3 : 3 + $dataRows + $hasSep;
+                // ===== Bordes finos a todo
+                $lastRow = (int)$s->getHighestRow();
+                $s->getStyle("A{$headerRow}:{$lastCol}{$lastRow}")
+                    ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+                $s->getStyle("A{$headerRow}:{$lastCol}{$lastRow}")
+                    ->getBorders()->getAllBorders()->getColor()->setARGB($borderC);
 
-                for ($r = $totStart; $r <= $totStart + 2; $r++) {
-                    $s->getStyle("A{$r}:{$lastCol}{$r}")->applyFromArray([
-                        'font' => ['bold'=>true,'color'=>['argb'=>$fontW]],
-                        'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
-                        'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$bgDark]],
+                // ===== Anchos compactos (desactiva autosize y fija)
+                $lastColIdx = Coordinate::columnIndexFromString($lastCol);
+                for ($c=1; $c <= $lastColIdx; $c++) {
+                    $s->getColumnDimensionByColumn($c)->setAutoSize(false);
+                }
+                $s->getColumnDimension('A')->setWidth(14.5); // CONTROLADOR
+                $s->getColumnDimension('B')->setWidth(16);   // PARADERO
+                $s->getColumnDimension('C')->setWidth(6.5);  // TIPO
+                for ($c=$firstDayColIdx; $c < $lastColIdx; $c++) {
+                    $s->getColumnDimensionByColumn($c)->setWidth(3.0); // Días
+                }
+                $s->getColumnDimensionByColumn($lastColIdx)->setWidth(6.5); // V.T
+
+                // ===== Alineaciones / formatos
+                $dataRows   = count($this->rows);
+                $dataEndRow = $dataRows > 0 ? ($dataStartRow + $dataRows - 1) : ($dataStartRow - 1);
+                $lastColLetter = Coordinate::stringFromColumnIndex($lastColIdx);
+
+                if ($dataRows > 0) {
+                    // A y B a la izquierda; resto centrado
+                    $s->getStyle("A{$dataStartRow}:A{$dataEndRow}")
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+                    $s->getStyle("B{$dataStartRow}:B{$dataEndRow}")
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+                    $s->getStyle("C{$dataStartRow}:{$lastCol}{$dataEndRow}")
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+                    // ---- Rellenar celdas vacías con 0 en días + V.T (datos)
+                    for ($r = $dataStartRow; $r <= $dataEndRow; $r++) {
+                        for ($c = $firstDayColIdx; $c <= $lastColIdx; $c++) {
+                            $cell = $s->getCellByColumnAndRow($c, $r);
+                            $val  = $cell->getValue();
+                            if ($val === null || $val === '') {
+                                $cell->setValueExplicit(0, DataType::TYPE_NUMERIC);
+                            }
+                        }
+                    }
+                    // Formato entero "0" a todo el rango numérico de datos
+                    $s->getStyle("D{$dataStartRow}:{$lastColLetter}{$dataEndRow}")
+                        ->getNumberFormat()->setFormatCode('0');
+                }
+
+                // ===== Zebra vertical suave (días: D .. penúltima)
+                if ($dataRows > 0) {
+                    for ($c = $firstDayColIdx; $c < $lastColIdx; $c++) {
+                        if ((($c - $firstDayColIdx) % 2) === 1) {
+                            $col = Coordinate::stringFromColumnIndex($c);
+                            $s->getStyle("{$col}{$dataStartRow}:{$col}{$dataEndRow}")
+                                ->getFill()->setFillType(Fill::FILL_SOLID)
+                                ->getStartColor()->setARGB('FFF8FAFC');
+                        }
+                    }
+                }
+
+                // ===== Merge y estilo por bloques =====
+                // 1) PARADERO (col B): merge de 2 en 2 (Emp./Apoyo) + azul
+                $i = 0;
+                while ($i < $dataRows) {
+                    $row1 = $dataStartRow + $i;
+                    $row2 = $row1;
+                    if ($i + 1 < $dataRows) {
+                        $r1 = $this->rows[$i];
+                        $r2 = $this->rows[$i+1];
+                        if ($r2['controller'] === $r1['controller'] && $r2['stop'] === $r1['stop']) {
+                            $row2 = $row1 + 1;
+                            $i += 2;
+                        } else {
+                            $i += 1;
+                        }
+                    } else {
+                        $i += 1;
+                    }
+
+                    if ($row2 > $row1) {
+                        $s->mergeCells("B{$row1}:B{$row2}");
+                    }
+                    $s->getStyle("B{$row1}:B{$row2}")->applyFromArray([
+                        'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
+                        'font' => ['bold'=>true, 'color'=>['argb'=>$fontW]],
+                        'alignment' => ['horizontal'=>Alignment::HORIZONTAL_LEFT, 'vertical'=>Alignment::VERTICAL_CENTER],
                     ]);
                 }
 
-                // Formato numérico entero para celdas de días + total (filas de datos y totales)
-                $firstDayColIdx = 4; // A=1,B=2,C=3, días desde D
-                $lastColIdx     = Coordinate::columnIndexFromString($lastCol);
-                for ($c=$firstDayColIdx; $c <= $lastColIdx; $c++) {
-                    $colL = Coordinate::stringFromColumnIndex($c);
-                    // filas de datos
-                    if ($dataRows > 0) {
-                        $s->getStyle("{$colL}3:{$colL}".(2+$dataRows))
-                            ->getNumberFormat()->setFormatCode('0');
+                // 2) CONTROLADOR (col A): merge por bloque del mismo controlador + azul
+                if ($dataRows > 0) {
+                    $ctrlStart = $dataStartRow;
+                    $prevCtrl  = $this->rows[0]['controller'];
+                    for ($k=1; $k < $dataRows; $k++) {
+                        $curr = $this->rows[$k]['controller'];
+                        if ($curr !== $prevCtrl) {
+                            $ctrlEnd = $dataStartRow + $k - 1;
+                            $s->mergeCells("A{$ctrlStart}:A{$ctrlEnd}");
+                            $s->getStyle("A{$ctrlStart}:A{$ctrlEnd}")->applyFromArray([
+                                'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
+                                'font' => ['bold'=>true, 'color'=>['argb'=>$fontW]],
+                                'alignment' => ['horizontal'=>Alignment::HORIZONTAL_LEFT, 'vertical'=>Alignment::VERTICAL_CENTER],
+                            ]);
+                            $ctrlStart = $ctrlEnd + 1;
+                            $prevCtrl  = $curr;
+                        }
                     }
-                    // filas de totales
-                    $s->getStyle("{$colL}{$totStart}:{$colL}".($totStart+2))
-                        ->getNumberFormat()->setFormatCode('0');
+                    // último bloque
+                    $ctrlEnd = $dataStartRow + $dataRows - 1;
+                    $s->mergeCells("A{$ctrlStart}:A{$ctrlEnd}");
+                    $s->getStyle("A{$ctrlStart}:A{$ctrlEnd}")->applyFromArray([
+                        'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
+                        'font' => ['bold'=>true, 'color'=>['argb'=>$fontW]],
+                        'alignment' => ['horizontal'=>Alignment::HORIZONTAL_LEFT, 'vertical'=>Alignment::VERTICAL_CENTER],
+                    ]);
                 }
+
+                // ===== Totales (T.E / T.A / V.T) =====
+                $lastRow = (int)$s->getHighestRow();
+                $footerVT = $lastRow;       // V.T
+                $footerTA = $lastRow - 1;   // T.A
+                $footerTE = $lastRow - 2;   // T.E
+
+                foreach ([$footerTE, $footerTA, $footerVT] as $fr) {
+                    // Rellenar celdas vacías con 0 en totales (días + V.T)
+                    for ($c = $firstDayColIdx; $c <= $lastColIdx; $c++) {
+                        $cell = $s->getCellByColumnAndRow($c, $fr);
+                        $val  = $cell->getValue();
+                        if ($val === null || $val === '') {
+                            $cell->setValueExplicit(0, DataType::TYPE_NUMERIC);
+                        }
+                    }
+                    // Estilo de pie (celeste + borde) y formato entero
+                    $s->getStyle("A{$fr}:{$lastCol}{$fr}")->applyFromArray([
+                        'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$footerFill]],
+                        'font' => ['bold'=>true, 'color'=>['argb'=>$fontB], 'size'=>10],
+                        'borders' => ['outline' => ['borderStyle'=>Border::BORDER_MEDIUM, 'color'=>['argb'=>$blueDark]]],
+                        'alignment' => ['vertical'=>Alignment::VERTICAL_CENTER],
+                    ]);
+                    $s->getStyle("D{$fr}:{$lastCol}{$fr}")
+                        ->getNumberFormat()->setFormatCode('0'); // enteros
+                }
+
+                // “TOTAL GENERAL” fusionado en A (3 filas) con azul
+                $s->mergeCells("A{$footerTE}:A{$footerVT}");
+                $s->setCellValue("A{$footerTE}", 'TOTAL GENERAL');
+                $s->getStyle("A{$footerTE}:A{$footerVT}")->applyFromArray([
+                    'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
+                    'font' => ['bold'=>true, 'color'=>['argb'=>$fontW]],
+                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_LEFT, 'vertical'=>Alignment::VERTICAL_CENTER],
+                ]);
+
+                // Ajuste de alineación en totales
+                $s->getStyle("B{$footerTE}:B{$footerVT}")
+                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+                $s->getStyle("C{$footerTE}:C{$footerVT}")
+                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             }
         ];
     }
 
-    /* --------------- helpers / datos --------------- */
+    /* ====================== Helpers / Datos ====================== */
 
     protected function monthName(): string
     {
@@ -221,7 +328,7 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
             }
         }
 
-        // === SQL: contar distintos por controlador/paradero/día separando Emp (match con vehicles) y Apoyo ===
+        // === SQL base (agrupa por controlador/paradero y separa Emp/Apoyo) ===
         $sql = <<<SQL
 WITH RECURSIVE days(d) AS (
   SELECT 1
