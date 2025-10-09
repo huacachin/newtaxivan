@@ -49,7 +49,7 @@ class VehiclesReportExport implements
                 };
             })
             ->with(['owner:id,name','driver:id,name'])
-            ->orderBy('brand')
+            ->orderBy('id','asc')
             ->select(['id','owner_id','driver_id','brand','type','fuel','condition','affiliated_company']);
     }
 

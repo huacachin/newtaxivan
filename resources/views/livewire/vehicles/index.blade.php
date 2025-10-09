@@ -58,67 +58,7 @@
     </div>
 
     <div class="row table-section">
-        <!-- Filtros -->
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    <div class="row g-3 align-items-end">
-                        <div class="col-xl-3 col-md-6">
-                            <form class="app-form app-icon-form" action="#">
-                                <div class="position-relative">
-                                    <input type="search" class="form-control" placeholder="Buscar..."
-                                           aria-label="Buscar" wire:model.live="search">
-                                    <i class="ti ti-search text-dark"></i>
-                                </div>
-                            </form>
-                        </div>
 
-                        <div class="col-xl-2 col-md-4">
-                            <select class="form-select" aria-label="Estado del vehiculo" wire:model.live="status">
-                                <option value="active">Activo</option>
-                                <option value="inactive">Cesado</option>
-                            </select>
-                        </div>
-
-                        <div class="col-xl-2 col-md-4">
-                            <select class="form-select" aria-label="Filtro" wire:model.live="filter">
-                                <option value="plate">Placa</option>
-                                <option value="brand">Marca</option>
-                                <option value="year">Año</option>
-                                <option value="owner">Propietario</option>
-                                <option value="driver">Conductor</option>
-                                <option value="condition">Condición</option>
-                                <option value="company">Empresa</option>
-                                <option value="category">Categoría</option>
-                                <option value="code">Código</option>
-                            </select>
-                        </div>
-
-                        <div class="col-xl-2 col-md-4">
-                            <button class="btn btn-primary w-100" wire:click="openAddModal">
-                                <i class="ti ti-square-plus f-s-17"></i> Nuevo
-                            </button>
-                        </div>
-                        <div class="col-xl-2 col-md-4">
-                            <button class="btn btn-primary w-100" wire:click="export">
-                                <i class="ti ti-file-analytics f-s-17"></i> Exportar
-                            </button>
-                        </div>
-                        <div class="col-xl-1 col-md-4">
-                            <button id="down" class="btn btn-primary w-100">
-                                <i class="ti ti-square-chevrons-down f-s-17"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="mt-2" wire:loading.delay>
-                        <span class="text-muted">
-                            <span class="spinner-border spinner-border-sm"></span> Cargando…
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- Tabla -->
         <div class="col-xl-12">
@@ -133,6 +73,54 @@
                         <strong>Propietario:</strong> {{ $owners }} ·
                         <strong>Conductor:</strong> {{ $drivers }}
                     </p>
+                    <div class="row g-3 align-items-end mt-2">
+                        <div class="col-xl-3 col-md-2">
+                            <form class="app-form app-icon-form" action="#">
+                                <div class="position-relative">
+                                    <input type="search" class="form-control" placeholder="Buscar..."
+                                           aria-label="Buscar" wire:model.live="search">
+                                    <i class="ti ti-search text-dark"></i>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="col-xl-2 col-md-2">
+                            <select class="form-select" aria-label="Estado del vehiculo" wire:model.live="status">
+                                <option value="active">Activo</option>
+                                <option value="inactive">Cesado</option>
+                            </select>
+                        </div>
+
+                        <div class="col-xl-2 col-md-2">
+                            <select class="form-select" aria-label="Filtro" wire:model.live="filter">
+                                <option value="plate">Placa</option>
+                                <option value="brand">Marca</option>
+                                <option value="year">Año</option>
+                                <option value="owner">Propietario</option>
+                                <option value="driver">Conductor</option>
+                                <option value="condition">Condición</option>
+                                <option value="company">Empresa</option>
+                                <option value="category">Categoría</option>
+                                <option value="code">Código</option>
+                            </select>
+                        </div>
+
+                        <div class="col-xl-2 col-md-2">
+                            <button class="btn btn-primary w-100" wire:click="openAddModal">
+                                <i class="ti ti-square-plus f-s-17"></i> Nuevo
+                            </button>
+                        </div>
+                        <div class="col-xl-2 col-md-2">
+                            <button class="btn btn-primary w-100" wire:click="export">
+                                <i class="ti ti-file-analytics f-s-17"></i> Exportar
+                            </button>
+                        </div>
+                        <div class="col-xl-1 col-md-2">
+                            <button id="down" class="btn btn-primary w-100">
+                                <i class="ti ti-square-chevrons-down f-s-17"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="card-body">
@@ -263,8 +251,142 @@
                     <button type="button" class="btn-close m-0 fs-5" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    {{-- Tus inputs (se dejan tal cual) --}}
-                    {{-- ... --}}
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Placa</label>
+                            <input id="plate-edit" type="text" class="form-control" wire:model.defer="plate" placeholder="ABC-123">
+                            @error('plate') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Sede</label>
+                            <select class="form-select" wire:model.defer="headquarter">
+                                <option value="">— Seleccionar —</option>
+                                @foreach($listHeadquarters as $hq)
+                                    <option value="{{ $hq->name ?? $hq->title ?? $hq->id }}">{{ $hq->name ?? $hq->title ?? ('ID '.$hq->id) }}</option>
+                                @endforeach
+                            </select>
+                            @error('headquarter') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Fecha ingreso</label>
+                            <input type="date" class="form-control" wire:model.defer="entry_date">
+                            @error('entry_date') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Fecha cese</label>
+                            <input type="date" class="form-control" wire:model.defer="termination_date">
+                            @error('termination_date') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Categoría</label>
+                            <input type="text" class="form-control" wire:model.defer="class" placeholder="(clase)">
+                            @error('class') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Marca</label>
+                            <input type="text" class="form-control" wire:model.defer="brand" placeholder="Toyota">
+                            @error('brand') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+
+                        <div class="col-md-2">
+                            <label class="form-label">Año</label>
+                            <input type="number" class="form-control" wire:model.defer="year" min="1950" max="{{ now()->year + 1 }}">
+                            @error('year') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Modelo</label>
+                            <input type="text" class="form-control" wire:model.defer="model" placeholder="Yaris / Accent">
+                            @error('model') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Carrocería</label>
+                            <input type="text" class="form-control" wire:model.defer="bodywork" placeholder="Sedán / Hatchback">
+                            @error('bodywork') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Color</label>
+                            <input type="text" class="form-control" wire:model.defer="color" placeholder="Rojo / Negro">
+                            @error('color') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Modalidad</label>
+                            <input type="text" class="form-control" wire:model.defer="type" placeholder="(tipo)">
+                            @error('type') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Empresa afiliada</label>
+                            <input type="text" class="form-control" wire:model.defer="affiliated_company" placeholder="(empresa)">
+                            @error('affiliated_company') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Condición</label>
+                            <input type="text" class="form-control" wire:model.defer="condition" placeholder="EX / GN / DT / Activo / ...">
+                            @error('condition') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Propietario</label>
+                            <select class="form-select" wire:model.defer="owner_id">
+                                <option value="">— Seleccionar —</option>
+                                @foreach($listOwners as $o)
+                                    <option value="{{ $o->id }}">{{ $o->name }}</option>
+                                @endforeach
+                            </select>
+                            @error('owner_id') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Conductor</label>
+                            <select class="form-select" wire:model.defer="driver_id">
+                                <option value="">— Seleccionar —</option>
+                                @foreach($listDrivers as $d)
+                                    <option value="{{ $d->id }}">{{ $d->name }}</option>
+                                @endforeach
+                            </select>
+                            @error('driver_id') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Combustible</label>
+                            <input type="text" class="form-control" wire:model.defer="fuel" placeholder="GAS / D2 / GNV / GLP">
+                            @error('fuel') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">SOAT</label>
+                            <input type="date" class="form-control" wire:model.defer="soat_date">
+                            @error('soat_date') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Revisión técnica</label>
+                            <input type="date" class="form-control" wire:model.defer="technical_review">
+                            @error('technical_review') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Certificado</label>
+                            <input type="date" class="form-control" wire:model.defer="certificate_date">
+                            @error('certificate_date') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Detalle</label>
+                            <textarea class="form-control" rows="2" wire:model.defer="detail" placeholder="Observaciones…"></textarea>
+                            @error('detail') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light-primary" wire:click="update">Editar</button>
