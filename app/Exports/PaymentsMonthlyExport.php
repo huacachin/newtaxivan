@@ -10,6 +10,10 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, WithTitle
 {
@@ -58,74 +62,116 @@ class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, With
     {
         return [
             AfterSheet::class => function (AfterSheet $event) {
-                $sheet = $event->sheet->getDelegate();
+                $s = $event->sheet->getDelegate();
 
-                // Calcular filas
-                $rowCount  = count($this->rows);
+                // --- Paleta
+                $blue      = 'FF2874A6';
+                $footerBg  = 'FFCEE7FF';
+                $white     = 'FFFFFFFF';
+                $black     = 'FF000000';
+                $borderC   = 'FFCFD8DC';
+
+                // ========== Layout (insertamos 2 filas: Título y Cabecera de grupos) ==========
+                $s->insertNewRowBefore(1, 2);            // empuja headings a la fila 3
+                $lastCol = 'L';                          // A..L
                 $titleRow  = 1;
-                $headerRow = 2;            // después de insertar el título
-                $firstData = 3;            // datos inician en fila 3
-                $lastData  = $firstData + max(0, $rowCount - 1);
-                $footer1   = $lastData + 1;
-                $footer2   = $footer1 + 1;
+                $groupRow  = 2;
+                $headRow   = 3;
+                $dataRow1  = 4;
 
-                // Título (inserta y pinta)
-                $sheet->insertNewRowBefore(1, 1);
-                $sheet->mergeCells('A1:L1');
-                $sheet->setCellValue('A1', 'REPORTE MENSUAL DE PAGO – '.$this->mesTexto($this->month).' '.$this->year);
-                $sheet->getStyle('A1')->applyFromArray([
-                    'font'      => ['bold' => true, 'size' => 14, 'color' => ['rgb' => 'FFFFFF']],
-                    'alignment' => ['horizontal' => 'center'],
-                    'fill'      => ['fillType' => 'solid', 'startColor' => ['rgb' => '23242F']],
+                // Título
+                $s->mergeCells("A{$titleRow}:{$lastCol}{$titleRow}");
+                $s->setCellValue("A{$titleRow}", 'REPORTE MENSUAL DE PAGOS '.$this->mesTexto($this->month).' '.$this->year);
+                $s->getStyle("A{$titleRow}:{$lastCol}{$titleRow}")->applyFromArray([
+                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blue]],
+                    'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$white]],
+                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
+                ]);
+                $s->getRowDimension($titleRow)->setRowHeight(18);
+
+                // Cabecera de grupos (D:F y H:K)
+                $s->mergeCells("D{$groupRow}:F{$groupRow}");
+                $s->mergeCells("H{$groupRow}:K{$groupRow}");
+                $s->setCellValue("D{$groupRow}", 'DEUDA DEL MES ANTERIOR');
+                $s->setCellValue("H{$groupRow}", 'PAGOS');
+                $s->getStyle("A{$groupRow}:{$lastCol}{$groupRow}")->applyFromArray([
+                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blue]],
+                    'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$white]],
+                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
+                ]);
+                $s->getRowDimension($groupRow)->setRowHeight(16);
+
+                // Headings (fila 3)
+                $s->getStyle("A{$headRow}:{$lastCol}{$headRow}")->applyFromArray([
+                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blue]],
+                    'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$white]],
+                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
                 ]);
 
-                // Encabezado oscuro
-                $sheet->getStyle("A{$headerRow}:L{$headerRow}")->applyFromArray([
-                    'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
-                    'alignment' => ['horizontal' => 'center'],
-                    'fill'      => ['fillType' => 'solid', 'startColor' => ['rgb' => '23242F']],
-                ]);
+                // Congelar
+                $s->freezePane("A{$dataRow1}");
 
-                // Bordes finos (incluye footers)
-                $sheet->getStyle("A{$headerRow}:L{$footer2}")->applyFromArray([
-                    'borders' => [
-                        'allBorders' => [
-                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                            'color'       => ['rgb' => 'CCCCCC'],
-                        ],
-                    ],
-                ]);
+                // Bordes finos para toda la tabla (incl. pies)
+                $lastRow = (int)$s->getHighestRow();
+                $s->getStyle("A{$groupRow}:{$lastCol}{$lastRow}")
+                    ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+                $s->getStyle("A{$groupRow}:{$lastCol}{$lastRow}")
+                    ->getBorders()->getAllBorders()->getColor()->setARGB($borderC);
 
-                // Congelar debajo del header
-                $sheet->freezePane('A3');
+                // Anchos
+                foreach (range('A','L') as $col) $s->getColumnDimension($col)->setAutoSize(false);
+                $s->getColumnDimension('A')->setWidth(5.5);
+                $s->getColumnDimension('B')->setWidth(6.5);
+                $s->getColumnDimension('C')->setWidth(12);
+                foreach (['D','E','F'] as $c) $s->getColumnDimension($c)->setWidth(10);
+                $s->getColumnDimension('G')->setWidth(12);
+                foreach (['H','I','J'] as $c) $s->getColumnDimension($c)->setWidth(6.5);
+                $s->getColumnDimension('K')->setWidth(10);
+                $s->getColumnDimension('L')->setWidth(12);
 
-                // Autosize columnas
-                foreach (range('A', 'L') as $col) {
-                    $sheet->getColumnDimension($col)->setAutoSize(true);
+                // Alineaciones: texto a la izq en B,C,K; resto centrado/numérico
+                $dataEnd = $lastRow - 2;  // antes de footers (hay 2)
+                if ($dataEnd >= $dataRow1) {
+                    $s->getStyle("B{$dataRow1}:B{$dataEnd}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+                    $s->getStyle("C{$dataRow1}:C{$dataEnd}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+                    $s->getStyle("K{$dataRow1}:K{$dataEnd}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
                 }
 
-                // Formatos numéricos en montos (D,E,F,G,L)
-                foreach (['D','E','F','G','L'] as $col) {
-                    $sheet->getStyle("{$col}{$firstData}:{$col}{$footer2}")
+                // Formatos numéricos
+                // Moneda: D,E,F,G,L
+                foreach (['D','E','F','G','L'] as $c) {
+                    $s->getStyle("{$c}{$dataRow1}:{$c}{$lastRow}")
                         ->getNumberFormat()->setFormatCode('#,##0.00');
                 }
-
-                // Contenido (tbody) en gris suave
-                if ($lastData >= $firstData) {
-                    $sheet->getStyle("A{$firstData}:L{$lastData}")->applyFromArray([
-                        'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => 'F1F5F9']],
-                    ]);
+                // Enteros: H,I,J y A (Item)
+                foreach (['A','H','I','J'] as $c) {
+                    $s->getStyle("{$c}{$dataRow1}:{$c}{$lastRow}")
+                        ->getNumberFormat()->setFormatCode('0');
                 }
 
-                // Footers: mismo color que thead + negrita
-                $sheet->getStyle("A{$footer1}:L{$footer1}")->applyFromArray([
-                    'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
-                    'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '23242F']],
-                ]);
-                $sheet->getStyle("A{$footer2}:L{$footer2}")->applyFromArray([
-                    'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
-                    'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '23242F']],
-                ]);
+                // Rellenar vacíos numéricos con 0 en todo el bloque de datos + pies
+                $colIdxsNum = ['A','D','E','F','G','H','I','J','L'];
+                for ($r = $dataRow1; $r <= $lastRow; $r++) {
+                    foreach ($colIdxsNum as $c) {
+                        $cell = $s->getCell("{$c}{$r}");
+                        $val  = $cell->getValue();
+                        if ($val === null || $val === '') {
+                            $cell->setValueExplicit(0, DataType::TYPE_NUMERIC);
+                        }
+                    }
+                }
+
+                // Pies (últimas 2 filas) en #CEE7FF
+                $footer1 = $lastRow - 1;
+                $footer2 = $lastRow;
+                foreach ([$footer1,$footer2] as $fr) {
+                    $s->getStyle("A{$fr}:{$lastCol}{$fr}")->applyFromArray([
+                        'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$footerBg]],
+                        'font' => ['bold'=>true,'color'=>['argb'=>$black]],
+                        'borders' => ['outline' => ['borderStyle'=>Border::BORDER_MEDIUM,'color'=>['argb'=>$blue]]],
+                        'alignment' => ['vertical'=>Alignment::VERTICAL_CENTER],
+                    ]);
+                }
             },
         ];
     }
@@ -335,9 +381,9 @@ class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, With
 
         $this->footer2 = [
             '', 'TOTAL', '',
-            '', '', '',
-            round($sumMonth + $sumPrevPaid, 2),
-            '', '', '', '', '',
+            0, 0, 0,
+            round($sumMonth + $sumPrevPaid, 2), // Suma que te muestran en la segunda línea
+            0, 0, 0, '', 0,
         ];
     }
 
