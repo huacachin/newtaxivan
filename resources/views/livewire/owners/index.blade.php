@@ -1,12 +1,5 @@
 @push('styles')
     <style>
-        /* Tabla compacta */
-        .compact-table-xxs{
-            font-size:12px; line-height:1.12; table-layout:fixed;
-        }
-        .compact-table-xxs th,.compact-table-xxs td{
-            padding:.22rem .35rem; white-space:nowrap; vertical-align:middle; text-align:center;
-        }
 
         /* Encabezado y pie oscuros para TODAS las tablas de esta vista */
         .table-section .table thead th {
@@ -30,6 +23,19 @@
         .support-table.table-striped tbody tr:nth-of-type(odd) td {
             background-color:#e5e7eb !important;
         }
+
+        .screen-overlay {
+            position: fixed;
+            inset: 0;                 /* full viewport */
+            display: none;            /* Livewire lo pondrá en flex */
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,.35);
+            backdrop-filter: blur(2px);
+            z-index: 2000;            /* sobre modals/backdrops de Bootstrap */
+            pointer-events: all;      /* bloquea clics */
+        }
+
     </style>
 @endpush
 
@@ -55,12 +61,13 @@
     </div>
 
     <div class="row table-section">
-        <!-- Filtros / acciones -->
-        <div class="col-12">
+        <!-- Tabla principal: Propietarios -->
+        <div class="col-xl-12">
             <div class="card">
-                <div class="card-body">
-                    <div class="row g-2">
-                        <div class="col-xl-5 col-md-6">
+                <div class="card-header">
+                    <h5>Total propietarios: {{ $owners->count() }}</h5>
+                    <div class="row g-2 mt-2">
+                        <div class="col-xl-5 col-md-3">
                             <form class="app-form app-icon-form" action="#">
                                 <div class="position-relative">
                                     <input type="search" class="form-control" placeholder="Buscar..."
@@ -69,45 +76,36 @@
                                 </div>
                             </form>
                         </div>
-                        <div class="col-xl-2 col-md-4">
+                        <div class="col-xl-2 col-md-3">
                             <select class="form-select" aria-label="Selecciona item a filtrar" wire:model.live="filter">
                                 <option value="plate">Placa</option>
                                 <option value="name">Nombre</option>
                                 <option value="code">Código</option>
                             </select>
                         </div>
-                        <div class="col-xl-2 col-md-4">
+                        <div class="col-xl-2 col-md-2">
                             <button class="btn btn-primary w-100" wire:click="openAddModal">
                                 <i class="ti ti-square-plus f-s-17"></i> Nuevo
                             </button>
                         </div>
-                        <div class="col-xl-2 col-md-4">
+                        <div class="col-xl-2 col-md-2">
                             <button class="btn btn-primary w-100" wire:click="export">
                                 <i class="ti ti-file-analytics f-s-17"></i> Exportar
                             </button>
                         </div>
-                        <div class="col-xl-1 col-md-4">
+                        <div class="col-xl-1 col-md-2">
                             <button id="down" class="btn btn-primary w-100">
                                 <i class="ti ti-square-chevrons-down f-s-17"></i>
                             </button>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- Tabla principal: Propietarios -->
-        <div class="col-xl-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5>Total propietarios: {{ $owners->count() }}</h5>
-                </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-sm table-bordered table-striped table-hover compact-table-xxs">
                             <thead class="text-center">
                             <tr>
-                                <th scope="col">Id</th>
+                                <th>Id</th>
                                 <th scope="col">Placa</th>
                                 <th scope="col">Nombre/Empresa</th>
                                 <th scope="col">DNI/RUC</th>
@@ -121,10 +119,10 @@
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
                                         <td>{{ $owner->plate }}</td>
-                                        <td class="text-start">{{ $owner->name }}</td>
+                                        <td>{{ $owner->name }}</td>
                                         <td>{{ $owner->document_number }}</td>
                                         <td>{{ $owner->phone }}</td>
-                                        <td width="10" class="text-center">
+                                        <td class="text-center">
                                             <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
                                                wire:click="openEditModal({{ $owner->id }})"></i>
                                         </td>
@@ -377,6 +375,14 @@
                     <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal">Cerrar</button>
                 </div>
             </div>
+        </div>
+    </div>
+    <div class="screen-overlay"
+         wire:loading.delay.flex
+         wire:target="export,openAddModal,openEditModal,save,update">
+        <div class="text-center">
+            <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
+            <div class="mt-2 text-white fw-semibold">Cargando…</div>
         </div>
     </div>
 </div>
