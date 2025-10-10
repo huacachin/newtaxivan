@@ -106,18 +106,18 @@
                                 <option value="3">Sucursal</option>
                             </select>
                         </div>
-                        <div class="col-xl-2 col-md-3 mb-2 mb-md-0">
+                        <div class="col-xl-2 col-md-2 mb-2 mb-md-0">
                             <label class="form-label">Fecha Inicio</label>
                             {{-- UI sin disparar consulta: uiFromDate --}}
                             <input type="date" class="form-control" wire:model.defer="uiFromDate">
                         </div>
-                        <div class="col-xl-2 col-md-3 mb-2 mb-md-0">
+                        <div class="col-xl-2 col-md-2 mb-2 mb-md-0">
                             <label class="form-label">Fecha Fin</label>
                             {{-- UI sin disparar consulta: uiToDate --}}
                             <input type="date" class="form-control" wire:model.defer="uiToDate">
                         </div>
-                        <div class="col-xl-1 col-md-3 mb-2 mb-md-0 d-flex align-items-end">
-                            <button class="btn btn-primary btn-xs w-100"
+                        <div class="col-xl-1 col-md-2 mb-2 mb-md-0 d-flex align-items-end">
+                            <button class="btn btn-primary w-100"
                                     wire:click="applyDateRange"
                                     wire:loading.attr="disabled"
                                     wire:target="applyDateRange">
