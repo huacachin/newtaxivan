@@ -25,6 +25,18 @@
 
         .ta-center{ text-align:center; }
         .f-w-600{ font-weight:600; }
+
+        .screen-overlay {
+            position: fixed;
+            inset: 0;                 /* full viewport */
+            display: none;            /* Livewire lo pondrá en flex */
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,.35);
+            backdrop-filter: blur(2px);
+            z-index: 2000;            /* sobre modals/backdrops de Bootstrap */
+            pointer-events: all;      /* bloquea clics */
+        }
     </style>
 @endpush
 
@@ -50,11 +62,13 @@
     </div>
 
     <div class="row table-section">
-        <!-- Filtros / acciones -->
+        <!-- Tabla principal: Conductores -->
         <div class="col-12">
-            <div class="card"><div class="card-body">
-                    <div class="row g-2 align-items-end">
-                        <div class="col-xl-5 col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Total conductores: {{ $drivers->count() }}</h5>
+                    <div class="row g-2 align-items-end mt-2">
+                        <div class="col-xl-5 col-md-3">
                             <form class="app-form app-icon-form" action="#">
                                 <div class="position-relative">
                                     <input type="search" class="form-control" placeholder="Buscar..." aria-label="Buscar" wire:model.live="search">
@@ -63,7 +77,7 @@
                             </form>
                         </div>
 
-                        <div class="col-xl-2 col-md-4">
+                        <div class="col-xl-2 col-md-3">
                             <select class="form-select" aria-label="Selecciona item a filtrar" wire:model.live="filter">
                                 <option value="plate">Placa</option>
                                 <option value="name">Nombre</option>
@@ -71,31 +85,25 @@
                             </select>
                         </div>
 
-                        <div class="col-xl-2 col-md-4">
+                        <div class="col-xl-2 col-md-2">
                             <button class="btn btn-primary w-100" wire:click="openAddModal">
                                 <i class="ti ti-square-plus f-s-17"></i> Nuevo
                             </button>
                         </div>
 
-                        <div class="col-xl-2 col-md-4">
+                        <div class="col-xl-2 col-md-2">
                             <button class="btn btn-primary w-100" wire:click="export">
                                 <i class="ti ti-file-analytics f-s-17"></i> Exportar
                             </button>
                         </div>
 
-                        <div class="col-xl-1 col-md-4">
+                        <div class="col-xl-1 col-md-2">
                             <button id="down" class="btn btn-primary w-100">
                                 <i class="ti ti-square-chevrons-down f-s-17"></i>
                             </button>
                         </div>
                     </div>
-                </div></div>
-        </div>
-
-        <!-- Tabla principal: Conductores -->
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header"><h5>Total conductores: {{ $drivers->count() }}</h5></div>
+                </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-sm table-bordered table-striped table-hover">
@@ -434,7 +442,6 @@
                                     @error('document_expiration_date') <span class="text-danger">{{ $message }}</span> @enderror
                                 </div>
                             </div>
-
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label class="form-label">Fecha Nacimiento</label>
@@ -459,7 +466,6 @@
                                     @error('condition') <span class="text-danger">{{ $message }}</span> @enderror
                                 </div>
                             </div>
-
                             <div class="col-md-8">
                                 <div class="mb-3">
                                     <label class="form-label">Dirección</label>
@@ -474,7 +480,6 @@
                                     @error('phone') <span class="text-danger">{{ $message }}</span> @enderror
                                 </div>
                             </div>
-
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label class="form-label">Email</label>
@@ -482,7 +487,6 @@
                                     @error('email') <span class="text-danger">{{ $message }}</span> @enderror
                                 </div>
                             </div>
-
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label class="form-label">Licencia</label>
@@ -497,7 +501,6 @@
                                     @error('license_issue_date') <span class="text-danger">{{ $message }}</span> @enderror
                                 </div>
                             </div>
-
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label class="form-label">Fecha Revalidación</label>
@@ -539,3 +542,70 @@
 
                             <div class="col-md-4">
                                 <div class="mb-3">
+                                    <label class="form-label">F.Inicio Contrato</label>
+                                    <input type="date" class="form-control" wire:model="contract_start">
+                                    @error('contract_start') <span class="text-danger">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">F.Fin Contrato</label>
+                                    <input type="date" class="form-control" wire:model="contract_end">
+                                    @error('contract_end') <span class="text-danger">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+
+                            <div class="app-divider-v justify-content-center">
+                                <p>Credencial de Educación y Seguridad Vial.</p>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label">Fecha Expedición</label>
+                                        <input type="date" class="form-control" wire:model="credential">
+                                        @error('credential') <span class="text-danger">{{ $message }}</span> @enderror
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label">Fecha Vencimiento</label>
+                                        <input type="date" class="form-control" wire:model="credential_expiration_date">
+                                        @error('credential_expiration_date') <span class="text-danger">{{ $message }}</span> @enderror
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label">Municipalidad</label>
+                                        <select class="form-select" wire:model="credential_municipality">
+                                            <option value="lima">Lima</option>
+                                            <option value="callao">Callao</option>
+                                        </select>
+                                        @error('credential_municipality') <span class="text-danger">{{ $message }}</span> @enderror
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light-primary" wire:click="update">Editar</button>
+                        <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div class="screen-overlay"
+         wire:loading.delay.flex
+         wire:target="export,openAddModal,openEditModal,save,update">
+        <div class="text-center">
+            <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
+            <div class="mt-2 text-white fw-semibold">Cargando…</div>
+        </div>
+    </div>
+</div>

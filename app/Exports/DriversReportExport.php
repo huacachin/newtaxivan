@@ -23,22 +23,15 @@ class DriversReportExport implements FromArray, ShouldAutoSize, WithColumnFormat
         protected ?string $filter = 'plate' // plate | name | code
     ) {}
 
-    /** ====== Cabeceras comunes ====== */
     protected function headings(): array
     {
+        // A..H
         return [
-            'ID','Nombre','N° Documento','Teléfono','Email','Dirección','Distrito',
-            'Licencia','Clase','Categoría',
-            'F. Emisión Licencia','F. Revalidación Licencia',
-            'Contrato Inicio','Contrato Fin',
-            'Condición','Score',
-            'Venc. Documento','Nacimiento',
-            'Credencial','Venc. Credencial','Municipalidad Credencial',
-            'Placas Activas',
+            'ID', 'Placa', 'Nombre', 'N° Documento',
+            'Contrato Inicio', 'Contrato Fin', 'Teléfono', 'Condición',
         ];
     }
 
-    /** ====== Data builder (dos tablas en una hoja) ====== */
     public function array(): array
     {
         [$active, $free] = $this->fetchData();
@@ -52,32 +45,19 @@ class DriversReportExport implements FromArray, ShouldAutoSize, WithColumnFormat
             $plates = $d->relationLoaded('vehicles')
                 ? $d->vehicles->pluck('plate')->filter()->unique()->values()->implode(', ')
                 : '';
+
             $rows[] = [
                 $d->id,
-                $d->name,
-                $d->document_number,
-                $d->phone,
-                $d->email,
-                $d->address,
-                $d->district,
-                $d->license,
-                $d->class,
-                $d->category,
-                optional($d->license_issue_date)?->format('Y-m-d') ?: null,
-                optional($d->license_revalidation_date)?->format('Y-m-d') ?: null,
+                $plates ?: '',
+                (string)$d->name,
+                (string)$d->document_number,
                 optional($d->contract_start)?->format('Y-m-d') ?: null,
                 optional($d->contract_end)?->format('Y-m-d') ?: null,
-                $d->condition,
-                is_null($d->score) ? null : (float)$d->score,
-                optional($d->document_expiration_date)?->format('Y-m-d') ?: null,
-                optional($d->birthdate)?->format('Y-m-d') ?: null,
-                $d->credential, // string o fecha según tu modelo
-                optional($d->credential_expiration_date)?->format('Y-m-d') ?: null,
-                $d->credential_municipality,
-                $plates,
+                (string)$d->phone,
+                (string)$d->condition,
             ];
         }
-        $rows[] = array_fill(0, count($head), ''); // fila TOTAL (se rellena en AfterSheet)
+        $rows[] = array_fill(0, count($head), ''); // TOTAL T1
 
         // Separador
         $rows[] = array_fill(0, count($head), '');
@@ -87,221 +67,173 @@ class DriversReportExport implements FromArray, ShouldAutoSize, WithColumnFormat
         foreach ($free as $d) {
             $rows[] = [
                 $d->id,
-                $d->name,
-                $d->document_number,
-                $d->phone,
-                $d->email,
-                $d->address,
-                $d->district,
-                $d->license,
-                $d->class,
-                $d->category,
-                optional($d->license_issue_date)?->format('Y-m-d') ?: null,
-                optional($d->license_revalidation_date)?->format('Y-m-d') ?: null,
+                '—',
+                (string)$d->name,
+                (string)$d->document_number,
                 optional($d->contract_start)?->format('Y-m-d') ?: null,
                 optional($d->contract_end)?->format('Y-m-d') ?: null,
-                $d->condition,
-                is_null($d->score) ? null : (float)$d->score,
-                optional($d->document_expiration_date)?->format('Y-m-d') ?: null,
-                optional($d->birthdate)?->format('Y-m-d') ?: null,
-                $d->credential,
-                optional($d->credential_expiration_date)?->format('Y-m-d') ?: null,
-                $d->credential_municipality,
-                '', // sin placas activas por definición
+                (string)$d->phone,
+                (string)$d->condition,
             ];
         }
-        $rows[] = array_fill(0, count($head), ''); // fila TOTAL (se rellena en AfterSheet)
+        $rows[] = array_fill(0, count($head), ''); // TOTAL T2
 
         return $rows;
     }
 
-    /** ====== Formatos de columnas (aplican a ambas tablas) ====== */
     public function columnFormats(): array
     {
-        // A..V (22 columnas)
         return [
-            'K' => NumberFormat::FORMAT_DATE_YYYYMMDD2, // Emisión Licencia
-            'L' => NumberFormat::FORMAT_DATE_YYYYMMDD2, // Revalidación
-            'M' => NumberFormat::FORMAT_DATE_YYYYMMDD2, // Contrato Inicio
-            'N' => NumberFormat::FORMAT_DATE_YYYYMMDD2, // Contrato Fin
-            'Q' => NumberFormat::FORMAT_DATE_YYYYMMDD2, // Venc. Documento
-            'R' => NumberFormat::FORMAT_DATE_YYYYMMDD2, // Nacimiento
-            'T' => NumberFormat::FORMAT_DATE_YYYYMMDD2, // Venc. Credencial
-            'P' => '0.00',                               // Score
+            'D' => '@',                                 // N° Documento texto
+            'E' => NumberFormat::FORMAT_DATE_YYYYMMDD2, // Contrato Inicio
+            'F' => NumberFormat::FORMAT_DATE_YYYYMMDD2, // Contrato Fin
+            'G' => '@',                                 // Teléfono texto
         ];
     }
 
-    /** ====== Eventos/estilos “línea de diseño Payments” ====== */
     public function registerEvents(): array
     {
         return [
             AfterSheet::class => function (AfterSheet $e) {
                 $ws = $e->sheet->getDelegate();
 
-                // Insertar 2 filas para título y subtítulo
+                // ======= Paleta =======
+                $blue     = 'FF2874A6'; // #2874A6
+                $footerBg = 'FFCEE7FF'; // #CEE7FF
+                $white    = 'FFFFFFFF';
+                $borderC  = 'FFCFD8DC';
+
+                // Tamaño de fuente global = 10 (no se toca)
+                $ws->getParent()->getDefaultStyle()->getFont()->setSize(10);
+
+                // Insertar 2 filas para título y (sin subtítulo)
                 $ws->insertNewRowBefore(1, 2);
+                $lastCol = 'H';
 
-                $lastCol = 'V'; // 22 columnas
-                $head    = $this->headings();
-                $colsCnt = count($head);
-
-                // Calcular offsets y tamaños
-                // Estructura actual (después de insertar 2 filas):
-                // 3: encabezado T1
-                // 4..(3+n1-1): datos T1
-                // (3+n1): TOTAL T1
-                // (3+n1+1): separador
-                // (3+n1+2): encabezado T2
-                // ... datos T2
-                // TOTAL T2
-                $rowsTotal = $ws->getHighestRow();
-
-                // Contar filas por tabla a partir del contenido:
-                // Tomamos n1 y n2 a partir de filas no vacías entre cabeceras
-                $header1 = 3;
-                // Busca header2: es la fila inmediatamente después del separador,
-                // localízala detectando la primera fila que replica las cabeceras
-                $header2 = null;
-                for ($r = $header1 + 1; $r <= $rowsTotal; $r++) {
-                    $valA = (string) $ws->getCell("A{$r}")->getValue();
-                    if ($valA === 'ID') { $header2 = $r; break; }
-                }
-                if (!$header2) { $header2 = $rowsTotal; } // fallback
-
-                $dataStart1 = $header1 + 1;
-                $total1     = $header2 - 2; // (fila antes del separador)
-                $n1         = max(0, $total1 - $dataStart1);
-
-                $dataStart2 = $header2 + 1;
-                $total2     = $rowsTotal; // última fila es TOTAL T2
-                $n2         = max(0, $total2 - $dataStart2);
-
-                // ===== TÍTULO (fila 1) y SUBTÍTULO (fila 2) =====
-                $title = 'REPORTE DE CONDUCTORES';
-                $ws->setCellValue('A1', $title);
+                // ======= Título (fila 1) =======
                 $ws->mergeCells("A1:{$lastCol}1");
-                $ws->getStyle('A1')->getFont()->setBold(true)->setSize(14)->getColor()->setARGB('FFFFFFFF');
-                $ws->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setVertical(Alignment::VERTICAL_CENTER);
-                $ws->getStyle('A1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF1F2937');
-                $ws->getRowDimension(1)->setRowHeight(24);
+                $ws->setCellValue('A1', 'REPORTE DE CONDUCTORES');
+                $ws->getStyle('A1')->applyFromArray([
+                    'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$white]],
+                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
+                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blue]],
+                ]);
+                $ws->getRowDimension(1)->setRowHeight(16);
 
-                $label = match ($this->filter) {
-                    'plate' => 'Placa',
-                    'name'  => 'Nombre',
-                    'code'  => 'Código',
-                    default => 'Búsqueda',
-                };
-                $sub = 'Filtros: ' . ($this->search ? "{$label}: {$this->search}" : '—');
-                $ws->setCellValue('A2', $sub);
+                // ======= Fila 2 vacía (sin “Filtros”), solo como separador fino =======
                 $ws->mergeCells("A2:{$lastCol}2");
-                $ws->getStyle('A2')->getFont()->setItalic(true)->setSize(10)->getColor()->setARGB('FFFFFFFF');
-                $ws->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setVertical(Alignment::VERTICAL_CENTER)->setWrapText(true);
-                $ws->getStyle('A2')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF1F2937');
-                $ws->getRowDimension(2)->setRowHeight(18);
+                $ws->setCellValue('A2', '');
+                // mantenemos una línea azul muy delgada para continuidad visual
+                $ws->getStyle('A2')->applyFromArray([
+                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blue]],
+                ]);
+                $ws->getRowDimension(2)->setRowHeight(6);
 
-                // ===== Encabezados oscuros (header1 y header2) =====
+                // Detectar bloques
+                $header1    = 3;
+                $dataStart1 = 4;
+                $rowsTotal  = (int)$ws->getHighestRow();
+                $header2    = null;
+                for ($r = $dataStart1; $r <= $rowsTotal; $r++) {
+                    if ((string)$ws->getCell("A{$r}")->getValue() === 'ID') { $header2 = $r; break; }
+                }
+                if (!$header2) { $header2 = $rowsTotal; }
+                $total1     = $header2 - 2;
+                $dataEnd1   = max($dataStart1, $total1 - 1);
+                $dataStart2 = $header2 + 1;
+                $total2     = $rowsTotal;
+                $dataEnd2   = max($dataStart2, $total2 - 1);
+
+                // ======= Encabezados (ambas tablas) =======
                 foreach ([$header1, $header2] as $hr) {
-                    $ws->getStyle("A{$hr}:{$lastCol}{$hr}")
-                        ->getFont()->setBold(true)->getColor()->setARGB('FFFFFFFF');
-                    $ws->getStyle("A{$hr}:{$lastCol}{$hr}")
-                        ->getAlignment()->setVertical(Alignment::VERTICAL_CENTER)->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                    $ws->getRowDimension($hr)->setRowHeight(20);
-                    $ws->getStyle("A{$hr}:{$lastCol}{$hr}")
-                        ->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF23242F'); // #009BDC
+                    if ($hr < 3) continue;
+                    $ws->getStyle("A{$hr}:{$lastCol}{$hr}")->applyFromArray([
+                        'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$white]],
+                        'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
+                        'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blue]],
+                    ]);
+                    $ws->getRowDimension($hr)->setRowHeight(15);
                 }
 
-                // Freeze pane debajo del primer header
-                $ws->freezePane("A" . ($header1 + 1));
+                // Freeze
+                $ws->freezePane('A4');
 
-                // Autofiltro SOLO para la primera tabla (Excel permite uno por hoja)
-                if ($n1 > 0) {
-                    $ws->setAutoFilter("A{$header1}:{$lastCol}" . ($total1 - 0)); // incluye datos T1
-                } else {
-                    $ws->setAutoFilter("A{$header1}:{$lastCol}{$header1}");
-                }
+                // Bordes finos
+                $ws->getStyle("A{$header1}:{$lastCol}{$total2}")
+                    ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)
+                    ->getColor()->setARGB($borderC);
 
-                // Bordes finos (todo)
-                $ws->getStyle("A{$header1}:{$lastCol}{$rowsTotal}")
-                    ->getBorders()->getAllBorders()
-                    ->setBorderStyle(Border::BORDER_THIN)
-                    ->getColor()->setARGB('FFCFD8DC');
-
-                // Zebra en ambos cuerpos
+                // Zebra
                 $zebra = function (string $range) use ($ws) {
                     $cond = new Conditional();
                     $cond->setConditionType(Conditional::CONDITION_EXPRESSION);
                     $cond->setConditions(['MOD(ROW(),2)=0']);
                     $cond->getStyle()->getFill()->setFillType(Fill::FILL_SOLID)
-                        ->getStartColor()->setARGB('FFF9FAFB');
+                        ->getStartColor()->setARGB('FFF3F4F6');
                     $styles = $ws->getStyle($range)->getConditionalStyles();
                     $styles[] = $cond;
                     $ws->getStyle($range)->setConditionalStyles($styles);
                 };
-                if ($n1 > 0) { $zebra("A{$dataStart1}:{$lastCol}" . ($total1 - 1)); }
-                if ($n2 > 0) { $zebra("A{$dataStart2}:{$lastCol}" . ($total2 - 1)); }
+                if ($dataEnd1 >= $dataStart1) $zebra("A{$dataStart1}:{$lastCol}{$dataEnd1}");
+                if ($dataEnd2 >= $dataStart2) $zebra("A{$dataStart2}:{$lastCol}{$dataEnd2}");
 
-                // Alineaciones útiles
-                foreach (['D','P'] as $col) { // Teléfono, Score
-                    $ws->getStyle("{$col}{$dataStart1}:{$col}{$total1}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-                    $ws->getStyle("{$col}{$dataStart2}:{$col}{$total2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+                // Alineaciones + shrink
+                foreach ([[$dataStart1,$dataEnd1],[$dataStart2,$dataEnd2]] as [$r1,$r2]) {
+                    if ($r2 < $r1) continue;
+                    $ws->getStyle("A{$r1}:A{$r2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // ID
+                    $ws->getStyle("B{$r1}:B{$r2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // Placa
+                    $ws->getStyle("C{$r1}:C{$r2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT)->setShrinkToFit(true); // Nombre
+                    $ws->getStyle("D{$r1}:D{$r2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT)->setShrinkToFit(true); // Doc
+                    $ws->getStyle("E{$r1}:F{$r2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // Fechas
+                    $ws->getStyle("G{$r1}:G{$r2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT)->setShrinkToFit(true); // Tel
+                    $ws->getStyle("H{$r1}:H{$r2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // Cond
                 }
 
-                // Anchos sugeridos extra
-                $ws->getColumnDimension('A')->setWidth(8);
-                $ws->getColumnDimension('B')->setWidth(24);
-                $ws->getColumnDimension('C')->setWidth(16);
-                $ws->getColumnDimension('D')->setWidth(14);
-                $ws->getColumnDimension('E')->setWidth(26);
-                $ws->getColumnDimension('F')->setWidth(28);
-                $ws->getColumnDimension('G')->setWidth(18);
-                $ws->getColumnDimension('H')->setWidth(14);
-                $ws->getColumnDimension('I')->setWidth(10);
-                $ws->getColumnDimension('J')->setWidth(12);
-                $ws->getColumnDimension('V')->setWidth(26); // Placas activas
-
-                // ===== Filas de TOTALES (una por tabla) =====
-                // Total T1: merge A..U, conteo en V
-                $ws->mergeCells("A{$total1}:U{$total1}");
+                // ======= Footers (mismo esquema, fondo #CEE7FF) =======
+                // Total T1
+                $ws->mergeCells("A{$total1}:G{$total1}");
                 $ws->setCellValue("A{$total1}", 'TOTAL CONDUCTORES (con vehículo activo)');
-                if ($n1 > 0) {
-                    $ws->setCellValue("V{$total1}", "=COUNTA(A{$dataStart1}:A" . ($total1 - 1) . ")");
-                } else {
-                    $ws->setCellValue("V{$total1}", 0);
-                }
-                // Total T2
-                $ws->mergeCells("A{$total2}:U{$total2}");
-                $ws->setCellValue("A{$total2}", 'TOTAL CONDUCTORES LIBRES');
-                if ($n2 > 0) {
-                    $ws->setCellValue("V{$total2}", "=COUNTA(A{$dataStart2}:A" . ($total2 - 1) . ")");
-                } else {
-                    $ws->setCellValue("V{$total2}", 0);
-                }
+                $ws->setCellValue("H{$total1}", $dataEnd1 >= $dataStart1 ? "=COUNTA(A{$dataStart1}:A{$dataEnd1})" : 0);
+                $ws->getStyle("A{$total1}:{$lastCol}{$total1}")->applyFromArray([
+                    'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>'FF000000']],
+                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_RIGHT,'vertical'=>Alignment::VERTICAL_CENTER],
+                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$footerBg]],
+                    'borders' => ['outline' => ['borderStyle'=>Border::BORDER_MEDIUM,'color'=>['argb'=>$blue]]],
+                ]);
+                $ws->getStyle("H{$total1}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-                // Estilo de pies = thead oscuro
-                foreach ([$total1, $total2] as $tr) {
-                    $ws->getStyle("A{$tr}:{$lastCol}{$tr}")
-                        ->getFont()->setBold(true)->getColor()->setARGB('FFFFFFFF');
-                    $ws->getStyle("A{$tr}:{$lastCol}{$tr}")
-                        ->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF23242F');
-                    $ws->getStyle("A{$tr}:U{$tr}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-                    $ws->getStyle("V{$tr}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-                    $ws->getStyle("A{$tr}:{$lastCol}{$tr}")
-                        ->getBorders()->getTop()->setBorderStyle(Border::BORDER_MEDIUM);
-                }
+                // Total T2
+                $ws->mergeCells("A{$total2}:G{$total2}");
+                $ws->setCellValue("A{$total2}", 'TOTAL CONDUCTORES LIBRES');
+                $ws->setCellValue("H{$total2}", $dataEnd2 >= $dataStart2 ? "=COUNTA(A{$dataStart2}:A{$dataEnd2})" : 0);
+                $ws->getStyle("A{$total2}:{$lastCol}{$total2}")->applyFromArray([
+                    'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>'FF000000']],
+                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_RIGHT,'vertical'=>Alignment::VERTICAL_CENTER],
+                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$footerBg]],
+                    'borders' => ['outline' => ['borderStyle'=>Border::BORDER_MEDIUM,'color'=>['argb'=>$blue]]],
+                ]);
+                $ws->getStyle("H{$total2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+                // ======= Anchos AÚN MÁS COMPACTOS (sin cambiar la letra) =======
+                // A:ID, B:Placa, C:Nombre, D:Doc, E:Ini, F:Fin, G:Tel, H:Cond
+                $ws->getColumnDimension('A')->setWidth(5.0);
+                $ws->getColumnDimension('B')->setWidth(9.5);
+                $ws->getColumnDimension('C')->setWidth(13.0); // bajado (más compacto)
+                $ws->getColumnDimension('D')->setWidth(12.0); // bajado
+                $ws->getColumnDimension('E')->setWidth(9.0);  // bajado
+                $ws->getColumnDimension('F')->setWidth(9.0);  // bajado
+                $ws->getColumnDimension('G')->setWidth(10.0); // bajado
+                $ws->getColumnDimension('H')->setWidth(8.5);  // bajado
             },
         ];
     }
 
-    /** ====== Helpers: query de datos ====== */
     protected function fetchData(): array
     {
         $statuses = ['active','activo'];
         $filter   = (string) $this->filter;
         $search   = trim((string) $this->search);
 
-        // Conductores con vehículo ACTIVO
         $active = Driver::query()
             ->whereHas('vehicles', fn($q) =>
             $q->whereIn(DB::raw("LOWER(TRIM(status))"), $statuses)
@@ -312,51 +244,33 @@ class DriversReportExport implements FromArray, ShouldAutoSize, WithColumnFormat
             ])
             ->when($filter && $search !== '', function ($q) use ($filter, $search) {
                 return match ($filter) {
-                    'plate' => $q->whereHas('vehicles', fn($qq) => $qq->where('plate', 'like', "%{$search}%")),
-                    'name'  => $q->where('name', 'like', "%{$search}%"),
+                    'plate' => $q->whereHas('vehicles', fn($qq) => $qq->where('plate','like',"%{$search}%")),
+                    'name'  => $q->where('name','like',"%{$search}%"),
                     'code'  => ctype_digit($search)
-                        ? $q->whereHas('vehicles', fn($qq) => $qq->where('id', (int)$search))
+                        ? $q->whereHas('vehicles', fn($qq) => $qq->where('id',(int)$search))
                         : $q,
                     default => $q,
                 };
             })
             ->orderBy('name')
-            ->get([
-                'id','name','document_number','phone','email','address','district',
-                'license','class','category',
-                'license_issue_date','license_revalidation_date',
-                'contract_start','contract_end',
-                'condition','score',
-                'document_expiration_date','birthdate',
-                'credential','credential_expiration_date','credential_municipality',
-            ]);
+            ->get(['id','name','document_number','phone','condition','contract_start','contract_end']);
 
-        // Conductores LIBRES (sin vehículo activo)
         $free = Driver::query()
             ->whereDoesntHave('vehicles', fn($q) =>
             $q->whereIn(DB::raw("LOWER(TRIM(status))"), $statuses)
             )
             ->when($filter && $search !== '', function ($q) use ($filter, $search) {
                 return match ($filter) {
-                    // permitimos buscar por placa/código en cualquier vehículo histórico
-                    'plate' => $q->whereHas('vehicles', fn($qq) => $qq->where('plate', 'like', "%{$search}%")),
-                    'name'  => $q->where('name', 'like', "%{$search}%"),
+                    'plate' => $q->whereHas('vehicles', fn($qq) => $qq->where('plate','like',"%{$search}%")),
+                    'name'  => $q->where('name','like',"%{$search}%"),
                     'code'  => ctype_digit($search)
-                        ? $q->whereHas('vehicles', fn($qq) => $qq->where('id', (int)$search))
+                        ? $q->whereHas('vehicles', fn($qq) => $qq->where('id',(int)$search))
                         : $q,
                     default => $q,
                 };
             })
             ->orderBy('name')
-            ->get([
-                'id','name','document_number','phone','email','address','district',
-                'license','class','category',
-                'license_issue_date','license_revalidation_date',
-                'contract_start','contract_end',
-                'condition','score',
-                'document_expiration_date','birthdate',
-                'credential','credential_expiration_date','credential_municipality',
-            ]);
+            ->get(['id','name','document_number','phone','condition','contract_start','contract_end']);
 
         return [$active, $free];
     }
