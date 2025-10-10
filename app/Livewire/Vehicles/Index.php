@@ -39,6 +39,7 @@ class Index extends Component
     public $technical_review;
     public $certificate_date;
     public $detail;
+    public $plate;
 
     #[Url(except: '')]       public $search = '';
     #[Url(except: 'plate')]  public $filter = 'plate';
