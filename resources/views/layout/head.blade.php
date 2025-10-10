@@ -9,4 +9,5 @@
 <link rel="icon" href="{{('../assets/images/logo/logo.png')}}" type="image/x-icon">
 <link rel="shortcut icon" href="{{('../assets/images/logo/logo.png')}}" type="image/x-icon">
 <title>@yield('title') | Taxivan | Huacachin</title>
+
 @stack('styles')

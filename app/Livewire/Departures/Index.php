@@ -515,6 +515,8 @@ class Index extends Component
      */
     public function applyDateRange(): void
     {
+
+
         $this->validate([
             'uiFromDate' => ['required','date'],
             'uiToDate'   => ['required','date'],
@@ -523,8 +525,11 @@ class Index extends Component
             'uiToDate'   => 'fecha fin',
         ]);
 
+
+
         $from = $this->uiFromDate;
         $to   = $this->uiToDate;
+
         if ($from && $to && $from > $to) {
             [$from, $to] = [$to, $from];
         }
@@ -536,6 +541,7 @@ class Index extends Component
         // Marca como aplicado
         $this->lastAppliedFrom = $from;
         $this->lastAppliedTo   = $to;
+
     }
 
     // ==============================
