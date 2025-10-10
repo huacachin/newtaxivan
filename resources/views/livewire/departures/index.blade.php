@@ -642,7 +642,7 @@
     {{-- Overlay de carga scopeado (ya no targetea fromDate/toDate) --}}
     <div class="screen-overlay"
          wire:loading.delay.flex
-         wire:target="applyDateRange,groupMode,export,openEditModal,toggleGroup,save,update">
+         wire:target="applyDateRange,groupMode,export,openEditModal,toggleGroup,save,update,reportMonthly,reportRmp,reportStats">
         <div class="text-center">
             <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
             <div class="mt-2 text-white fw-semibold">Cargando…</div>
