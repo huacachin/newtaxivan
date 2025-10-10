@@ -38,7 +38,6 @@
     <div class="row">
         <div class="col-sm-6">
             <h4 class="main-title">Costo por placa - Lista General</h4>
-            <small class="text-muted">Catálogo</small>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
