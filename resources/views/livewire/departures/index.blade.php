@@ -127,7 +127,7 @@
                     </div>
                     <div class="row g-2 mb-2">
                         @role('admin')
-                        <div class="col-xl-2 col-lg-2 col-md-1">
+                        <div class="col-xl-2 col-lg-2 col-md-2">
                             <button wire:click="reportMonthly" class="btn btn-primary w-100 btn-xs">
                                 <i class="ti ti-report-analytics f-s-16 text--"></i> Mensual
                             </button>
