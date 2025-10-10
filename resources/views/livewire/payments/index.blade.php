@@ -53,12 +53,13 @@
     </div>
 
     <div class="row table-section">
-        <!-- Búsqueda / filtro -->
-        <div class="col-12">
+
+        <!-- Tabla -->
+        <div class="col-xl-12">
             <div class="card shadow-sm">
-                <div class="card-body">
+                <div class="card-header">
                     <div class="row g-3">
-                        <div class="col-xl-9 col-md-6">
+                        <div class="col-xl-9 col-md-7">
                             <label class="form-label">Buscar</label>
                             <form class="app-form app-icon-form" action="#">
                                 <div class="position-relative">
@@ -68,7 +69,7 @@
                                 </div>
                             </form>
                         </div>
-                        <div class="col-xl-3 col-md-4">
+                        <div class="col-xl-3 col-md-5">
                             <label class="form-label">Filtro</label>
                             <select class="form-select" aria-label="Selecciona item a filtrar" wire:model.live="filter">
                                 <option value="">Seleccione un filtro</option>
@@ -78,24 +79,16 @@
                             </select>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Filtros secundarios -->
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-xl-3 col-md-4">
+                    <div class="row g-3 mt-2">
+                        <div class="col-xl-3 col-md-3">
                             <label class="form-label">Fecha Inicio</label>
                             <input type="date" class="form-control" wire:model.live="date_start">
                         </div>
-                        <div class="col-xl-3 col-md-4">
+                        <div class="col-xl-3 col-md-3">
                             <label class="form-label">Fecha Fin</label>
                             <input type="date" class="form-control" wire:model.live="date_end">
                         </div>
-                        <div class="col-xl-3 col-md-4">
+                        <div class="col-xl-3 col-md-3">
                             <label class="form-label">Sucursal</label>
                             <select class="form-select" wire:model.live="headquarter_id" aria-label="Selecciona sucursal">
                                 <option value="">Todos</option>
@@ -104,7 +97,7 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-xl-3 col-md-4">
+                        <div class="col-xl-3 col-md-3">
                             <label class="form-label">Tipo</label>
                             <select class="form-select" wire:model.live="type" aria-label="Selecciona tipo">
                                 <option value="">Todos</option>
@@ -114,10 +107,7 @@
                             </select>
                         </div>
                     </div>
-                </div>
-
-                <div class="card-footer">
-                    <div class="row g-2">
+                    <div class="row g-2 mt-2">
                         @role('admin')
                         <div class="col-xl-2 col-md-4">
                             <button class="btn btn-primary w-100" wire:click="daily">
@@ -152,12 +142,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- Tabla -->
-        <div class="col-xl-12">
-            <div class="card shadow-sm">
                 <div class="card-body">
                     <div class="table-responsive tableFixHead">
                         <table class="table table-sm table-bordered table-striped table-hover align-middle">

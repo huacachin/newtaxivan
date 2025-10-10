@@ -127,40 +127,40 @@
                     </div>
                     <div class="row g-2 mb-2">
                         @role('admin')
-                        <div class="col-xl-2 col-lg-2 col-md-2">
-                            <button wire:click="reportMonthly" class="btn btn-primary w-100 btn-xs">
+                        <div class="col-xl-2 col-lg-2 col-md-4">
+                            <button wire:click="reportMonthly" class="btn btn-primary w-100">
                                 <i class="ti ti-report-analytics f-s-16 text--"></i> Mensual
                             </button>
                         </div>
-                        <div class="col-xl-2 col-md-2">
-                            <button wire:click="reportRmp" class="btn btn-primary w-100 btn-xs">
+                        <div class="col-xl-2 col-md-4">
+                            <button wire:click="reportRmp" class="btn btn-primary w-100">
                                 <i class="ti ti-report-analytics f-s-16"></i> RMP V.T
                             </button>
                         </div>
-                        <div class="col-xl-2 col-md-2">
-                            <button wire:click="reportStats" class="btn btn-primary w-100 btn-xs">
+                        <div class="col-xl-2 col-md-4">
+                            <button wire:click="reportStats" class="btn btn-primary w-100">
                                 <i class="ti ti-report-analytics f-s-16"></i> Estadis.
                             </button>
                         </div>
                         @endrole
-                        <div class="col-xl-2 col-md-2">
-                            <button class="btn btn-primary w-100 btn-xs" wire:click="export">
+                        <div class="col-xl-2 col-md-4">
+                            <button class="btn btn-primary w-100" wire:click="export">
                                 <i class="ti ti-file-analytics f-s-16"></i> Exportar
                             </button>
                         </div>
-                        <div class="col-xl-2 col-md-2">
-                            <button class="btn btn-primary w-100 btn-xs" wire:click="openAddModal">
+                        <div class="col-xl-2 col-md-4">
+                            <button class="btn btn-primary w-100" wire:click="openAddModal">
                                 <i class="ti ti-square-plus f-s-16"></i> Nuevo
                             </button>
                         </div>
-                        <div class="col-xl-1 col-md-1">
-                            <button class="btn btn-primary w-100 btn-xs" id="down">
+                        <div class="col-xl-1 col-md-2">
+                            <button class="btn btn-primary w-100" id="down">
                                 <i class="ti ti-square-chevrons-down f-s-17"></i>
                             </button>
                         </div>
-                        <div class="col-xl-1 col-md-1">
+                        <div class="col-xl-1 col-md-2">
                             <button
-                                class="btn w-100 {{ $groupMode ? 'btn-success' : 'btn-primary' }} btn-xs"
+                                class="btn w-100 {{ $groupMode ? 'btn-success' : 'btn-primary' }}"
                                 wire:click="toggleGroup"
                                 aria-pressed="{{ $groupMode ? 'true' : 'false' }}"
                                 title="{{ $groupMode ? 'Agrupado: ON' : 'Agrupado: OFF' }}"

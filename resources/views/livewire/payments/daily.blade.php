@@ -19,44 +19,6 @@
 
     {{-- Filtros --}}
     <div class="row table-section">
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <div class="row g-3 align-items-end">
-                        <div class="col-md-3">
-                            <label class="form-label">Año</label>
-                            <select class="form-select" wire:model.live="year">
-                                @foreach($years as $y) <option value="{{ $y }}">{{ $y }}</option> @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Mes</label>
-                            <select class="form-select" wire:model.live="month">
-                                @foreach($months as $mVal => $mName)
-                                    <option value="{{ $mVal }}">{{ $mName }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Modo</label>
-                            <select class="form-select" wire:model.live="mode">
-                                <option value="Pago">Pago (PAGO + RETRASO)</option>
-                                <option value="Caja">Caja (PAGO + RETRASO + DEUDA)</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3 text-end">
-                            <a href="#" wire:click="export" class="btn btn-primary">
-                                <i class="ti ti-file-analytics"></i> Exportar
-                            </a>
-                            <a href="{{ route('payments.index') }}" class="btn btn-primary">
-                                <i class="ti ti-arrow-back-up"></i> Regresar
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         {{-- Resumen rápido --}}
         <div class="col-12">
             <div class="row g-3">
@@ -101,6 +63,43 @@
         {{-- Tabla --}}
         <div class="col-12">
             <div class="card shadow-sm">
+                <div class="card-header">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label">Año</label>
+                            <select class="form-select" wire:model.live="year">
+                                @foreach($years as $y) <option value="{{ $y }}">{{ $y }}</option> @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Mes</label>
+                            <select class="form-select" wire:model.live="month">
+                                @foreach($months as $mVal => $mName)
+                                    <option value="{{ $mVal }}">{{ $mName }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Modo</label>
+                            <select class="form-select" wire:model.live="mode">
+                                <option value="Pago">Pago</option>
+                                <option value="Caja">Caja</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 text-end">
+                            <a href="#" wire:click="export" class="btn btn-primary w-100">
+                                <i class="ti ti-file-analytics"></i> Exportar
+                            </a>
+
+                        </div>
+
+                        <div class="col-md-2">
+                            <a href="{{ route('payments.index') }}" class="btn btn-primary w-100">
+                                <i class="ti ti-arrow-back-up"></i> Regresar
+                            </a>
+                        </div>
+                    </div>
+                </div>
                 <div class="card-body">
 
                     {{-- Estilos específicos de la tabla --}}
