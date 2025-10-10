@@ -64,12 +64,15 @@
     </div>
 
     <div class="row table-section">
-        <!-- Filtros -->
-        <div class="col-12">
+
+
+        <!-- Tabla -->
+        <div class="col-xl-12">
             <div class="card shadow-sm">
-                <div class="card-body pt-3">
-                    <div class="row g-3 align-items-end">
-                        <div class="col-md-10">
+                <div class="card-header">
+                    <h5 class="mb-0" style="color:#e11d48;">LISTADO DE USUARIOS</h5>
+                    <div class="row g-3 align-items-end mt-2">
+                        <div class="col-xl-10 col-md-6">
                             <form class="app-form app-icon-form" action="#" onsubmit="return false;">
                                 <div class="position-relative">
                                     <input type="search" class="form-control" placeholder="Buscar..."
@@ -78,21 +81,12 @@
                                 </div>
                             </form>
                         </div>
-                        <div class="col-md-2 d-flex justify-content-md-end">
+                        <div class="col-xl-2 col-md-6 d-flex justify-content-md-end">
                             <button class="btn btn-primary w-100" wire:click="openAddModal">
                                 <i class="ti ti-square-plus f-s-17"></i> Nuevo
                             </button>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tabla -->
-        <div class="col-xl-12">
-            <div class="card shadow-sm">
-                <div class="card-header">
-                    <h5 class="mb-0" style="color:#e11d48;">LISTADO DE USUARIOS</h5>
                 </div>
                 <div class="card-body pb-2">
                     <div class="table-responsive tableFixHead">

@@ -38,7 +38,6 @@
     <div class="row">
         <div class="col-sm-6">
             <h4 class="main-title">Conceptos</h4>
-            <small class="text-muted">Catálogo</small>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -56,11 +55,14 @@
     </div>
 
     <div class="row table-section">
-        <!-- Filtros -->
-        <div class="col-12">
+
+        <!-- Tabla -->
+        <div class="col-xl-12">
             <div class="card shadow-sm">
-                <div class="card-body pt-3">
-                    <div class="row g-3 align-items-end">
+                <div class="card-header">
+                    <h5 class="mb-0" style="color:#e11d48;">LISTADO DE CONCEPTOS</h5>
+
+                    <div class="row g-3 align-items-end mt-2">
                         <div class="col-md-10">
                             <form class="app-form app-icon-form" action="#" onsubmit="return false;">
                                 <div class="position-relative">
@@ -76,21 +78,6 @@
                             </button>
                         </div>
                     </div>
-
-                    <div class="mt-2" wire:loading.delay>
-                        <span class="text-muted">
-                            <span class="spinner-border spinner-border-sm"></span> Cargando…
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tabla -->
-        <div class="col-xl-12">
-            <div class="card shadow-sm">
-                <div class="card-header">
-                    <h5 class="mb-0" style="color:#e11d48;">LISTADO DE CONCEPTOS</h5>
                 </div>
                 <div class="card-body pb-2">
                     <div class="table-responsive tableFixHead">

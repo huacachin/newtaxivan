@@ -67,7 +67,6 @@
                                 <input type="number" class="form-control" placeholder="0.00"
                                        aria-label="Apply" step="0.01" min="0"
                                        wire:model.live="bulk">
-                                <i class="ti ti-123 text-dark"></i>
                             </div>
                         </div>
                         <div class="col-md-2 d-grid">
