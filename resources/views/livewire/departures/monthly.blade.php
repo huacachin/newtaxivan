@@ -30,6 +30,18 @@
         .table-bordered > :not(caption) > * > * {
             border-color: #cfd8dc !important;
         }
+
+        .screen-overlay {
+            position: fixed;
+            inset: 0;                 /* full viewport */
+            display: none;            /* Livewire lo pondrá en flex */
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,.35);
+            backdrop-filter: blur(2px);
+            z-index: 2000;            /* sobre modals/backdrops de Bootstrap */
+            pointer-events: all;      /* bloquea clics */
+        }
     </style>
 @endpush
 
@@ -46,7 +58,6 @@
     <div class="row">
         <div class="col-sm-6">
             <h4 class="main-title">Reporte mensual por placa – V.T</h4>
-            <div class="text-muted f-s-12">{{ $monthName }} {{ $year }}</div>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -64,51 +75,6 @@
     </div>
 
     <div class="row table-section">
-        <!-- Filtros -->
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-body pt-3 pb-3">
-                    <div class="row g-3 align-items-end">
-                        <div class="col-xl-3 col-md-6">
-                            <label class="form-label">Mes</label>
-                            <select class="form-select form-select-sm" wire:model.live="month">
-                                @foreach($months as $mVal => $mName)
-                                    <option value="{{ $mVal }}">{{ $mName }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-xl-3 col-md-6">
-                            <label class="form-label">Año</label>
-                            <select class="form-select form-select-sm" wire:model.live="year">
-                                @foreach($years as $y)
-                                    <option value="{{ $y }}">{{ $y }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="col-xl-3 col-md-6">
-                            <label class="form-label d-block invisible">.</label>
-                            <a href="#" wire:click="export" class="btn btn-primary w-100">
-                                <i class="ti ti-file-analytics f-s-16"></i> Exportar
-                            </a>
-                        </div>
-
-                        <div class="col-xl-3 col-md-6">
-                            <label class="form-label d-block invisible">.</label>
-                            <a href="{{ route('departures.index') }}" class="btn btn-primary w-100">
-                                <i class="ti ti-rotate-2 f-s-16"></i> Regresar
-                            </a>
-                        </div>
-                    </div>
-
-                    <div class="mt-2" wire:loading.delay>
-                        <span class="text-muted">
-                            <span class="spinner-border spinner-border-sm"></span> Cargando…
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- Tabla mensual por placa -->
         <div class="col-xl-12">
@@ -117,6 +83,39 @@
                     <h5 class="mb-0" style="color:#e11d48;">
                         REPORTE MENSUAL POR PLACA – V.T {{ $monthName }} {{ $year }}
                     </h5>
+
+                    <div class="row g-3 align-items-end mt-2">
+                        <div class="col-xl-3 col-md-3">
+                            <label class="form-label">Mes</label>
+                            <select class="form-select form-select-sm" wire:model.live="month">
+                                @foreach($months as $mVal => $mName)
+                                    <option value="{{ $mVal }}">{{ $mName }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-xl-3 col-md-3">
+                            <label class="form-label">Año</label>
+                            <select class="form-select form-select-sm" wire:model.live="year">
+                                @foreach($years as $y)
+                                    <option value="{{ $y }}">{{ $y }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="col-xl-3 col-md-3">
+                            <label class="form-label d-block invisible">.</label>
+                            <a href="#" wire:click="export" class="btn btn-primary w-100">
+                                <i class="ti ti-file-analytics f-s-16"></i> Exportar
+                            </a>
+                        </div>
+
+                        <div class="col-xl-3 col-md-3">
+                            <label class="form-label d-block invisible">.</label>
+                            <a href="{{ route('departures.index') }}" class="btn btn-primary w-100">
+                                <i class="ti ti-rotate-2 f-s-16"></i> Regresar
+                            </a>
+                        </div>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive tableFixHead">
@@ -178,6 +177,15 @@
                     </small>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="screen-overlay"
+         wire:loading.delay.flex
+         wire:target="export,recalc">
+        <div class="text-center">
+            <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
+            <div class="mt-2 text-white fw-semibold">Cargando…</div>
         </div>
     </div>
 </div>
