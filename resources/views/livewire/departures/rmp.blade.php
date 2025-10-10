@@ -56,6 +56,18 @@
         /* Alineaciones generales */
         th, td{ vertical-align: middle; text-align: center; white-space: nowrap; }
         .text-start{ text-align: left !important; }
+
+        .screen-overlay {
+            position: fixed;
+            inset: 0;                 /* full viewport */
+            display: none;            /* Livewire lo pondrá en flex */
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,.35);
+            backdrop-filter: blur(2px);
+            z-index: 2000;            /* sobre modals/backdrops de Bootstrap */
+            pointer-events: all;      /* bloquea clics */
+        }
     </style>
 @endpush
 
@@ -70,7 +82,6 @@
     <div class="row align-items-center mb-3">
         <div class="col-sm-6">
             <h4 class="main-title mb-0">RMP V.T</h4>
-            <small class="text-muted">{{ $monthName }} {{ $year }}</small>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end mb-0">
@@ -90,12 +101,14 @@
 
     <div class="row table-section">
 
-        <!-- Filtros start -->
-        <div class="col-12">
+
+        <!-- Tabla RMP V.T start -->
+        <div class="col-xl-12">
             <div class="card shadow-sm">
-                <div class="card-body pt-3 pb-3">
-                    <div class="row g-3">
-                        <div class="col-xl-3 col-md-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Reporte mensual por paradero (V.T.)</h5>
+                    <div class="row g-3 mt-2">
+                        <div class="col-xl-3 col-md-3">
                             <label class="form-label">Mes</label>
                             <select class="form-select" wire:model.live="month">
                                 @foreach($months as $mVal => $mName)
@@ -103,7 +116,7 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-xl-3 col-md-4">
+                        <div class="col-xl-3 col-md-3">
                             <label class="form-label">Año</label>
                             <select class="form-select" wire:model.live="year">
                                 @foreach($years as $y)
@@ -111,35 +124,19 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-xl-3 col-md-4">
+                        <div class="col-xl-3 col-md-3">
                             <label class="form-label d-block invisible">.</label>
                             <a wire:click="export" class="btn btn-primary w-100">
                                 <i class="ti ti-file-analytics f-s-16"></i> Exportar
                             </a>
                         </div>
-                        <div class="col-xl-3 col-md-4">
+                        <div class="col-xl-3 col-md-3">
                             <label class="form-label d-block invisible">.</label>
                             <a href="{{ route('departures.index') }}" class="btn btn-primary w-100">
                                 <i class="ti ti-rotate-2 f-s-16"></i> Regresar
                             </a>
                         </div>
                     </div>
-
-                    <div class="mt-2" wire:loading.delay>
-                        <span class="text-muted">
-                            <span class="spinner-border spinner-border-sm"></span> Cargando…
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Filtros end -->
-
-        <!-- Tabla RMP V.T start -->
-        <div class="col-xl-12">
-            <div class="card shadow-sm">
-                <div class="card-header">
-                    <h5 class="mb-0">Reporte mensual por paradero (V.T.)</h5>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive tableFixHead">
@@ -211,5 +208,14 @@
         </div>
         <!-- Tabla RMP V.T end -->
 
+    </div>
+
+    <div class="screen-overlay"
+         wire:loading.delay.flex
+         wire:target="month,year,export">
+        <div class="text-center">
+            <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
+            <div class="mt-2 text-white fw-semibold">Cargando…</div>
+        </div>
     </div>
 </div>
