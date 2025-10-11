@@ -129,7 +129,7 @@
                     <div class="table-responsive tableFixHead">
                         <div class="screen-overlay-local"
                              wire:loading.flex
-                             wire:target="search,month,year,condition">
+                             wire:target="search">
                             <div class="text-center">
                                 <div class="spinner-border text-light" role="status" aria-label="Buscando…"></div>
                                 <div class="loader-text">Buscando…</div>
