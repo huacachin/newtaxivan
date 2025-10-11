@@ -125,7 +125,7 @@
 
                             <tbody>
                             <tr>
-                                <td colspan="11" wire:loading wire:target="search">
+                                <td colspan="11" wire:loading wire:target="search" class="text-center">
                                     Buscando...
                                 </td>
                             </tr>
