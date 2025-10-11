@@ -35,7 +35,7 @@
             display: none;              /* Livewire lo pone en flex */
             align-items: center;
             justify-content: center;
-            background: rgba(0,0,0,.75);/* negro traslúcido */
+            background: rgba(255,255,255,.75);/* negro traslúcido */
             backdrop-filter: none;      /* sin blur, fondo negro sólido */
             z-index: 10;
             pointer-events: all;
@@ -43,7 +43,7 @@
 
         .screen-overlay-local .loader-text{
             margin-top: .5rem;
-            color: #fff;
+            color: #000;
             font-weight: 600;
             text-transform: none;       /* “Buscando…” tal cual */
         }
