@@ -32,6 +32,7 @@
         .screen-overlay-local {
             position: absolute;       /* solo cubre el card-body */
             inset: 0;
+            height: 300px;
             display: none;            /* Livewire lo pone en flex */
             align-items: center;
             justify-content: center;
