@@ -58,7 +58,6 @@
     <div class="row">
         <div class="col-sm-6">
             <h4 class="main-title">Deuda por días</h4>
-            <small class="text-muted">Resumen diario por placa</small>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -73,12 +72,12 @@
 
     <div class="row table-section">
 
-        {{-- Filtros / Controles --}}
-        <div class="col-12">
+        {{-- Tabla --}}
+        <div class="col-xl-12">
             <div class="card shadow-sm">
-                <div class="card-body">
+                <div class="card-header">
                     <div class="row g-2 align-items-end">
-                        <div class="col-xl-4 col-md-4">
+                        <div class=" col-md-4">
                             <label class="form-label">Mes</label>
                             <select class="form-select" wire:model.live="month">
                                 @foreach($months as $val => $label)
@@ -87,7 +86,7 @@
                             </select>
                         </div>
 
-                        <div class="col-xl-4 col-md-4">
+                        <div class=" col-md-2">
                             <label class="form-label">Año</label>
                             <select class="form-select" wire:model.live="year">
                                 @foreach($years as $y)
@@ -96,7 +95,7 @@
                             </select>
                         </div>
 
-                        <div class="col-xl-4 col-md-4">
+                        <div class=" col-md-2">
                             <label class="form-label">Condición</label>
                             <select class="form-select" wire:model.live="condition">
                                 <option value="">Todas</option>
@@ -106,34 +105,19 @@
                                 <option value="EX5">EX5</option>
                             </select>
                         </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        {{-- Exportes --}}
-        <div class="col-12 mt-2">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <div class="row justify-content-end g-2">
-                        <div class="col-sm-3 col-md-2">
+                        <div class=" col-md-2">
                             <button class="btn btn-primary w-100" wire:click="exportSummary">
                                 <i class="ti ti-file-analytics f-s-16"></i> Exportar
                             </button>
                         </div>
-                        <div class="col-sm-3 col-md-2">
+                        <div class=" col-md-2">
                             <button class="btn btn-primary w-100" wire:click="exportDetail">
-                                <i class="ti ti-file-description f-s-16"></i> Exportar detalle
+                                <i class="ti ti-file-description f-s-16"></i> E. detalle
                             </button>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        {{-- Tabla --}}
-        <div class="col-xl-12">
-            <div class="card shadow-sm">
                 <div class="card-body table-responsive">
                     <div class="table-responsive x-scroll tableFixHead">
                         <table class="table table-sm table-bordered table-hover compact-table-xxs align-middle">

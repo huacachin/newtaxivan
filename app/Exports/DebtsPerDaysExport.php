@@ -19,7 +19,7 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTitle
 {
     public function __construct(
-        protected string $monthDate = '', // YYYY-mm-dd (cualquier día del mes)
+        protected string $monthDate = '', // YYYY-mm-dd
         protected bool   $onlyActive = true,
         protected string $condition  = '' // '', 'DT', 'GN', 'EX', 'EX5', ...
     ) {}
@@ -36,7 +36,6 @@ class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTi
 
     public function view(): View
     {
-        // Normaliza mes
         $seed = $this->monthDate && preg_match('/^\d{4}-\d{2}-\d{2}$/', $this->monthDate)
             ? Carbon::parse($this->monthDate)
             : now();
@@ -205,11 +204,21 @@ class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTi
             AfterSheet::class => function (AfterSheet $e) {
                 $ws = $e->sheet->getDelegate();
 
-                // ===== Inserta 2 filas para TÍTULO y SUBTÍTULO =====
-                $ws->insertNewRowBefore(1, 2);
+                // Paleta
+                $blue     = 'FF2874A6'; // header
+                $footerBg = 'FFCEE7FF'; // footer
+                $white    = 'FFFFFFFF';
+                $borderC  = 'FFCFD8DC';
+                $sunRed   = 'FFEF4444';
 
-                $headerRow    = 3;   // thead real
-                $dataStartRow = 4;   // primer dato
+                // Fuente base 10 pt (compacto)
+                $ws->getParent()->getDefaultStyle()->getFont()->setSize(10);
+
+                // ===== Insertar SOLO 1 fila (título). Ya NO usamos la fila 2 =====
+                $ws->insertNewRowBefore(1, 1);
+
+                $headerRow    = 2;   // thead real (se corrió 1 fila)
+                $dataStartRow = 3;   // primer dato
                 $dayStartColIndex = 5; // E (A:Item, B:Cod, C:Placa, D:Condición)
                 $dayEndColIndex   = $dayStartColIndex + max(0, $this->dayCols - 1);
                 // +4 columnas finales: P días, P S/, D días, D S/
@@ -222,99 +231,88 @@ class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTi
                     : '';
                 $ws->setCellValue('A1', 'DEUDA POR DÍA' . ($monthLabel ? " – {$monthLabel}" : ''));
                 $ws->mergeCells("A1:{$lastColLetter}1");
-                $ws->getRowDimension(1)->setRowHeight(24);
-                $ws->getStyle('A1')->getFont()->setBold(true)->setSize(14)->getColor()->setARGB('FFFFFFFF');
-                $ws->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setVertical(Alignment::VERTICAL_CENTER);
-                $ws->getStyle('A1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF1F2937'); // barra oscura
+                $ws->getRowDimension(1)->setRowHeight(18);
+                $ws->getStyle('A1')->applyFromArray([
+                    'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$white]],
+                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
+                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blue]],
+                ]);
 
-                // ===== SUBTÍTULO (fila 2) =====
-                $filters = [];
-                $filters[] = 'Solo activos: ' . ($this->onlyActive ? 'Sí' : 'No');
-                if ($this->condition !== '') $filters[] = 'Condición: ' . $this->condition;
-                $ws->setCellValue('A2', implode(' | ', $filters));
-                $ws->mergeCells("A2:{$lastColLetter}2");
-                $ws->getRowDimension(2)->setRowHeight(18);
-                $ws->getStyle('A2')->getFont()->setItalic(true)->setSize(10)->getColor()->setARGB('FFFFFFFF');
-                $ws->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setVertical(Alignment::VERTICAL_CENTER);
-                $ws->getStyle('A2')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF1F2937');
+                // (❌ Eliminado: fila 2 con filtros/linea) — no se crea ni se pinta
 
-                // ===== THEAD (fila 3) oscuro =====
-                $ws->getStyle("A{$headerRow}:{$lastColLetter}{$headerRow}")
-                    ->getFont()->setBold(true)->getColor()->setARGB('FFFFFFFF');
-                $ws->getStyle("A{$headerRow}:{$lastColLetter}{$headerRow}")
-                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setVertical(Alignment::VERTICAL_CENTER);
-                $ws->getRowDimension($headerRow)->setRowHeight(20);
-                $ws->getStyle("A{$headerRow}:{$lastColLetter}{$headerRow}")
-                    ->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF23242F'); // #009BDC
+                // ===== THEAD (fila 2) azul =====
+                $ws->getStyle("A{$headerRow}:{$lastColLetter}{$headerRow}")->applyFromArray([
+                    'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$white]],
+                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
+                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blue]],
+                ]);
+                $ws->getRowDimension($headerRow)->setRowHeight(16);
 
-                // Domingo: cabeceras en rojo (sin tapar condicionales del cuerpo)
+                // Domingos en rojo (solo header de días)
                 foreach ($this->days as $i => $d) {
                     if (!empty($d['isSunday'])) {
                         $colLetter = $this->colLetter($dayStartColIndex + $i);
                         $ws->getStyle("{$colLetter}{$headerRow}")
-                            ->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFEF4444');
-                        $ws->getStyle("{$colLetter}{$headerRow}")
-                            ->getFont()->getColor()->setARGB('FFFFFFFF');
+                            ->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB($sunRed);
                     }
                 }
 
-                // ===== Congelar después de D y debajo del thead =====
+                // Freeze después de D y debajo del thead
                 $ws->freezePane("E{$dataStartRow}");
 
-                // ===== Rango de datos / autofiltro =====
+                // Rango de datos
                 $lastDataRow = $dataStartRow + max(0, $this->rowCount) - 1;
-                if ($lastDataRow >= $dataStartRow) {
-                    $ws->setAutoFilter("A{$headerRow}:{$lastColLetter}{$lastDataRow}");
-                } else {
-                    $ws->setAutoFilter("A{$headerRow}:{$lastColLetter}{$headerRow}");
-                }
 
-                // ===== Zebra en cuerpo =====
+                // ❌ SIN AutoFilter (no íconos de filtro)
+                // (No llamamos setAutoFilter)
+
+                // Zebra
                 if ($lastDataRow >= $dataStartRow) {
                     $rangeData = "A{$dataStartRow}:{$lastColLetter}{$lastDataRow}";
                     $cond = new Conditional();
                     $cond->setConditionType(Conditional::CONDITION_EXPRESSION);
                     $cond->setConditions(['MOD(ROW(),2)=0']);
                     $cond->getStyle()->getFill()->setFillType(Fill::FILL_SOLID)
-                        ->getStartColor()->setARGB('FFF9FAFB');
+                        ->getStartColor()->setARGB('FFF3F4F6');
                     $styles = $ws->getStyle($rangeData)->getConditionalStyles();
                     $styles[] = $cond;
                     $ws->getStyle($rangeData)->setConditionalStyles($styles);
                 }
 
-                // ===== Bordes finos =====
+                // Bordes finos
                 $ws->getStyle("A{$headerRow}:{$lastColLetter}" . max($headerRow, $lastDataRow))
-                    ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)
-                    ->getColor()->setARGB('FFCFD8DC');
+                    ->getBorders()->getAllBorders()
+                    ->setBorderStyle(Border::BORDER_THIN)
+                    ->getColor()->setARGB($borderC);
 
-                // ===== Formato condicional para celdas de DÍAS =====
+                // Condicionales en celdas de días
                 if ($lastDataRow >= $dataStartRow && $this->dayCols > 0) {
                     $firstDayLetter = $this->colLetter($dayStartColIndex);
                     $lastDayLetter  = $this->colLetter($dayEndColIndex);
                     $dayRange = "{$firstDayLetter}{$dataStartRow}:{$lastDayLetter}{$lastDataRow}";
 
-                    // "P" ⇒ verde
+                    // "P" ⇒ verde claro
                     $cP = new Conditional();
-                    $cP->setConditionType(Conditional::CONDITION_CONTAINSTEXT);
-                    $cP->setOperatorType(Conditional::OPERATOR_CONTAINSTEXT);
-                    $cP->setText('P');
+                    $cP->setConditionType(Conditional::CONDITION_CONTAINSTEXT)
+                        ->setOperatorType(Conditional::OPERATOR_CONTAINSTEXT)
+                        ->setText('P');
                     $cP->getStyle()->getFill()->setFillType(Fill::FILL_SOLID)
                         ->getStartColor()->setARGB('FFDCFCE7');
                     $cP->getStyle()->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
                     // "NT" ⇒ rojo suave
                     $cNT = new Conditional();
-                    $cNT->setConditionType(Conditional::CONDITION_CONTAINSTEXT);
-                    $cNT->setOperatorType(Conditional::OPERATOR_CONTAINSTEXT);
-                    $cNT->setText('NT');
+                    $cNT->setConditionType(Conditional::CONDITION_CONTAINSTEXT)
+                        ->setOperatorType(Conditional::OPERATOR_CONTAINSTEXT)
+                        ->setText('NT');
                     $cNT->getStyle()->getFill()->setFillType(Fill::FILL_SOLID)
                         ->getStartColor()->setARGB('FFFEE2E2');
                     $cNT->getStyle()->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-                    // número ⇒ ámbar (ISNUMBER)
+                    // número (frecuencia) ⇒ ámbar
                     $cNum = new Conditional();
                     $cNum->setConditionType(Conditional::CONDITION_EXPRESSION);
-                    $cNum->setConditions(["ISNUMBER({$firstDayLetter}{$dataStartRow})"]);
+                    $cNum->setConditions(["LEN(TRIM({$firstDayLetter}{$dataStartRow}))>0"]);
                     $cNum->getStyle()->getFill()->setFillType(Fill::FILL_SOLID)
                         ->getStartColor()->setARGB('FFFEF3C7');
                     $cNum->getStyle()->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
@@ -324,7 +322,7 @@ class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTi
                     $ws->getStyle($dayRange)->setConditionalStyles($styles);
                 }
 
-                // ===== Montos: alineación y formato "S/ " =====
+                // Montos (S/)
                 $paidAmtColLetter = $this->colLetter($dayEndColIndex + 2);
                 $debtAmtColLetter = $this->colLetter($dayEndColIndex + 4);
                 if ($lastDataRow >= $dataStartRow) {
@@ -339,20 +337,35 @@ class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTi
                         ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
                 }
 
-                // ===== Anchos sugeridos =====
-                $ws->getColumnDimension('A')->setWidth(6);   // Item
-                $ws->getColumnDimension('B')->setWidth(8);   // Cod
-                $ws->getColumnDimension('C')->setWidth(12);  // Placa
-                $ws->getColumnDimension('D')->setWidth(11);  // Condición
+                // Anchos compactos
+                $ws->getColumnDimension('A')->setWidth(5.0);   // Item
+                $ws->getColumnDimension('B')->setWidth(7.0);   // Cod
+                $ws->getColumnDimension('C')->setWidth(10.0);  // Placa
+                $ws->getColumnDimension('D')->setWidth(8.5);   // Condición
                 for ($c = $dayStartColIndex; $c <= $dayEndColIndex; $c++) {
-                    $ws->getColumnDimension($this->colLetter($c))->setWidth(5); // días compactos
+                    $ws->getColumnDimension($this->colLetter($c))->setWidth(5.0); // días compactos
                 }
-                $ws->getColumnDimension($this->colLetter($dayEndColIndex + 1))->setWidth(10); // P días
-                $ws->getColumnDimension($this->colLetter($dayEndColIndex + 2))->setWidth(14); // P S/
-                $ws->getColumnDimension($this->colLetter($dayEndColIndex + 3))->setWidth(10); // D días
-                $ws->getColumnDimension($this->colLetter($dayEndColIndex + 4))->setWidth(14); // D S/
+                $ws->getColumnDimension($this->colLetter($dayEndColIndex + 1))->setWidth(9.0);  // P días
+                $ws->getColumnDimension($this->colLetter($dayEndColIndex + 2))->setWidth(12.5); // P S/
+                $ws->getColumnDimension($this->colLetter($dayEndColIndex + 3))->setWidth(9.0);  // D días
+                $ws->getColumnDimension($this->colLetter($dayEndColIndex + 4))->setWidth(12.5); // D S/
 
-                // ===== Pie de TOTALES con banda oscura (igual diseño) =====
+                // Alineaciones básicas
+                if ($lastDataRow >= $dataStartRow) {
+                    $ws->getStyle("A{$dataStartRow}:A{$lastDataRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                    $ws->getStyle("B{$dataStartRow}:B{$lastDataRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                    $ws->getStyle("C{$dataStartRow}:C{$lastDataRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT)->setShrinkToFit(true);
+                    $ws->getStyle("D{$dataStartRow}:D{$lastDataRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+                    if ($this->dayCols > 0) {
+                        $firstDayLetter = $this->colLetter($dayStartColIndex);
+                        $lastDayLetter  = $this->colLetter($dayEndColIndex);
+                        $ws->getStyle("{$firstDayLetter}{$dataStartRow}:{$lastDayLetter}{$lastDataRow}")
+                            ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                    }
+                }
+
+                // Pie de TOTALES con banda #CEE7FF
                 if ($lastDataRow >= $dataStartRow) {
                     $totalRow = $lastDataRow + 1;
 
@@ -370,18 +383,18 @@ class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTi
                     $ws->setCellValue("{$debtAmtColLetter}{$totalRow}", "=SUM({$debtAmtColLetter}{$dataStartRow}:{$debtAmtColLetter}{$lastDataRow})");
 
                     // Estilo pie
+                    $ws->getStyle("A{$totalRow}:{$lastColLetter}{$totalRow}")->applyFromArray([
+                        'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>'FF000000']],
+                        'alignment' => ['horizontal'=>Alignment::HORIZONTAL_RIGHT,'vertical'=>Alignment::VERTICAL_CENTER],
+                        'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$footerBg]],
+                    ]);
                     $ws->getStyle("A{$totalRow}:{$lastColLetter}{$totalRow}")
-                        ->getFont()->setBold(true)->getColor()->setARGB('FFFFFFFF');
-                    $ws->getStyle("A{$totalRow}:{$lastColLetter}{$totalRow}")
-                        ->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF23242F');
-                    $ws->getStyle("A{$totalRow}:{$lastColLetter}{$totalRow}")
-                        ->getBorders()->getTop()->setBorderStyle(Border::BORDER_MEDIUM);
-                    $ws->getStyle("A{$totalRow}:D{$totalRow}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-
-                    // Formato moneda en sumas
+                        ->getBorders()->getTop()->setBorderStyle(Border::BORDER_MEDIUM)
+                        ->getColor()->setARGB($blue);
                     $ws->getStyle("{$paidAmtColLetter}{$totalRow}")->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
                     $ws->getStyle("{$debtAmtColLetter}{$totalRow}")->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
+                    $ws->getStyle("{$paidDaysColLetter}{$totalRow}:{$debtDaysColLetter}{$totalRow}")
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 }
             },
         ];
