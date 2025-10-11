@@ -14,6 +14,18 @@
         .tableFixHead table.table th,
         .tableFixHead table.table td{ white-space:nowrap; }
         .num{ text-align:right; }
+
+        .screen-overlay {
+            position: fixed;
+            inset: 0;                 /* full viewport */
+            display: none;            /* Livewire lo pondrá en flex */
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,.35);
+            backdrop-filter: blur(2px);
+            z-index: 2000;            /* sobre modals/backdrops de Bootstrap */
+            pointer-events: all;      /* bloquea clics */
+        }
     </style>
 @endpush
 
@@ -39,12 +51,15 @@
     </div>
 
     <div class="row table-section">
-        {{-- Filtros --}}
-        <div class="col-12">
+
+
+
+        {{-- Tabla (estilo Payments) --}}
+        <div class="col-xl-12">
             <div class="card shadow-sm">
-                <div class="card-body pt-3">
+                <div class="card-header">
                     <div class="row g-2 align-items-end">
-                        <div class="col-xl-3 col-md-4">
+                        <div class="col-md-2">
                             <label class="form-label">Mes</label>
                             <select class="form-select" wire:model.live="month">
                                 @foreach($months as $val => $label)
@@ -52,7 +67,7 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-xl-3 col-md-4">
+                        <div class="col-md-2">
                             <label class="form-label">Año</label>
                             <select class="form-select" wire:model.live="year">
                                 @foreach($years as $y)
@@ -60,12 +75,12 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-xl-3 col-md-4">
+                        <div class="col-md-3">
                             <label class="form-label">Buscar placa</label>
                             <input type="search" class="form-control" placeholder="ABC-123"
                                    wire:model.live.debounce.300ms="search">
                         </div>
-                        <div class="col-xl-3 col-md-4">
+                        <div class="col-md-2">
                             <label class="form-label">Condición</label>
                             <select class="form-select" wire:model.live="condition">
                                 <option value="">Todas</option>
@@ -77,41 +92,18 @@
                                 <option value="Amortizado">Amortizado</option>
                             </select>
                         </div>
-                    </div>
-
-                    <div class="mt-2" wire:loading.delay>
-                        <span class="text-muted">
-                            <span class="spinner-border spinner-border-sm"></span> Cargando…
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- Acciones --}}
-        <div class="col-12 mt-2">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <div class="row justify-content-end g-2">
-                        <div class="col-sm-3 col-md-2">
+                        <div class="col-md-2">
                             <button class="btn btn-primary w-100" wire:click="export">
                                 <i class="ti ti-file-analytics f-s-16"></i> Exportar
                             </button>
                         </div>
-                        <div class="col-sm-2 col-md-1">
+                        <div class="col-md-1">
                             <button id="down" class="btn btn-primary w-100" title="Ir al final">
                                 <i class="ti ti-square-chevrons-down f-s-17"></i>
                             </button>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div id="bottom"></div>
-        </div>
-
-        {{-- Tabla (estilo Payments) --}}
-        <div class="col-xl-12">
-            <div class="card shadow-sm">
                 <div class="card-body">
                     <div class="table-responsive tableFixHead">
                         <table class="table table-sm table-bordered table-striped table-hover align-middle">
@@ -132,16 +124,6 @@
                             </thead>
 
                             <tbody>
-                            {{-- fila loading --}}
-                            <tr wire:loading>
-                                <td colspan="11" class="text-center">
-                                    <div class="d-flex justify-content-center align-items-center gap-2 py-2">
-                                        <div class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></div>
-                                        <span>Cargando…</span>
-                                    </div>
-                                </td>
-                            </tr>
-
                             {{-- filas --}}
                             @forelse($rows as $r)
                                 <tr wire:key="row-{{ $r['item'] }}" wire:loading.class="d-none">
@@ -191,5 +173,13 @@
             </div>
         </div>
 
+    </div>
+    <div class="screen-overlay"
+         wire:loading.delay.flex
+         wire:target="export,month,year,condition">
+        <div class="text-center">
+            <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
+            <div class="mt-2 text-white fw-semibold">Cargando…</div>
+        </div>
     </div>
 </div>

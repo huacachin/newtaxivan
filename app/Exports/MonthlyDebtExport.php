@@ -5,8 +5,6 @@ namespace App\Exports;
 use App\Models\DebtDay;
 use App\Models\Vehicle;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -17,43 +15,39 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use PhpOffice\PhpSpreadsheet\Style\Conditional;
+use PhpOffice\PhpSpreadsheet\RichText\RichText;
 
 class MonthlyDebtExport implements FromArray, ShouldAutoSize, WithHeadings, WithEvents, WithStyles
 {
     public function __construct(
-        protected string $monthDate,          // YYYY-MM-DD (cualquier día del mes)
-        protected string $search    = '',     // filtro por placa (legacy o vehicle.plate)
-        protected string $condition = ''      // '', 'DT','GN','EX','EX5','Exonerado','Amortizado'
+        protected string $monthDate,
+        protected string $search = '',
+        protected string $condition = ''
     ) {}
 
-    /** cache para AfterSheet */
     private int $rowCount = 0;
+    private int $daysInMonth = 30;
+    /** Guarda por fila los días X y X1 para pintar RichText */
+    private array $daysPerRow = []; // [rowIndex => ['x'=>[...], 'x1'=>[...]]]
 
-    /** datos -> construimos las filas como en tu componente */
+    /* ================= DATA ================= */
     public function array(): array
     {
         [$from, $to] = $this->monthRange($this->monthDate);
 
         $q = DebtDay::query()->whereBetween('date', [$from, $to]);
 
-        // Filtro por condición (igual que el componente)
-        if ($this->condition === 'Exonerado') {
-            $q->where('exonerated', '>', 0);
-        } elseif ($this->condition === 'Amortizado') {
-            $q->where('amortized', '>', 0);
-        } elseif (!empty($this->condition)) {
-            $q->where('condition', $this->condition);
-        }
+        if ($this->condition === 'Exonerado') $q->where('exonerated', '>', 0);
+        elseif ($this->condition === 'Amortizado') $q->where('amortized', '>', 0);
+        elseif ($this->condition !== '') $q->where('condition', $this->condition);
 
-        // Búsqueda por placa (legacy o vehicle.plate)
         $needle = mb_strtolower(trim($this->search ?? ''));
         if ($needle !== '') {
             $q->where(function ($w) use ($needle) {
                 $w->whereRaw('LOWER(legacy_plate) LIKE ?', ['%'.$needle.'%'])
                     ->orWhereExists(function ($sub) use ($needle) {
                         $sub->from('vehicles as v')
-                            ->whereColumn('v.id', 'debt_days.vehicle_id')
+                            ->whereColumn('v.id','debt_days.vehicle_id')
                             ->whereRaw('LOWER(v.plate) LIKE ?', ['%'.$needle.'%']);
                     });
             });
@@ -61,34 +55,33 @@ class MonthlyDebtExport implements FromArray, ShouldAutoSize, WithHeadings, With
 
         $rows = $q->orderBy('date')->get();
 
-        // Mapa de vehículos para COD/PLACA/COND
         $vehicleIds = $rows->pluck('vehicle_id')->filter()->unique()->values();
         $vehicles = Vehicle::query()
             ->whereIn('id', $vehicleIds)
-            ->get(['id','sort_order','plate','condition'])
+            ->get(['id','plate','condition'])
             ->keyBy('id');
 
-        // Build
+        $seed = Carbon::parse($from);
+        $this->daysInMonth = $seed->daysInMonth;
+
         $data = [];
         $item = 0;
-
-        $seed     = Carbon::parse($from);
-        $daysInMo = $seed->daysInMonth;
 
         foreach ($rows as $r) {
             $item++;
 
-            $veh      = $r->vehicle_id ? ($vehicles[$r->vehicle_id] ?? null) : null;
-            $cod      = $veh->sort_order ?? '';
-            $plateStr = $veh ? $veh->plate : ($r->legacy_plate ?? '');
-            $cond     = $r->condition ?: ($veh->condition ?? '');
+            $veh  = $r->vehicle_id ? ($vehicles[$r->vehicle_id] ?? null) : null;
+            $plate = $veh?->plate ?? ($r->legacy_plate ?? '');
+            $cond  = $r->condition ?: ($veh->condition ?? '');
 
-            // Separar días X y X1 (X1 eran “azules” en UI)
-            [$daysX, $daysX1] = $this->splitDays($r, $daysInMo);
-            $daysX_text  = implode(',', $daysX);
-            $daysX1_text = implode(',', $daysX1);
+            [$x, $x1] = $this->splitDays($r, $this->daysInMonth);
+            $this->daysPerRow[$item] = ['x'=>$x, 'x1'=>$x1];
 
-            // Totales
+            // Unión ordenada para mostrar; el color se aplica en AfterSheet
+            $union = array_values(array_unique(array_merge($x, $x1)));
+            sort($union);
+            $daysMixed = implode(',', $union);
+
             $total      = (float) ($r->total ?? 0);
             $exonerated = (float) ($r->exonerated ?? 0);
             $amortized  = (float) ($r->amortized ?? 0);
@@ -97,18 +90,16 @@ class MonthlyDebtExport implements FromArray, ShouldAutoSize, WithHeadings, With
             $daysLate   = (int)   ($r->days_late ?? 0);
 
             $data[] = [
-                'item'        => $item,
-                'cod'         => $cod,
-                'plate'       => $plateStr,
-                'condition'   => $cond,
-                'days_x'      => $daysX_text,   // "1,2,5,12"
-                'days_x1'     => $daysX1_text,  // "3,9,20"
-                'days_late'   => $daysLate,     // número de días
-                'total'       => $total,        // S/
-                'exonerated'  => $exonerated,   // S/
-                'to_pay'      => $toPay,        // S/
-                'amortized'   => $amortized,    // S/
-                'pending'     => $pending,      // S/
+                'item'       => $item,
+                'plate'      => $plate,
+                'condition'  => $cond,
+                'days_mix'   => $daysMixed, // RichText se aplica luego
+                'days_late'  => $daysLate,
+                'total'      => $total,
+                'exonerated' => $exonerated,
+                'to_pay'     => $toPay,
+                'amortized'  => $amortized,
+                'pending'    => $pending,
             ];
         }
 
@@ -116,17 +107,15 @@ class MonthlyDebtExport implements FromArray, ShouldAutoSize, WithHeadings, With
         return $data;
     }
 
-    /** encabezados */
     public function headings(): array
     {
+        // 10 columnas (A..J)
         return [
             'Item',
-            'Cod',
             'Placa',
             'Condición',
-            'Días (X)',
-            'Días X1',
-            'Días deuda',
+            'Días no trabajados (mes)', // X y X1 juntos (X1 en azul)
+            'D. deuda',
             'Total',
             'Exonerado',
             'A pagar',
@@ -135,152 +124,155 @@ class MonthlyDebtExport implements FromArray, ShouldAutoSize, WithHeadings, With
         ];
     }
 
-    /** header bold */
     public function styles(Worksheet $sheet)
     {
-        return [1 => ['font' => ['bold' => true]]];
+        // El header real quedará en la fila 2 (título en la 1)
+        return [2 => ['font' => ['bold' => true]]];
     }
 
-    /** ===== Estilo “Payments” ===== */
+    /* ================= ESTILOS / FORMATEO ================= */
     public function registerEvents(): array
     {
         return [
             AfterSheet::class => function (AfterSheet $e) {
                 $ws = $e->sheet->getDelegate();
 
-                // Insertar 2 filas para título/subtítulo
-                $ws->insertNewRowBefore(1, 2);
+                // Fuente base 10
+                $ws->getParent()->getDefaultStyle()->getFont()->setSize(10);
 
-                $headerRow    = 3;  // headings()
-                $dataStartRow = 4;
+                // Insertar 1 fila para TÍTULO
+                $ws->insertNewRowBefore(1, 1);
+
+                $headerRow    = 2;
+                $dataStartRow = 3;
                 $lastRow      = $dataStartRow + max(0, $this->rowCount) - 1;
-                $lastCol      = 'L'; // A..L
+                $lastCol      = 'J'; // A..J
 
-                // ===== TÍTULO (oscuro, centrado) =====
-                $ws->setCellValue('A1', 'REPORTE DE DEUDA MENSUAL');
+                // ===== TÍTULO (azul #2874A6) =====
+                $monthL = \Carbon\Carbon::parse($this->monthDate)->startOfMonth()->locale('es')->translatedFormat('F Y');
+                $ws->setCellValue('A1', 'REPORTE DE DEUDA MENSUAL' . ($monthL ? " – {$monthL}" : ''));
                 $ws->mergeCells("A1:{$lastCol}1");
-                $ws->getRowDimension(1)->setRowHeight(24);
-                $ws->getStyle('A1')->getFont()->setBold(true)->setSize(14)->getColor()->setARGB('FFFFFFFF');
-                $ws->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setVertical(Alignment::VERTICAL_CENTER);
-                $ws->getStyle('A1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF1F2937');
+                $ws->getRowDimension(1)->setRowHeight(18);
+                $ws->getStyle('A1')->applyFromArray([
+                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['rgb' => 'FFFFFF']],
+                    'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER, 'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER],
+                    'fill'      => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => '2874A6']],
+                ]);
 
-                // ===== SUBTÍTULO (filtros) — mismo fondo oscuro =====
-                $seed   = Carbon::parse($this->monthDate)->startOfMonth();
-                $monthL = $seed->locale('es')->translatedFormat('F Y');
-                $sub = "Mes: {$monthL}";
-                if (trim($this->search) !== '')    $sub .= " | Búsqueda: {$this->search}";
-                if (trim($this->condition) !== '') $sub .= " | Condición: {$this->condition}";
+                // ===== THEAD (azul) =====
+                $ws->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->applyFromArray([
+                    'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+                    'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER, 'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER],
+                    'fill'      => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => '2874A6']],
+                ]);
+                $ws->getRowDimension($headerRow)->setRowHeight(16);
 
-                $ws->setCellValue('A2', $sub);
-                $ws->mergeCells("A2:{$lastCol}2");
-                $ws->getRowDimension(2)->setRowHeight(18);
-                $ws->getStyle('A2')->getFont()->setItalic(true)->setSize(10)->getColor()->setARGB('FFFFFFFF');
-                $ws->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setVertical(Alignment::VERTICAL_CENTER);
-                $ws->getStyle('A2')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF1F2937');
-
-                // ===== THEAD oscuro (igual Payments) =====
-                $ws->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")
-                    ->getFont()->getColor()->setARGB('FFFFFFFF');
-                $ws->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")
-                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setVertical(Alignment::VERTICAL_CENTER);
-                $ws->getRowDimension($headerRow)->setRowHeight(20);
-                $ws->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")
-                    ->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF23242F');
-
-                // Freeze pane justo debajo del header
+                // Freeze pane
                 $ws->freezePane("A{$dataStartRow}");
 
-                // ===== AutoFilter =====
-                if ($lastRow >= $dataStartRow) {
-                    $ws->setAutoFilter("A{$headerRow}:{$lastCol}{$lastRow}");
-                } else {
-                    $ws->setAutoFilter("A{$headerRow}:{$lastCol}{$headerRow}");
-                }
-
-                // ===== Zebra (gris muy suave) =====
-                if ($lastRow >= $dataStartRow) {
-                    $cond = new Conditional();
-                    $cond->setConditionType(Conditional::CONDITION_EXPRESSION);
-                    $cond->setConditions(['MOD(ROW(),2)=0']);
-                    $cond->getStyle()->getFill()->setFillType(Fill::FILL_SOLID)
-                        ->getStartColor()->setARGB('FFF9FAFB');
-                    $rangeData = "A{$dataStartRow}:{$lastCol}{$lastRow}";
-                    $styles = $ws->getStyle($rangeData)->getConditionalStyles();
-                    $styles[] = $cond;
-                    $ws->getStyle($rangeData)->setConditionalStyles($styles);
-                }
-
-                // ===== Bordes finos =====
+                // ===== Bordes + zebra =====
                 $ws->getStyle("A{$headerRow}:{$lastCol}" . max($headerRow, $lastRow))
-                    ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)
-                    ->getColor()->setARGB('FFCFD8DC');
+                    ->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN)
+                    ->getColor()->setRGB('CFD8DC');
 
-                // ===== Anchos de columnas =====
-                $ws->getColumnDimension('A')->setWidth(6);   // Item
-                $ws->getColumnDimension('B')->setWidth(8);   // Cod
-                $ws->getColumnDimension('C')->setWidth(12);  // Placa
-                $ws->getColumnDimension('D')->setWidth(12);  // Condición
-                $ws->getColumnDimension('E')->setWidth(24);  // Días (X)
-                $ws->getColumnDimension('F')->setWidth(24);  // Días X1
-                $ws->getColumnDimension('G')->setWidth(10);  // Días deuda
-                foreach (['H','I','J','K','L'] as $col) {
-                    $ws->getColumnDimension($col)->setWidth(14); // Montos
+                if ($lastRow >= $dataStartRow) {
+                    $cond = new \PhpOffice\PhpSpreadsheet\Style\Conditional();
+                    $cond->setConditionType(\PhpOffice\PhpSpreadsheet\Style\Conditional::CONDITION_EXPRESSION);
+                    $cond->setConditions(['MOD(ROW(),2)=0']);
+                    $cond->getStyle()->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('F9FAFB');
+                    $range = "A{$dataStartRow}:{$lastCol}{$lastRow}";
+                    $styles = $ws->getStyle($range)->getConditionalStyles();
+                    $styles[] = $cond;
+                    $ws->getStyle($range)->setConditionalStyles($styles);
                 }
 
-                // ===== Alineaciones / formatos =====
+                // ===== Anchos ULTRA-compactos (más angosto) =====
+                $set = fn($col,$w)=>$ws->getColumnDimension($col)->setWidth($w);
+                $set('A',4.2);   // Item
+                $set('B',8.0);   // Placa
+                $set('C',7.0);   // Condición
+                $set('D',13.5);  // Días mixtos
+                $set('E',6.0);   // D. deuda
+                foreach (['F','G','H','I','J'] as $c) $set($c,9.0); // Montos más angostos
+
+                // Reducir/ajustar sin cortar
+                foreach (range('A','J') as $c) {
+                    $ws->getStyle("{$c}{$dataStartRow}:{$c}" . max($dataStartRow, $lastRow))
+                        ->getAlignment()->setShrinkToFit(true);
+                }
                 if ($lastRow >= $dataStartRow) {
-                    // Centrados
-                    $ws->getStyle("A{$dataStartRow}:D{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                    $ws->getStyle("G{$dataStartRow}:G{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                    // Texto con wrap en columnas de días
-                    $ws->getStyle("E{$dataStartRow}:F{$lastRow}")->getAlignment()->setWrapText(true);
-                    // Moneda S/ (igual Payments)
-                    foreach (['H','I','J','K','L'] as $col) {
-                        $ws->getStyle("{$col}{$dataStartRow}:{$col}{$lastRow}")
+                    $ws->getStyle("D{$dataStartRow}:D{$lastRow}")->getAlignment()->setWrapText(true);
+                }
+
+                // ===== Todo CENTRADO (incluye montos y pie) =====
+                $ws->getStyle("A{$headerRow}:{$lastCol}" . max($headerRow, $lastRow))
+                    ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+                // Mantener formato moneda, pero centrado
+                if ($lastRow >= $dataStartRow) {
+                    foreach (['F','G','H','I','J'] as $c) {
+                        $ws->getStyle("{$c}{$dataStartRow}:{$c}{$lastRow}")
                             ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
-                        $ws->getStyle("{$col}{$dataStartRow}:{$col}{$lastRow}")
-                            ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
                     }
                 }
 
-                // ===== Totales (pie oscuro como thead) =====
-                $totalRow = ($lastRow >= $dataStartRow) ? $lastRow + 1 : $headerRow + 1;
-                $ws->mergeCells("A{$totalRow}:G{$totalRow}");
-                $ws->setCellValue("A{$totalRow}", 'TOTAL');
-
+                // ===== Pintado RichText en D (X1 en azul #2874A6) =====
                 if ($lastRow >= $dataStartRow) {
+                    $blue = '2874A6';
+                    for ($r = $dataStartRow; $r <= $lastRow; $r++) {
+                        $item = (int) $ws->getCell("A{$r}")->getCalculatedValue();
+                        $sets = $this->daysPerRow[$item] ?? null;
+                        if (!$sets) continue;
+
+                        $x  = array_map('intval', $sets['x']);
+                        $x1 = array_map('intval', $sets['x1']);
+                        $union = array_values(array_unique(array_merge($x, $x1)));
+                        sort($union);
+
+                        $rt = new \PhpOffice\PhpSpreadsheet\RichText\RichText();
+                        foreach ($union as $i => $day) {
+                            $run = $rt->createTextRun((string)$day);
+                            if (in_array($day, $x1, true)) $run->getFont()->getColor()->setRGB($blue);
+                            if ($i < count($union)-1) $rt->createTextRun(',');
+                        }
+                        $ws->getCell("D{$r}")->setValue($rt);
+                    }
+                }
+
+                // ===== Footer celeste #CEE7FF (centrado) =====
+                $totalRow = ($lastRow >= $dataStartRow) ? $lastRow + 1 : $headerRow + 1;
+                $ws->mergeCells("A{$totalRow}:E{$totalRow}");
+                $ws->setCellValue("A{$totalRow}", 'Total');
+                if ($lastRow >= $dataStartRow) {
+                    $ws->setCellValue("F{$totalRow}", "=SUM(F{$dataStartRow}:F{$lastRow})");
+                    $ws->setCellValue("G{$totalRow}", "=SUM(G{$dataStartRow}:G{$lastRow})");
                     $ws->setCellValue("H{$totalRow}", "=SUM(H{$dataStartRow}:H{$lastRow})");
                     $ws->setCellValue("I{$totalRow}", "=SUM(I{$dataStartRow}:I{$lastRow})");
                     $ws->setCellValue("J{$totalRow}", "=SUM(J{$dataStartRow}:J{$lastRow})");
-                    $ws->setCellValue("K{$totalRow}", "=SUM(K{$dataStartRow}:K{$lastRow})");
-                    $ws->setCellValue("L{$totalRow}", "=SUM(L{$dataStartRow}:L{$lastRow})");
                 } else {
-                    foreach (['H','I','J','K','L'] as $col) {
-                        $ws->setCellValue("{$col}{$totalRow}", 0);
-                    }
+                    foreach (['F','G','H','I','J'] as $c) $ws->setCellValue("{$c}{$totalRow}", 0);
                 }
 
-                $ws->getStyle("A{$totalRow}:L{$totalRow}")
-                    ->getFont()->setBold(true)->getColor()->setARGB('FFFFFFFF');
-                $ws->getStyle("A{$totalRow}:L{$totalRow}")
-                    ->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF23242F');
-                $ws->getStyle("A{$totalRow}:L{$totalRow}")
-                    ->getBorders()->getTop()->setBorderStyle(Border::BORDER_MEDIUM);
+                $ws->getStyle("A{$totalRow}:{$lastCol}{$totalRow}")->applyFromArray([
+                    'font'      => ['bold' => true],
+                    'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER, 'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER],
+                    'fill'      => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => 'CEE7FF']],
+                ]);
+                $ws->getStyle("A{$totalRow}:{$lastCol}{$totalRow}")
+                    ->getBorders()->getTop()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM);
 
-                $ws->getStyle("A{$totalRow}:G{$totalRow}")
-                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-
-                foreach (['H','I','J','K','L'] as $col) {
-                    $ws->getStyle("{$col}{$totalRow}")
+                // Totales centrados + formato moneda
+                foreach (['F','G','H','I','J'] as $c) {
+                    $ws->getStyle("{$c}{$totalRow}")
                         ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
-                    $ws->getStyle("{$col}{$totalRow}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+                    $ws->getStyle("{$c}{$totalRow}")
+                        ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
                 }
             },
         ];
     }
 
-    /** helpers */
+    /* ================= HELPERS ================= */
     private function monthRange(string $anyDay): array
     {
         $d1 = Carbon::parse($anyDay ?: now())->startOfMonth();
@@ -290,8 +282,7 @@ class MonthlyDebtExport implements FromArray, ShouldAutoSize, WithHeadings, With
 
     private function splitDays(DebtDay $row, int $daysInMonth): array
     {
-        $x  = [];
-        $x1 = [];
+        $x = []; $x1 = [];
         for ($d = 1; $d <= $daysInMonth; $d++) {
             $col = 'd'.$d;
             $val = (string) ($row->{$col} ?? '');
