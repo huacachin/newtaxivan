@@ -32,7 +32,6 @@
         .screen-overlay-local {
             position: absolute;       /* solo cubre el card-body */
             inset: 0;
-            height: 300px;
             display: none;            /* Livewire lo pone en flex */
             align-items: center;
             justify-content: center;
@@ -131,7 +130,7 @@
                                 <div class="mt-2 text-white fw-semibold">Cargando…</div>
                             </div>
                         </div>
-                        <table class="table table-sm table-bordered table-striped table-hover align-middle" wire:loading.class="d-none">
+                        <table class="table table-sm table-bordered table-striped table-hover align-middle">
                             <thead class="text-center">
                             <tr>
                                 <th>Op</th>
