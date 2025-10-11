@@ -124,18 +124,12 @@
                             </thead>
 
                             <tbody>
+                            <tr wire:loading wire:target="search">
+                                <td colspan="11" class="text-center">Buscando...</td>
+                            </tr>
                             {{-- filas --}}
                             @forelse($rows as $r)
                                 <tr wire:key="row-{{ $r['item'] }}" wire:loading.class="d-none">
-
-                                    <div class="screen-overlay"
-                                         wire:loading.delay.flex
-                                         wire:target="export,month,year,condition">
-                                        <div class="text-center">
-                                            <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
-                                            <div class="mt-2 text-white fw-semibold">Cargando…</div>
-                                        </div>
-                                    </div>
                                     <td class="text-center">
                                         @if(($r['total'] ?? 0) > 0)
                                             <a href="#" title="Editar" wire:click.prevent="detail({{ $r['id'] }})">
