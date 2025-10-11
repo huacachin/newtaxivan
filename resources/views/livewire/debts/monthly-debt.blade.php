@@ -29,18 +29,23 @@
 
         /* Overlay LOCAL solo dentro del card-body */
         .card-body { position: relative; }
-        .screen-overlay-local {
-            position: absolute;       /* solo cubre el card-body */
+        .screen-overlay-local{
+            position: absolute;
             inset: 0;
-            display: none;            /* Livewire lo pone en flex */
+            display: none;              /* Livewire lo pone en flex */
             align-items: center;
             justify-content: center;
-            background: rgba(255,255,255,.35);
-            backdrop-filter: blur(2px);
-            -webkit-backdrop-filter: blur(2px);
-            z-index: 10;              /* encima del contenido, debajo de modals */
-            pointer-events: all;      /* bloquea clics dentro del card-body */
-            color:#FFF;
+            background: rgba(0,0,0,.75);/* negro traslúcido */
+            backdrop-filter: none;      /* sin blur, fondo negro sólido */
+            z-index: 10;
+            pointer-events: all;
+        }
+
+        .screen-overlay-local .loader-text{
+            margin-top: .5rem;
+            color: #fff;
+            font-weight: 600;
+            text-transform: none;       /* “Buscando…” tal cual */
         }
     </style>
 @endpush
@@ -124,10 +129,10 @@
                     <div class="table-responsive tableFixHead">
                         <div class="screen-overlay-local"
                              wire:loading.flex
-                             wire:target="search">
+                             wire:target="search,month,year,condition">
                             <div class="text-center">
-                                <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
-                                <div class="mt-2 text-white fw-semibold">Cargando…</div>
+                                <div class="spinner-border text-light" role="status" aria-label="Buscando…"></div>
+                                <div class="loader-text">Buscando…</div>
                             </div>
                         </div>
                         <table class="table table-sm table-bordered table-striped table-hover align-middle">
