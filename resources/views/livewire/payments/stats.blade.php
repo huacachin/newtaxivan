@@ -23,6 +23,18 @@
 
         /* Domingos en rojo (solo cabecera de día) */
         .sunday { background-color: #ef4444 !important; color:#fff !important; }
+
+        .screen-overlay {
+            position: fixed;
+            inset: 0;                 /* full viewport */
+            display: none;            /* Livewire lo pondrá en flex */
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,.35);
+            backdrop-filter: blur(2px);
+            z-index: 2000;            /* sobre modals/backdrops de Bootstrap */
+            pointer-events: all;      /* bloquea clics */
+        }
     </style>
 @endpush
 
@@ -31,7 +43,6 @@
     <div class="row">
         <div class="col-sm-6">
             <h4 class="main-title">Pagos</h4>
-            <small class="text-muted">Reporte estadístico mensual</small>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -45,12 +56,16 @@
     </div>
 
     <div class="row table-section">
-        {{-- Filtros --}}
+
+        {{-- Tabla --}}
         <div class="col-12">
             <div class="card shadow-sm">
-                <div class="card-body pt-3">
-                    <div class="row g-3 align-items-end">
-                        <div class="col-xl-4 col-md-6">
+                <div class="card-header">
+                    <h5 style="color:#e11d48;">
+                        REPORTE ESTADÍSTICO DE PAGO – {{ $this->monthName() }} {{ $year }}
+                    </h5>
+                    <div class="row g-3 align-items-end mt-2">
+                        <div class="col-md-4">
                             <label class="form-label">Mes</label>
                             <select class="form-select" wire:model.live="month">
                                 @foreach($months as $mVal => $mName)
@@ -58,7 +73,7 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-xl-4 col-md-6">
+                        <div class="col-md-4">
                             <label class="form-label">Año</label>
                             <select class="form-select" wire:model.live="year">
                                 @foreach($years as $y)
@@ -66,30 +81,21 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-xl-4 d-flex gap-2 justify-content-xl-end">
-                            <a href="#" wire:click="export" class="btn btn-primary">
+                        <div class="col-md-2 d-flex">
+                            <a href="#" wire:click="export" class="btn btn-primary w-100">
                                 <i class="ti ti-file-analytics"></i> Exportar
                             </a>
-                            <a href="{{ route('payments.index') }}" class="btn btn-primary">
+                        </div>
+
+                        <div class="col-md-2">
+                            <a href="{{ route('payments.index') }}" class="btn btn-primary w-100">
                                 <i class="ti ti-arrow-back-up"></i> Regresar
                             </a>
                         </div>
                     </div>
-
-                    <div class="mt-2" wire:loading.delay>
-                        <span class="text-muted"><span class="spinner-border spinner-border-sm"></span> Cargando…</span>
-                    </div>
                 </div>
-            </div>
-        </div>
-
-        {{-- Tabla --}}
-        <div class="col-12">
-            <div class="card shadow-sm">
                 <div class="card-body pb-2">
-                    <h5 class="mb-3" style="color:#e11d48;">
-                        REPORTE ESTADÍSTICO DE PAGO – {{ $this->monthName() }} {{ $year }}
-                    </h5>
+
 
                     @php $days = range(1, $daysInMonth); @endphp
 
@@ -176,6 +182,14 @@
                     </small>
                 </div>
             </div>
+        </div>
+    </div>
+    <div class="screen-overlay"
+         wire:loading.delay.flex
+         wire:target="export,month,year">
+        <div class="text-center">
+            <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
+            <div class="mt-2 text-white fw-semibold">Cargando…</div>
         </div>
     </div>
 </div>

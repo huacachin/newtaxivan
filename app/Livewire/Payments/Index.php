@@ -143,6 +143,10 @@ class Index extends Component
         return $this->userHasRole('controller');
     }
 
+    public function applyDate(){
+        $this->render();
+    }
+
     /** Carga ids de sedes asignadas al usuario (N:N + primaria en users.headquarter_id) */
     private function loadUserHeadquarters(): void
     {

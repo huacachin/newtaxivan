@@ -28,6 +28,18 @@
         .app-icon-form .ti { position: absolute; right: .75rem; top: 50%; transform: translateY(-50%); }
 
         /* Botones iguales al resto del sistema (ya usas .btn-primary) */
+
+        .screen-overlay {
+            position: fixed;
+            inset: 0;                 /* full viewport */
+            display: none;            /* Livewire lo pondrá en flex */
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,.35);
+            backdrop-filter: blur(2px);
+            z-index: 2000;            /* sobre modals/backdrops de Bootstrap */
+            pointer-events: all;      /* bloquea clics */
+        }
     </style>
 @endpush
 
@@ -82,13 +94,13 @@
                     <div class="row g-3 mt-2">
                         <div class="col-xl-3 col-md-3">
                             <label class="form-label">Fecha Inicio</label>
-                            <input type="date" class="form-control" wire:model.live="date_start">
+                            <input type="date" class="form-control" wire:model="date_start">
                         </div>
                         <div class="col-xl-3 col-md-3">
                             <label class="form-label">Fecha Fin</label>
-                            <input type="date" class="form-control" wire:model.live="date_end">
+                            <input type="date" class="form-control" wire:model="date_end">
                         </div>
-                        <div class="col-xl-3 col-md-3">
+                        <div class="col-xl-2 col-md-2">
                             <label class="form-label">Sucursal</label>
                             <select class="form-select" wire:model.live="headquarter_id" aria-label="Selecciona sucursal">
                                 <option value="">Todos</option>
@@ -97,7 +109,7 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-xl-3 col-md-3">
+                        <div class="col-xl-2 col-md-2">
                             <label class="form-label">Tipo</label>
                             <select class="form-select" wire:model.live="type" aria-label="Selecciona tipo">
                                 <option value="">Todos</option>
@@ -105,6 +117,11 @@
                                 <option value="DEUDA">Deuda</option>
                                 <option value="RETRASO">Retraso</option>
                             </select>
+                        </div>
+                        <div class="col-xl-2 col-md-2 d-flex align-items-end">
+                            <button class="btn btn-primary w-100" wire:click="applyDate">
+                                Buscar
+                            </button>
                         </div>
                     </div>
                     <div class="row g-2 mt-2">
@@ -203,12 +220,6 @@
                             </tr>
                             </tfoot>
                         </table>
-                    </div>
-
-                    <div class="mt-2" wire:loading.delay>
-                        <span class="text-muted">
-                            <span class="spinner-border spinner-border-sm"></span> Cargando…
-                        </span>
                     </div>
                 </div>
             </div>
@@ -483,6 +494,14 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+    <div class="screen-overlay"
+         wire:loading.delay.flex
+         wire:target="applyDate,export,save,update,daily,monthly,stats">
+        <div class="text-center">
+            <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
+            <div class="mt-2 text-white fw-semibold">Cargando…</div>
         </div>
     </div>
 </div>
