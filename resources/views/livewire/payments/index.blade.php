@@ -498,7 +498,7 @@
     </div>
     <div class="screen-overlay"
          wire:loading.delay.flex
-         wire:target="applyDate,export,save,update,daily,monthly,stats">
+         wire:target="applyDate,export,save,update,daily,monthly,stats,openAddModal,openEditModal">
         <div class="text-center">
             <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
             <div class="mt-2 text-white fw-semibold">Cargando…</div>
