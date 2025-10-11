@@ -124,11 +124,6 @@
                             </thead>
 
                             <tbody>
-                            <tr wire:loading wire:target="search">
-                                <td colspan="11" class="text-center">
-                                    Buscando...
-                                </td>
-                            </tr>
                             {{-- filas --}}
                             @forelse($rows as $r)
                                 <tr wire:key="row-{{ $r['item'] }}" wire:loading.class="d-none">
