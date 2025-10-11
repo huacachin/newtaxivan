@@ -47,6 +47,18 @@
         .cond-EX  { background:#e2e8f0; color:#334155; } /* EX/EX5 gris */
         .cond-GN  { background:#fef3c7; color:#92400e; } /* GN ámbar */
         .cond-DT  { background:#dcfce7; color:#166534; } /* DT verde */
+
+        .screen-overlay {
+            position: fixed;
+            inset: 0;                 /* full viewport */
+            display: none;            /* Livewire lo pondrá en flex */
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,.35);
+            backdrop-filter: blur(2px);
+            z-index: 2000;            /* sobre modals/backdrops de Bootstrap */
+            pointer-events: all;      /* bloquea clics */
+        }
     </style>
 @endpush
 
@@ -55,7 +67,6 @@
     <div class="row align-items-center mb-3">
         <div class="col-sm-6">
             <h4 class="main-title mb-0">Pagos</h4>
-            <small class="text-muted">Mensual</small>
         </div>
         <div class="col-sm-6 mt-sm-0 mt-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end mb-0">
@@ -73,12 +84,19 @@
     </div>
 
     <div class="row table-section">
-        <!-- Filtros -->
+
+        <!-- Tabla -->
         <div class="col-12">
             <div class="card shadow-sm">
-                <div class="card-body pt-3">
-                    <div class="row g-3 align-items-end">
-                        <div class="col-xl-3 col-md-4">
+                <div class="card-header">
+                    @php
+                        $monthName = \Illuminate\Support\Str::upper(\Carbon\Carbon::create($year, $month, 1)->translatedFormat('F'));
+                    @endphp
+                    <h5 class="mb-3" style="color:#e11d48;">
+                        REPORTE MENSUAL DE PAGO – {{ $monthName }} {{ $year }}
+                    </h5>
+                    <div class="row g-3 align-items-end mt-2">
+                        <div class="col-md-3">
                             <label class="form-label">Mes</label>
                             <select class="form-select" wire:model.live="month">
                                 @foreach($months as $mVal => $mName)
@@ -86,7 +104,7 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-xl-3 col-md-4">
+                        <div class="col-md-3">
                             <label class="form-label">Año</label>
                             <select class="form-select" wire:model.live="year">
                                 @foreach($years as $y)
@@ -94,7 +112,7 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-xl-3 col-md-4">
+                        <div class="col-md-2">
                             <label class="form-label">Condición</label>
                             <select class="form-select" wire:model.live="cond">
                                 <option value="">Todos</option>
@@ -105,35 +123,21 @@
                             </select>
                         </div>
 
-                        <div class="col-xl-3 col-md-12 d-flex gap-2 justify-content-xl-end">
-                            <a href="#" wire:click="export" class="btn btn-primary">
+                        <div class="col-md-2 d-flex gap-2">
+                            <a href="#" wire:click="export" class="btn btn-primary w-100">
                                 <i class="ti ti-file-spreadsheet f-s-16"></i> Exportar
                             </a>
-                            <a href="{{ route('payments.index') }}" class="btn btn-primary">
+
+                        </div>
+
+                        <div class="col-md-2 d-flex gap-2">
+                            <a href="{{ route('payments.index') }}" class="btn btn-primary w-100">
                                 <i class="ti ti-arrow-back-up"></i> Regresar
                             </a>
                         </div>
                     </div>
-
-                    <div class="mt-2" wire:loading.delay>
-                        <span class="text-muted">
-                            <span class="spinner-border spinner-border-sm"></span> Cargando…
-                        </span>
-                    </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- Tabla -->
-        <div class="col-12">
-            <div class="card shadow-sm">
                 <div class="card-body pb-2">
-                    @php
-                        $monthName = \Illuminate\Support\Str::upper(\Carbon\Carbon::create($year, $month, 1)->translatedFormat('F'));
-                    @endphp
-                    <h5 class="mb-3" style="color:#e11d48;">
-                        REPORTE MENSUAL DE PAGO – {{ $monthName }} {{ $year }}
-                    </h5>
 
                     <div class="table-responsive tableFixHead">
                         <table class="table table-sm table-bordered table-striped table-hover align-middle">
@@ -253,10 +257,12 @@
             </div>
         </div>
     </div>
+    <div class="screen-overlay"
+         wire:loading.delay.flex
+         wire:target="export,month,year,cond">
+        <div class="text-center">
+            <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
+            <div class="mt-2 text-white fw-semibold">Cargando…</div>
+        </div>
+    </div>
 </div>
-
-@push('scripts')
-    <script>
-        // espacio para JS específico si luego lo necesitas
-    </script>
-@endpush
