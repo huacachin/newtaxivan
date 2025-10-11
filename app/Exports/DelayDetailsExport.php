@@ -16,7 +16,6 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use PhpOffice\PhpSpreadsheet\Style\Conditional;
 
 class DelayDetailsExport implements FromArray, ShouldAutoSize, WithHeadings, WithEvents, WithStyles
 {
@@ -30,19 +29,20 @@ class DelayDetailsExport implements FromArray, ShouldAutoSize, WithHeadings, Wit
 
     private int $rowCount = 0;
 
-    /* ============== DATA ============== */
+    /* ---------------- datos ---------------- */
     public function array(): array
     {
         [$from, $toMonthEnd] = $this->monthBoundaries($this->monthDate);
+        $seed   = Carbon::parse($this->monthDate);
 
         $vehiclesQ = DB::table('vehicles as v')
             ->select('v.id','v.plate','v.sort_order','v.condition','v.status');
-
         if ($this->onlyActive)       $vehiclesQ->where('v.status', 'active');
         if ($this->condition !== '') $vehiclesQ->where('v.condition', $this->condition);
         if ($this->plateFilter)      $vehiclesQ->where('v.plate', 'like', '%'.strtoupper($this->plateFilter).'%');
 
-        $vehicles = $vehiclesQ->orderByRaw('COALESCE(v.sort_order,999999)')
+        $vehicles = $vehiclesQ
+            ->orderByRaw('COALESCE(v.sort_order, 999999)')
             ->orderBy('v.plate')
             ->get();
 
@@ -58,7 +58,7 @@ class DelayDetailsExport implements FromArray, ShouldAutoSize, WithHeadings, Wit
             ->groupBy('c.vehicle_id','c.date')
             ->get();
         $costMap = [];
-        foreach ($costs as $c) $costMap[$c->vehicle_id][$c->date] = (float)$c->amount;
+        foreach ($costs as $c) $costMap[$c->vehicle_id][$c->date] = (float) $c->amount;
 
         [$amountCol, $dateCol] = $this->detectPaymentColumns();
         $payRows = DB::table('payments as p')
@@ -66,18 +66,18 @@ class DelayDetailsExport implements FromArray, ShouldAutoSize, WithHeadings, Wit
                 DB::raw("COUNT(*) as cnt"), DB::raw("COALESCE(SUM(p.$amountCol),0) as amt"))
             ->whereIn('p.vehicle_id', $vehicleIds)
             ->whereBetween(DB::raw("DATE(p.$dateCol)"), [$from, $toMonthEnd])
-            ->where('p.type','<>','DEUDA')
+            ->where('p.type', '<>', 'DEUDA')
             ->groupBy('p.vehicle_id', DB::raw("DATE(p.$dateCol)"))
             ->get();
         $payMap = [];
-        foreach ($payRows as $r) $payMap[$r->vehicle_id][$r->d] = ['cnt'=>(int)$r->cnt, 'amt'=>(float)$r->amt];
+        foreach ($payRows as $r) $payMap[$r->vehicle_id][$r->d] = ['cnt'=>(int)$r->cnt,'amt'=>(float)$r->amt];
 
         $deps = DB::table('departures as d')
             ->leftJoin('headquarters as h','h.id','=','d.headquarter_id')
             ->select('d.vehicle_id','d.date', DB::raw('SUM(d.times) as k1'))
             ->whereIn('d.vehicle_id', $vehicleIds)
             ->whereBetween('d.date', [$from, $toMonthEnd])
-            ->when(!empty($this->excludeHeads), function($q){
+            ->when(!empty($this->excludeHeads), function ($q) {
                 $q->where(function($qq){ $qq->whereNull('h.name')->orWhereNotIn('h.name', $this->excludeHeads); });
             })
             ->groupBy('d.vehicle_id','d.date')
@@ -85,16 +85,18 @@ class DelayDetailsExport implements FromArray, ShouldAutoSize, WithHeadings, Wit
         $depMap = [];
         foreach ($deps as $d) $depMap[$d->vehicle_id][$d->date] = (int)$d->k1;
 
-        $data = []; $item = 0;
+        $data = [];
+        $item = 0;
         foreach ($vehicles as $v) {
             if (Str::startsWith((string)$v->condition, 'EX')) continue;
+
             foreach ($days as $d) {
-                if ($d['isSunday']) continue;
                 $date = $d['d'];
+                if ($d['isSunday']) continue;
 
                 $cost = $date <= '2023-04-30' ? 10.00 : (float)($costMap[$v->id][$date] ?? 0.00);
-                $cnt  = (int)  ($payMap[$v->id][$date]['cnt'] ?? 0);
-                $sum  = (float)($payMap[$v->id][$date]['amt'] ?? 0.00);
+                $cnt = (int)($payMap[$v->id][$date]['cnt'] ?? 0);
+                $sum = (float)($payMap[$v->id][$date]['amt'] ?? 0.00);
                 $expected = $cnt > 1 ? ($cost * $cnt) : $cost;
 
                 if (round($sum,2) !== round($expected,2)) {
@@ -103,7 +105,6 @@ class DelayDetailsExport implements FromArray, ShouldAutoSize, WithHeadings, Wit
                         $item++;
                         $data[] = [
                             'item'   => $item,
-                            'cod'    => $v->sort_order,
                             'fecha'  => $date,
                             'placa'  => $v->plate,
                             'vuelta' => (int)ceil($k1/2),
@@ -118,123 +119,124 @@ class DelayDetailsExport implements FromArray, ShouldAutoSize, WithHeadings, Wit
         return $data;
     }
 
+    /* ---------------- encabezados (sin “código”) ---------------- */
     public function headings(): array
     {
-        return ['Item','Codigo','Fecha','Placa','Vueltas','S/'];
+        return ['Item','Fecha','Placa','Vueltas','S/'];
     }
 
     public function styles(Worksheet $sheet)
     {
-        return [1 => ['font' => ['bold' => true]]];
+        // Header en negrita (fila 2 tras insertar título)
+        return [2 => ['font' => ['bold' => true]]];
     }
 
-    /* ============== STYLING ============== */
     public function registerEvents(): array
     {
         return [
-            AfterSheet::class => function(AfterSheet $e) {
+            AfterSheet::class => function (AfterSheet $e) {
                 $ws = $e->sheet->getDelegate();
 
-                // Paleta
-                $brandHex  = '2874A6'; // header/título
-                $footerHex = 'CEE7FF'; // footer
-                $white     = 'FFFFFF';
-                $black     = '000000';
-
-                // Solo TÍTULO (sin subtítulo/filtros)
-                $ws->insertNewRowBefore(1, 1);
-
-                $headerRow     = 2;
-                $dataStartRow  = 3;
-                $lastRow       = $dataStartRow + max(0, $this->rowCount) - 1;
-                $lastColLetter = 'F';
-
-                // Fuente 10pt homogénea
+                // Fuente 10pt global
                 $ws->getParent()->getDefaultStyle()->getFont()->setSize(10);
 
-                // Title bar (brand)
-                $monthText = Carbon::parse($this->monthDate)->locale('es')->translatedFormat('F Y');
-                $ws->setCellValue('A1', 'RESUMEN DE RETRASO ' . strtoupper($monthText));
+                // Insertar SOLO 1 fila (título). No hay subtítulo ni AutoFilter.
+                $ws->insertNewRowBefore(1, 1);
+
+                $headerRow     = 2;              // cabecera real
+                $dataStartRow  = 3;              // datos
+                $lastRow       = $dataStartRow + max(0, $this->rowCount) - 1;
+                $lastColLetter = 'E';            // A..E
+
+                // ===== TÍTULO =====
+                $seed      = Carbon::parse($this->monthDate);
+                $monthText = $seed->locale('es')->translatedFormat('F Y');
+                $ws->setCellValue('A1', 'REPORTE DE RETRASOS – DETALLE' . ($monthText ? " – {$monthText}" : ''));
                 $ws->mergeCells("A1:{$lastColLetter}1");
-                $ws->getRowDimension(1)->setRowHeight(18);
+                $ws->getRowDimension(1)->setRowHeight(22);
                 $ws->getStyle('A1')->applyFromArray([
-                    'font' => ['bold'=>true,'size'=>10,'color'=>['rgb'=>$white]],
-                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
-                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['rgb'=>$brandHex]],
+                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['rgb' => 'FFFFFF']],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                    'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '2874A6']],
                 ]);
 
-                // THEAD (brand)
+                // ===== THEAD (azul #2874A6) =====
                 $ws->getStyle("A{$headerRow}:{$lastColLetter}{$headerRow}")->applyFromArray([
-                    'font' => ['bold'=>true,'color'=>['rgb'=>$white]],
-                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
-                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['rgb'=>$brandHex]],
+                    'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                    'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '2874A6']],
                 ]);
-                $ws->getRowDimension($headerRow)->setRowHeight(16);
+                $ws->getRowDimension($headerRow)->setRowHeight(18);
 
-                // Freeze bajo thead
+                // Congelar debajo del thead
                 $ws->freezePane("A{$dataStartRow}");
 
-                // Anchos compactos
-                $ws->getColumnDimension('A')->setWidth(6);
-                $ws->getColumnDimension('B')->setWidth(8);
-                $ws->getColumnDimension('C')->setWidth(10);
-                $ws->getColumnDimension('D')->setWidth(10);
-                $ws->getColumnDimension('E')->setWidth(7);
-                $ws->getColumnDimension('F')->setWidth(8);
+                // ===== Anchos compactos =====
+                $ws->getColumnDimension('A')->setWidth(6);   // Item
+                $ws->getColumnDimension('B')->setWidth(10);  // Fecha
+                $ws->getColumnDimension('C')->setWidth(10);  // Placa
+                $ws->getColumnDimension('D')->setWidth(7);   // Vueltas
+                $ws->getColumnDimension('E')->setWidth(9);   // S/
 
-                // Zebra + bordes
+                // ===== Nada de AutoFilter =====
+                // (intencionalmente no se llama setAutoFilter)
+
+                // Zebra en cuerpo
                 if ($lastRow >= $dataStartRow) {
-                    $cond = new Conditional();
-                    $cond->setConditionType(Conditional::CONDITION_EXPRESSION);
+                    $rangeData = "A{$dataStartRow}:{$lastColLetter}{$lastRow}";
+                    $cond = new \PhpOffice\PhpSpreadsheet\Style\Conditional();
+                    $cond->setConditionType(\PhpOffice\PhpSpreadsheet\Style\Conditional::CONDITION_EXPRESSION);
                     $cond->setConditions(['MOD(ROW(),2)=0']);
-                    $cond->getStyle()->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('F9FAFB');
-                    $range = "A{$dataStartRow}:{$lastColLetter}{$lastRow}";
-                    $styles = $ws->getStyle($range)->getConditionalStyles(); $styles[] = $cond;
-                    $ws->getStyle($range)->setConditionalStyles($styles);
+                    $cond->getStyle()->getFill()->setFillType(Fill::FILL_SOLID)
+                        ->getStartColor()->setRGB('F9FAFB');
+                    $styles = $ws->getStyle($rangeData)->getConditionalStyles();
+                    $styles[] = $cond;
+                    $ws->getStyle($rangeData)->setConditionalStyles($styles);
                 }
-                $ws->getStyle("A{$headerRow}:{$lastColLetter}" . max($headerRow,$lastRow))
+
+                // Bordes finos
+                $ws->getStyle("A{$headerRow}:{$lastColLetter}" . max($headerRow, $lastRow))
                     ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)
                     ->getColor()->setRGB('CFD8DC');
 
-                // Formatos/alineaciones
-                if ($lastRow >= $dataStartRow) {
-                    $ws->getStyle("C{$dataStartRow}:C{$lastRow}")->getNumberFormat()->setFormatCode('dd/mm/yy');
-                    $ws->getStyle("C{$dataStartRow}:C{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                    $ws->getStyle("D{$dataStartRow}:E{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                    $ws->getStyle("F{$dataStartRow}:F{$lastRow}")->getNumberFormat()->setFormatCode('#,##0');
-                    $ws->getStyle("F{$dataStartRow}:F{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-                }
+                // Centrar todas las columnas
+                $ws->getStyle("A{$dataStartRow}:{$lastColLetter}" . ($lastRow >= $dataStartRow ? $lastRow : $headerRow))
+                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-                // Alternancia negro/rojo por placa
+                // Formatos
                 if ($lastRow >= $dataStartRow) {
-                    $prev = (string)$ws->getCell("D{$dataStartRow}")->getValue();
-                    $red = false;
-                    for ($r=$dataStartRow; $r<=$lastRow; $r++) {
-                        $plate = (string)$ws->getCell("D{$r}")->getValue();
-                        if ($r>$dataStartRow && $plate !== $prev) { $red = !$red; $prev = $plate; }
-                        $ws->getStyle("A{$r}:F{$r}")->getFont()->getColor()->setRGB($red ? 'FF0000' : $black);
+                    $ws->getStyle("B{$dataStartRow}:B{$lastRow}")->getNumberFormat()->setFormatCode('yyyy-mm-dd');       // Fecha
+                    $ws->getStyle("E{$dataStartRow}:E{$lastRow}")->getNumberFormat()->setFormatCode('"S/ " #,##0.00');   // S/
+                    // Alternancia por bloque de placa (C): opcional, la mantengo
+                    $prev = (string)$ws->getCell("C{$dataStartRow}")->getValue();
+                    $red  = false;
+                    for ($r = $dataStartRow; $r <= $lastRow; $r++) {
+                        $p = (string)$ws->getCell("C{$r}")->getValue();
+                        if ($r > $dataStartRow && $p !== $prev) { $red = !$red; $prev = $p; }
+                        $ws->getStyle("A{$r}:{$lastColLetter}{$r}")->getFont()->getColor()
+                            ->setRGB($red ? 'FF0000' : '000000');
                     }
                 }
 
-                // Footer (fondo celeste claro)
+                // ===== Footer (celeste #CEE7FF) =====
                 $totalRow = ($lastRow >= $dataStartRow) ? $lastRow + 1 : $headerRow + 1;
-                $ws->mergeCells("A{$totalRow}:E{$totalRow}");
+                $ws->mergeCells("A{$totalRow}:D{$totalRow}");
                 $ws->setCellValue("A{$totalRow}", 'Total');
-                $ws->setCellValue("F{$totalRow}", $lastRow >= $dataStartRow ? "=SUM(F{$dataStartRow}:F{$lastRow})" : 0);
+                $ws->setCellValue("E{$totalRow}", $lastRow >= $dataStartRow ? "=SUM(E{$dataStartRow}:E{$lastRow})" : 0);
 
                 $ws->getStyle("A{$totalRow}:{$lastColLetter}{$totalRow}")->applyFromArray([
-                    'font' => ['bold'=>true,'color'=>['rgb'=>$black]],
-                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['rgb'=>$footerHex]],
+                    'font'      => ['bold' => true],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                    'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'CEE7FF']],
                 ]);
                 $ws->getStyle("A{$totalRow}:{$lastColLetter}{$totalRow}")
                     ->getBorders()->getTop()->setBorderStyle(Border::BORDER_MEDIUM);
-                $ws->getStyle("A{$totalRow}:E{$totalRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-                $ws->getStyle("F{$totalRow}")->getNumberFormat()->setFormatCode('#,##0');
+                $ws->getStyle("E{$totalRow}")->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
             },
         ];
     }
 
-    /* ============== HELPERS ============== */
+    /* ---------------- helpers ---------------- */
     private function monthBoundaries(string $anyDay): array
     {
         $d = Carbon::parse($anyDay)->startOfMonth();
@@ -247,7 +249,7 @@ class DelayDetailsExport implements FromArray, ShouldAutoSize, WithHeadings, Wit
         $c = Carbon::parse($from);
         $end = Carbon::parse($to);
         while ($c->lte($end)) {
-            $days[] = ['d'=>$c->toDateString(),'isSunday'=>$c->dayOfWeekIso===7];
+            $days[] = ['d' => $c->toDateString(), 'isSunday' => $c->dayOfWeekIso === 7];
             $c->addDay();
         }
         return $days;
@@ -255,11 +257,11 @@ class DelayDetailsExport implements FromArray, ShouldAutoSize, WithHeadings, Wit
 
     private function detectPaymentColumns(): array
     {
-        $cols  = Schema::getColumnListing('payments');
+        $cols = Schema::getColumnListing('payments');
         $amountCandidates = ['amount','total','total_amount','importe','import','price','value','amount_total'];
         $dateCandidates   = ['date_payment','date_register','fechac','fecha'];
-        $amountCol = collect($amountCandidates)->first(fn($c)=>in_array($c,$cols,true)) ?? 'amount';
-        $dateCol   = collect($dateCandidates)->first(fn($c)=>in_array($c,$cols,true)) ?? 'date_payment';
+        $amountCol = collect($amountCandidates)->first(fn($c) => in_array($c, $cols, true)) ?? 'amount';
+        $dateCol   = collect($dateCandidates)->first(fn($c) => in_array($c, $cols, true)) ?? 'date_payment';
         return [$amountCol, $dateCol];
     }
 }
