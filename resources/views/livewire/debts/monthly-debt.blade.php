@@ -26,6 +26,22 @@
             z-index: 2000;            /* sobre modals/backdrops de Bootstrap */
             pointer-events: all;      /* bloquea clics */
         }
+
+        /* Overlay LOCAL solo dentro del card-body */
+        .card-body { position: relative; }
+        .screen-overlay-local {
+            position: absolute;       /* solo cubre el card-body */
+            inset: 0;
+            display: none;            /* Livewire lo pone en flex */
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,.35);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+            z-index: 10;              /* encima del contenido, debajo de modals */
+            pointer-events: all;      /* bloquea clics dentro del card-body */
+            color:#FFF;
+        }
     </style>
 @endpush
 
@@ -106,7 +122,15 @@
                 </div>
                 <div class="card-body">
                     <div class="table-responsive tableFixHead">
-                        <table class="table table-sm table-bordered table-striped table-hover align-middle">
+                        <div class="screen-overlay-local"
+                             wire:loading.flex
+                             wire:target="search">
+                            <div class="text-center">
+                                <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
+                                <div class="mt-2 text-white fw-semibold">Cargando…</div>
+                            </div>
+                        </div>
+                        <table class="table table-sm table-bordered table-striped table-hover align-middle" wire:loading.class="d-none">
                             <thead class="text-center">
                             <tr>
                                 <th>Op</th>
@@ -176,7 +200,7 @@
     </div>
     <div class="screen-overlay"
          wire:loading.delay.flex
-         wire:target="export,month,year,condition,search">
+         wire:target="export,month,year,condition">
         <div class="text-center">
             <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
             <div class="mt-2 text-white fw-semibold">Cargando…</div>
