@@ -124,8 +124,8 @@
                             </thead>
 
                             <tbody>
-                            <tr>
-                                <td colspan="11" wire:loading wire:target="search" class="text-center">
+                            <tr wire:loading wire:target="search">
+                                <td colspan="11" class="text-center">
                                     Buscando...
                                 </td>
                             </tr>
@@ -160,7 +160,7 @@
                                     <td class="num">{{ number_format($r['pending'], 2) }}</td>
                                 </tr>
                             @empty
-                                <tr wire:loading.class="d-none">
+                                <tr>
                                     <td colspan="11" class="text-center">No se encontraron resultados.</td>
                                 </tr>
                             @endforelse
