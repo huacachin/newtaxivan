@@ -15,9 +15,6 @@
         .tableFixHead table.table td{ white-space:nowrap; }
         .num{ text-align:right; }
 
-        /* Mantener el grid estable para que el colspan ocupe todo */
-        .tableFixHead table.table{ table-layout: fixed; width: 100%; }
-
         .screen-overlay {
             position: fixed;
             inset: 0;                 /* full viewport */
@@ -26,7 +23,6 @@
             justify-content: center;
             background: rgba(0,0,0,.35);
             backdrop-filter: blur(2px);
-            -webkit-backdrop-filter: blur(2px);
             z-index: 2000;            /* sobre modals/backdrops de Bootstrap */
             pointer-events: all;      /* bloquea clics */
         }
@@ -55,6 +51,9 @@
     </div>
 
     <div class="row table-section">
+
+
+
         {{-- Tabla (estilo Payments) --}}
         <div class="col-xl-12">
             <div class="card shadow-sm">
@@ -105,7 +104,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="card-body">
                     <div class="table-responsive tableFixHead">
                         <table class="table table-sm table-bordered table-striped table-hover align-middle">
@@ -126,17 +124,23 @@
                             </thead>
 
                             <tbody>
-                            {{-- Mensaje de búsqueda: visible solo mientras search está cargando --}}
-                            <tr wire:loading wire:target="search">
-                                {{-- colspan grande garantiza abarcar todas las columnas reales --}}
-                                <td colspan="1000" class="text-center">Buscando…</td>
+                            <tr>
+                                <td colspan="11" wire:loading wire:target="search">
+                                    Buscando...
+                                </td>
                             </tr>
-
-                            {{-- Filas con datos: se ocultan solo mientras search está cargando --}}
+                            {{-- filas --}}
                             @forelse($rows as $r)
-                                <tr wire:key="row-{{ $r['item'] }}"
-                                    wire:loading.remove
-                                    wire:target="search">
+                                <tr wire:key="row-{{ $r['item'] }}" wire:loading.class="d-none">
+
+                                    <div class="screen-overlay"
+                                         wire:loading.delay.flex
+                                         wire:target="export,month,year,condition">
+                                        <div class="text-center">
+                                            <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
+                                            <div class="mt-2 text-white fw-semibold">Cargando…</div>
+                                        </div>
+                                    </div>
                                     <td class="text-center">
                                         @if(($r['total'] ?? 0) > 0)
                                             <a href="#" title="Editar" wire:click.prevent="detail({{ $r['id'] }})">
@@ -156,8 +160,7 @@
                                     <td class="num">{{ number_format($r['pending'], 2) }}</td>
                                 </tr>
                             @empty
-                                {{-- “No resultados”: oculto mientras search está cargando --}}
-                                <tr wire:loading.remove wire:target="search">
+                                <tr wire:loading.class="d-none">
                                     <td colspan="11" class="text-center">No se encontraron resultados.</td>
                                 </tr>
                             @endforelse
@@ -183,12 +186,11 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    {{-- Overlay global para export: NO TOCADO --}}
+    </div>
     <div class="screen-overlay"
          wire:loading.delay.flex
-         wire:target="month,year,condition,export">
+         wire:target="export,month,year,condition">
         <div class="text-center">
             <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
             <div class="mt-2 text-white fw-semibold">Cargando…</div>
