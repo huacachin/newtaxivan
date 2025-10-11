@@ -78,7 +78,7 @@
                         <div class="col-md-3">
                             <label class="form-label">Buscar placa</label>
                             <input type="search" class="form-control" placeholder="ABC-123"
-                                   wire:model.live.debounce.300ms="search">
+                                   wire:model.live.debounce.750ms="search">
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">Condición</label>
@@ -124,23 +124,9 @@
                             </thead>
 
                             <tbody>
-                            <tr>
-                                <td colspan="11" wire:loading wire:target="search">
-                                    Buscando...
-                                </td>
-                            </tr>
                             {{-- filas --}}
                             @forelse($rows as $r)
                                 <tr wire:key="row-{{ $r['item'] }}" wire:loading.class="d-none">
-
-                                    <div class="screen-overlay"
-                                         wire:loading.delay.flex
-                                         wire:target="export,month,year,condition">
-                                        <div class="text-center">
-                                            <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
-                                            <div class="mt-2 text-white fw-semibold">Cargando…</div>
-                                        </div>
-                                    </div>
                                     <td class="text-center">
                                         @if(($r['total'] ?? 0) > 0)
                                             <a href="#" title="Editar" wire:click.prevent="detail({{ $r['id'] }})">
@@ -190,7 +176,7 @@
     </div>
     <div class="screen-overlay"
          wire:loading.delay.flex
-         wire:target="export,month,year,condition">
+         wire:target="export,month,year,condition,search">
         <div class="text-center">
             <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
             <div class="mt-2 text-white fw-semibold">Cargando…</div>
