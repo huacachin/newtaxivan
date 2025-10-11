@@ -124,12 +124,16 @@
                             </thead>
 
                             <tbody>
-                            <tr wire:loading wire:target="search">
-                                <td colspan="11" class="text-center">Buscando...</td>
+                            {{-- Mensaje de carga para cualquier cambio de filtros/búsqueda --}}
+                            <tr wire:loading wire:target="search,month,year,condition">
+                                <td colspan="11" class="text-center">Buscando…</td>
                             </tr>
-                            {{-- filas --}}
+
+                            {{-- Filas con datos: se ocultan mientras carga --}}
                             @forelse($rows as $r)
-                                <tr wire:key="row-{{ $r['item'] }}" wire:loading.class="d-none">
+                                <tr wire:key="row-{{ $r['item'] }}"
+                                    wire:loading.remove
+                                    wire:target="search,month,year,condition">
                                     <td class="text-center">
                                         @if(($r['total'] ?? 0) > 0)
                                             <a href="#" title="Editar" wire:click.prevent="detail({{ $r['id'] }})">
@@ -149,7 +153,8 @@
                                     <td class="num">{{ number_format($r['pending'], 2) }}</td>
                                 </tr>
                             @empty
-                                <tr>
+                                {{-- Mensaje de “no resultados”: solo cuando NO está cargando --}}
+                                <tr wire:loading.remove wire:target="search,month,year,condition">
                                     <td colspan="11" class="text-center">No se encontraron resultados.</td>
                                 </tr>
                             @endforelse
