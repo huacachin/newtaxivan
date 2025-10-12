@@ -1,30 +1,18 @@
 @push('styles')
     <style>
-        /* ===== Tabla compacta, estilo homologado ===== */
-        .compact-table-xxs{
-            font-size:12px; line-height:1.12; table-layout:fixed;
-        }
-        .compact-table-xxs th,.compact-table-xxs td{
-            padding:.22rem .35rem; white-space:nowrap; vertical-align:middle; text-align:center;
-        }
-        .sticky{ position:sticky; top:0; z-index:2; background:#e9f4ff; }
-        .table thead th{ background:#e9f4ff; }
-        .user-header td{ background:blue; color:#000; font-weight:700; }
 
-        /* Cols angostas para dar respiro a los 12 meses */
-        .col-ctrl { width: 160px; text-align:left; }
-        .col-hq   { width: 160px; text-align:left; }
-        .col-tot  { width: 110px; }
-
-        /* Overlay de carga solo cuando cambia "year" */
-        .lw-holder{ position:relative; }
-        .lw-overlay{
-            position:absolute; inset:0; background:rgba(255,255,255,.55);
-            display:flex; align-items:center; justify-content:center; gap:.5rem; z-index:10;
+        .screen-overlay {
+            position: fixed;
+            inset: 0;                 /* full viewport */
+            display: none;            /* Livewire lo pondrá en flex */
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,.35);
+            backdrop-filter: blur(2px);
+            z-index: 2000;            /* sobre modals/backdrops de Bootstrap */
+            pointer-events: all;      /* bloquea clics */
         }
 
-        /* Ajustes de tabla lateral (resumen HQ) */
-        .mini-table th,.mini-table td{ padding:.25rem .45rem; }
     </style>
 @endpush
 
@@ -52,48 +40,33 @@
 
     <div class="row table-section">
 
-        {{-- Filtros --}}
+        {{-- Tabla principal --}}
         <div class="col-12">
             <div class="card">
-                <div class="card-body">
-                    <div class="row g-2 align-items-end justify-content-end">
-                        <div class="col-sm-4 col-md-3">
-                            <label class="form-label">Año</label>
+                <div class="card-header">
+                    <div class="row g-2">
+                        <div class="col-md-6 d-flex align-items-center">
+                            <h5>REPORTE ESTADÍSTICO DRACO {{ $year }}</h5>
+                        </div>
+                        <div class="col-md-3">
                             <select class="form-select" wire:model.live="year">
                                 @for($y = now()->year + 1; $y >= 2015; $y--)
                                     <option value="{{ $y }}">{{ $y }}</option>
                                 @endfor
                             </select>
                         </div>
-                        <div class="col-xl-2 col-md-4">
+                        <div class="col-md-3">
                             <button class="btn btn-primary w-100" wire:click="export">
                                 <i class="ti ti-file-analytics f-s-16"></i> Exportar
                             </button>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-
-
-        {{-- Tabla principal --}}
-        <div class="col-12">
-            <div class="card">
                 <div class="card-body lw-holder">
-
-                    {{-- Overlay de carga solo cuando varía "year" --}}
-                    <div class="lw-overlay" wire:loading wire:target="year">
-                        <div class="spinner-border" role="status" aria-hidden="true"></div>
-                        <span class="text-muted">Cargando…</span>
-                    </div>
-
-                    <div class="text-center mb-2">
-                        <h5 class="mb-0" style="color:#e11d48;">REPORTE ESTADÍSTICO DRACO {{ $year }}</h5>
-                    </div>
 
                     <div class="table-responsive">
                         <table class="table table-sm table-bordered table-striped compact-table-xxs">
-                            <thead>
+                            <thead class="bg-primary">
                             <tr>
                                 <th class="sticky col-ctrl">CONTROLADOR</th>
                                 <th class="sticky col-hq">PARADERO</th>
@@ -119,8 +92,8 @@
 
                             {{-- Grupos DRACO: Usuario -> HQs --}}
                             @forelse($groups as $g)
-                                <tr class="user-header">
-                                    <td class="text-start">{{ strtoupper($g['user']) }}</td>
+                                <tr>
+                                    <td class="text-start"><strong>{{ strtoupper($g['user']) }}</strong></td>
                                     <td></td>
                                     @foreach($months as $_) <td></td> @endforeach
                                     <td></td>
@@ -176,7 +149,7 @@
                     <h6 class="mb-2">Resumen por Sucursal</h6>
                     <div class="table-responsive">
                         <table class="table table-sm table-bordered mini-table" style="max-width:420px;">
-                            <thead>
+                            <thead class="bg-primary">
                             <tr><th class="text-start">SUCURSAL</th><th class="text-end">TOTAL</th></tr>
                             </thead>
                             <tbody>
@@ -205,6 +178,14 @@
             </div>
         </div>
 
+    </div>
+    <div class="screen-overlay"
+         wire:loading.delay.flex
+         wire:target="export,year">
+        <div class="text-center">
+            <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
+            <div class="mt-2 text-white fw-semibold">Cargando…</div>
+        </div>
     </div>
 </div>
 
