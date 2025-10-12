@@ -64,25 +64,30 @@
 
                     <div class="col-xl-2 col-md-4 mb-2 mb-md-0">
                         <label class="form-label">Fecha Inicio</label>
-                        <input type="date" class="form-control" wire:model.live="date_start">
+                        <input type="date" class="form-control" wire:model="date_start">
                     </div>
                     <div class="col-xl-2 col-md-4 mb-2 mb-md-0">
                         <label class="form-label">Fecha Fin</label>
-                        <input type="date" class="form-control" wire:model.live="date_end">
+                        <input type="date" class="form-control" wire:model="date_end">
                     </div>
                 </div>
                     <div class="row justify-content-end g-2 mt-2">
-                        <div class="col-xl-2 col-md-4">
-                            <button class="btn btn-primary w-100" wire:click="export">
+                        <div class="col-md-3">
+                            <button class="btn btn-primary w-100" wire:click="applyDate">
+                                <i class="ti ti-search f-s-16"></i> Buscar
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-primary w-100" wire:click="search">
                                 <i class="ti ti-file-analytics f-s-16"></i> Exportar
                             </button>
                         </div>
-                        <div class="col-xl-2 col-md-4">
+                        <div class="col-md-3">
                             <button class="btn btn-primary w-100" wire:click="openAddModal">
                                 <i class="ti ti-square-plus f-s-16"></i> Nuevo
                             </button>
                         </div>
-                        <div class="col-xl-1 col-md-4">
+                        <div class="col-md-3">
                             <button id="down" class="btn btn-primary w-100" wire:click="downloadLast">
                                 <i class="ti ti-square-chevrons-down f-s-17"></i>
                             </button>
@@ -105,15 +110,6 @@
                             </tr>
                             </thead>
                             <tbody>
-                            {{-- Spinner mientras carga --}}
-                            <tr wire:loading>
-                                <td colspan="7" class="text-center">
-                                    <div class="d-flex justify-content-center align-items-center gap-2 py-3">
-                                        <div class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></div>
-                                        <span>Cargando...</span>
-                                    </div>
-                                </td>
-                            </tr>
 
                             @forelse($incomes as $i)
                                 <tr>
@@ -299,7 +295,7 @@
     </div>
     <div class="screen-overlay"
          wire:loading.delay.flex
-         wire:target="month,year,export">
+         wire:target="export,applyDate">
         <div class="text-center">
             <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
             <div class="mt-2 text-white fw-semibold">Cargando…</div>

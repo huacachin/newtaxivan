@@ -70,6 +70,10 @@ class Incomes extends Component
         $this->date_end   = $this->date_end   ?: $today;
     }
 
+    public function applyDate():void {
+        $this->render();
+    }
+
     // ===== Listado =====
     public function render()
     {
