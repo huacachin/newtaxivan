@@ -1,3 +1,18 @@
+@push('styles')
+    <style>
+        .screen-overlay {
+            position: fixed;
+            inset: 0;                 /* full viewport */
+            display: none;            /* Livewire lo pondrá en flex */
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,.35);
+            backdrop-filter: blur(2px);
+            z-index: 2000;            /* sobre modals/backdrops de Bootstrap */
+            pointer-events: all;      /* bloquea clics */
+        }
+    </style>
+@endpush
 <div class="container-fluid">
 
     {{-- ===== Header & Breadcrumb ===== --}}
@@ -22,48 +37,41 @@
 
     <div class="row table-responsive">
 
-        {{-- ===== Filters ===== --}}
-        <div class="col-12">
+        {{-- ===== Table ===== --}}
+        <div class="col-xl-12">
             <div class="card">
-                <div class="card-body">
+                <div class="card-header">
+
                     <div class="row g-3">
-                        <div class="col-xl-6 col-md-6 mb-2 mb-md-0">
-                            <form class="app-form app-icon-form" action="#" onsubmit="return false;">
-                                <label class="form-label">Buscar: </label>
-                                <div class="position-relative">
-                                    <input type="search" class="form-control" placeholder="Buscar..." aria-label="Buscar" wire:model.live.debounce.400ms="search">
-                                    <i class="ti ti-search text-dark"></i>
-                                </div>
-                            </form>
-                        </div>
+                    <div class="col-xl-6 col-md-6 mb-2 mb-md-0">
+                        <form class="app-form app-icon-form" action="#" onsubmit="return false;">
+                            <label class="form-label">Buscar: </label>
+                            <div class="position-relative">
+                                <input type="search" class="form-control" placeholder="Buscar..." aria-label="Buscar" wire:model.live.debounce.400ms="search">
+                                <i class="ti ti-search text-dark"></i>
+                            </div>
+                        </form>
+                    </div>
 
-                        <div class="col-xl-2 col-md-4">
-                            <label class="form-label">Filtro</label>
-                            <select class="form-select" aria-label="Filtro" wire:model.live="filterType">
-                                <option value="1">A</option>
-                                <option value="2">Motivo</option>
-                                <option value="3">Usuario</option>
-                            </select>
-                        </div>
+                    <div class="col-xl-2 col-md-4">
+                        <label class="form-label">Filtro</label>
+                        <select class="form-select" aria-label="Filtro" wire:model.live="filterType">
+                            <option value="1">A</option>
+                            <option value="2">Motivo</option>
+                            <option value="3">Usuario</option>
+                        </select>
+                    </div>
 
-                        <div class="col-xl-2 col-md-4 mb-2 mb-md-0">
-                            <label class="form-label">Fecha Inicio</label>
-                            <input type="date" class="form-control" wire:model.live="date_start">
-                        </div>
-                        <div class="col-xl-2 col-md-4 mb-2 mb-md-0">
-                            <label class="form-label">Fecha Fin</label>
-                            <input type="date" class="form-control" wire:model.live="date_end">
-                        </div>
+                    <div class="col-xl-2 col-md-4 mb-2 mb-md-0">
+                        <label class="form-label">Fecha Inicio</label>
+                        <input type="date" class="form-control" wire:model.live="date_start">
+                    </div>
+                    <div class="col-xl-2 col-md-4 mb-2 mb-md-0">
+                        <label class="form-label">Fecha Fin</label>
+                        <input type="date" class="form-control" wire:model.live="date_end">
                     </div>
                 </div>
-            </div>
-        </div>
-
-        {{-- ===== Top actions ===== --}}
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    <div class="row justify-content-end g-2">
+                    <div class="row justify-content-end g-2 mt-2">
                         <div class="col-xl-2 col-md-4">
                             <button class="btn btn-primary w-100" wire:click="export">
                                 <i class="ti ti-file-analytics f-s-16"></i> Exportar
@@ -80,13 +88,8 @@
                             </button>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
 
-        {{-- ===== Table ===== --}}
-        <div class="col-xl-12">
-            <div class="card">
+                </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-sm table-bordered table-striped table-hover">
@@ -292,6 +295,14 @@
                     <button type="button" class="btn btn-light-primary" wire:click="update">Guardar cambios</button>
                 </div>
             </div>
+        </div>
+    </div>
+    <div class="screen-overlay"
+         wire:loading.delay.flex
+         wire:target="month,year,export">
+        <div class="text-center">
+            <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
+            <div class="mt-2 text-white fw-semibold">Cargando…</div>
         </div>
     </div>
 

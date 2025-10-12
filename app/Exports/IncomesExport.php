@@ -13,8 +13,8 @@ use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterSheet;
-use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -24,6 +24,9 @@ class IncomesExport implements
     FromQuery, ShouldAutoSize, WithHeadings, WithMapping,
     WithColumnFormatting, WithStyles, WithEvents
 {
+    /** contador de item (1..n) */
+    private int $i = 0;
+
     public function __construct(
         protected ?string $search = '',
         protected int $filterType = 1,   // 1=reason, 2=detail, 3=user.name
@@ -31,7 +34,7 @@ class IncomesExport implements
         protected ?string $date_end = null
     ) {}
 
-    /** ========================= QUERY ========================= */
+    /* ========================= QUERY ========================= */
     public function query(): Builder
     {
         $q = Income::query()
@@ -59,188 +62,176 @@ class IncomesExport implements
             }
         }
 
-        return $q->select(['id','date','reason','detail','total','user_id','created_at']);
+        return $q->select(['id','date','reason','detail','total','user_id']);
     }
 
-    /** ========================= LAYOUT / MAPPING ========================= */
+    /* ========================= LAYOUT ========================= */
     public function headings(): array
     {
-        return ['ID','Fecha','Motivo','Detalle','Total','Usuario','Creado'];
+        // Item, Fecha, Respons., A, Motivo, S/.
+        return ['Item', 'Fecha', 'Respons.', 'A', 'Motivo', 'S/.'];
     }
 
     public function map($row): array
     {
+        $this->i++;
+
+        // Ajusta el contenido de la col. "A" si lo necesitas
+        $colA = $row->reason === 'DEUDA' ? 'DEUDA' : 'Taxi Van';
+
         return [
-            $row->id,
-            $row->date ? Carbon::parse($row->date) : null,                   // Fecha Excel
-            $row->reason,
-            $row->detail,
-            is_null($row->total) ? null : (float)$row->total,                // Número
-            optional($row->user)->name,
-            $row->created_at ? Carbon::parse($row->created_at) : null,       // Fecha/Hora Excel
+            $this->i,                                                    // Item
+            $row->date ? Carbon::parse($row->date) : null,               // Fecha Excel
+            optional($row->user)->name,                                  // Respons.
+            $colA,                                                       // A
+            trim($row->detail ?: $row->reason),                          // Motivo
+            is_null($row->total) ? null : (float)$row->total,            // S/.
         ];
     }
 
     public function columnFormats(): array
     {
-        // A B C D E F G
+        // A B C D E F
         return [
-            'B' => NumberFormat::FORMAT_DATE_YYYYMMDD2, // Fecha
-            'G' => NumberFormat::FORMAT_DATE_DATETIME,  // Creado
-            // 'E' moneda se setea abajo en AfterSheet
+            'B' => NumberFormat::FORMAT_DATE_DDMMYYYY, // Fecha dd/mm/aaaa
+            // F (S/.) se formatea en AfterSheet
         ];
     }
 
     public function styles(Worksheet $sheet)
     {
-        // El header (que moveremos a la fila 3) va bold; reforzado en AfterSheet
+        // El header (que quedará en la fila 2) en negrita (reforzado en AfterSheet)
         return [1 => ['font' => ['bold' => true]]];
     }
 
-    /** ========================= ESTILOS AVANZADOS ========================= */
+    /* ========================= ESTILOS AVANZADOS ========================= */
     public function registerEvents(): array
     {
         return [
             AfterSheet::class => function (AfterSheet $e) {
                 $ws = $e->sheet->getDelegate();
 
-                // Paleta final
-                $PRIMARY   = 'FF212529';   // #212529 (ARGB)
-                $PRIMARYLT = 'FFEDEEEF';   // gris suave p/ bloque de títulos
-                $WHITE     = 'FFFFFFFF';
-                $BORDER    = 'FFCFD8DC';
-                $ZEBRA     = 'FFF9FAFB';
+                // Paleta
+                $BLUE   = 'FF2874A6'; // header
+                $FOOT   = 'FFCEE7FF'; // footer Total
+                $WHITE  = 'FFFFFFFF';
+                $BORDER = 'FFCFD8DC';
 
-                // Insertar 2 filas para Título (1) y Subtítulo (2)
-                $ws->insertNewRowBefore(1, 2);
+                // Fuente base 10
+                $ws->getParent()->getDefaultStyle()->getFont()->setSize(10);
 
-                // Título (centrado)
-                $ws->setCellValue('A1', 'Reporte de Ingresos');
-                $ws->mergeCells('A1:G1');
-                $ws->getStyle('A1')->getFont()->setBold(true)->setSize(14);
-                $ws->getStyle('A1')->getAlignment()
-                    ->setVertical(Alignment::VERTICAL_CENTER)
-                    ->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                // Insertar 1 fila para TÍTULO
+                $ws->insertNewRowBefore(1, 1);
 
-                // Subtítulo (centrado)
-                $rangeText = ($this->date_start ?: '—') . ' a ' . ($this->date_end ?: '—');
-                $label = match ((int)$this->filterType) {
-                    1 => 'Motivo',
-                    2 => 'Detalle',
-                    3 => 'Usuario',
-                    default => 'Búsqueda',
-                };
-                $filters = 'Rango: ' . $rangeText;
-                if (trim((string)$this->search) !== '') {
-                    $filters .= ' | ' . $label . ': ' . $this->search;
+                // Título (texto azul, fondo blanco)
+                $ws->setCellValue('A1', 'LISTADO GENERAL DE INGRESOS');
+                $ws->mergeCells('A1:F1');
+                $ws->getRowDimension(1)->setRowHeight(18);
+                $ws->getStyle('A1')->applyFromArray([
+                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['rgb' => '2874A6']],
+                    'alignment' => [
+                        'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                        'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                    ],
+                ]);
+
+                // Filas clave
+                $headerRow    = 2;     // encabezados
+                $dataStartRow = 3;     // primera fila de datos
+                $last         = (int)$ws->getHighestRow();
+
+                // THEAD (azul)
+                $ws->getStyle("A{$headerRow}:F{$headerRow}")->applyFromArray([
+                    'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+                    'alignment' => [
+                        'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                        'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                    ],
+                    'fill'      => [
+                        'fillType'   => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                        'startColor' => ['rgb' => '2874A6'],
+                    ],
+                ]);
+                $ws->getRowDimension($headerRow)->setRowHeight(18);
+
+                // Anchos compactos
+                $ws->getColumnDimension('A')->setWidth(6.0);  // Item
+                $ws->getColumnDimension('B')->setWidth(11.0); // Fecha
+                $ws->getColumnDimension('C')->setWidth(14.0); // Respons.
+                $ws->getColumnDimension('D')->setWidth(10.0); // A
+                $ws->getColumnDimension('E')->setWidth(52.0); // Motivo
+                $ws->getColumnDimension('F')->setWidth(9.0);  // S/.
+
+                // Wrap sólo en Motivo
+                if ($last >= $dataStartRow) {
+                    $ws->getStyle("E{$dataStartRow}:E{$last}")
+                        ->getAlignment()->setWrapText(true);
                 }
-                $ws->setCellValue('A2', $filters);
-                $ws->mergeCells('A2:G2');
-                $ws->getStyle('A2')->getFont()->setItalic(true)->setSize(10);
-                $ws->getStyle('A2')->getAlignment()
-                    ->setVertical(Alignment::VERTICAL_CENTER)
-                    ->setHorizontal(Alignment::HORIZONTAL_CENTER)
-                    ->setWrapText(true);
 
-                // Fondo suave al bloque de títulos
-                $ws->getStyle('A1:G2')->getFill()->setFillType(Fill::FILL_SOLID)
-                    ->getStartColor()->setARGB($PRIMARYLT);
-
-                // Fila de encabezados y de datos
-                $headerRow    = 3;  // fila del encabezado (headings)
-                $dataStartRow = 4;  // primera fila de datos
-                $last         = $ws->getHighestRow();
-
-                // THEAD (bg #212529 + texto blanco, centrado)
-                $ws->getStyle("A{$headerRow}:G{$headerRow}")->getFont()
-                    ->setBold(true)->getColor()->setARGB($WHITE);
-                $ws->getStyle("A{$headerRow}:G{$headerRow}")->getAlignment()
-                    ->setVertical(Alignment::VERTICAL_CENTER)
-                    ->setHorizontal(Alignment::HORIZONTAL_CENTER)
-                    ->setWrapText(true);
-                $ws->getStyle("A{$headerRow}:G{$headerRow}")->getFill()
-                    ->setFillType(Fill::FILL_SOLID)
-                    ->getStartColor()->setARGB($PRIMARY);
-                $ws->getRowDimension($headerRow)->setRowHeight(22);
-
-                // Anchos mínimos (setWidth prevalece sobre ShouldAutoSize)
-                $ws->getColumnDimension('A')->setWidth(10); // ID
-                $ws->getColumnDimension('B')->setWidth(12); // Fecha
-                $ws->getColumnDimension('C')->setWidth(22); // Motivo
-                $ws->getColumnDimension('D')->setWidth(44); // Detalle
-                $ws->getColumnDimension('E')->setWidth(16); // Total
-                $ws->getColumnDimension('F')->setWidth(24); // Usuario
-                $ws->getColumnDimension('G')->setWidth(20); // Creado
-
-                // Wrap en columnas de texto largas
-                $ws->getStyle("C{$dataStartRow}:D" . max($dataStartRow, $last))
-                    ->getAlignment()->setWrapText(true);
-
-                // Congelar por debajo del header
+                // Congelar bajo el encabezado
                 $ws->freezePane("A{$dataStartRow}");
 
-                // Si no hay datos, al menos deja el autofiltro en el header y sal
-                if ($last < $dataStartRow) {
-                    $ws->setAutoFilter("A{$headerRow}:G{$headerRow}");
-                    return;
+                // SIN filtros (para que no aparezcan los desplegables)
+                // (No llamar a setAutoFilter)
+
+                // Alineaciones de datos
+                if ($last >= $dataStartRow) {
+                    $ws->getStyle("A{$dataStartRow}:D{$last}")
+                        ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                    $ws->getStyle("E{$dataStartRow}:E{$last}")
+                        ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+                    $ws->getStyle("F{$dataStartRow}:F{$last}")
+                        ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
+
+                    // Formatos
+                    $ws->getStyle("B{$dataStartRow}:B{$last}")
+                        ->getNumberFormat()->setFormatCode('d/m/yy');
+                    $ws->getStyle("F{$dataStartRow}:F{$last}")
+                        ->getNumberFormat()->setFormatCode('"S/ " #,##0');
                 }
 
-                // Autofiltro
-                $ws->setAutoFilter("A{$headerRow}:G{$last}");
-
-                // Zebra stripes (filas pares)
-                $cond = new Conditional();
-                $cond->setConditionType(Conditional::CONDITION_EXPRESSION);
-                $cond->setConditions(['MOD(ROW(),2)=0']);
-                $cond->getStyle()->getFill()->setFillType(Fill::FILL_SOLID)
-                    ->getStartColor()->setARGB($ZEBRA);
-                $rangeData = "A{$dataStartRow}:G{$last}";
-                $styles = $ws->getStyle($rangeData)->getConditionalStyles();
-                $styles[] = $cond;
-                $ws->getStyle($rangeData)->setConditionalStyles($styles);
-
-                // Bordes finos para header + datos
-                $ws->getStyle("A{$headerRow}:G{$last}")
-                    ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)
+                // Bordes finos (header + datos)
+                $ws->getStyle("A{$headerRow}:F" . max($headerRow, $last))
+                    ->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN)
                     ->getColor()->setARGB($BORDER);
 
-                // Alineación: números a la derecha en Total
-                $ws->getStyle("E{$dataStartRow}:E{$last}")
-                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+                // Línea punteada entre filas de datos
+                if ($last >= $dataStartRow) {
+                    $ws->getStyle("A{$dataStartRow}:F{$last}")
+                        ->getBorders()->getHorizontal()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_DOTTED)
+                        ->getColor()->setARGB($BORDER);
+                }
 
-                // Formatos (separados de la alineación para evitar el error)
-                $ws->getStyle("B{$dataStartRow}:B{$last}")
-                    ->getNumberFormat()->setFormatCode('yyyy-mm-dd');
-                $ws->getStyle("G{$dataStartRow}:G{$last}")
-                    ->getNumberFormat()->setFormatCode('yyyy-mm-dd hh:mm');
-                $ws->getStyle("E{$dataStartRow}:E{$last}")
-                    ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
+                // TOTAL (footer claro)
+                $totalRow = max($last, $dataStartRow - 1) + 1;
+                $ws->mergeCells("A{$totalRow}:E{$totalRow}");
+                $ws->setCellValue("A{$totalRow}", 'Total');
+                if ($last >= $dataStartRow) {
+                    $ws->setCellValue("F{$totalRow}", "=SUM(F{$dataStartRow}:F{$last})");
+                } else {
+                    $ws->setCellValue("F{$totalRow}", 0);
+                }
 
-                // Fila TOTAL (mismo fondo que thead: #212529; texto blanco)
-                $totalRow = $last + 1;
-                $ws->mergeCells("A{$totalRow}:D{$totalRow}");
-                $ws->setCellValue("A{$totalRow}", 'TOTAL');
-                $ws->setCellValue("E{$totalRow}", "=SUM(E{$dataStartRow}:E{$last})");
+                // Estilo footer: #CEE7FF
+                $ws->getStyle("A{$totalRow}:F{$totalRow}")->applyFromArray([
+                    'font'      => ['bold' => true, 'color' => ['rgb' => '000000']],
+                    'alignment' => [
+                        'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT,
+                        'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                    ],
+                    'fill'      => [
+                        'fillType'   => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                        'startColor' => ['rgb' => 'CEE7FF'],
+                    ],
+                ]);
+                $ws->getStyle("F{$totalRow}")
+                    ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
+                $ws->getStyle("F{$totalRow}")
+                    ->getNumberFormat()->setFormatCode('"S/ " #,##0');
 
-                $ws->getStyle("A{$totalRow}:G{$totalRow}")->getFont()
-                    ->setBold(true)->getColor()->setARGB($WHITE);
-                // Etiqueta TOTAL a la derecha, monto a la derecha
-                $ws->getStyle("A{$totalRow}:D{$totalRow}")
-                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-                $ws->getStyle("E{$totalRow}")
-                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-                // Formato moneda (separado de la alineación para no encadenar)
-                $ws->getStyle("E{$totalRow}")
-                    ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
-
-                // Mismo color de fondo que el thead
-                $ws->getStyle("A{$totalRow}:G{$totalRow}")->getFill()
-                    ->setFillType(Fill::FILL_SOLID)
-                    ->getStartColor()->setARGB($PRIMARY);
-
-                // Borde superior marcado
-                $ws->getStyle("A{$totalRow}:G{$totalRow}")
-                    ->getBorders()->getTop()->setBorderStyle(Border::BORDER_MEDIUM)
+                // Borde exterior del bloque completo
+                $ws->getStyle("A{$headerRow}:F{$totalRow}")
+                    ->getBorders()->getOutline()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN)
                     ->getColor()->setARGB($BORDER);
             },
         ];
