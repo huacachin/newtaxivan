@@ -78,7 +78,7 @@
                             </button>
                         </div>
                         <div class="col-md-3">
-                            <button class="btn btn-primary w-100" wire:click="search">
+                            <button class="btn btn-primary w-100" wire:click="export">
                                 <i class="ti ti-file-analytics f-s-16"></i> Exportar
                             </button>
                         </div>
