@@ -43,7 +43,7 @@
                 <div class="card-header">
 
                     <div class="row g-3">
-                    <div class="col-xl-6 col-md-6 mb-2 mb-md-0">
+                    <div class="col-md-4 mb-2">
                         <form class="app-form app-icon-form" action="#" onsubmit="return false;">
                             <label class="form-label">Buscar: </label>
                             <div class="position-relative">
@@ -53,7 +53,7 @@
                         </form>
                     </div>
 
-                    <div class="col-xl-2 col-md-4">
+                    <div class="col-md-2">
                         <label class="form-label">Filtro</label>
                         <select class="form-select" aria-label="Filtro" wire:model.live="filterType">
                             <option value="1">A</option>
@@ -62,11 +62,11 @@
                         </select>
                     </div>
 
-                    <div class="col-xl-2 col-md-4 mb-2 mb-md-0">
+                    <div class="col-md-3 mb-2">
                         <label class="form-label">Fecha Inicio</label>
                         <input type="date" class="form-control" wire:model="date_start">
                     </div>
-                    <div class="col-xl-2 col-md-4 mb-2 mb-md-0">
+                    <div class="col-md-3 mb-2">
                         <label class="form-label">Fecha Fin</label>
                         <input type="date" class="form-control" wire:model="date_end">
                     </div>
