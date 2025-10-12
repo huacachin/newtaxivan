@@ -32,6 +32,19 @@
             display:inline-block; padding:.25rem .5rem; border-radius:999px;
             background:#f8fafc; border:1px solid #e5e7eb; font-size:.875rem; font-weight:600;
         }
+
+        .screen-overlay {
+            position: fixed;
+            inset: 0;                 /* full viewport */
+            display: none;            /* Livewire lo pondrá en flex */
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,.35);
+            backdrop-filter: blur(2px);
+            z-index: 2000;            /* sobre modals/backdrops de Bootstrap */
+            pointer-events: all;      /* bloquea clics */
+        }
+
     </style>
 @endpush
 
@@ -160,15 +173,6 @@
                     </thead>
 
                     <tbody>
-                    {{-- Loading row --}}
-                    <tr wire:loading>
-                        <td colspan="7" class="p-0">
-                            <div class="d-flex justify-content-center align-items-center" style="min-height:60px;">
-                                <div class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></div>
-                                <span class="ms-2">Cargando...</span>
-                            </div>
-                        </td>
-                    </tr>
 
                     @forelse($details as $row)
                         <tr wire:loading.remove class="text-center">
@@ -202,11 +206,15 @@
                 </table>
             </div>
 
-            <div class="mt-2" wire:loading.delay>
-                <span class="text-muted">
-                    <span class="spinner-border spinner-border-sm"></span> Cargando…
-                </span>
-            </div>
+        </div>
+    </div>
+
+    <div class="screen-overlay"
+         wire:loading.delay.flex
+         wire:target="save,questionDelete">
+        <div class="text-center">
+            <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
+            <div class="mt-2 text-white fw-semibold">Cargando…</div>
         </div>
     </div>
 </div>
