@@ -117,6 +117,27 @@
         });
     }
 
+    function questionDelete(id) {
+        Swal.fire({
+            title: "Se va a eliminar el registro",
+            text: "Esta seguro que desea eliminar el registro?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Eliminar"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Livewire.dispatch('register_destroy', [id])
+                Swal.fire({
+                    title: "Eliminado!",
+                    text: "El registro se eliminado correctamente.",
+                    icon: "success"
+                });
+            }
+        });
+    }
+
     document.addEventListener('open-modal', event => {
         openModal(event.detail[0]['name'], {focus:"#" + event.detail[0]['focus']});
     });
@@ -127,6 +148,10 @@
 
     window.addEventListener('successAlert', event => {
         successAlert(event.detail[0]['message']);
+    });
+
+    window.addEventListener('questionDelete', event => {
+        questionDelete(event.detail[0]['id']);
     });
 
     document.addEventListener('click', (e) => {

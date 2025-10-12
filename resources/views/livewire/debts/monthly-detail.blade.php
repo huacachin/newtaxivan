@@ -62,31 +62,32 @@
             </ul>
         </div>
     @endif
-    @if (session('ok'))
-        <div class="alert alert-success py-2 my-2">{{ session('ok') }}</div>
-    @endif
 
-    {{-- Card: Resumen + Formulario --}}
-    <div class="card mb-2">
-        <div class="card-body">
+    {{-- Card: Tabla de detalles --}}
+    <div class="card">
+        <div class="card-header">
             <form wire:submit.prevent="save">
                 <div class="row g-3">
-                    <div class="col-md-3">
+                    <div class="col-12 d-flex justify-content-end">
+                        <div class="d-flex flex-wrap gap-2 mt-1">
+                            <span class="chip">Exonerado: S/ {{ number_format($sumExonerated,2) }}</span>
+                            <span class="chip">Amortizado: S/ {{ number_format($sumAmortized,2) }}</span>
+                            <span class="chip">Pendiente: S/ {{ number_format($pending,2) }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
                         <label class="form-label">Placa</label>
                         <input type="text" class="form-control" value="{{ $plate }}" readonly style="background:#eee;">
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label class="form-label">Fecha</label>
                         <input type="text" class="form-control" value="{{ $date }}" readonly>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label class="form-label">Días (no trabajados)</label>
                         <input type="text" class="form-control" value="{{ $days }}" readonly style="background:#eee;">
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Deuda Total (S/)</label>
-                        <input type="text" class="form-control text-end" value="{{ number_format($total,2) }}" readonly style="background:#eee;">
-                    </div>
+
 
                     <div class="col-12">
                         <label class="form-label"><b style="color:red;">Días no trabajados — detalle</b></label>
@@ -94,8 +95,12 @@
                             {!! $this->daysString !!}
                         </div>
                     </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Deuda Total (S/)</label>
+                        <input type="text" class="form-control text-end" value="{{ number_format($total,2) }}" readonly style="background:#eee;">
+                    </div>
 
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label class="form-label">Exonerado (S/)</label>
                         <input type="number" step="0.01"
                                class="form-control text-end @error('exonerateInput') is-invalid @enderror"
@@ -104,7 +109,7 @@
                     </div>
 
                     {{-- Oculto (legacy) --}}
-                    <div class="col-md-3 d-none">
+                    <div class="col-md- d-none">
                         <label class="form-label">Amortización (S/)</label>
                         <input type="number" step="0.01"
                                class="form-control text-end @error('amortizeInput') is-invalid @enderror"
@@ -112,7 +117,7 @@
                         @error('amortizeInput') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label class="form-label">Detalle exoneración</label>
                         <input type="text"
                                class="form-control @error('detailInput') is-invalid @enderror"
@@ -122,39 +127,22 @@
                     </div>
 
                     {{-- Chips de totales --}}
-                    <div class="col-12">
-                        <div class="d-flex flex-wrap gap-2 mt-1">
-                            <span class="chip">Exonerado: S/ {{ number_format($sumExonerated,2) }}</span>
-                            <span class="chip">Amortizado: S/ {{ number_format($sumAmortized,2) }}</span>
-                            <span class="chip">Pendiente: S/ {{ number_format($pending,2) }}</span>
-                        </div>
-                    </div>
+
                 </div>
             </form>
-        </div>
-    </div>
-
-    {{-- Card: Acciones (homologado) --}}
-    <div class="card mb-3">
-        <div class="card-body">
-            <div class="row justify-content-end g-2">
+            <div class="row justify-content-end g-2 mt-2">
                 <div class="col-xl-2 col-md-3">
                     <button class="btn btn-primary w-100" wire:click="save" wire:loading.attr="disabled">
                         <i class="ti ti-device-floppy f-s-16"></i> Guardar
                     </button>
                 </div>
                 <div class="col-xl-2 col-md-3">
-                    <a class="btn btn-primary w-100" href="{{ url()->previous() }}">
+                    <a class="btn btn-primary w-100" href="{{ route('debts.monthly') }}">
                         <i class="ti ti-arrow-left f-s-16"></i> Regresar
                     </a>
                 </div>
             </div>
-        </div>
-    </div>
-
-    {{-- Card: Tabla de detalles --}}
-    <div class="card">
-        <div class="card-body">
+        </div><div class="card-body">
             <h6 class="mb-2">Detalles</h6>
 
             <div class="table-responsive tableFixHead">
@@ -185,10 +173,7 @@
                     @forelse($details as $row)
                         <tr wire:loading.remove class="text-center">
                             <td>
-                                {{-- Eliminar --}}
-                                <button class="btn btn-sm btn-danger ms-1"
-                                        onclick="if(!confirm('¿Eliminar este detalle?')) return false;"
-                                        wire:click="deleteDetail({{ $row['id'] }})">
+                                <button  class="btn btn-sm btn-danger ms-1" wire:click="questionDelete({{ $row['id'] }})">
                                     Eliminar
                                 </button>
                             </td>

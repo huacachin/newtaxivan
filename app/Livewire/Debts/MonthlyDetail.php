@@ -5,6 +5,7 @@ namespace App\Livewire\Debts;
 use App\Models\DebtDay;
 use App\Models\DebtDayDetail;
 use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Illuminate\Validation\ValidationException;
 
@@ -102,9 +103,15 @@ class MonthlyDetail extends Component
         // Reset y recarga
         $this->reset(['exonerateInput','amortizeInput','detailInput']);
         $this->loadData();
-        session()->flash('ok', 'Guardado con éxito.');
+        $this->dispatch('successAlert',["message" => "Se ha guardado exitosamente."]);
     }
 
+    public function questionDelete($id): void
+    {
+        $this->dispatch('questionDelete',["id" => $id]);
+    }
+
+    #[On('register_destroy')]
     public function deleteDetail(int $detailId): void
     {
         DB::transaction(function () use ($detailId) {
