@@ -11,6 +11,10 @@
             z-index: 2000;            /* sobre modals/backdrops de Bootstrap */
             pointer-events: all;      /* bloquea clics */
         }
+
+        .bg-foot{
+            background: #009BDC;
+        }
     </style>
 @endpush
 <div class="container-fluid">
@@ -98,7 +102,7 @@
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-sm table-bordered table-striped table-hover">
-                            <thead class="bg-primary text-white">
+                            <thead class="bg-primary">
                             <tr>
                                 <th>Op</th>
                                 <th>Item</th>
@@ -129,7 +133,7 @@
                                 </tr>
                             @endforelse
                             </tbody>
-                            <tfoot class="bg-primary text-white">
+                            <tfoot class="bg-foot">
                             <tr>
                                 <td colspan="6" class="f-fw-700 text-end">Total General</td>
                                 <td class="f-fw-700 text-end">{{ number_format($totalGeneral, 2) }}</td>
@@ -138,11 +142,6 @@
                         </table>
                     </div>
 
-                    {{-- Paginación --}}
-                    <div class="mt-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                        <div class="small text-muted">Mostrando {{ $incomes->firstItem() }}–{{ $incomes->lastItem() }} de {{ $incomes->total() }}</div>
-                        <div>{{ $incomes->onEachSide(1)->links() }}</div>
-                    </div>
 
                 </div>
             </div>

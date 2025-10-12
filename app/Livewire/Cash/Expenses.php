@@ -102,6 +102,9 @@ class Expenses extends Component
         ])->all();
     }
 
+    public function applyDate(): void{
+        $this->render();
+    }
 
 
     public function render()
