@@ -2,244 +2,237 @@
 
 namespace App\Livewire\Cash;
 
+use App\Models\Departure;
+use App\Models\Expense;
+use App\Models\Headquarter;
+use App\Models\Income;
+use App\Models\Payment;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Livewire\Component;
 
 class GeneralReport extends Component
 {
-    // Filtros
-    public string $month = '';          // "YYYY-MM"
+    public int $year;
+    public int $month;
+    public array $days = [];              // YYYY-MM-DD de todo el mes
+    public float $carryFromPrevMonth = 0; // saldo final del mes anterior
 
-    // Datos calculados
-    public array  $weeks = [];
-    public array  $sections = [];
-    public float  $grandIncome = 0.0;
-    public float  $grandExpense = 0.0;
-    public float  $grandProfit = 0.0;
+    // Totales del mes (para el footer)
+    public float $totalIncomes = 0;
+    public float $totalExpenses = 0;
+    public float $finalBalance = 0;
 
-    // Mapas
-    protected array $userMap = [];
-    protected array $hqMap   = [];
+    // Cache de HQ id=>name
+    protected Collection $hqNames;
 
-    public function mount(): void
+    public function mount(?int $year = null, ?int $month = null): void
     {
-        if (empty($this->month)) {
-            $this->month = now()->format('Y-m');
-        }
-        $this->buildMaps();
-        $this->computeWeeks();
-        $this->recalc();
+        $today = now();
+        $this->year  = $year  ?: (int)$today->year;
+        $this->month = $month ?: (int)$today->month;
+
+        $this->prepareStatic();
     }
 
-    /** Hook: se dispara SOLO cuando cambia $month vía wire:model */
+    public function updatedYear(): void
+    {
+        $this->prepareStatic();
+    }
+
     public function updatedMonth(): void
     {
-        $this->computeWeeks();
-        $this->recalc();
+        $this->prepareStatic();
+    }
+
+    /** Prepara días del mes, HQ y saldo arrastrado */
+    protected function prepareStatic(): void
+    {
+        $start = Carbon::create($this->year, $this->month, 1)->startOfMonth();
+        $end   = (clone $start)->endOfMonth();
+
+        // lista de días
+        $this->days = [];
+        for ($d = (clone $start); $d->lte($end); $d->addDay()) {
+            $this->days[] = $d->toDateString(); // YYYY-MM-DD
+        }
+
+        // HQs
+        $this->hqNames = Headquarter::query()
+            ->pluck('name', 'id');
+
+        // Saldo que arrastra: (Ingresos prev) - (Egresos prev)
+        $this->carryFromPrevMonth = $this->computePreviousMonthBalance($start);
+
+        // Reset pie
+        $this->totalIncomes = 0;
+        $this->totalExpenses = 0;
+        $this->finalBalance = 0;
+    }
+
+    /** Saldo final del mes anterior (para usar como saldo inicial del 1° del mes) */
+    protected function computePreviousMonthBalance(Carbon $monthStart): float
+    {
+        $prevStart = (clone $monthStart)->subMonth()->startOfMonth();
+        $prevEnd   = (clone $monthStart)->subMonth()->endOfMonth();
+
+        // INGRESOS prev
+        $prevPayments = Payment::query()
+            ->whereBetween(DB::raw('DATE(date_register)'), [$prevStart->toDateString(), $prevEnd->toDateString()])
+            ->sum('amount');
+
+        $prevDepartures = Departure::query()
+            ->whereBetween(DB::raw('DATE(date)'), [$prevStart->toDateString(), $prevEnd->toDateString()])
+            ->sum('price');
+
+        $prevIncomes = Income::query()
+            ->whereBetween(DB::raw('DATE(date)'), [$prevStart->toDateString(), $prevEnd->toDateString()])
+            ->sum('total');
+
+        // EGRESOS prev
+        $prevExpenses = Expense::query()
+            ->whereBetween(DB::raw('DATE(date)'), [$prevStart->toDateString(), $prevEnd->toDateString()])
+            ->sum('total');
+
+        return (float)($prevPayments + $prevDepartures + $prevIncomes - $prevExpenses);
+    }
+
+    /** Devuelve un hash con todo el material del mes, por día */
+    protected function loadMonthBatches(): array
+    {
+        $start = Carbon::create($this->year, $this->month, 1)->startOfMonth()->toDateString();
+        $end   = Carbon::create($this->year, $this->month, 1)->endOfMonth()->toDateString();
+
+        // PAYMENTS agrupados por dia, type, hq
+        $payments = Payment::query()
+            ->selectRaw('DATE(date_register) AS d, type, headquarter_id, SUM(amount) AS amount')
+            ->whereBetween(DB::raw('DATE(date_register)'), [$start, $end])
+            ->groupBy('d', 'type', 'headquarter_id')
+            ->get()
+            ->groupBy('d');
+
+        // DEPARTURES agrupados por dia, hq
+        $departures = Departure::query()
+            ->selectRaw('DATE(date) AS d, headquarter_id, SUM(price) AS amount')
+            ->whereBetween(DB::raw('DATE(date)'), [$start, $end])
+            ->groupBy('d', 'headquarter_id')
+            ->get()
+            ->groupBy('d');
+
+        // INCOMES por fila
+        $incomes = Income::query()
+            ->selectRaw('id, DATE(date) AS d, reason, detail, total')
+            ->whereBetween(DB::raw('DATE(date)'), [$start, $end])
+            ->orderBy('date')
+            ->get()
+            ->groupBy('d');
+
+        // EXPENSES por fila
+        $expenses = Expense::query()
+            ->selectRaw('id, DATE(date) AS d, reason, detail, total')
+            ->whereBetween(DB::raw('DATE(date)'), [$start, $end])
+            ->orderBy('date')
+            ->get()
+            ->groupBy('d');
+
+        return compact('payments', 'departures', 'incomes', 'expenses');
     }
 
     public function render()
     {
-        return view('livewire.cash.general-report');
-    }
+        // Cargamos todo el mes en memoria (rápido/1 query por tabla)
+        $batches = $this->loadMonthBatches();
 
-    /* ================== Helpers ================== */
+        $running = $this->carryFromPrevMonth; // saldo acumulado día a día
+        $rowsByDay = [];                      // para la vista
 
-    protected function buildMaps(): void
-    {
-        if (Schema::hasTable('users')) {
-            DB::table('users')->select('id','name')->orderBy('id')->chunk(1000, function($rows){
-                foreach ($rows as $r) $this->userMap[(int)$r->id] = (string)$r->name;
-            });
-        }
-        if (Schema::hasTable('headquarters')) {
-            DB::table('headquarters')->select('id','name')->orderBy('id')->chunk(1000, function($rows){
-                foreach ($rows as $r) $this->hqMap[(int)$r->id] = (string)$r->name;
-            });
-        }
-    }
+        $this->totalIncomes = 0;
+        $this->totalExpenses = 0;
 
-    protected function computeWeeks(): void
-    {
-        $this->weeks = [];
+        foreach ($this->days as $d) {
+            $dayRows = [];
 
-        $mStart = Carbon::createFromFormat('Y-m-d', $this->month.'-01')->startOfDay();
-        $mEnd   = (clone $mStart)->endOfMonth();
+            $dayIncome = 0.0;
+            $dayExpense = 0.0;
 
-        // Semanas Lun-Dom dentro del mes (recortadas al mes)
-        $cursor = (clone $mStart)->startOfWeek(Carbon::MONDAY);
-        $idx = 1;
+            // PAYMENTS (ingreso) – agrupados por type+hq
+            foreach (($batches['payments'][$d] ?? collect()) as $p) {
+                $hq  = $this->hqNames->get($p->headquarter_id, '—');
+                $glosa = sprintf('%s-%s', strtoupper($p->type), $hq);
+                $amount = (float) $p->amount;
 
-        while ($cursor <= $mEnd) {
-            $wStart = (clone $cursor);
-            $wEnd   = (clone $cursor)->endOfWeek(Carbon::SUNDAY);
+                $dayRows[] = [
+                    'date'   => $d,
+                    'glosa'  => $glosa,
+                    'ingreso'=> $amount,
+                    'egreso' => 0.0,
+                ];
 
-            if ($wEnd < $mStart) { $cursor = $cursor->addWeek(); continue; }
+                $dayIncome += $amount;
+            }
 
-            $rangeStart = $wStart->greaterThan($mStart) ? $wStart : $mStart;
-            $rangeEnd   = $wEnd->lessThan($mEnd) ? $wEnd : $mEnd;
+            // DEPARTURES (ingreso) – agrupados por hq
+            foreach (($batches['departures'][$d] ?? collect()) as $dep) {
+                $hq  = $this->hqNames->get($dep->headquarter_id, '—');
+                $glosa = sprintf('Salidas-%s', $hq);
+                $amount = (float) $dep->amount;
 
-            $this->weeks[] = [
-                'i'     => $idx,
-                'start' => $rangeStart->toDateString(),
-                'end'   => $rangeEnd->toDateString(),
-                'label' => sprintf('Semana %d (%s–%s)', $idx, $rangeStart->format('d'), $rangeEnd->format('d')),
+                $dayRows[] = [
+                    'date'   => $d,
+                    'glosa'  => $glosa,
+                    'ingreso'=> $amount,
+                    'egreso' => 0.0,
+                ];
+
+                $dayIncome += $amount;
+            }
+
+            // INCOMES (filas individuales, ingreso)
+            foreach (($batches['incomes'][$d] ?? collect()) as $inc) {
+                $glosa = trim($inc->reason . ' - ' . $inc->detail, ' -');
+
+                $dayRows[] = [
+                    'date'   => $d,
+                    'glosa'  => $glosa,
+                    'ingreso'=> (float) $inc->total,
+                    'egreso' => 0.0,
+                ];
+                $dayIncome += (float) $inc->total;
+            }
+
+            // EXPENSES (filas individuales, egreso)
+            foreach (($batches['expenses'][$d] ?? collect()) as $exp) {
+                $glosa = trim($exp->reason . ' - ' . $exp->detail, ' -');
+
+                $dayRows[] = [
+                    'date'   => $d,
+                    'glosa'  => $glosa,
+                    'ingreso'=> 0.0,
+                    'egreso' => (float) $exp->total,
+                ];
+                $dayExpense += (float) $exp->total;
+            }
+
+            // Totales del día y saldo
+            $running += ($dayIncome - $dayExpense);
+
+            // Guardamos totales/foot del día
+            $rowsByDay[$d] = [
+                'rows'        => $dayRows,
+                'sum_ingreso' => $dayIncome,
+                'sum_egreso'  => $dayExpense,
+                'saldo_final' => $running,
             ];
 
-            $idx++;
-            $cursor = $cursor->addWeek();
-        }
-    }
-
-    public function recalc(): void
-    {
-        $this->sections = [];
-        $this->grandIncome = 0.0;
-        $this->grandExpense = 0.0;
-        $this->grandProfit = 0.0;
-
-        $hasPayments   = Schema::hasTable('payments');
-        $hasDepartures = Schema::hasTable('departures');
-        $hasIncomes    = Schema::hasTable('incomes');
-        $hasExpenses   = Schema::hasTable('expenses');
-
-        // departures: elige columna a sumar
-        $depSumExpr = null;
-        if ($hasDepartures) {
-            $hasPrice  = Schema::hasColumn('departures', 'price');
-            $hasAmount = Schema::hasColumn('departures', 'amount');
-            if ($hasPrice && $hasAmount)      $depSumExpr = 'SUM(COALESCE(price, amount))';
-            elseif ($hasPrice)                $depSumExpr = 'SUM(price)';
-            elseif ($hasAmount)               $depSumExpr = 'SUM(amount)';
+            $this->totalIncomes += $dayIncome;
+            $this->totalExpenses += $dayExpense;
         }
 
-        foreach ($this->weeks as $wk) {
-            $wStart = $wk['start'];
-            $wEnd   = $wk['end'];
-            $rows   = [];
+        $this->finalBalance = $this->carryFromPrevMonth + $this->totalIncomes - $this->totalExpenses;
 
-            if ($hasPayments) {
-                $pData = DB::table('payments as p')
-                    ->whereBetween('p.date_register', [$wStart, $wEnd])
-                    ->select('p.date_register as date','p.user_id','p.headquarter_id','p.type')
-                    ->selectRaw('SUM(p.amount) as total')
-                    ->groupBy('p.date_register','p.user_id','p.headquarter_id','p.type')
-                    ->get()
-                    ->map(function($r){
-                        $user = $this->userMap[$r->user_id] ?? '-';
-                        $hq   = $this->hqMap[$r->headquarter_id] ?? ($r->headquarter_id ? ('HQ#'.$r->headquarter_id) : '-');
-                        return [
-                            'date'    => (string)$r->date,
-                            'user'    => $user,
-                            'source'  => 'Pago'.($r->type ? " ({$r->type})" : ''),
-                            'detail'  => $hq,
-                            'income'  => (float)$r->total,
-                            'expense' => 0.0,
-                        ];
-                    })->all();
-                $rows = array_merge($rows, $pData);
-            }
-
-            if ($hasDepartures && $depSumExpr) {
-                $dData = DB::table('departures as d')
-                    ->whereBetween('d.date', [$wStart, $wEnd])
-                    ->select('d.date','d.user_id','d.headquarter_id')
-                    ->selectRaw("$depSumExpr as total")
-                    ->groupBy('d.date','d.user_id','d.headquarter_id')
-                    ->get()
-                    ->map(function($r){
-                        $user = $this->userMap[$r->user_id] ?? '-';
-                        $hq   = $this->hqMap[$r->headquarter_id] ?? ($r->headquarter_id ? ('HQ#'.$r->headquarter_id) : '-');
-                        return [
-                            'date'    => (string)$r->date,
-                            'user'    => $user,
-                            'source'  => 'Salida',
-                            'detail'  => $hq,
-                            'income'  => (float)$r->total,
-                            'expense' => 0.0,
-                        ];
-                    })->all();
-                $rows = array_merge($rows, $dData);
-            }
-
-            if ($hasIncomes) {
-                $iData = DB::table('incomes as i')
-                    ->whereBetween('i.date', [$wStart, $wEnd])
-                    ->select('i.date','i.user_id','i.reason','i.detail','i.total')
-                    ->orderBy('i.date')
-                    ->get()
-                    ->map(function($r){
-                        $user = $this->userMap[$r->user_id] ?? '-';
-                        $glosa = trim(implode(' - ', array_filter([(string)$r->reason, (string)$r->detail])));
-                        return [
-                            'date'    => (string)$r->date,
-                            'user'    => $user,
-                            'source'  => 'Ingreso',
-                            'detail'  => $glosa !== '' ? $glosa : 'Ingreso',
-                            'income'  => (float)$r->total,
-                            'expense' => 0.0,
-                        ];
-                    })->all();
-                $rows = array_merge($rows, $iData);
-            }
-
-            if ($hasExpenses) {
-                $eData = DB::table('expenses as e')
-                    ->whereBetween('e.date', [$wStart, $wEnd])
-                    ->select('e.date','e.user_id','e.reason','e.detail','e.total','e.document_type','e.in_charge')
-                    ->orderBy('e.date')
-                    ->get()
-                    ->map(function($r){
-                        $user = $this->userMap[$r->user_id] ?? '-';
-                        $parts = [(string)$r->reason, (string)$r->detail];
-                        if (!empty($r->document_type)) $parts[] = 'Doc: '.$r->document_type;
-                        if (!empty($r->in_charge))     $parts[] = 'Resp: '.$r->in_charge;
-                        $glosa = trim(implode(' - ', array_filter($parts)));
-                        return [
-                            'date'    => (string)$r->date,
-                            'user'    => $user,
-                            'source'  => 'Gasto',
-                            'detail'  => $glosa !== '' ? $glosa : 'Gasto',
-                            'income'  => 0.0,
-                            'expense' => (float)$r->total,
-                        ];
-                    })->all();
-                $rows = array_merge($rows, $eData);
-            }
-
-            usort($rows, function($a,$b){
-                if ($a['date'] === $b['date']) return $a['source'] <=> $b['source'];
-                return $a['date'] <=> $b['date'];
-            });
-
-            $inc = 0.0; $exp = 0.0;
-            foreach ($rows as $rr) { $inc += $rr['income']; $exp += $rr['expense']; }
-            $profit = $inc - $exp;
-
-            $this->sections[] = [
-                'label'   => $wk['label'],
-                'start'   => $wStart,
-                'end'     => $wEnd,
-                'rows'    => $rows,
-                'summary' => [
-                    'income'  => $inc,
-                    'expense' => $exp,
-                    'profit'  => $profit,
-                ],
-            ];
-
-            $this->grandIncome  += $inc;
-            $this->grandExpense += $exp;
-            $this->grandProfit  += $profit;
-        }
-    }
-
-    // Stubs para evitar errores si los usas en el Blade
-    public function export()
-    {
-        $route = route('exports.cash-general-report', ["month" => $this->month]);
-        $this->dispatch('url-open', ["url" => $route]);
+        return view('livewire.cash.general-report', [
+            'rowsByDay' => $rowsByDay,
+        ]);
     }
 }
