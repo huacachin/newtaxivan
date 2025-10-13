@@ -1,4 +1,4 @@
-@section('title', 'Sign In Bg')
+@section('title', 'Iniciar Sesión | Taxivan')
 @include('layout.head')
 
 @include('layout.css')

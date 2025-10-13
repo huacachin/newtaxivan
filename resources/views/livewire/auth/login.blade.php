@@ -8,11 +8,11 @@
                     <div class="row">
                         <div class="col-12 p-0">
                             <div class="login-form-container">
-                                <div class="mb-4">
-                                    <a class="logo d-inline-block" href="#">
-                                        <img width="300px" style=" filter: brightness(0) saturate(100%) invert(24%) sepia(89%)
-          saturate(346%) hue-rotate(135deg) brightness(90%) contrast(90%);" src="{{ asset('assets/images/logo/logo1.png') }}" alt="#" class="dark-logo">
+                                <div class="mb-4 text-center">
+                                    <a class="logo-home d-inline-block" href="#">
+
                                     </a>
+                                    <h4 class="slogan" >IN GOD WE TRUST</h4>
                                 </div>
                                 <div class="form_container">
                                     <form wire:submit.prevent="authenticate" class="app-form">
@@ -30,13 +30,13 @@
                                         </div>
                                         <div class="mb-3 form-check">
                                             <input wire:model="remember" type="checkbox" class="form-check-input" >
-                                            <label class="form-check-label" for="formCheck1">Recordar contraseña</label>
+                                            <label class="form-check-label" for="formCheck1">Mantener sesión</label>
                                         </div>
 
                                         @error('username') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
 
                                         <div>
-                                            <button type="submit" role="button" class="btn btn-primary w-100">Mantener sesión</button>
+                                            <button type="submit" role="button" class="btn btn-primary w-100">Ingresar</button>
                                         </div>
                                     </form>
                                 </div>

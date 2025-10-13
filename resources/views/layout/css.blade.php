@@ -1,18 +1,18 @@
 <!-- Animation css -->
-<link rel="stylesheet" href="{{ asset('assets/vendor/animation/animate.min.css') }}" >
+<link rel="stylesheet" href="{{ asset('assets/vendor/animation/animate.min.css') }}">
 
 <!-- Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700;800;900&display=swap"
-    rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700;800;900&display=swap"
+      rel="stylesheet">
 
 <!-- Weather icon css-->
 <link rel="stylesheet" type="text/css" href="{{ asset('assets/vendor/weather/weather-icons.css') }}">
 <link rel="stylesheet" type="text/css" href="{{ asset('assets/vendor/weather/weather-icons-wind.css') }}">
 
-  <!--font-awesome-css-->
-  <link rel="stylesheet" href="{{asset('assets/vendor/fontawesome/css/all.css')}}">
+<!--font-awesome-css-->
+<link rel="stylesheet" href="{{asset('assets/vendor/fontawesome/css/all.css')}}">
 
 <!--Flag Icon css-->
 <link rel="stylesheet" type="text/css" href="{{ asset('assets/vendor/flag-icons-master/flag-icon.css') }}">
@@ -37,11 +37,29 @@
         font-weight: normal;
         font-style: normal;
     }
-    .logo-text{
-        font-family: 'brush';
-        font-size:42px;
+
+    @font-face {
+        font-family: 'cooper';
+        src: url({{asset('assets/fonts/cooper.otf')}}) format('opentype');
+        font-weight: normal;
+        font-style: normal;
     }
-    .active-menu{
+
+    .logo-home{
+        width: 300px;        /* ajusta a tu tamaño */
+        height: 80px;
+        background: #2874A6; /* el color nuevo del “texto” */
+        -webkit-mask: url({{ asset('assets/images/logo/logo1.png') }}) no-repeat center / contain;
+        mask: url({{ asset('assets/images/logo/logo1.png') }}) no-repeat center / contain;
+    }
+
+    .slogan{
+        color: #2874A6;
+        font-family: 'cooper','sans-serif';
+        font-size: 16px;
+    }
+
+    .active-menu {
         color: rgba(var(--dark), 1);
         background: rgba(var(--dark), .08);
         border: 1px dashed rgba(var(--dark), .2);
