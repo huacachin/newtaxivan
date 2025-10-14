@@ -47,13 +47,18 @@
                                 @endfor
                             </select>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label class="form-label">Año</label>
                             <select wire:model.live="year" class="form-select">
                                 @for($y=now()->year-5;$y<=now()->year+1;$y++)
                                     <option value="{{ $y }}">{{ $y }}</option>
                                 @endfor
                             </select>
+                        </div>
+                        <div class="col-md-1  d-flex align-items-end">
+                            <button class="btn btn-primary w-100" id="down">
+                                <i class="ti ti-square-chevrons-down f-s-17"></i>
+                            </button>
                         </div>
                     </div>
 
