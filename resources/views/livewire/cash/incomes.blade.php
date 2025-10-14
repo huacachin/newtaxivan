@@ -39,7 +39,7 @@
         </div>
     </div>
 
-    <div class="row table-responsive">
+    <div class="row">
 
         {{-- ===== Table ===== --}}
         <div class="col-xl-12">
