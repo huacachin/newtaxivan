@@ -7,6 +7,18 @@
         .table thead th {
             color: #fff;
         }
+
+        .screen-overlay {
+            position: fixed;
+            inset: 0;                 /* full viewport */
+            display: none;            /* Livewire lo pondrá en flex */
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,.35);
+            backdrop-filter: blur(2px);
+            z-index: 2000;            /* sobre modals/backdrops de Bootstrap */
+            pointer-events: all;      /* bloquea clics */
+        }
     </style>
 @endpush
 
@@ -150,5 +162,13 @@
             </div>
         </div>
 
+    </div>
+    <div class="screen-overlay"
+         wire:loading.delay.flex
+         wire:target="export,year,month">
+        <div class="text-center">
+            <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
+            <div class="mt-2 text-white fw-semibold">Cargando…</div>
+        </div>
     </div>
 </div>
