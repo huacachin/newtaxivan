@@ -91,7 +91,8 @@ class CashController extends Controller
 
     public function exportGeneralReport(Request $request){
         $month = (string) $request->query('month', now()->format('Y-m'));
-        return Excel::download(new GeneralReportExport($month), "reporte_general_{$month}.xlsx");
+        $year = (int) $request->query('year', now()->year);
+        return Excel::download(new GeneralReportExport($year,$month), "reporte_general_{$month}_{$year}.xlsx");
     }
 
     public function exportDracoReport(Request $request){

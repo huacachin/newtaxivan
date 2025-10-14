@@ -39,7 +39,7 @@
                 <div class="card-header">
 
                     <div class="row g-3">
-                        <div class="col-md-8">
+                        <div class="col-md-5">
                             <label class="form-label">Mes</label>
                             <select wire:model.live="month" class="form-select">
                                 @for($m=1;$m<=12;$m++)
@@ -54,6 +54,11 @@
                                     <option value="{{ $y }}">{{ $y }}</option>
                                 @endfor
                             </select>
+                        </div>
+                        <div class="col-md-3  d-flex align-items-end">
+                            <button class="btn btn-primary w-100" wire:click="export">
+                                <i class="ti ti-file-analytics f-s-17"></i> Exportar
+                            </button>
                         </div>
                         <div class="col-md-1  d-flex align-items-end">
                             <button class="btn btn-primary w-100" id="down">
@@ -128,18 +133,16 @@
 
                         {{-- FOOTER del mes --}}
                         <tfoot>
-                        <tr class="bg-dark text-white fw-semibold">
-                            <td class="px-2 py-2 text-center" colspan="4">TOTAL GENERAL</td>
+                        <tr class=" bg-saldo text-white fw-bold">
+                            <td class="px-2 py-2 text-end" colspan="4">TOTAL GENERAL</td>
                             <td class="px-2 py-2 text-end">{{ number_format($totalIncomes,2) }}</td>
                             <td class="px-2 py-2 text-end">{{ number_format($totalExpenses,2) }}</td>
                         </tr>
-                        <tr class="table-light fw-bold">
-                            <td class="px-2 py-2" colspan="2">UTILIDAD</td>
-                            <td class="px-2 py-2" colspan="2"></td>
-                            <td class="px-2 py-2 text-end text-primary">
+                        <tr class="bg-saldo fw-bold">
+                            <td class="px-2 py-2 text-end" colspan="4">UTILIDAD</td>
+                            <td class="px-2 py-2 text-center" colspan="2">
                                 {{ number_format($finalBalance,2) }}
                             </td>
-                            <td class="px-2 py-2"></td>
                         </tr>
                         </tfoot>
                     </table>

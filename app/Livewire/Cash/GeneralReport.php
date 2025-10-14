@@ -9,48 +9,49 @@ use App\Models\Income;
 use App\Models\Payment;
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
 class GeneralReport extends Component
 {
-    /** Filtros */
-    public int $year;
-    public int $month;
+    /** ========= Filtros (enlazados a la URL) ========= */
+    #[Url(except: null, history: true, keep: true)]
+    public ?int $year = null;
 
-    /** Utilidades de la vista */
-    public array $days = [];                // Lista de YYYY-MM-DD del mes seleccionado
-    public float $totalIncomes = 0.0;       // Suma de ingresos del mes
-    public float $totalExpenses = 0.0;      // Suma de egresos del mes
-    public float $finalBalance = 0.0;       // Utilidad del mes (suma de saldos diarios)
+    #[Url(except: null, history: true, keep: true)]
+    public ?int $month = null;
 
-    /** Caches */
-    protected Collection $hqNames;          // headquarter_id => name
-    protected Collection $userMap;          // user_id => "Nombre · DOC"
+    /** ========= Estado para la vista ========= */
+    public array $days = [];            // Lista de YYYY-MM-DD del mes
+    public float $totalIncomes = 0.0;   // Total ingresos del mes
+    public float $totalExpenses = 0.0;  // Total egresos del mes
+    public float $finalBalance = 0.0;   // Utilidad del mes (saldo acumulado final)
 
-    public function mount(?int $year = null, ?int $month = null): void
+    /** ========= Caches persistentes (arrays para Livewire) ========= */
+    public array $hqNames = [];   // [headquarter_id => name]
+    public array $userMap = [];   // [user_id => "Nombre · DOC"]
+
+    /** ========= Lifecycle ========= */
+    public function mount(): void
     {
-        $today = now();
-        $this->year  = $year  ?: (int) $today->year;
-        $this->month = $month ?: (int) $today->month;
+        // Si NO hay query string, usar año/mes actuales
+        if ($this->year === null || $this->month === null) {
+            $today = now();
+            $this->year  ??= (int)$today->year;
+            $this->month ??= (int)$today->month;
+        }
+
+        // Saneamiento por si llega algo fuera de rango en la URL
+        $this->month = max(1, min(12, (int)$this->month));
+        $this->year  = (int)$this->year;
 
         $this->prepareStatic();
     }
 
-    public function updatedYear(): void
-    {
-        $this->prepareStatic();
-    }
+    public function updatedYear(): void  { $this->prepareStatic(); }
+    public function updatedMonth(): void { $this->prepareStatic(); }
 
-    public function updatedMonth(): void
-    {
-        $this->prepareStatic();
-    }
-
-    /**
-     * Prepara días del mes y caches (HQs y Users).
-     */
+    /** ========= Preparación de días y caches ========= */
     protected function prepareStatic(): void
     {
         $start = Carbon::create($this->year, $this->month, 1)->startOfMonth();
@@ -63,30 +64,27 @@ class GeneralReport extends Component
         }
 
         // HQs
-        $this->hqNames = Headquarter::query()
-            ->pluck('name', 'id');
+        $this->hqNames = Headquarter::pluck('name', 'id')->toArray();
 
-        // Users: nombre + documento (si existe)
-        $this->userMap = User::query()
-            ->select('id', 'name', 'document_type', 'document_number')
+        // Users: "Nombre · {DOC}" (si hay doc)
+        $this->userMap = User::select('id', 'name', 'document_type', 'document_number')
             ->get()
             ->mapWithKeys(function ($u) {
-                $doc = trim(($u->document_type ?? '') . ' ' . ($u->document_number ?? ''));
-                $label = trim($u->name . ($doc ? " · $doc" : ''));
+                $doc   = trim(($u->document_type ?? '') . ' ' . ($u->document_number ?? ''));
+                $label = trim($u->name . ($doc ? " · {$doc}" : ''));
                 return [$u->id => ($label !== '' ? $label : '—')];
-            });
+            })
+            ->all();
 
-        // Reset totales
+        // Reset de totales
         $this->totalIncomes  = 0.0;
         $this->totalExpenses = 0.0;
         $this->finalBalance  = 0.0;
     }
 
-    /**
-     * Carga en bloque los datos del mes, agrupando donde corresponde.
-     *
-     * payments: agrupado por día, type, headquarter_id y user_id (usa date_register)
-     * departures: agrupado por día, headquarter_id y user_id (usa date)
+    /** ========= Carga en bloque del mes =========
+     * payments: agrupado por día, type, headquarter_id y user_id (date_register)
+     * departures: agrupado por día, headquarter_id y user_id (date)
      * incomes/expenses: filas individuales (incluye user_id)
      */
     protected function loadMonthBatches(): array
@@ -94,34 +92,30 @@ class GeneralReport extends Component
         $start = Carbon::create($this->year, $this->month, 1)->startOfMonth()->toDateString();
         $end   = Carbon::create($this->year, $this->month, 1)->endOfMonth()->toDateString();
 
-        // PAYMENTS (ingresos)
         $payments = Payment::query()
             ->selectRaw('DATE(date_register) AS d, type, headquarter_id, user_id, SUM(amount) AS amount')
-            ->whereBetween(DB::raw('DATE(date_register)'), [$start, $end])
+            ->whereBetween(\DB::raw('DATE(date_register)'), [$start, $end])
             ->groupBy('d', 'type', 'headquarter_id', 'user_id')
             ->get()
             ->groupBy('d');
 
-        // DEPARTURES (ingresos)
         $departures = Departure::query()
             ->selectRaw('DATE(date) AS d, headquarter_id, user_id, SUM(price) AS amount')
-            ->whereBetween(DB::raw('DATE(date)'), [$start, $end])
+            ->whereBetween(\DB::raw('DATE(date)'), [$start, $end])
             ->groupBy('d', 'headquarter_id', 'user_id')
             ->get()
             ->groupBy('d');
 
-        // INCOMES (filas)
         $incomes = Income::query()
             ->selectRaw('id, DATE(date) AS d, reason, detail, total, user_id')
-            ->whereBetween(DB::raw('DATE(date)'), [$start, $end])
+            ->whereBetween(\DB::raw('DATE(date)'), [$start, $end])
             ->orderBy('date')
             ->get()
             ->groupBy('d');
 
-        // EXPENSES (filas)
         $expenses = Expense::query()
             ->selectRaw('id, DATE(date) AS d, reason, detail, total, user_id')
-            ->whereBetween(DB::raw('DATE(date)'), [$start, $end])
+            ->whereBetween(\DB::raw('DATE(date)'), [$start, $end])
             ->orderBy('date')
             ->get()
             ->groupBy('d');
@@ -129,27 +123,27 @@ class GeneralReport extends Component
         return compact('payments', 'departures', 'incomes', 'expenses');
     }
 
+    /** ========= Render principal ========= */
     public function render()
     {
         $batches = $this->loadMonthBatches();
 
         $rowsByDay = [];
-
         $this->totalIncomes   = 0.0;
         $this->totalExpenses  = 0.0;
-        $runningAccumulated   = 0.0; // saldo acumulado dentro del mes (se suma día a día)
+        $runningAccumulated   = 0.0; // saldo acumulado dentro del mes (día a día)
 
         foreach ($this->days as $d) {
             $dayRows    = [];
             $dayIncome  = 0.0;
             $dayExpense = 0.0;
 
-            // PAYMENTS (ingresos) — agrupados por type + HQ + user
+            // PAYMENTS (ingresos)
             foreach (($batches['payments'][$d] ?? collect()) as $p) {
-                $hqName  = $this->hqNames->get($p->headquarter_id, '—');
-                $cliente = $this->userMap->get($p->user_id, '—');
-                $glosa   = sprintf('%s-%s', strtoupper($p->type), $hqName);
-                $amount  = (float) $p->amount;
+                $hqName  = $this->hqNames[$p->headquarter_id] ?? '—';
+                $cliente = $this->userMap[$p->user_id]       ?? '—';
+                $glosa   = strtoupper($p->type) . '-' . $hqName;
+                $amount  = (float)$p->amount;
 
                 $dayRows[] = [
                     'date'    => $d,
@@ -161,12 +155,12 @@ class GeneralReport extends Component
                 $dayIncome += $amount;
             }
 
-            // DEPARTURES (ingresos) — agrupados por HQ + user
+            // DEPARTURES (ingresos)
             foreach (($batches['departures'][$d] ?? collect()) as $dep) {
-                $hqName  = $this->hqNames->get($dep->headquarter_id, '—');
-                $cliente = $this->userMap->get($dep->user_id, '—');
-                $glosa   = sprintf('Salidas-%s', $hqName);
-                $amount  = (float) $dep->amount;
+                $hqName  = $this->hqNames[$dep->headquarter_id] ?? '—';
+                $cliente = $this->userMap[$dep->user_id]        ?? '—';
+                $glosa   = 'Salidas-' . $hqName;
+                $amount  = (float)$dep->amount;
 
                 $dayRows[] = [
                     'date'    => $d,
@@ -180,9 +174,9 @@ class GeneralReport extends Component
 
             // INCOMES (filas individuales)
             foreach (($batches['incomes'][$d] ?? collect()) as $inc) {
-                $cliente = $this->userMap->get($inc->user_id, '—');
+                $cliente = $this->userMap[$inc->user_id] ?? '—';
                 $glosa   = trim(($inc->reason ?? '') . ' - ' . ($inc->detail ?? ''), ' - ');
-                $amount  = (float) $inc->total;
+                $amount  = (float)$inc->total;
 
                 $dayRows[] = [
                     'date'    => $d,
@@ -196,9 +190,9 @@ class GeneralReport extends Component
 
             // EXPENSES (filas individuales)
             foreach (($batches['expenses'][$d] ?? collect()) as $exp) {
-                $cliente = $this->userMap->get($exp->user_id, '—');
+                $cliente = $this->userMap[$exp->user_id] ?? '—';
                 $glosa   = trim(($exp->reason ?? '') . ' - ' . ($exp->detail ?? ''), ' - ');
-                $amount  = (float) $exp->total;
+                $amount  = (float)$exp->total;
 
                 $dayRows[] = [
                     'date'    => $d,
@@ -210,7 +204,7 @@ class GeneralReport extends Component
                 $dayExpense += $amount;
             }
 
-            // Saldo del día y acumulado del mes (acumulado se suma día a día)
+            // Saldos
             $dayBalance = $dayIncome - $dayExpense;
             $runningAccumulated += $dayBalance;
 
@@ -226,11 +220,26 @@ class GeneralReport extends Component
             $this->totalExpenses += $dayExpense;
         }
 
-        // Utilidad del mes = suma de saldos diarios = último acumulado
+        // Utilidad del mes = último acumulado (ingresos totales − egresos totales)
         $this->finalBalance = $runningAccumulated;
 
         return view('livewire.cash.general-report', [
             'rowsByDay' => $rowsByDay,
         ]);
+    }
+
+    /** ========= Export: abre la ruta que genera el Excel =========
+     * Ruta esperada (GET): route('exports.cash-general-report', ['year' => ..., 'month' => ...])
+     * En el front escucha:
+     *   Livewire.on('url-open', ({ url }) => window.open(url, '_blank'))
+     */
+    public function export(): void
+    {
+        $route = route('exports.cash-general-report', [
+            'year'  => $this->year,
+            'month' => $this->month,
+        ]);
+
+        $this->dispatch('url-open', ['url' => $route]);
     }
 }
