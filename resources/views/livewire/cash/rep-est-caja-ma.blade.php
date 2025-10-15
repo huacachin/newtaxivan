@@ -46,7 +46,7 @@
                             @endfor
                         </select>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label>Año</label>
                         <select wire:model.live="year" class="form-select">
                             @for ($y = 2015; $y <= 2030; $y++)
@@ -54,7 +54,7 @@
                             @endfor
                         </select>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label>Sede</label>
                         <select wire:model.live="headquarterId" class="form-select">
                             <option value="">Todas</option>
@@ -62,6 +62,11 @@
                                 <option value="{{ $hq['id'] }}">{{ $hq['name'] }}</option>
                             @endforeach
                         </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button class="btn btn-primary w-100" wire:click="export">
+                            <i class="ti ti-file-analytics f-s-16"></i> Exportar
+                        </button>
                     </div>
                 </div>
 

@@ -1,0 +1,628 @@
+<?php
+
+namespace App\Exports;
+
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Concerns\Exportable;
+use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Events\AfterSheet;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+
+class CajaEstadisticaExport implements WithEvents
+{
+    use Exportable;
+
+    /* ===== Tablas / Columnas ===== */
+    private const TBL_PAYMENTS  = 'payments';
+    private const PAY_DATE      = 'date_register';   // <- campo correcto
+    private const PAY_HQ_ID     = 'headquarter_id';
+    private const PAY_TYPE      = 'type';            // PAGO | RETRASO | DEUDA
+    private const PAY_AMOUNT    = 'amount';
+
+    private const TBL_DEPARTURES = 'departures';
+    private const DEP_DATE       = 'date';
+    private const DEP_HQ_ID      = 'headquarter_id';
+    private const DEP_IS_SUPPORT = 'is_support';     // 0 empresa / 1 apoyo
+    private const DEP_PRICE      = 'price';
+
+    private const TBL_INCOMES = 'incomes';
+    private const INC_DATE    = 'date';
+    private const INC_HQ_ID   = 'headquarter_id';
+    private const INC_TOTAL   = 'total';
+
+    private const TBL_EXPENSES = 'expenses';
+    private const EXP_DATE     = 'date';
+    private const EXP_HQ_ID    = 'headquarter_id';
+    private const EXP_TOTAL    = 'total';
+
+    /* ===== Parámetros ===== */
+    private int $year;
+    private int $month;
+    private ?int $headquarterId;
+
+    /* ===== Estilos / colores ===== */
+    private const BLUE_DARK  = '2874A6';
+    private const BLUE_LIGHT = 'CEE7FF';
+    private const RED_TITLE  = 'D32F2F';
+    private const NUM_FMT    = '#,##0.00';
+
+    public function __construct(int $year, int $month, ?int $headquarterId = null)
+    {
+        $this->year = $year;
+        $this->month = $month;
+        $this->headquarterId = $headquarterId;
+    }
+
+    /* ============================
+     *  Maatwebsite: evento AfterSheet
+     * ============================ */
+    public function registerEvents(): array
+    {
+        return [
+            AfterSheet::class => function (AfterSheet $e) {
+                $sheet = $e->sheet->getDelegate();
+
+                // Título 1 (diario)
+                $row = 1;
+                $titulo1 = 'ESTADÍSTICA DE CAJA ' . mb_strtoupper($this->monthName($this->month)) . ' DEL ' . $this->year;
+                $sheet->setCellValue("B{$row}", $titulo1);
+                $sheet->mergeCells("B{$row}:M{$row}");
+                $sheet->getStyle("B{$row}:M{$row}")->applyFromArray([
+                    'font' => ['bold' => true, 'color' => ['rgb' => self::RED_TITLE]],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+                ]);
+
+                // Tabla diaria
+                $row += 1;
+                $row = $this->drawDailyTable($sheet, $row);
+
+                // Separador
+                $row += 2;
+
+                // Título 2 (anual)
+                $titulo2 = 'ESTADÍSTICA DE CAJA ANUAL ' . $this->year;
+                $sheet->setCellValue("B{$row}", $titulo2);
+                $sheet->mergeCells("B{$row}:M{$row}");
+                $sheet->getStyle("B{$row}:M{$row}")->applyFromArray([
+                    'font' => ['bold' => true, 'color' => ['rgb' => self::RED_TITLE]],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+                ]);
+
+                // Tabla anual
+                $row += 1;
+                $row = $this->drawAnnualTable($sheet, $row);
+
+                // Bordes externos suaves
+                $highest = $sheet->getHighestRow();
+                $sheet->getStyle("B1:M{$highest}")->applyFromArray([
+                    'borders' => [
+                        'allBorders' => [
+                            'borderStyle' => Border::BORDER_THIN,
+                            'color' => ['rgb' => 'BBBBBB']
+                        ]
+                    ]
+                ]);
+
+                // Anchos compactos (pero legibles)
+                $widths = [
+                    'B'=>10, // Fecha / Mes
+                    'C'=>10, 'D'=>10, 'E'=>10, 'F'=>10, // Pago
+                    'G'=>10, 'H'=>10, 'I'=>10,          // Salida
+                    'J'=>9,                              // Otros
+                    'K'=>10,                             // Total ingreso
+                    'L'=>10,                             // Egreso
+                    'M'=>10,                             // Utilidad
+                ];
+                foreach ($widths as $col => $w) {
+                    $sheet->getColumnDimension($col)->setWidth($w);
+                }
+            },
+        ];
+    }
+
+    /* ============================
+     *  Bloque 1: tabla mensual (diaria)
+     * ============================ */
+    private function drawDailyTable(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet, int $startRow): int
+    {
+        $r = $startRow;
+
+        // Encabezados multinivel
+        // Fila 1
+        $sheet->setCellValue("B{$r}", 'Fecha');
+        $sheet->mergeCells("B{$r}:B".($r+2));
+        $sheet->setCellValue("C{$r}", 'Ingreso');
+        $sheet->mergeCells("C{$r}:K{$r}");
+        $sheet->setCellValue("L{$r}", 'Egreso');
+        $sheet->mergeCells("L{$r}:L".($r+2));
+        $sheet->setCellValue("M{$r}", 'Utilidad');
+        $sheet->mergeCells("M{$r}:M".($r+2));
+        $this->paintHeader($sheet, "B{$r}:M{$r}");
+
+        // Fila 2
+        $r2 = $r + 1;
+        $sheet->setCellValue("C{$r2}", 'Pago');
+        $sheet->mergeCells("C{$r2}:F{$r2}");
+        $sheet->setCellValue("G{$r2}", 'Salida');
+        $sheet->mergeCells("G{$r2}:I{$r2}");
+        $sheet->setCellValue("J{$r2}", 'Otros');
+        $sheet->mergeCells("J{$r2}:J{$r2}");
+        $sheet->setCellValue("K{$r2}", 'Total');
+        $sheet->mergeCells("K{$r2}:K{$r2}");
+        $this->paintHeader($sheet, "C{$r2}:K{$r2}");
+
+        // Fila 3
+        $r3 = $r + 2;
+        $sheet->fromArray(
+            ['Cotización', 'Retraso', 'Deuda', 'Total', 'Empresa', 'Apoyo', 'Total'],
+            null,
+            "C{$r3}"
+        );
+        // Huecos “Otros” y “Total” ya están en fila 2.
+        $this->paintHeader($sheet, "C{$r3}:I{$r3}");
+        $this->paintHeader($sheet, "J{$r3}:J{$r3}");
+        $this->paintHeader($sheet, "K{$r3}:K{$r3}");
+
+        $this->headerBaseStyle($sheet, "B{$r}:M{$r3}");
+
+        // Datos
+        $data = $this->buildDailyData($this->year, $this->month, $this->headquarterId);
+
+        $row = $r3 + 1;
+        $numFmt = self::NUM_FMT;
+
+        foreach ($data['rows'] as $d) {
+            $sheet->setCellValue("B{$row}", $d['fecha']);
+            $this->num($sheet, "C{$row}", $d['cotizacion'], $numFmt);
+            $this->num($sheet, "D{$row}", $d['retraso'],    $numFmt);
+            $this->num($sheet, "E{$row}", $d['deuda'],      $numFmt);
+            $this->num($sheet, "F{$row}", $d['pago_total'], $numFmt);
+
+            $this->num($sheet, "G{$row}", $d['empresa'],       $numFmt);
+            $this->num($sheet, "H{$row}", $d['apoyo'],         $numFmt);
+            $this->num($sheet, "I{$row}", $d['salidas_total'], $numFmt);
+
+            $this->num($sheet, "J{$row}", $d['otros'],          $numFmt);
+            $this->num($sheet, "K{$row}", $d['ingresos_total'], $numFmt);
+            $this->num($sheet, "L{$row}", $d['egreso'],         $numFmt);
+            $this->num($sheet, "M{$row}", $d['utilidad'],       $numFmt);
+
+            $row++;
+        }
+
+        // Totales
+        $this->paintLightTotal($sheet, "B{$row}:M{$row}");
+        $sheet->setCellValue("B{$row}", 'Total');
+        $t = $data['totales'];
+        $this->num($sheet, "C{$row}", $t['pago'],           $numFmt);
+        $this->num($sheet, "D{$row}", $t['retraso'],        $numFmt);
+        $this->num($sheet, "E{$row}", $t['deuda'],          $numFmt);
+        $this->num($sheet, "F{$row}", $t['pago_total'],     $numFmt);
+        $this->num($sheet, "G{$row}", $t['empresa'],        $numFmt);
+        $this->num($sheet, "H{$row}", $t['apoyo'],          $numFmt);
+        $this->num($sheet, "I{$row}", $t['salidas_total'],  $numFmt);
+        $this->num($sheet, "J{$row}", $t['otros'],          $numFmt);
+        $this->num($sheet, "K{$row}", $t['ingresos_total'], $numFmt);
+        $this->num($sheet, "L{$row}", $t['egreso'],         $numFmt);
+        $this->num($sheet, "M{$row}", $t['utilidad'],       $numFmt);
+
+        // Promedio (divide por días mostrados)
+        $row++;
+        $this->paintLightTotal($sheet, "B{$row}:M{$row}");
+        $sheet->setCellValue("B{$row}", 'Promedio');
+        $p = $data['promedios'];
+        $this->num($sheet, "C{$row}", $p['pago'],           $numFmt);
+        $this->num($sheet, "D{$row}", $p['retraso'],        $numFmt);
+        $this->num($sheet, "E{$row}", $p['deuda'],          $numFmt);
+        $this->num($sheet, "F{$row}", $p['pago_total'],     $numFmt);
+        $this->num($sheet, "G{$row}", $p['empresa'],        $numFmt);
+        $this->num($sheet, "H{$row}", $p['apoyo'],          $numFmt);
+        $this->num($sheet, "I{$row}", $p['salidas_total'],  $numFmt);
+        $this->num($sheet, "J{$row}", $p['otros'],          $numFmt);
+        $this->num($sheet, "K{$row}", $p['ingresos_total'], $numFmt);
+        $this->num($sheet, "L{$row}", $p['egreso'],         $numFmt);
+        $this->num($sheet, "M{$row}", $p['utilidad'],       $numFmt);
+
+        return $row;
+    }
+
+    /* ============================
+     *  Bloque 2: tabla anual (mensual)
+     * ============================ */
+    private function drawAnnualTable(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet, int $startRow): int
+    {
+        $r = $startRow;
+
+        // Encabezados multinivel
+        // Fila 1
+        $sheet->setCellValue("B{$r}", 'Mes');
+        $sheet->mergeCells("B{$r}:B".($r+2));
+        $sheet->setCellValue("C{$r}", 'Ingreso');
+        $sheet->mergeCells("C{$r}:K{$r}");
+        $sheet->setCellValue("L{$r}", 'Egreso');
+        $sheet->mergeCells("L{$r}:L".($r+2));
+        $sheet->setCellValue("M{$r}", 'Utilidad');
+        $sheet->mergeCells("M{$r}:M".($r+2));
+        $this->paintHeader($sheet, "B{$r}:M{$r}");
+
+        // Fila 2
+        $r2 = $r + 1;
+        $sheet->setCellValue("C{$r2}", 'Pago');
+        $sheet->mergeCells("C{$r2}:F{$r2}");
+        $sheet->setCellValue("G{$r2}", 'Salida');
+        $sheet->mergeCells("G{$r2}:I{$r2}");
+        $sheet->setCellValue("J{$r2}", 'Otros');
+        $sheet->mergeCells("J{$r2}:J{$r2}");
+        $sheet->setCellValue("K{$r2}", 'Total');
+        $sheet->mergeCells("K{$r2}:K{$r2}");
+        $this->paintHeader($sheet, "C{$r2}:K{$r2}");
+
+        // Fila 3
+        $r3 = $r + 2;
+        $sheet->fromArray(
+            ['Cotización', 'Retraso', 'Deuda', 'Total', 'Empresa', 'Apoyo', 'Total'],
+            null,
+            "C{$r3}"
+        );
+        $this->paintHeader($sheet, "C{$r3}:I{$r3}");
+        $this->paintHeader($sheet, "J{$r3}:J{$r3}");
+        $this->paintHeader($sheet, "K{$r3}:K{$r3}");
+
+        $this->headerBaseStyle($sheet, "B{$r}:M{$r3}");
+
+        // Datos
+        [$rows, $totales, $promedios] = $this->buildAnnualData($this->year, $this->month, $this->headquarterId);
+
+        $row = $r3 + 1;
+        $numFmt = self::NUM_FMT;
+
+        foreach ($rows as $d) {
+            $sheet->setCellValueExplicit("B{$row}", $d['mes'], DataType::TYPE_STRING);
+            $this->num($sheet, "C{$row}", $d['pago'],           $numFmt);
+            $this->num($sheet, "D{$row}", $d['retraso'],        $numFmt);
+            $this->num($sheet, "E{$row}", $d['deuda'],          $numFmt);
+            $this->num($sheet, "F{$row}", $d['pago_total'],     $numFmt);
+            $this->num($sheet, "G{$row}", $d['empresa'],        $numFmt);
+            $this->num($sheet, "H{$row}", $d['apoyo'],          $numFmt);
+            $this->num($sheet, "I{$row}", $d['salidas_total'],  $numFmt);
+            $this->num($sheet, "J{$row}", $d['otros'],          $numFmt);
+            $this->num($sheet, "K{$row}", $d['ingresos_total'], $numFmt);
+            $this->num($sheet, "L{$row}", $d['egreso'],         $numFmt);
+            $this->num($sheet, "M{$row}", $d['utilidad'],       $numFmt);
+            $row++;
+        }
+
+        // Totales
+        $this->paintLightTotal($sheet, "B{$row}:M{$row}");
+        $sheet->setCellValue("B{$row}", 'Total');
+        $this->num($sheet, "C{$row}", $totales['pago'],           $numFmt);
+        $this->num($sheet, "D{$row}", $totales['retraso'],        $numFmt);
+        $this->num($sheet, "E{$row}", $totales['deuda'],          $numFmt);
+        $this->num($sheet, "F{$row}", $totales['pago_total'],     $numFmt);
+        $this->num($sheet, "G{$row}", $totales['empresa'],        $numFmt);
+        $this->num($sheet, "H{$row}", $totales['apoyo'],          $numFmt);
+        $this->num($sheet, "I{$row}", $totales['salidas_total'],  $numFmt);
+        $this->num($sheet, "J{$row}", $totales['otros'],          $numFmt);
+        $this->num($sheet, "K{$row}", $totales['ingresos_total'], $numFmt);
+        $this->num($sheet, "L{$row}", $totales['egreso'],         $numFmt);
+        $this->num($sheet, "M{$row}", $totales['utilidad'],       $numFmt);
+
+        // Promedio
+        $row++;
+        $this->paintLightTotal($sheet, "B{$row}:M{$row}");
+        $sheet->setCellValue("B{$row}", 'Promedio');
+        $this->num($sheet, "C{$row}", $promedios['pago'],           $numFmt);
+        $this->num($sheet, "D{$row}", $promedios['retraso'],        $numFmt);
+        $this->num($sheet, "E{$row}", $promedios['deuda'],          $numFmt);
+        $this->num($sheet, "F{$row}", $promedios['pago_total'],     $numFmt);
+        $this->num($sheet, "G{$row}", $promedios['empresa'],        $numFmt);
+        $this->num($sheet, "H{$row}", $promedios['apoyo'],          $numFmt);
+        $this->num($sheet, "I{$row}", $promedios['salidas_total'],  $numFmt);
+        $this->num($sheet, "J{$row}", $promedios['otros'],          $numFmt);
+        $this->num($sheet, "K{$row}", $promedios['ingresos_total'], $numFmt);
+        $this->num($sheet, "L{$row}", $promedios['egreso'],         $numFmt);
+        $this->num($sheet, "M{$row}", $promedios['utilidad'],       $numFmt);
+
+        return $row;
+    }
+
+    /* ============================
+     *  Data builders (mismos cálculos del componente)
+     * ============================ */
+
+    private function buildDailyData(int $year, int $month, ?int $hqId): array
+    {
+        [$start, $end] = $this->monthRange($year, $month);
+        $days = Carbon::create($year, $month, 1)->endOfMonth()->day;
+
+        // Pagos por día/tipo
+        $pagos = DB::table(self::TBL_PAYMENTS)
+            ->selectRaw('DATE('.self::PAY_DATE.') as d, '.self::PAY_TYPE.' as t, SUM('.self::PAY_AMOUNT.') as s')
+            ->whereBetween(self::PAY_DATE, [$start, $end])
+            ->when($hqId, fn($q) => $q->where(self::PAY_HQ_ID, $hqId))
+            ->groupBy(DB::raw('DATE('.self::PAY_DATE.')'), self::PAY_TYPE)
+            ->get()
+            ->mapWithKeys(fn($r) => [ "{$r->d}|{$r->t}" => (float)$r->s ])
+            ->all();
+
+        // Salidas por día
+        $salidas = DB::table(self::TBL_DEPARTURES)
+            ->selectRaw('DATE('.self::DEP_DATE.') as d, '.self::DEP_IS_SUPPORT.' as spt, SUM('.self::DEP_PRICE.') as s')
+            ->whereBetween(self::DEP_DATE, [$start, $end])
+            ->when($hqId, fn($q) => $q->where(self::DEP_HQ_ID, $hqId))
+            ->groupBy(DB::raw('DATE('.self::DEP_DATE.')'), self::DEP_IS_SUPPORT)
+            ->get()
+            ->mapWithKeys(fn($r) => [ "{$r->d}|{$r->spt}" => (float)$r->s ])
+            ->all();
+
+        // Otros por día
+        $otros = DB::table(self::TBL_INCOMES)
+            ->selectRaw('DATE('.self::INC_DATE.') as d, SUM('.self::INC_TOTAL.') as s')
+            ->whereBetween(self::INC_DATE, [$start, $end])
+            ->when($hqId, fn($q) => $q->where(self::INC_HQ_ID, $hqId))
+            ->groupBy(DB::raw('DATE('.self::INC_DATE.')'))
+            ->pluck('s','d')->all();
+
+        // Egresos por día
+        $egresos = DB::table(self::TBL_EXPENSES)
+            ->selectRaw('DATE('.self::EXP_DATE.') as d, SUM('.self::EXP_TOTAL.') as s')
+            ->whereBetween(self::EXP_DATE, [$start, $end])
+            ->when($hqId, fn($q) => $q->where(self::EXP_HQ_ID, $hqId))
+            ->groupBy(DB::raw('DATE('.self::EXP_DATE.')'))
+            ->pluck('s','d')->all();
+
+        $rows = [];
+        $sum = [
+            'pago'=>0,'retraso'=>0,'deuda'=>0,'pago_total'=>0,
+            'empresa'=>0,'apoyo'=>0,'salidas_total'=>0,
+            'otros'=>0,'ingresos_total'=>0,
+            'egreso'=>0,'utilidad'=>0,
+        ];
+
+        for ($day=1; $day <= $days; $day++) {
+            $d   = Carbon::create($year, $month, $day)->toDateString();
+            $lbl = Carbon::create($year, $month, $day)->format('d/m/y');
+
+            $cot = (float)($pagos["{$d}|PAGO"]    ?? 0);
+            $ret = (float)($pagos["{$d}|RETRASO"] ?? 0);
+            $deu = (float)($pagos["{$d}|DEUDA"]   ?? 0);
+            $pagTot = $cot + $ret + $deu;
+
+            $emp = (float)($salidas["{$d}|0"] ?? 0);
+            $apo = (float)($salidas["{$d}|1"] ?? 0);
+            $salTot = $emp + $apo;
+
+            $otr = (float)($otros[$d]   ?? 0);
+            $egr = (float)($egresos[$d] ?? 0);
+
+            $ingTot = $pagTot + $salTot + $otr;
+            $uti    = $ingTot - $egr;
+
+            $rows[] = [
+                'fecha'         => $lbl,
+                'cotizacion'    => $cot,
+                'retraso'       => $ret,
+                'deuda'         => $deu,
+                'pago_total'    => $pagTot,
+                'empresa'       => $emp,
+                'apoyo'         => $apo,
+                'salidas_total' => $salTot,
+                'otros'         => $otr,
+                'ingresos_total'=> $ingTot,
+                'egreso'        => $egr,
+                'utilidad'      => $uti,
+            ];
+
+            $sum['pago']           += $cot;
+            $sum['retraso']        += $ret;
+            $sum['deuda']          += $deu;
+            $sum['pago_total']     += $pagTot;
+            $sum['empresa']        += $emp;
+            $sum['apoyo']          += $apo;
+            $sum['salidas_total']  += $salTot;
+            $sum['otros']          += $otr;
+            $sum['ingresos_total'] += $ingTot;
+            $sum['egreso']         += $egr;
+            $sum['utilidad']       += $uti;
+        }
+
+        $divisor = max(1, count($rows));
+        $prom = array_map(fn($v) => $v / $divisor, $sum);
+
+        return [
+            'rows'      => $rows,
+            'totales'   => $sum,
+            'promedios' => $prom,
+        ];
+    }
+
+    private function buildAnnualData(int $year, int $selectedMonth, ?int $hqId): array
+    {
+        // Límite: si es año actual, hasta mes seleccionado; otros años 12 meses
+        $currentYear = (int) now()->format('Y');
+        $limitMonth = ($year === $currentYear) ? max(1, min(12, $selectedMonth ?: 12)) : 12;
+
+        $rows = [];
+        $sum = [
+            'pago'=>0,'retraso'=>0,'deuda'=>0,'pago_total'=>0,
+            'empresa'=>0,'apoyo'=>0,'salidas_total'=>0,
+            'otros'=>0,'ingresos_total'=>0,
+            'egreso'=>0,'utilidad'=>0,
+        ];
+        $monthsShown = 0;
+
+        for ($m=1; $m<= $limitMonth; $m++) {
+            [$start, $end] = $this->monthRange($year, $m);
+
+            $pagos = DB::table(self::TBL_PAYMENTS)
+                ->selectRaw(self::PAY_TYPE.' as t, SUM('.self::PAY_AMOUNT.') as s')
+                ->whereBetween(self::PAY_DATE, [$start, $end])
+                ->when($hqId, fn($q) => $q->where(self::PAY_HQ_ID, $hqId))
+                ->groupBy(self::PAY_TYPE)
+                ->pluck('s','t');
+
+            $cot = (float)($pagos['PAGO']    ?? 0);
+            $ret = (float)($pagos['RETRASO'] ?? 0);
+            $deu = (float)($pagos['DEUDA']   ?? 0);
+            $pagTot = $cot + $ret + $deu;
+
+            $sal = DB::table(self::TBL_DEPARTURES)
+                ->selectRaw(self::DEP_IS_SUPPORT.' as spt, SUM('.self::DEP_PRICE.') as s')
+                ->whereBetween(self::DEP_DATE, [$start, $end])
+                ->when($hqId, fn($q) => $q->where(self::DEP_HQ_ID, $hqId))
+                ->groupBy(self::DEP_IS_SUPPORT)
+                ->pluck('s','spt');
+
+            $emp = (float)($sal[0] ?? 0);
+            $apo = (float)($sal[1] ?? 0);
+            $salTot = $emp + $apo;
+
+            $otr = (float) DB::table(self::TBL_INCOMES)
+                ->whereBetween(self::INC_DATE, [$start, $end])
+                ->when($hqId, fn($q) => $q->where(self::INC_HQ_ID, $hqId))
+                ->sum(self::INC_TOTAL);
+
+            $egr = (float) DB::table(self::TBL_EXPENSES)
+                ->whereBetween(self::EXP_DATE, [$start, $end])
+                ->when($hqId, fn($q) => $q->where(self::EXP_HQ_ID, $hqId))
+                ->sum(self::EXP_TOTAL);
+
+            $ingTot = $pagTot + $salTot + $otr;
+            $uti    = $ingTot - $egr;
+
+            $row = [
+                'mes'           => $this->monthName($m),
+                'pago'          => $cot,
+                'retraso'       => $ret,
+                'deuda'         => $deu,
+                'pago_total'    => $pagTot,
+                'empresa'       => $emp,
+                'apoyo'         => $apo,
+                'salidas_total' => $salTot,
+                'otros'         => $otr,
+                'ingresos_total'=> $ingTot,
+                'egreso'        => $egr,
+                'utilidad'      => $uti,
+            ];
+
+            if ($this->rowHasMovement($row)) {
+                $rows[] = $row;
+                $monthsShown++;
+
+                foreach ($row as $k => $v) {
+                    if (isset($sum[$k])) {
+                        $sum[$k] += (float)$v;
+                    }
+                }
+            }
+        }
+
+        $divisor = max(1, $monthsShown);
+        $prom = array_map(fn($v) => $v / $divisor, $sum);
+
+        return [$rows, $sum, $prom];
+    }
+
+    /* ============================
+     *  Helpers visuales y numéricos
+     * ============================ */
+
+    private function num(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet, string $cell, $value, string $fmt): void
+    {
+        // Si viene null → 0
+        $val = ($value === null || $value === '') ? 0 : (float)$value;
+
+        $sheet->setCellValueExplicit($cell, $val, DataType::TYPE_NUMERIC);
+        $sheet->getStyle($cell)
+            ->getNumberFormat()
+            ->setFormatCode($fmt);
+
+        // Ceros en gris claro para distinguir vacíos (opcional; quita si no lo quieres)
+        if ((float)$val === 0.0) {
+            $sheet->getStyle($cell)->getFont()->getColor()->setRGB('444444');
+        }
+    }
+
+    private function paintHeader(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet, string $range): void
+    {
+        $sheet->getStyle($range)->applyFromArray([
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => self::BLUE_DARK],
+            ],
+            'font' => [
+                'bold' => true,
+                'color' => ['rgb' => 'FFFFFF'],
+                'size' => 10,
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical'   => Alignment::VERTICAL_CENTER,
+                'wrapText'   => true,
+            ],
+        ]);
+    }
+
+    private function headerBaseStyle(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet, string $range): void
+    {
+        $sheet->getStyle($range)->applyFromArray([
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['rgb' => 'FFFFFF']
+                ]
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical'   => Alignment::VERTICAL_CENTER,
+                'wrapText'   => true,
+            ],
+        ]);
+        // Altura de filas de cabecera
+        foreach ($sheet->rangeToArray($range)[0] as $_) { /* noop */ }
+        $dim = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::rangeBoundaries($range);
+        for ($row = $dim[1][1]; $row >= $dim[0][1]; $row--) {
+            $sheet->getRowDimension($row)->setRowHeight(20);
+        }
+    }
+
+    private function paintLightTotal(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet, string $range): void
+    {
+        $sheet->getStyle($range)->applyFromArray([
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => self::BLUE_LIGHT],
+            ],
+            'font' => ['bold' => true],
+        ]);
+    }
+
+    private function monthRange(int $year, int $month): array
+    {
+        $start = Carbon::create($year, $month, 1)->startOfDay()->toDateTimeString();
+        $end   = Carbon::create($year, $month, 1)->endOfMonth()->endOfDay()->toDateTimeString();
+        return [$start, $end];
+    }
+
+    private function monthName(int $m): string
+    {
+        return [
+            1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
+            7=>'Julio',8=>'Agosto',9=>'Septiembre',10=>'Octubre',11=>'Noviembre',12=>'Diciembre'
+        ][$m] ?? (string)$m;
+    }
+
+    private function rowHasMovement(array $row): bool
+    {
+        return (
+            ($row['pago_total'] ?? 0) > 0 ||
+            ($row['salidas_total'] ?? 0) > 0 ||
+            ($row['otros'] ?? 0) > 0 ||
+            ($row['egreso'] ?? 0) > 0
+        );
+    }
+}

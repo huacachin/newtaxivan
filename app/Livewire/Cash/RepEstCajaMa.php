@@ -2,9 +2,11 @@
 
 namespace App\Livewire\Cash;
 
+use App\Exports\CajaEstadisticaExport;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
+use Maatwebsite\Excel\Facades\Excel;
 
 class RepEstCajaMa extends Component
 {
@@ -362,5 +364,11 @@ class RepEstCajaMa extends Component
             'monthName' => $monthName,
             'hqName'    => $hqName,
         ]);
+    }
+
+    public function export()
+    {
+        $file = sprintf('Estadistica_Caja_%s_%d.xlsx', str_pad($this->month, 2, '0', STR_PAD_LEFT), $this->year);
+        return Excel::download(new CajaEstadisticaExport($this->year, $this->month, $this->headquarterId), $file);
     }
 }
