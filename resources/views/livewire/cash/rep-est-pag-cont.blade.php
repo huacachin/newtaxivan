@@ -37,7 +37,7 @@
 
 
                       <div class="col-md-2 d-flex align-items-end">
-                          <button class="btn btn-primary w-100" wire:click="consultar">
+                          <button class="btn btn-primary w-100" wire:click="export">
                               Exportar
                           </button>
                       </div>

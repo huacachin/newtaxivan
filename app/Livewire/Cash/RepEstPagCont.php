@@ -2,9 +2,11 @@
 
 namespace App\Livewire\Cash;
 
+use App\Exports\RepEstPagContExport;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
+use Maatwebsite\Excel\Facades\Excel;
 
 class RepEstPagCont extends Component
 {
@@ -270,5 +272,20 @@ class RepEstPagCont extends Component
         return view('livewire.cash.rep-est-pag-cont', [
             'year' => $this->year,
         ]);
+    }
+
+    public function export()
+    {
+        return Excel::download(
+            new RepEstPagContExport(
+                $this->rows,
+                $this->totalesSaldoMes,
+                $this->totalSaldoFavor,
+                $this->comparativo,
+                $this->comparativoTotales,
+                $this->year
+            ),
+            'reporte_salidas_pagos_controlador.xlsx'
+        );
     }
 }
