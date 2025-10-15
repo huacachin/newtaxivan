@@ -72,7 +72,7 @@
                 ['title' => 'Reporte General',       'route' => 'cash.report.general',        'can' => 'cash.report'],
                 ['title' => 'Rep Est Draco Base',    'route' => 'cash.report.est-draco-base', 'can' => 'cash.report'],
                 ['title' => 'Rep Esp Sal Pag Cont',  'route' => 'cash.report.est-sal-pag-cont','can' => 'cash.report'],
-                // ['title' => 'Rep Est Caja M.A',      'route' => 'cash.report.est-caja-ma',     'can' => 'cash.report'],
+                ['title' => 'Rep Est Caja M.A',      'route' => 'cash.report.est-caja-ma',     'can' => 'cash.report'],
             ],
         ],
     ];

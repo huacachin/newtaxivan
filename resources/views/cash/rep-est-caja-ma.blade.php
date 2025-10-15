@@ -5,7 +5,7 @@
 @endsection
 
 @section('main-content')
-    <h1>Rep Est Caja MA</h1>
+    <livewire:cash.rep-est-caja-ma />
 @endsection
 
 @section('script')

@@ -274,6 +274,7 @@ class RepEstPagCont extends Component
         ]);
     }
 
+    #TODO: Hacer que todos los exports manejen esta misma arquitectura.
     public function export()
     {
         return Excel::download(
