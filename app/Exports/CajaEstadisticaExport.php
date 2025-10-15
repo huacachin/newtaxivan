@@ -132,7 +132,6 @@ class CajaEstadisticaExport implements WithEvents
         $r = $startRow;
 
         // Encabezados multinivel
-        // Fila 1
         $sheet->setCellValue("B{$r}", 'Fecha');
         $sheet->mergeCells("B{$r}:B".($r+2));
         $sheet->setCellValue("C{$r}", 'Ingreso');
@@ -143,7 +142,6 @@ class CajaEstadisticaExport implements WithEvents
         $sheet->mergeCells("M{$r}:M".($r+2));
         $this->paintHeader($sheet, "B{$r}:M{$r}");
 
-        // Fila 2
         $r2 = $r + 1;
         $sheet->setCellValue("C{$r2}", 'Pago');
         $sheet->mergeCells("C{$r2}:F{$r2}");
@@ -155,46 +153,35 @@ class CajaEstadisticaExport implements WithEvents
         $sheet->mergeCells("K{$r2}:K{$r2}");
         $this->paintHeader($sheet, "C{$r2}:K{$r2}");
 
-        // Fila 3
         $r3 = $r + 2;
-        $sheet->fromArray(
-            ['Cotización', 'Retraso', 'Deuda', 'Total', 'Empresa', 'Apoyo', 'Total'],
-            null,
-            "C{$r3}"
-        );
-        // Huecos “Otros” y “Total” ya están en fila 2.
+        $sheet->fromArray(['Cotización','Retraso','Deuda','Total','Empresa','Apoyo','Total'], null, "C{$r3}");
         $this->paintHeader($sheet, "C{$r3}:I{$r3}");
         $this->paintHeader($sheet, "J{$r3}:J{$r3}");
         $this->paintHeader($sheet, "K{$r3}:K{$r3}");
-
         $this->headerBaseStyle($sheet, "B{$r}:M{$r3}");
 
         // Datos
-        $data = $this->buildDailyData($this->year, $this->month, $this->headquarterId);
-
-        $row = $r3 + 1;
+        $data  = $this->buildDailyData($this->year, $this->month, $this->headquarterId);
+        $row   = $r3 + 1;
         $numFmt = self::NUM_FMT;
 
         foreach ($data['rows'] as $d) {
             $sheet->setCellValue("B{$row}", $d['fecha']);
-            $this->num($sheet, "C{$row}", $d['cotizacion'], $numFmt);
-            $this->num($sheet, "D{$row}", $d['retraso'],    $numFmt);
-            $this->num($sheet, "E{$row}", $d['deuda'],      $numFmt);
-            $this->num($sheet, "F{$row}", $d['pago_total'], $numFmt);
-
+            $this->num($sheet, "C{$row}", $d['cotizacion'],    $numFmt);
+            $this->num($sheet, "D{$row}", $d['retraso'],       $numFmt);
+            $this->num($sheet, "E{$row}", $d['deuda'],         $numFmt);
+            $this->num($sheet, "F{$row}", $d['pago_total'],    $numFmt);
             $this->num($sheet, "G{$row}", $d['empresa'],       $numFmt);
             $this->num($sheet, "H{$row}", $d['apoyo'],         $numFmt);
             $this->num($sheet, "I{$row}", $d['salidas_total'], $numFmt);
-
-            $this->num($sheet, "J{$row}", $d['otros'],          $numFmt);
-            $this->num($sheet, "K{$row}", $d['ingresos_total'], $numFmt);
-            $this->num($sheet, "L{$row}", $d['egreso'],         $numFmt);
-            $this->num($sheet, "M{$row}", $d['utilidad'],       $numFmt);
-
+            $this->num($sheet, "J{$row}", $d['otros'],         $numFmt);
+            $this->num($sheet, "K{$row}", $d['ingresos_total'],$numFmt);
+            $this->num($sheet, "L{$row}", $d['egreso'],        $numFmt);
+            $this->num($sheet, "M{$row}", $d['utilidad'],      $numFmt);
             $row++;
         }
 
-        // Totales
+        // Fila Total (mantener igual que antes)
         $this->paintLightTotal($sheet, "B{$row}:M{$row}");
         $sheet->setCellValue("B{$row}", 'Total');
         $t = $data['totales'];
@@ -210,25 +197,10 @@ class CajaEstadisticaExport implements WithEvents
         $this->num($sheet, "L{$row}", $t['egreso'],         $numFmt);
         $this->num($sheet, "M{$row}", $t['utilidad'],       $numFmt);
 
-        // Promedio (divide por días mostrados)
-        $row++;
-        $this->paintLightTotal($sheet, "B{$row}:M{$row}");
-        $sheet->setCellValue("B{$row}", 'Promedio');
-        $p = $data['promedios'];
-        $this->num($sheet, "C{$row}", $p['pago'],           $numFmt);
-        $this->num($sheet, "D{$row}", $p['retraso'],        $numFmt);
-        $this->num($sheet, "E{$row}", $p['deuda'],          $numFmt);
-        $this->num($sheet, "F{$row}", $p['pago_total'],     $numFmt);
-        $this->num($sheet, "G{$row}", $p['empresa'],        $numFmt);
-        $this->num($sheet, "H{$row}", $p['apoyo'],          $numFmt);
-        $this->num($sheet, "I{$row}", $p['salidas_total'],  $numFmt);
-        $this->num($sheet, "J{$row}", $p['otros'],          $numFmt);
-        $this->num($sheet, "K{$row}", $p['ingresos_total'], $numFmt);
-        $this->num($sheet, "L{$row}", $p['egreso'],         $numFmt);
-        $this->num($sheet, "M{$row}", $p['utilidad'],       $numFmt);
-
+        // <- Ya no agregamos la fila “Promedio” aquí
         return $row;
     }
+
 
     /* ============================
      *  Bloque 2: tabla anual (mensual)
