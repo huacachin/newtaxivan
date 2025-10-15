@@ -14,6 +14,7 @@ class RepEstPagCont extends Component
     private const USERS_TABLE        = 'users';         // tabla de usuarios
     private const USERS_ID           = 'id';
     private const USERS_NAME         = 'name';
+    private const USERS_USERNAME     = 'username';      // <-- agregado
 
     private const HQ_TABLE           = 'headquarters';  // tabla de sedes/paraderos
     private const HQ_ID              = 'id';
@@ -29,7 +30,7 @@ class RepEstPagCont extends Component
     private const EXP_DATE           = 'date';
     private const EXP_USER_ID        = 'user_id';
     private const EXP_TOTAL          = 'total';
-    private const EXP_IN_CHARGE      = 'in_charge';
+    private const EXP_REASON         = 'reason';        // <-- usamos reason (no in_charge)
 
     // Filtro principal
     public ?int $year = null;
@@ -58,14 +59,19 @@ class RepEstPagCont extends Component
     {
         $year = $this->year ?: (int) date('Y');
 
-        /** =======================================
-         *  1) Controladores: tomamos los que TENGAN departures en el año
-         *  (así evitamos depender de roles/flags legacy)
-         *  ======================================= */
+        /**
+         * 1) Controladores: tomamos los que TENGAN departures en el año
+         * (así evitamos depender de roles/flags legacy)
+         * Además traemos username para cruzarlo con expenses.reason
+         */
         $controladores = DB::table(self::DEPARTURES_TABLE.' as d')
             ->join(self::USERS_TABLE.' as u', 'u.'.self::USERS_ID, '=', 'd.'.self::DEP_USER_ID)
             ->whereYear('d.'.self::DEP_DATE, $year)
-            ->select('u.'.self::USERS_ID.' as id', 'u.'.self::USERS_NAME.' as name')
+            ->select(
+                'u.'.self::USERS_ID.' as id',
+                'u.'.self::USERS_NAME.' as name',
+                'u.'.self::USERS_USERNAME.' as username'
+            )
             ->distinct()
             ->orderBy('name')
             ->get();
@@ -75,6 +81,9 @@ class RepEstPagCont extends Component
         $this->totalSaldoFavor = 0.0;
 
         foreach ($controladores as $ctrl) {
+            // normalizamos el username para comparación case-insensitive y sin espacios
+            $usernameLc = mb_strtolower(trim((string) $ctrl->username));
+
             /** Paraderos/sedes donde ese usuario tuvo departures en el año **/
             $paraderos = DB::table(self::DEPARTURES_TABLE.' as d')
                 ->join(self::HQ_TABLE.' as h', 'h.'.self::HQ_ID, '=', 'd.'.self::DEP_HQ_ID)
@@ -86,7 +95,6 @@ class RepEstPagCont extends Component
                 ->get();
 
             if ($paraderos->isEmpty()) {
-                // evitar bloques vacíos
                 continue;
             }
 
@@ -98,21 +106,23 @@ class RepEstPagCont extends Component
                 'saldos'      => array_fill(1, 12, 0.0),
             ];
 
-            /** Egresos por mes (toda la cuenta del usuario) **/
+            /** Egresos por mes **/
             for ($m=1; $m<=12; $m++) {
                 [$start, $end] = $this->monthRange($year, $m);
 
-                // Egreso Pago: todos los expenses del usuario
+                // === Egreso Pago ===
+                // Regla: expenses.reason == users.username
                 $egresoPago = (float) DB::table(self::EXPENSES_TABLE)
-                    ->where(self::EXP_USER_ID, $ctrl->id)
                     ->whereBetween(self::EXP_DATE, [$start, $end])
+                    ->whereRaw('LOWER(TRIM('.self::EXP_REASON.')) = ?', [$usernameLc])
                     ->sum(self::EXP_TOTAL);
 
-                // Egreso Draco: expenses del usuario con in_charge ~ 'DRACO'
+                // === Egreso DRACO ===
+                // Regla: expenses.reason = 'DRACO' y expenses.user_id = controller.id
                 $egresoDraco = (float) DB::table(self::EXPENSES_TABLE)
                     ->where(self::EXP_USER_ID, $ctrl->id)
-                    ->where(self::EXP_IN_CHARGE, 'like', '%DRACO%')
                     ->whereBetween(self::EXP_DATE, [$start, $end])
+                    ->whereRaw('LOWER(TRIM('.self::EXP_REASON.')) = "draco"')
                     ->sum(self::EXP_TOTAL);
 
                 $ctrlBlock['egreso_pago'][$m]  = $egresoPago;
@@ -174,10 +184,7 @@ class RepEstPagCont extends Component
 
         $this->totalSaldoFavor = array_sum($this->totalesSaldoMes);
 
-        /** =======================================
-         *  2) Comparativo Luis vs Elmer
-         *      (por nombres de usuario y sedes)
-         *  ======================================= */
+        /** Comparativo (lo dejé tal cual tu versión) */
         $this->comparativo = $this->buildComparativo(
             $year,
             userA: 'Luis',
