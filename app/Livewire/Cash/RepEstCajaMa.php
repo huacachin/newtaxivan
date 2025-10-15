@@ -38,25 +38,32 @@ class RepEstCajaMa extends Component
     private const HQ_NAME       = 'name';
 
     /* =======================
-     *  Filtros
+     *  Filtros (persisten en la URL)
      * ======================= */
     public ?int $year = null;           // YYYY
     public ?int $month = null;          // 1..12
     public ?int $headquarterId = null;  // opcional
+
+    protected $queryString = [
+        'year'          => ['except' => null],
+        'month'         => ['except' => null],
+        'headquarterId' => ['except' => null],
+    ];
 
     /* =======================
      *  Datos cuadro mensual (por día)
      * ======================= */
     public array $rows = [];        // filas dd/mm/YYYY
     public array $totales = [];     // totales del mes
-    public array $promedios = [];   // promedios del mes
+    public array $promedios = [];   // promedios del mes (por día mostrado)
 
     /* =======================
      *  Datos cuadro anual (por mes)
      * ======================= */
-    public array $anual = [];           // Enero..Diciembre
-    public array $anualTotales = [];    // totales año
-    public array $anualPromedios = [];  // promedios año
+    public array $anual = [];           // Solo meses con movimiento
+    public array $anualTotales = [];    // totales año (solo de meses mostrados)
+    public array $anualPromedios = [];  // promedios año (divididos entre meses mostrados)
+    public int   $anualMesesMostrados = 0;
 
     /* Para combos */
     public array $headquarters = [];
@@ -67,9 +74,17 @@ class RepEstCajaMa extends Component
     public function mount(?int $year = null, ?int $month = null, ?int $headquarterId = null): void
     {
         $today = now();
-        $this->year  = $year  ?: (int) $today->format('Y');
-        $this->month = $month ?: (int) $today->format('n');
-        $this->headquarterId = $headquarterId;
+
+        // Solo setear defaults si están NULL (evita "volver" al mes actual en remounts)
+        if ($this->year === null) {
+            $this->year = $year ?? (int) $today->format('Y');
+        }
+        if ($this->month === null) {
+            $this->month = $month ?? (int) $today->format('n');
+        }
+        if ($this->headquarterId === null) {
+            $this->headquarterId = $headquarterId;
+        }
 
         $this->headquarters = DB::table(self::TBL_HQ)
             ->select(self::HQ_ID.' as id', self::HQ_NAME.' as name')
@@ -194,14 +209,21 @@ class RepEstCajaMa extends Component
         }
 
         $this->totales = $sum;
-        $divisor = max(1, count($this->rows));
+
+        // Promedios del cuadro mensual (por día del mes mostrado)
+        $divisorMensual = max(1, count($this->rows));
         $this->promedios = array_map(
-            fn($v) => $v / $divisor,
+            fn($v) => $v / $divisorMensual,
             $this->totales
         );
 
-        // ---- Cuadro anual
-        $this->buildAnnual($y);
+        // ---- Cuadro anual (solo meses con movimiento)
+        $currYear = (int) now()->format('Y');
+        $limitMonth = ($y === $currYear)
+            ? max(1, min(12, (int) ($this->month ?: 12)))
+            : 12;
+
+        $this->buildAnnual($y, $limitMonth);
     }
 
     /* =======================
@@ -219,7 +241,7 @@ class RepEstCajaMa extends Component
         return Carbon::create($y, $m, 1)->endOfMonth()->day;
     }
 
-    private static function monthName(int $m): string
+    public static function monthName(int $m): string
     {
         return [
             1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
@@ -227,7 +249,18 @@ class RepEstCajaMa extends Component
         ][$m] ?? (string)$m;
     }
 
-    private function buildAnnual(int $year): void
+    private static function rowHasMovement(array $row): bool
+    {
+        // Consideramos movimiento si hay algún valor > 0 en ingresos o egresos
+        return (
+            ($row['pago_total'] ?? 0) > 0 ||
+            ($row['salidas_total'] ?? 0) > 0 ||
+            ($row['otros'] ?? 0) > 0 ||
+            ($row['egreso'] ?? 0) > 0
+        );
+    }
+
+    private function buildAnnual(int $year, int $limitMonth = 12): void
     {
         $this->anual = [];
         $sum = [
@@ -236,8 +269,11 @@ class RepEstCajaMa extends Component
             'otros'=>0,'ingresos_total'=>0,
             'egreso'=>0,'utilidad'=>0,
         ];
+        $mesesMostrados = 0;
 
-        for ($m=1; $m<=12; $m++) {
+        $limitMonth = max(1, min(12, $limitMonth));
+
+        for ($m=1; $m<= $limitMonth; $m++) {
             [$start, $end] = $this->monthRange($year, $m);
 
             // Pagos mes
@@ -265,7 +301,7 @@ class RepEstCajaMa extends Component
             $apoyo    = (float) ($salidas[1] ?? 0);
             $salTotal = $empresa + $apoyo;
 
-            // Otros y Egresos mes (SIN filtro por mode)
+            // Otros y egresos mes (SIN filtro por mode)
             $otros = (float) DB::table(self::TBL_INCOMES)
                 ->whereBetween(self::INC_DATE, [$start, $end])
                 ->when($this->headquarterId, fn($q) => $q->where(self::INC_HQ_ID, $this->headquarterId))
@@ -293,17 +329,25 @@ class RepEstCajaMa extends Component
                 'egreso'        => $egreso,
                 'utilidad'      => $utilidad,
             ];
-            $this->anual[] = $row;
 
-            foreach ($row as $k => $v) {
-                if (isset($sum[$k])) {
-                    $sum[$k] += (float)$v;
+            if (self::rowHasMovement($row)) {
+                $this->anual[] = $row;
+                $mesesMostrados++;
+
+                foreach ($row as $k => $v) {
+                    if (isset($sum[$k])) {
+                        $sum[$k] += (float)$v;
+                    }
                 }
             }
         }
 
         $this->anualTotales = $sum;
-        $this->anualPromedios = array_map(fn($v) => $v / 12, $this->anualTotales);
+        $this->anualMesesMostrados = $mesesMostrados;
+
+        // Promedios anuales divididos entre meses mostrados (>0)
+        $divisorAnual = max(1, $mesesMostrados);
+        $this->anualPromedios = array_map(fn($v) => $v / $divisorAnual, $this->anualTotales);
     }
 
     public function render()
