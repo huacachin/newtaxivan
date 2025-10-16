@@ -108,23 +108,43 @@ class Vehicle extends Model
 
     public function getBadgesAttribute(): array
     {
-        $now    = Carbon::now();
         $badges = [];
 
-        $add = function ($date, string $abbr, string $label) use (&$badges, $now) {
+        $add = function ($date, string $abbrType, string $label) use (&$badges) {
             if (!$date) return;
 
-            $date = $date instanceof Carbon ? $date : Carbon::parse($date);
-            $days = $now->diffInDays($date, false); // negativo si ya venció
+            $days = $this->dayDelta($date);
+            if ($days === null) return;
 
-            // Mostrar solo si faltan 0–10 días
-            if ($days < 0 || $days > 10) return;
+            $due = $date instanceof \Carbon\Carbon
+                ? $date->toDateString()
+                : \Carbon\Carbon::parse($date)->toDateString();
 
-            $badges[] = [
-                'abbr'  => $abbr,
-                'title' => "{$label} vence en {$days} día(s)",
-                'class' => $days <= 5 ? 'bg-danger' : 'bg-warning',
-            ];
+            if ($days < 0) {
+                $badges[] = [
+                    'abbr'  => $abbrType, // SD | RT | CD
+                    'title' => "{$label} venció hace " . abs($days) . " día(s) ({$due})",
+                    'class' => 'bg-danger',
+                ];
+                return;
+            }
+
+            if ($days === 0) {
+                $badges[] = [
+                    'abbr'  => $abbrType,
+                    'title' => "{$label} vence hoy ({$due})",
+                    'class' => 'bg-danger',
+                ];
+                return;
+            }
+
+            if ($days <= 10) {
+                $badges[] = [
+                    'abbr'  => $abbrType,
+                    'title' => "{$label} vence en {$days} día(s) ({$due})",
+                    'class' => $days <= 5 ? 'bg-danger' : 'bg-warning',
+                ];
+            }
         };
 
         $add($this->soat_date,        'SD', 'SOAT');
@@ -136,31 +156,58 @@ class Vehicle extends Model
 
     public function expiringAlerts(): array
     {
-        $now = \Carbon\Carbon::now();
         $alerts = [];
 
-        $add = function ($date, string $abbr, string $label) use (&$alerts, $now) {
+        $add = function ($date, string $abbrType, string $label) use (&$alerts) {
             if (!$date) return;
 
-            // diferencia en minutos, permitiendo negativos
-            $mins = $now->diffInMinutes($date, false);
+            $days = $this->dayDelta($date);
+            if ($days === null) return;
 
-            // vencidos no se muestran (si quieres mostrarlos, quita este return)
-            if ($mins < 0) return;
+            $due = $date instanceof \Carbon\Carbon
+                ? $date->toDateString()
+                : \Carbon\Carbon::parse($date)->toDateString();
 
-            // días restantes redondeados hacia arriba (0.1 día => 1 día)
-            $days = (int) ceil($mins / 1440);
+            if ($days < 0) {
+                $alerts[] = [
+                    'plate'    => $this->plate,
+                    'abbr'     => $abbrType,   // SD | RT | CD
+                    'label'    => $label,
+                    'days'     => abs($days),  // cuántos días lleva vencido
+                    'due_date' => $due,
+                    'color'    => 'danger',
+                    'status'   => 'expired',
+                    'message'  => "{$label} venció hace " . abs($days) . " día(s)",
+                ];
+                return;
+            }
 
-            if ($days > 10) return; // solo 0–10 días
+            if ($days === 0) {
+                $alerts[] = [
+                    'plate'    => $this->plate,
+                    'abbr'     => $abbrType,
+                    'label'    => $label,
+                    'days'     => 0,
+                    'due_date' => $due,
+                    'color'    => 'danger',
+                    'status'   => 'today',
+                    'message'  => "{$label} vence hoy",
+                ];
+                return;
+            }
 
-            $alerts[] = [
-                'plate'    => $this->plate,
-                'abbr'     => $abbr,                          // SD|RT|CD
-                'label'    => $label,                         // SOAT|Revisión Técnica|Certificado
-                'days'     => $days,                          // ENTERO
-                'due_date' => $date->format('Y-m-d'),
-                'color'    => $days <= 5 ? 'danger' : 'warning',
-            ];
+            if ($days <= 10) {
+                $alerts[] = [
+                    'plate'    => $this->plate,
+                    'abbr'     => $abbrType,
+                    'label'    => $label,
+                    'days'     => $days,
+                    'due_date' => $due,
+                    'color'    => $days <= 5 ? 'danger' : 'warning',
+                    'status'   => 'upcoming',
+                    'message'  => "{$label} vence en {$days} día(s)",
+                ];
+            }
         };
 
         $add($this->soat_date,        'SD', 'SOAT');
@@ -169,5 +216,41 @@ class Vehicle extends Model
 
         return $alerts;
     }
+
+
+
+
+    /**
+     * Diferencia firmada en días entre HOY y $date.
+     * <0 = vencido, 0 = hoy, >0 = faltan N días.
+     */
+    protected function dayDelta($date): ?int
+    {
+        if (!$date) return null;
+
+        $tz = config('app.timezone', 'UTC');
+
+        // Normaliza ambos al inicio de día en la TZ de la app
+        $d = $date instanceof \Carbon\Carbon
+            ? $date->copy()->timezone($tz)->startOfDay()
+            : \Carbon\Carbon::parse($date, $tz)->startOfDay();
+
+        $today = \Carbon\Carbon::now($tz)->startOfDay();
+
+        if ($d->equalTo($today)) {
+            return 0;
+        }
+
+        // IMPORTANTE: calculamos el signo manualmente
+        if ($d->lessThan($today)) {
+            // Vencido: días negativos
+            return -$d->diffInDays($today); // diffInDays SIEMPRE positivo; le ponemos el signo
+        }
+
+        // Futuro: días positivos
+        return $today->diffInDays($d);
+    }
+
+
 
 }
