@@ -248,6 +248,26 @@
                             @error('in_charge') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
+                        <div class="col-md-12">
+                            <label class="form-label">Comprobante (imagen)</label>
+                            <input type="file" class="form-control" wire:model="image_file" accept="image/*">
+                            @error('image_file') <div class="text-danger">{{ $message }}</div> @enderror
+
+                            <div class="mt-2">
+                                @if ($image_file)
+                                    {{-- Vista previa temporal si el usuario selecciona nueva imagen --}}
+                                    <img src="{{ $image_file->temporaryUrl() }}" alt="Vista previa" class="img-fluid rounded border" style="max-height: 220px;">
+                                @else
+                                    @php
+                                        $p = $image_path;
+                                        $exists = $p && \Illuminate\Support\Facades\Storage::disk('public')->exists($p);
+                                        $url = $exists ? asset('storage/'.$p) : asset('images/placeholder-income.png');
+                                    @endphp
+                                    <img src="{{ $url }}" alt="Comprobante" class="img-fluid rounded border" style="max-height: 220px;">
+                                @endif
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 

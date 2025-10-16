@@ -8,11 +8,13 @@ use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Schema;
-
+use Livewire\WithFileUploads;
+use Illuminate\Support\Facades\Storage;
 
 class Expenses extends Component
 {
     use WithPagination;
+    use WithFileUploads;
 
     /** ====== Filtros de la tabla ====== */
     public string $search = '';
@@ -51,6 +53,10 @@ class Expenses extends Component
     public string  $in_charge     = '';
     public $users;
 
+    // Imagen
+    public $image_file = null;         // archivo subido
+    public ?string $image_path = null; // ruta actual en edición
+
     /** ====== Ciclo de vida ====== */
     public function mount(): void
     {
@@ -63,38 +69,23 @@ class Expenses extends Component
 
     private function refreshConcepts(): void
     {
-        // Si no existe la tabla, salimos limpios
         if (!Schema::hasTable('concepts')) {
             $this->concepts = [];
             return;
         }
 
-        // Candidatos posibles según legacy
-        $candidates = [
-            'default_amount', 'amount', 'price', 'value',
-            'default_value', 'monto', 'importe'
-        ];
-
+        $candidates = ['default_amount','amount','price','value','default_value','monto','importe'];
         $available = [];
-        foreach ($candidates as $col) {
-            if (Schema::hasColumn('concepts', $col)) {
-                $available[] = $col;
-            }
-        }
+        foreach ($candidates as $col) if (Schema::hasColumn('concepts', $col)) $available[] = $col;
 
-        // Si no hay ninguna de monto, usamos 0
-        $expr = $available
-            ? 'COALESCE(' . implode(',', $available) . ', 0)'
-            : '0';
+        $expr = $available ? 'COALESCE(' . implode(',', $available) . ', 0)' : '0';
 
-        // Traer id, name y el monto por defecto calculado
         $rows = DB::table('concepts')
             ->select('id', 'name')
             ->selectRaw("$expr as def_amount")
             ->orderBy('name', 'asc')
             ->get();
 
-        // Formatear para el select del modal
         $this->concepts = $rows->map(fn ($r) => [
             'id'             => (int) $r->id,
             'name'           => (string) $r->name,
@@ -106,7 +97,6 @@ class Expenses extends Component
         $this->render();
     }
 
-
     public function render()
     {
         $q = Expense::query()
@@ -114,7 +104,6 @@ class Expenses extends Component
             ->orderBy('date')
             ->orderBy('id');
 
-        // Rango de fechas
         if ($this->date_start && $this->date_end) {
             $q->whereBetween('date', [$this->date_start, $this->date_end]);
         } elseif ($this->date_start) {
@@ -123,24 +112,18 @@ class Expenses extends Component
             $q->where('date', '<=', $this->date_end);
         }
 
-        // Búsqueda
         $s = trim((string)$this->search);
         if ($s !== '') {
             switch ((int)$this->filterType) {
-                case 1: $q->where('reason', 'like', "%{$s}%"); break;           // A
-                case 2: $q->where('detail', 'like', "%{$s}%"); break;           // Motivo
-                case 3: // Usuario
-                    $q->whereHas('user', fn($qq) => $qq->where('name', 'like', "%{$s}%"));
-                    break;
-                case 4: $q->where('in_charge', 'like', "%{$s}%"); break;        // Respons.
+                case 1: $q->where('reason', 'like', "%{$s}%"); break;
+                case 2: $q->where('detail', 'like', "%{$s}%"); break;
+                case 3: $q->whereHas('user', fn($qq) => $qq->where('name', 'like', "%{$s}%")); break;
+                case 4: $q->where('in_charge', 'like', "%{$s}%"); break;
                 default: $q->where('reason', 'like', "%{$s}%");
             }
         }
 
-        // Totales
         $totalGeneral = (clone $q)->sum('total');
-
-        // Paginado
         $expenses = $q->paginate(200000);
 
         return view('livewire.cash.expenses', [
@@ -155,15 +138,15 @@ class Expenses extends Component
         return [
             'date' => ['required', 'date'],
             'expenseKind' => ['required', 'in:Fijos,Otros'],
-            // Fijos
             'concept_id' => [$this->expenseKind === 'Fijos' ? 'required' : 'nullable', 'integer'],
-            // Otros
             'reason_text' => [$this->expenseKind === 'Otros' ? 'required' : 'nullable', 'string', 'max:150'],
-            // Comunes
             'detail' => ['required', 'string', 'max:500'],
             'total'  => ['required', 'numeric', 'min:0.01'],
             'document_type' => ['nullable', 'string', 'max:100'],
             'in_charge'     => ['nullable', 'string', 'max:100'],
+
+            // Imagen opcional
+            'image_file'    => ['nullable', 'image', 'max:3072'], // ~3MB
         ];
     }
 
@@ -186,6 +169,10 @@ class Expenses extends Component
         $this->document_type = (string)($e->document_type ?? '');
         $this->in_charge     = (string)($e->in_charge ?? '');
 
+        // Imagen actual
+        $this->image_path    = $e->image_path ?: null;
+        $this->image_file    = null;
+
         // Detectar si reason coincide con un concepto (Fijos) o es libre (Otros)
         $match = collect($this->concepts)->firstWhere('name', (string)$e->reason);
         if ($match) {
@@ -204,15 +191,8 @@ class Expenses extends Component
     public function resetForm(): void
     {
         $this->reset([
-            'editId',
-            'expenseKind',
-            'concept_id',
-            'reason_text',
-            'date',
-            'detail',
-            'total',
-            'document_type',
-            'in_charge',
+            'editId','expenseKind','concept_id','reason_text','date','detail','total','document_type','in_charge',
+            'image_file','image_path' // limpia imagen
         ]);
         $this->expenseKind = 'Otros';
         $this->reason_text = '';
@@ -231,6 +211,12 @@ class Expenses extends Component
             ? $this->conceptNameById($this->concept_id)
             : trim($this->reason_text);
 
+        // Manejo de imagen (si se sube)
+        $newImagePath = null;
+        if ($this->image_file) {
+            $newImagePath = $this->image_file->storePublicly('expenses', 'public');
+        }
+
         $payload = [
             'date'          => $this->date,
             'user_id'       => $userId,
@@ -240,22 +226,27 @@ class Expenses extends Component
             'document_type' => trim((string)$this->document_type),
             'in_charge'     => trim((string)$this->in_charge),
         ];
+        if ($newImagePath) $payload['image_path'] = $newImagePath;
 
         if ($this->editId) {
-            Expense::where('id', $this->editId)->update($payload);
+            $e = Expense::findOrFail($this->editId);
+
+            // si hay nueva imagen, elimina la anterior
+            if ($newImagePath && $e->image_path && Storage::disk('public')->exists($e->image_path)) {
+                Storage::disk('public')->delete($e->image_path);
+            }
+
+            $e->update($payload);
             $okMsg = 'Egreso actualizado correctamente';
         } else {
             Expense::create($payload);
             $okMsg = 'Egreso creado correctamente';
         }
 
-        // Cerrar modal + alerta de éxito (TU dispatcher)
         $this->dispatch('modal-close',["name" => "modalExpense"]);
         $this->dispatch('successAlert', ["message" => $okMsg]);
 
-        // Limpia el formulario (no resetea filtros ni paginación)
         $this->resetForm();
-        // NOTA: dejamos que el componente rerenderice para que la tabla se actualice.
     }
 
     /** ====== Export ====== */
@@ -274,13 +265,8 @@ class Expenses extends Component
     /** ====== Handlers UI del modal ====== */
     public function updatedExpenseKind($val): void
     {
-        if ($val === 'Fijos') {
-            $this->refreshConcepts();
-        }
-        // Si pasa a "Otros", puedes limpiar concept_id
-        if ($val === 'Otros') {
-            $this->concept_id = null;
-        }
+        if ($val === 'Fijos') $this->refreshConcepts();
+        if ($val === 'Otros') $this->concept_id = null;
     }
 
     public function updatedConceptId($value): void
@@ -289,14 +275,12 @@ class Expenses extends Component
 
         $row = collect($this->concepts)->firstWhere('id', (int)$value);
         if ($row && ($this->total === null || $this->total == 0)) {
-            // $def = $row['default'] ?? null;        // ❌
-            $def = $row['default_amount'] ?? null;    // ✅
+            $def = $row['default_amount'] ?? null;
             if ($def !== null) $this->total = (float)$def;
         }
     }
 
     /** ====== Helpers ====== */
-
     protected function conceptNameById(?int $id): string
     {
         if (!$id) return '';

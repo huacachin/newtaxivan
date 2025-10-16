@@ -18,6 +18,7 @@ class Expense extends Model
         'date',
         'reason',
         'detail',
+        'image_path',
         'total',
         'user_id',
         'headquarter_id',
@@ -39,4 +40,12 @@ class Expense extends Model
     {
         return $this->belongsTo(\App\Models\Headquarter::class);
     }
+
+    public function getImageUrlAttribute(): string
+    {
+        return $this->image_path
+            ? asset('storage/'.$this->image_path)
+            : asset('images/placeholder-income.png'); // usa el mismo placeholder
+    }
+
 }
