@@ -213,7 +213,7 @@
                                     </td>
 
                                     @foreach($days as $d)
-                                        <td class="text-end">{{ number_format($r['days'][$d] ?? 0, 2) }}</td>
+                                        <td class="{{(number_format($r['days'][$d] ?? 0, 2) == 0.00) ? 'bg-danger':'bg-success'}} text-end">{{ number_format($r['days'][$d] ?? 0, 2) }}</td>
                                     @endforeach
 
                                     <td class="text-end fw-semibold">{{ number_format($r['total'], 2) }}</td>
