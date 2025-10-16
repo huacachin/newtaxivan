@@ -10,3 +10,8 @@ Schedule::command('cost-per-plate:generate')
     ->timezone('America/Lima')    // tu zona horaria
     ->withoutOverlapping()
     ->onOneServer();
+
+Schedule::command('debt-days:generate')
+    ->timezone('America/Lima')
+    ->lastDayOfMonth('23:00')
+    ->onOneServer();
