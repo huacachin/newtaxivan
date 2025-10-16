@@ -5,13 +5,16 @@ namespace App\Livewire\Cash;
 use App\Models\Income;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\WithFileUploads;
 
 class Incomes extends Component
 {
     use WithPagination;
+    use WithFileUploads;
 
     // ===== Filtros/Listado =====
     public $search = '';
@@ -31,6 +34,12 @@ class Incomes extends Component
     public float $exchange = 3.80;          // MVP: fijo
     public ?float $converted_total = null;  // Vista previa en soles
 
+    // ===== Imagen =====
+    /** Archivo subido (Livewire) */
+    public $image_file = null;
+    /** Ruta actual (editar) */
+    public ?string $image_path = null;
+
     protected $queryString = [
         'search'     => ['except' => ''],
         'filterType' => ['except' => 1],
@@ -47,6 +56,9 @@ class Incomes extends Component
             'detail'       => ['required', 'string', 'max:255'],
             'currency'     => ['required', Rule::in(['Soles','Dolares'])],
             'amount_input' => ['required', 'numeric', 'gt:0'],
+
+            // Imagen (opcional): máx ~2MB, cualquier formato de imagen
+            'image_file'   => ['nullable', 'image', 'max:2048'],
         ];
     }
 
@@ -60,6 +72,8 @@ class Incomes extends Component
             'amount_input.required' => 'El monto es obligatorio.',
             'amount_input.numeric'  => 'El monto debe ser numérico.',
             'amount_input.gt'       => 'El monto debe ser mayor a 0.',
+            'image_file.image'      => 'El archivo debe ser una imagen válida.',
+            'image_file.max'        => 'La imagen no debe superar 2MB.',
         ];
     }
 
@@ -137,6 +151,10 @@ class Incomes extends Component
         $this->reason   = (string)$i->reason;
         $this->detail   = (string)$i->detail;
 
+        // Imagen actual (si existe)
+        $this->image_path = $i->image_path;
+        $this->image_file = null;
+
         // Como almacenamos total en soles, por defecto cargamos en Soles:
         $this->currency      = 'Soles';
         $this->amount_input  = number_format((float)$i->total, 2, '.', '');
@@ -155,12 +173,19 @@ class Incomes extends Component
             ? round(((float)$this->amount_input) * $this->exchange, 2)
             : round((float)$this->amount_input, 2);
 
+        // Guardar imagen si se subió
+        $storedPath = null;
+        if ($this->image_file) {
+            $storedPath = $this->image_file->store('incomes', 'public'); // storage/app/public/incomes/...
+        }
+
         Income::create([
-            'date'    => $this->date,
-            'reason'  => $this->reason,
-            'detail'  => $this->detail,
-            'total'   => $total,          // guardamos en S/
-            'user_id' => Auth::id(),
+            'date'       => $this->date,
+            'reason'     => $this->reason,
+            'detail'     => $this->detail,
+            'image_path' => $storedPath,      // NUEVO
+            'total'      => $total,           // guardamos en S/
+            'user_id'    => Auth::id(),
         ]);
 
         $this->resetForm();
@@ -179,13 +204,26 @@ class Incomes extends Component
             : round((float)$this->amount_input, 2);
 
         $i = Income::findOrFail($this->incomeId);
-        $i->update([
+
+        $payload = [
             'date'    => $this->date,
             'reason'  => $this->reason,
             'detail'  => $this->detail,
             'total'   => $total,
             'user_id' => Auth::id(),
-        ]);
+        ];
+
+        // Si sube nueva imagen, reemplaza
+        if ($this->image_file) {
+            // borra la anterior si existe
+            if ($i->image_path && Storage::disk('public')->exists($i->image_path)) {
+                Storage::disk('public')->delete($i->image_path);
+            }
+            $payload['image_path'] = $this->image_file->store('incomes', 'public');
+            $this->image_path = $payload['image_path'];
+        }
+
+        $i->update($payload);
 
         $this->resetForm();
         $this->dispatch('modal-close', ['name' => 'modalEditIncome']);
@@ -232,6 +270,7 @@ class Incomes extends Component
         $this->reset([
             'incomeId', 'date', 'reason', 'detail',
             'currency', 'amount_input', 'exchange', 'converted_total',
+            'image_file', 'image_path', // limpia imagen
         ]);
     }
 

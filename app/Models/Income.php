@@ -18,6 +18,7 @@ class Income extends Model
         'date',
         'reason',
         'detail',
+        'image_path',
         'total',
         'user_id',
     ];
@@ -26,6 +27,14 @@ class Income extends Model
         'date'  => 'date',
         'total' => 'decimal:2',
     ];
+
+    public function getImageUrlAttribute(): string
+    {
+        if (!$this->image_path) {
+            return asset('images/placeholder-income.png'); // colócalo en /public/images/
+        }
+        return \Illuminate\Support\Facades\Storage::disk('public')->url($this->image_path);
+    }
 
     public function user(): BelongsTo
     {

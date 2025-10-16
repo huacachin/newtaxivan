@@ -207,6 +207,19 @@
                             @error('detail') <span class="text-danger">{{ $message }}</span> @enderror
                         </div>
 
+                        <div class="col-md-12">
+                            <label class="form-label">Comprobante (imagen)</label>
+                            <input type="file" class="form-control" wire:model="image_file" accept="image/*">
+                            @error('image_file') <span class="text-danger">{{ $message }}</span> @enderror
+
+                            {{-- Vista previa si el usuario ya seleccionó una imagen --}}
+                            @if ($image_file)
+                                <div class="mt-2">
+                                    <img src="{{ $image_file->temporaryUrl() }}" alt="Vista previa" class="img-fluid rounded border" style="max-height: 220px;">
+                                </div>
+                            @endif
+                        </div>
+
                         <div class="col-12">
                             <div class="form-text">TC usado (MVP): 3.80</div>
                         </div>
@@ -277,6 +290,27 @@
                             <label class="form-label">Motivo</label>
                             <input type="text" class="form-control" placeholder="Detalle" wire:model.defer="detail">
                             @error('detail') <span class="text-danger">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label">Comprobante (imagen)</label>
+                            <input type="file" class="form-control" wire:model="image_file" accept="image/*">
+                            @error('image_file') <span class="text-danger">{{ $message }}</span> @enderror
+
+                            <div class="mt-2">
+                                @if ($image_file)
+                                    {{-- Si el usuario acaba de seleccionar una nueva imagen, preview temporal --}}
+                                    <img src="{{ $image_file->temporaryUrl() }}" alt="Vista previa" class="img-fluid rounded border" style="max-height: 220px;">
+                                @else
+                                    @php
+                                        // Usa el disco 'public' y arma la URL con asset('storage/...') para evitar problemas de APP_URL/subcarpetas
+                                        $path = $image_path;
+                                        $exists = $path && \Illuminate\Support\Facades\Storage::disk('public')->exists($path);
+                                        $url = $exists ? asset('storage/'.$path) : asset('images/placeholder-income.png');
+                                    @endphp
+                                    <img src="{{ $url }}" alt="Comprobante" class="img-fluid rounded border" style="max-height: 220px;">
+                                @endif
+                            </div>
                         </div>
 
                         <div class="col-12">
