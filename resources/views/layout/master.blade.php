@@ -117,6 +117,16 @@
         });
     }
 
+    function alertError() {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Hubo un error. Contactar con el administrador',
+            confirmButtonText: 'OK',
+        });
+    }
+
+    //TODO: Homologar con QuestionGenerate
     function questionDelete(id) {
         Swal.fire({
             title: "Se va a eliminar el registro",
@@ -138,6 +148,28 @@
         });
     }
 
+    //TODO: Homologar con QuestionDelete
+    function questionGenerate() {
+        Swal.fire({
+            title: "Generar costo por placa",
+            text: "Se eliminaran regsitros del mes actual y se generar el costo por placa, esto es de solo contingencia esta de acuerdo?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Generar"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Livewire.dispatch('generate_cost_per_plates')
+                Swal.fire({
+                    title: "Generado!",
+                    text: "Se genero el costo por placa con éxito!!!",
+                    icon: "success"
+                });
+            }
+        });
+    }
+
     document.addEventListener('open-modal', event => {
         openModal(event.detail[0]['name'], {focus:"#" + event.detail[0]['focus']});
     });
@@ -150,8 +182,19 @@
         successAlert(event.detail[0]['message']);
     });
 
+
+    //TODO: Homologar llamado con questionGenerate
     window.addEventListener('questionDelete', event => {
         questionDelete(event.detail[0]['id']);
+    });
+
+    //TODO: Homologar llamado con questionDelete
+    window.addEventListener('questionGenerate', event => {
+        questionGenerate();
+    });
+
+    window.addEventListener('alertError', event => {
+        alertError();
     });
 
     document.addEventListener('click', (e) => {

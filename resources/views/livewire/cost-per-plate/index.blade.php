@@ -60,10 +60,11 @@
             <div class="card shadow-sm">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0" style="color:#e11d48;">COSTO POR PLACA</h5>
-                    <button class="btn btn-primary" data-bs-toggle="modal"
-                            data-bs-target="#modalGenerateCostPerPlate">
-                        <i class="ti ti-square-rounded-plus f-s-14"></i> Crear
-                    </button>
+                    @role('admin')
+                        <button class="btn btn-primary" wire:click="questionGenerate">
+                            <i class="ti ti-square-rounded-plus f-s-14"></i> Generar
+                        </button>
+                    @endrole
                 </div>
                 <div class="card-body pb-2">
                     <div class="table-responsive tableFixHead">
@@ -121,38 +122,6 @@
                             <span class="spinner-border spinner-border-sm"></span> Cargando…
                         </span>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Modal: Generar --}}
-    <div class="modal fade" id="modalGenerateCostPerPlate" aria-hidden="true" tabindex="-1" data-bs-backdrop="static" wire:ignore.self>
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Generar Costo por Placa</h5>
-                    <button type="button" class="btn-close m-0 fs-5" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="type" class="form-label">Tipo</label>
-                            <select class="form-select" id="type" wire:model="type">
-                                <option value="cp">Costo por Placa</option>
-                                <option value="prueba">Prueba</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Fecha</label>
-                            <input type="date" class="form-control" wire:model="date">
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light-primary" wire:click="generate">Generar</button>
-                    <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal">Cerrar</button>
                 </div>
             </div>
         </div>
