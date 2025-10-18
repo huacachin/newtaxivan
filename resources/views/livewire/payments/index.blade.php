@@ -71,17 +71,17 @@
             <div class="card shadow-sm">
                 <div class="card-header">
                     <div class="row g-3">
-                        <div class="col-xl-9 col-md-7">
+                        <div class="col-4">
                             <label class="form-label">Buscar</label>
                             <form class="app-form app-icon-form" action="#">
-                                <div class="position-relative">
+
                                     <input type="search" class="form-control" placeholder="Buscar..."
                                            aria-label="Buscar" wire:model.live="search">
-                                    <i class="ti ti-search text-dark"></i>
-                                </div>
+
+
                             </form>
                         </div>
-                        <div class="col-xl-3 col-md-5">
+                        <div class="col-4">
                             <label class="form-label">Filtro</label>
                             <select class="form-select" aria-label="Selecciona item a filtrar" wire:model.live="filter">
                                 <option value="">Seleccione un filtro</option>
@@ -90,17 +90,17 @@
                                 <option value="3">Serie</option>
                             </select>
                         </div>
-                    </div>
-                    <div class="row g-3 mt-2">
-                        <div class="col-xl-3 col-md-3">
+
+
+                        <div class="col-4">
                             <label class="form-label">Fecha Inicio</label>
                             <input type="date" class="form-control" wire:model="date_start">
                         </div>
-                        <div class="col-xl-3 col-md-3">
+                        <div class="col-3">
                             <label class="form-label">Fecha Fin</label>
                             <input type="date" class="form-control" wire:model="date_end">
                         </div>
-                        <div class="col-xl-2 col-md-2">
+                        <div class="col-3">
                             <label class="form-label">Sucursal</label>
                             <select class="form-select" wire:model.live="headquarter_id" aria-label="Selecciona sucursal">
                                 <option value="">Todos</option>
@@ -109,7 +109,7 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-xl-2 col-md-2">
+                        <div class="col-3">
                             <label class="form-label">Tipo</label>
                             <select class="form-select" wire:model.live="type" aria-label="Selecciona tipo">
                                 <option value="">Todos</option>
@@ -118,41 +118,41 @@
                                 <option value="RETRASO">Retraso</option>
                             </select>
                         </div>
-                        <div class="col-xl-2 col-md-2 d-flex align-items-end">
+                        <div class="col-3 col-md-2 d-flex align-items-end">
                             <button class="btn btn-primary w-100" wire:click="applyDate">
-                                Buscar
+                                <i class="ti ti-search f-s-17"></i>
                             </button>
                         </div>
                     </div>
                     <div class="row g-2 mt-2">
                         @role('admin')
-                        <div class="col-xl-2 col-md-4">
+                        <div class="col-lg-2 col-4">
                             <button class="btn btn-primary w-100" wire:click="daily">
                                 <i class="ti ti-report-analytics f-s-16"></i> Diario
                             </button>
                         </div>
-                        <div class="col-xl-2 col-md-4">
+                        <div class="col-lg-2 col-4">
                             <button class="btn btn-primary w-100" wire:click="monthly">
                                 <i class="ti ti-report-analytics f-s-16"></i> Mensual
                             </button>
                         </div>
-                        <div class="col-xl-2 col-md-4">
+                        <div class="col-lg-2 col-4">
                             <button class="btn btn-primary w-100" wire:click="stats">
                                 <i class="ti ti-report-analytics f-s-16"></i> Estadis.
                             </button>
                         </div>
-                        <div class="col-xl-2 col-md-4">
+                        <div class="col-lg-2 col-4">
                             <button class="btn btn-primary w-100" wire:click="export">
                                 <i class="ti ti-file-analytics f-s-16"></i> Exportar
                             </button>
                         </div>
                         @endrole
-                        <div class="col-xl-2 col-md-4">
+                        <div class="col-lg-2 col-4">
                             <button class="btn btn-primary w-100" wire:click="openAddModal">
                                 <i class="ti ti-square-plus f-s-16"></i> Nuevo
                             </button>
                         </div>
-                        <div class="col-xl-2 col-md-4">
+                        <div class="col-lg-2 col-4">
                             <button class="btn btn-primary w-100" id="down">
                                 <i class="ti ti-square-chevrons-down f-s-17"></i>
                             </button>

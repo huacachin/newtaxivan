@@ -74,8 +74,8 @@
                     <div class="row mb-2">
                         @if($searchType != 3)
                             {{-- Ajuste a col-4 para dejar espacio al botón Aplicar --}}
-                            <div class="col-xl-4 col-md-3 mb-2 mb-md-0">
-                                <label class="form-label">Buscar</label>
+                            <div class="col-3 mb-2 mb-md-0">
+                                <label class="form-label d-none d-lg-block">Buscar</label>
                                 <form class="app-form app-icon-form" action="#">
                                     <div class="position-relative">
                                         <input type="search" class="form-control" placeholder="Buscar..."
@@ -85,8 +85,8 @@
                                 </form>
                             </div>
                         @else
-                            <div class="col-xl-4 col-md-3 mb-2 mb-md-0">
-                                <label class="form-label">Selecciona una sucursal</label>
+                            <div class="col-3 mb-2 mb-md-0">
+                                <label class="form-label d-none d-lg-block">Selecciona una sucursal</label>
                                 <select class="form-select" aria-label="Selecciona item a filtrar"
                                         wire:model.live="searchText">
                                     <option value="">Todos</option>
@@ -97,8 +97,8 @@
                             </div>
                         @endif
 
-                        <div class="col-xl-3 col-md-3 mb-2 mb-md-0">
-                            <label class="form-label">Filtro</label>
+                        <div class="col-3 mb-2 mb-md-0">
+                            <label class="form-label d-none d-lg-block">Filtro</label>
                             <select class="form-select" aria-label="Selecciona item a filtrar"
                                     wire:model.live="searchType">
                                 <option value="1">Placa</option>
@@ -106,17 +106,17 @@
                                 <option value="3">Sucursal</option>
                             </select>
                         </div>
-                        <div class="col-xl-2 col-md-2 mb-2 mb-md-0">
-                            <label class="form-label">Fecha Inicio</label>
+                        <div class="col-2 mb-2 mb-md-0">
+                            <label class="form-label d-none d-lg-block">Fecha Inicio</label>
                             {{-- UI sin disparar consulta: uiFromDate --}}
                             <input type="date" class="form-control" wire:model.defer="uiFromDate">
                         </div>
-                        <div class="col-xl-2 col-md-2 mb-2 mb-md-0">
-                            <label class="form-label">Fecha Fin</label>
+                        <div class="col-2 mb-2 mb-md-0">
+                            <label class="form-label d-none d-lg-block">Fecha Fin</label>
                             {{-- UI sin disparar consulta: uiToDate --}}
                             <input type="date" class="form-control" wire:model.defer="uiToDate">
                         </div>
-                        <div class="col-xl-1 col-md-2 mb-2 mb-md-0 d-flex align-items-end">
+                        <div class="col-2 mb-2 mb-md-0 d-flex align-items-end">
                             <button class="btn btn-primary w-100"
                                     wire:click="applyDateRange"
                                     wire:loading.attr="disabled"
@@ -127,38 +127,38 @@
                     </div>
                     <div class="row g-2 mb-2">
                         @role('admin')
-                        <div class="col-xl-2 col-lg-2 col-md-4">
+                        <div class="col-lg-2 col-4">
                             <button wire:click="reportMonthly" class="btn btn-primary w-100">
                                 <i class="ti ti-report-analytics f-s-16 text--"></i> Mensual
                             </button>
                         </div>
-                        <div class="col-xl-2 col-md-4">
+                        <div class="col-lg-2 col-4">
                             <button wire:click="reportRmp" class="btn btn-primary w-100">
                                 <i class="ti ti-report-analytics f-s-16"></i> RMP V.T
                             </button>
                         </div>
-                        <div class="col-xl-2 col-md-4">
+                        <div class="col-lg-2 col-4">
                             <button wire:click="reportStats" class="btn btn-primary w-100">
                                 <i class="ti ti-report-analytics f-s-16"></i> Estadis.
                             </button>
                         </div>
                         @endrole
-                        <div class="col-xl-2 col-md-4">
+                        <div class="col-lg-2 col-4">
                             <button class="btn btn-primary w-100" wire:click="export">
                                 <i class="ti ti-file-analytics f-s-16"></i> Exportar
                             </button>
                         </div>
-                        <div class="col-xl-2 col-md-4">
+                        <div class="col-lg-2 col-4">
                             <button class="btn btn-primary w-100" wire:click="openAddModal">
                                 <i class="ti ti-square-plus f-s-16"></i> Nuevo
                             </button>
                         </div>
-                        <div class="col-xl-1 col-md-2">
+                        <div class="col-lg-1 col-2">
                             <button class="btn btn-primary w-100" id="down">
                                 <i class="ti ti-square-chevrons-down f-s-17"></i>
                             </button>
                         </div>
-                        <div class="col-xl-1 col-md-2">
+                        <div class="col-lg-1 col-2">
                             <button
                                 class="btn w-100 {{ $groupMode ? 'btn-success' : 'btn-primary' }}"
                                 wire:click="toggleGroup"
