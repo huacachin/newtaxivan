@@ -2,34 +2,6 @@
     <style>
         .hide-label { position:absolute; left:-9999px; }
 
-        /* Encabezado y pie oscuros para TODAS las tablas de esta vista */
-        .table-section .table thead th {
-            background-color: #009BDC !important;
-            color: #fff !important;
-            vertical-align: middle;
-        }
-        .table-section .table tfoot th,
-        .table-section .table tfoot td {
-            background-color: #009BDC !important;
-            color: #fff !important;
-        }
-
-        /* Tabla de Vehículos de apoyo: contenido con gris un poco más fuerte */
-        .support-table tbody td {
-            background-color: #e5e7eb !important; /* gris más fuerte */
-        }
-        .support-table tbody tr:hover td {
-            background-color: #d1d5db !important; /* hover un poco más notorio */
-        }
-        /* Evitar que el striped sobrescriba el fondo deseado */
-        .support-table.table-striped tbody tr:nth-of-type(odd) td {
-            background-color: #e5e7eb !important;
-        }
-
-        /* Alinear centrado rápido */
-        .ta-center { text-align: center; }
-        .f-w-600 { font-weight: 600; }
-
         .screen-overlay {
             position: fixed;
             inset: 0;                 /* full viewport */
@@ -170,36 +142,36 @@
                         </div>
                     </div>
 
-                    <div class="table-responsive">
-                        <table class="table table-sm table-bordered table-striped table-hover"
+                    <div class="">
+                        <table style="width: 100%; font-size: 10px;padding: 0px;" class=" table table-bordered table-striped table-hover"
                                wire:key="dep-table-{{ $groupMode ? 'g' : 'd' }}">
 
-                            <thead class="text-center">
+                            <thead class="text-center bg-primary" >
                             <tr>
                                 @if(!$groupMode)
                                     <th class="ta-center" rowspan="2"></th>
                                 @endif
-                                <th class="ta-center" rowspan="2">N°</th>
-                                <th class="ta-center" rowspan="2">Placa</th>
-                                <th class="ta-center" rowspan="2">Fecha</th>
-                                <th class="ta-center" colspan="2">Hora</th>
-                                <th class="ta-center" rowspan="2">Sucursal</th>
-                                <th class="ta-center" rowspan="2">Usuario</th>
-                                <th class="ta-center" colspan="3">Empresa</th>
-                                <th class="ta-center" colspan="3">Vehiculo</th>
-                                <th class="ta-center" rowspan="2">Map</th>
+                                <th class="ta-center" rowspan="2" style="padding: 3px !important;">N°</th>
+                                <th class="ta-center" rowspan="2" style="padding: 3px !important;">Placa</th>
+                                <th class="ta-center" rowspan="2" style="padding: 3px !important;">Fecha</th>
+                                <th class="ta-center" colspan="2" style="padding: 3px !important;">Hora</th>
+                                <th class="ta-center" rowspan="2" style="padding: 3px !important;">Sucursal</th>
+                                <th class="ta-center" rowspan="2" style="padding: 3px !important;">Usuario</th>
+                                <th class="ta-center" colspan="3" style="padding: 3px !important;">Empresa</th>
+                                <th class="ta-center" colspan="3" style="padding: 3px !important;">Vehiculo</th>
+                                <th class="ta-center" rowspan="2" style="padding: 3px !important;">Map</th>
                             </tr>
                             <tr>
-                                <th class="ta-center">Sal.</th>
-                                <th class="ta-center">Frec.</th>
+                                <th class="ta-center" style="padding: 3px !important;">Sal.</th>
+                                <th class="ta-center" style="padding: 3px !important;">Frec.</th>
 
-                                <th class="ta-center">Salida</th>
-                                <th class="ta-center">T. S</th>
-                                <th class="ta-center">S/</th>
+                                <th class="ta-center" style="padding: 3px !important;">Salida</th>
+                                <th class="ta-center" style="padding: 3px !important;">T. S</th>
+                                <th class="ta-center" style="padding: 3px !important;">S/</th>
 
-                                <th class="ta-center">P.</th>
-                                <th class="ta-center">PJ</th>
-                                <th class="ta-center">S/</th>
+                                <th class="ta-center" style="padding: 3px !important;">P.</th>
+                                <th class="ta-center" style="padding: 3px !important;">PJ</th>
+                                <th class="ta-center" style="padding: 3px !important;">S/</th>
                             </tr>
                             </thead>
 
@@ -208,7 +180,7 @@
                                 @foreach($rows as $d)
                                     <tr class="text-center">
                                         @if(!$groupMode)
-                                            <td class="text-center">
+                                            <td class="text-center" style="padding: 3px !important;">
                                                 <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
                                                    wire:click="openEditModal({{ $d->id }})"></i>
                                             </td>
@@ -216,23 +188,23 @@
 
                                         {{-- Nº --}}
                                         @if($groupMode)
-                                            <td>{{ $d->ordinal }}</td>
+                                            <td style="padding: 3px !important;">{{ $d->ordinal }}</td>
                                         @else
-                                            <td>{{ $loop->iteration }}</td>
+                                            <td style="padding: 3px !important;">{{ $loop->iteration }}</td>
                                         @endif
 
-                                        <td>{{ $d->plate }}</td>
-                                        <td>{{ \Illuminate\Support\Carbon::parse($d->date)->format('d/m/Y') }}</td>
+                                        <td style="padding: 3px !important;" style="padding: 3px !important;">{{ $d->plate }}</td>
+                                        <td style="padding: 3px !important;">{{ \Illuminate\Support\Carbon::parse($d->date)->format('d/m/Y') }}</td>
 
                                         {{-- Hora: Salida --}}
                                         @if(!$groupMode)
-                                            <td class="p-2">{{ $d->hour }}</td>
+                                            <td style="padding: 3px !important;" class="p-2">{{ $d->hour }}</td>
                                         @else
-                                            <td>-</td>
+                                            <td style="padding: 3px !important;">-</td>
                                         @endif
 
                                         {{-- Hora: Frec. (fix para agrupar) --}}
-                                        <td>
+                                        <td style="padding: 3px !important;">
                                             @if($groupMode)
                                                 -
                                             @else
@@ -240,22 +212,22 @@
                                             @endif
                                         </td>
 
-                                        <td>{{ $d->headquarter_name }}</td>
-                                        <td>{{ $d->user_name }}</td>
+                                        <td style="padding: 3px !important;">{{ $d->headquarter_name }}</td>
+                                        <td style="padding: 3px !important;">{{ $d->user_name }}</td>
 
                                         {{-- Empresa --}}
-                                        <td>{{ number_format($groupMode ? ($d->k1 ?? 0) : ($d->times ?? 0)) }}</td>
-                                        <td>{{ number_format($groupMode ? ($d->k1 ?? 0) : ($d->times ?? 0)) }}</td>
-                                        <td>{{ number_format($groupMode ? ($d->p1 ?? 0) : ($d->price ?? 0), 2) }}</td>
+                                        <td style="padding: 3px !important;">{{ number_format($groupMode ? ($d->k1 ?? 0) : ($d->times ?? 0)) }}</td>
+                                        <td style="padding: 3px !important;">{{ number_format($groupMode ? ($d->k1 ?? 0) : ($d->times ?? 0)) }}</td>
+                                        <td style="padding: 3px !important;">{{ number_format($groupMode ? ($d->p1 ?? 0) : ($d->price ?? 0), 2) }}</td>
 
                                         {{-- Vehículo --}}
-                                        <td>{{ number_format($groupMode ? ($d->pasajeros ?? 0) : ($d->passenger ?? 0)) }}</td>
-                                        <td>{{ number_format($groupMode ? ($d->pasaje ?? 0) : ($d->passage ?? 0), 2) }}</td>
-                                        <td>{{ number_format($d->total_pasaje ?? 0, 2) }}</td>
+                                        <td style="padding: 3px !important;">{{ number_format($groupMode ? ($d->pasajeros ?? 0) : ($d->passenger ?? 0)) }}</td>
+                                        <td style="padding: 3px !important;">{{ number_format($groupMode ? ($d->pasaje ?? 0) : ($d->passage ?? 0), 2) }}</td>
+                                        <td style="padding: 3px !important;">{{ number_format($d->total_pasaje ?? 0, 2) }}</td>
 
                                         {{-- Map sólo en detalle --}}
                                         @if(!$groupMode)
-                                            <td>
+                                            <td style="padding: 3px !important;">
                                                 @if(!empty($d->latitude) && !empty($d->longitude))
                                                     <a href="https://maps.google.com/?q={{ $d->latitude }},{{ $d->longitude }}"
                                                        target="_blank" class="underline">🌍</a>
@@ -264,27 +236,27 @@
                                                 @endif
                                             </td>
                                         @else
-                                            <td>-</td>
+                                            <td style="padding: 3px !important;">-</td>
                                         @endif
                                     </tr>
                                 @endforeach
                             @else
                                 <tr>
-                                    <td colspan="15" class="text-center">No se encontrarón resultados</td>
+                                    <td style="padding: 3px !important;" colspan="15" class="text-center">No se encontrarón resultados</td>
                                 </tr>
                             @endif
                             </tbody>
 
                             <tfoot class="text-center f-w-600">
                             <tr>
-                                <td class="p-2" colspan="8">TOTAL</td>
-                                <td class="p-2 text-end">{{ number_format($totals->times_total ?? 0) }}</td>
-                                <td class="p-2 text-end">{{ number_format($totals->times_total ?? 0) }}</td>
-                                <td class="p-2 text-end">{{ number_format($totals->price_total ?? 0, 2) }}</td>
-                                <td class="p-2 text-end">{{ number_format($totals->passengers_total ?? 0) }}</td>
-                                <td class="p-2 text-end">{{ number_format($totals->passage_total ?? 0, 2) }}</td>
-                                <td class="p-2 text-end">{{ number_format($totals->total_pasaje_total ?? 0, 2) }}</td>
-                                <td>-</td>
+                                <td style="padding: 3px !important;" class="p-2" colspan="8">TOTAL</td>
+                                <td style="padding: 3px !important;" class="p-2 text-end">{{ number_format($totals->times_total ?? 0) }}</td>
+                                <td style="padding: 3px !important;" class="p-2 text-end">{{ number_format($totals->times_total ?? 0) }}</td>
+                                <td style="padding: 3px !important;" class="p-2 text-end">{{ number_format($totals->price_total ?? 0, 2) }}</td>
+                                <td style="padding: 3px !important;" class="p-2 text-end">{{ number_format($totals->passengers_total ?? 0) }}</td>
+                                <td style="padding: 3px !important;" class="p-2 text-end">{{ number_format($totals->passage_total ?? 0, 2) }}</td>
+                                <td style="padding: 3px !important;" class="p-2 text-end">{{ number_format($totals->total_pasaje_total ?? 0, 2) }}</td>
+                                <td style="padding: 3px !important;">-</td>
                             </tr>
                             </tfoot>
                         </table>
