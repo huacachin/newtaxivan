@@ -25,7 +25,7 @@
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
                 <li class="d-flex">
-                    <i class="ti ti-door-exit f-s-16"></i>
+                    <i style="font-size:10px;" class="ti ti-door-exit f-s-16"></i>
                     <a href="#" class="f-s-14 d-flex gap-2">
                         <span class="d-none d-md-block">Salidas</span>
                     </a>
@@ -52,7 +52,7 @@
                                     <div class="position-relative">
                                         <input type="search" class="form-control" placeholder="Buscar..."
                                                aria-label="Buscar" wire:model.live="searchText">
-                                        <i class="ti ti-search text-dark"></i>
+                                        <i style="font-size:10px;" class="ti ti-search text-dark"></i>
                                     </div>
                                 </form>
                             </div>
@@ -89,55 +89,55 @@
                             <input type="date" class="form-control" wire:model.defer="uiToDate">
                         </div>
                         <div class="col-2 mb-2 mb-md-0 d-flex align-items-end">
-                            <button class="btn btn-primary w-100"
+                            <button style="font-size: 10px" class="btn btn-primary w-100"
                                     wire:click="applyDateRange"
                                     wire:loading.attr="disabled"
                                     wire:target="applyDateRange">
-                                <i class="ti ti-search f-s-16"></i>
+                                <i style="font-size:10px;" class="ti ti-search f-s-16"></i>
                             </button>
                         </div>
                     </div>
                     <div class="row g-2 mb-2">
                         @role('admin')
                         <div class="col-lg-2 col-4">
-                            <button wire:click="reportMonthly" class="btn btn-primary w-100">
-                                <i class="ti ti-report-analytics f-s-16 text--"></i> Mensual
+                            <button style="font-size: 10px" wire:click="reportMonthly" class="btn btn-sm btn-primary w-100">
+                                <i style="font-size:10px;" class="ti ti-report-analytics f-s-16 text--"></i> Mensual
                             </button>
                         </div>
                         <div class="col-lg-2 col-4">
-                            <button wire:click="reportRmp" class="btn btn-primary w-100">
-                                <i class="ti ti-report-analytics f-s-16"></i> RMP V.T
+                            <button style="font-size: 10px" wire:click="reportRmp" class="btn btn-sm btn-primary w-100">
+                                <i style="font-size:10px;" class="ti ti-report-analytics f-s-16"></i> RMP V.T
                             </button>
                         </div>
                         <div class="col-lg-2 col-4">
-                            <button wire:click="reportStats" class="btn btn-primary w-100">
-                                <i class="ti ti-report-analytics f-s-16"></i> Estadis.
+                            <button style="font-size: 10px" wire:click="reportStats" class="btn btn-sm btn-primary w-100">
+                                <i style="font-size:10px;" class="ti ti-report-analytics f-s-16"></i> Estadis.
                             </button>
                         </div>
                         @endrole
                         <div class="col-lg-2 col-4">
-                            <button class="btn btn-primary w-100" wire:click="export">
-                                <i class="ti ti-file-analytics f-s-16"></i> Exportar
+                            <button style="font-size: 10px" class="btn btn-sm btn-primary w-100" wire:click="export">
+                                <i style="font-size:10px;" class="ti ti-file-analytics f-s-16"></i> Exportar
                             </button>
                         </div>
                         <div class="col-lg-2 col-4">
-                            <button class="btn btn-primary w-100" wire:click="openAddModal">
-                                <i class="ti ti-square-plus f-s-16"></i> Nuevo
+                            <button style="font-size: 10px" class="btn btn-sm btn-primary w-100" wire:click="openAddModal">
+                                <i style="font-size:10px;" class="ti ti-square-plus f-s-16"></i> Nuevo
                             </button>
                         </div>
                         <div class="col-lg-1 col-2">
-                            <button class="btn btn-primary w-100" id="down">
-                                <i class="ti ti-square-chevrons-down f-s-17"></i>
+                            <button style="font-size: 10px" class="btn btn-sm btn-primary w-100" id="down">
+                                <i style="font-size:10px;" class="ti ti-square-chevrons-down f-s-17"></i>
                             </button>
                         </div>
                         <div class="col-lg-1 col-2">
-                            <button
-                                class="btn w-100 {{ $groupMode ? 'btn-success' : 'btn-primary' }}"
+                            <button style="font-size: 10px"
+                                class="btn btn-sm w-100 {{ $groupMode ? 'btn-success' : 'btn-primary' }}"
                                 wire:click="toggleGroup"
                                 aria-pressed="{{ $groupMode ? 'true' : 'false' }}"
                                 title="{{ $groupMode ? 'Agrupado: ON' : 'Agrupado: OFF' }}"
                             >
-                                <i class="ti ti-a-b-2 f-s-17"></i>
+                                <i style="font-size:10px;" class="ti ti-a-b-2 f-s-17"></i>
                             </button>
                         </div>
                     </div>
@@ -181,7 +181,7 @@
                                     <tr class="text-center">
                                         @if(!$groupMode)
                                             <td class="text-center" style="padding: 3px !important;">
-                                                <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
+                                                <i style="font-size:10px;" class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
                                                    wire:click="openEditModal({{ $d->id }})"></i>
                                             </td>
                                         @endif
@@ -309,7 +309,7 @@
                                 <tr class="text-center">
                                     @if(!$groupMode)
                                         <td class="text-center">
-                                            <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
+                                            <i style="font-size:10px;" class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
                                                wire:click="openEditModal({{ $d->id }})"></i>
                                         </td>
                                     @endif
@@ -425,7 +425,7 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Agregar Salida</h5>
-                        <button type="button" class="btn-close m-0 fs-5" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button style="font-size: 10px" type="button" class="btn-close m-0 fs-5" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
 
                     <div class="modal-body">
@@ -510,8 +510,8 @@
                     </div>
 
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-primary" wire:click="save">Agregar</button>
-                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cerrar</button>
+                        <button style="font-size: 10px" type="button" class="btn btn-primary" wire:click="save">Agregar</button>
+                        <button style="font-size: 10px" type="button" class="btn btn-primary" data-bs-dismiss="modal">Cerrar</button>
                     </div>
                 </div>
             </div>
@@ -523,7 +523,7 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Editar Salida</h5>
-                        <button type="button" class="btn-close m-0 fs-5" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button style="font-size: 10px" type="button" class="btn-close m-0 fs-5" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
 
                     <div class="modal-body">
@@ -603,8 +603,8 @@
                     </div>
 
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-primary" wire:click="update">Editar</button>
-                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cerrar</button>
+                        <button style="font-size: 10px" type="button" class="btn btn-primary" wire:click="update">Editar</button>
+                        <button style="font-size: 10px" type="button" class="btn btn-primary" data-bs-dismiss="modal">Cerrar</button>
                     </div>
                 </div>
             </div>
