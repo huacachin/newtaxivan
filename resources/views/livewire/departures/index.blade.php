@@ -142,7 +142,7 @@
                         </div>
                     </div>
 
-                    <div class="">
+                    <div class="table-responsive">
                         <table style="width: 100%; font-size: 10px;padding: 0px;" class=" table table-bordered table-striped table-hover"
                                wire:key="dep-table-{{ $groupMode ? 'g' : 'd' }}">
 
