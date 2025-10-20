@@ -120,10 +120,42 @@ function copyvalue() {
 
 // >>-- 03 sidebar toggle js --<<
 $(document).on('click', '.header-toggle', function () {
-  $("nav").toggleClass("semi-nav");
+    var $window = $(window);
+    if ($window.width() < 1199) {
+        $("nav").toggleClass("semi-nav");
+
+    } else {
+        $("nav").toggleClass("desktop-nav");
+    }
+
 });
-$(".toggle-semi-nav").on("click", function () {
-  $("nav").removeClass("semi-nav");
+// util: cerrar el semi-nav
+function closeSemiNav() {
+    $('nav.dark-sidebar').removeClass('semi-nav');
+}
+
+// 1) botón dentro del nav (ya lo tenías)
+$(document).on('click', '.toggle-semi-nav', function (e) {
+    e.preventDefault();
+    closeSemiNav();
+});
+
+// 2) click en cualquier parte FUERA del nav (overlay o contenido)
+$(document).on('click', function (e) {
+    const $nav = $('nav.dark-sidebar');
+    if (!$nav.hasClass('semi-nav')) return;               // si no está abierto, nada
+
+    const clickedInsideNav = $(e.target).closest('nav.dark-sidebar').length > 0;
+    const clickedHeaderToggle = $(e.target).closest('.header-toggle').length > 0;
+
+    if (!clickedInsideNav && !clickedHeaderToggle) {
+        closeSemiNav();
+    }
+});
+
+// 3) opcional: cerrar con ESC
+$(document).on('keydown', function (e) {
+    if (e.key === 'Escape') closeSemiNav();
 });
 
 
@@ -136,13 +168,12 @@ function resize() {
   var $window = $(window),
     $nav = $('nav');
 
-  $nav.removeClass('semi-nav');
-  if ($window.width() < 768) {
-    // $nav.removeClass('semi-nav');
+  //$nav.removeClass('semi-nav');
+  if ($window.width() > 1199) {
+    $nav.removeClass('desktop-nav');
 
-  } else if ($window.width() < 1199) {
-    $nav.addClass('semi-nav');
   }
+
 }
 
 $(function () {

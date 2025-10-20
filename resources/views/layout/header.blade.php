@@ -7,19 +7,9 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-6 d-flex align-items-center header-left">
-                        <span class="header-toggle me-3">
-                          <i class="ti ti-category"></i>
-                        </span>
-
-                                <div class="header-searchbar">
-                                    <form class="me-3 app-form app-icon-form " action="#">
-                                        <div class="position-relative">
-                                            <input type="search" class="form-control" placeholder="Search..."
-                                                   aria-label="Search">
-                                            <i class="ti ti-search text-dark"></i>
-                                        </div>
-                                    </form>
-                                </div>
+                                <span class="header-toggle me-3">
+                                  <i class="ti ti-menu"></i>
+                                </span>
                             </div>
 
                             <div class="col-6 d-flex align-items-center justify-content-end header-right">
@@ -197,7 +187,8 @@
                                                     <form action="{{ route('logout') }}" method="POST">
                                                         @csrf
                                                         <button type="submit" class="dropdown-item mb-0 text-danger">
-                                                            <i class="ti ti-logout pe-1 f-s-18 text-danger"></i> Cerrar Sesión
+                                                            <i class="ti ti-logout pe-1 f-s-18 text-danger"></i> Cerrar
+                                                            Sesión
                                                         </button>
                                                     </form>
                                                 </li>

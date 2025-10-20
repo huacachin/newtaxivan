@@ -50,7 +50,7 @@
                                 <label class="form-label d-none d-lg-block">Buscar</label>
                                 <form class="app-form app-icon-form" action="#">
                                     <div class="position-relative">
-                                        <input type="search" class="form-control" placeholder="Buscar..."
+                                        <input type="search" class="form-control form-control-sm" placeholder="Buscar..."
                                                aria-label="Buscar" wire:model.live="searchText">
                                         <i style="font-size:10px;" class="ti ti-search text-dark"></i>
                                     </div>
@@ -59,7 +59,7 @@
                         @else
                             <div class="col-3 mb-2 mb-md-0">
                                 <label class="form-label d-none d-lg-block">Selecciona una sucursal</label>
-                                <select class="form-select" aria-label="Selecciona item a filtrar"
+                                <select class="form-control form-control-sm" aria-label="Selecciona item a filtrar"
                                         wire:model.live="searchText">
                                     <option value="">Todos</option>
                                     @foreach($headquarters as $h)
@@ -71,7 +71,7 @@
 
                         <div class="col-3 mb-2 mb-md-0">
                             <label class="form-label d-none d-lg-block">Filtro</label>
-                            <select class="form-select" aria-label="Selecciona item a filtrar"
+                            <select class="form-control form-control-sm" aria-label="Selecciona item a filtrar"
                                     wire:model.live="searchType">
                                 <option value="1">Placa</option>
                                 <option value="2">Usuario</option>
@@ -81,15 +81,15 @@
                         <div class="col-2 mb-2 mb-md-0">
                             <label class="form-label d-none d-lg-block">Fecha Inicio</label>
                             {{-- UI sin disparar consulta: uiFromDate --}}
-                            <input type="date" class="form-control" wire:model.defer="uiFromDate">
+                            <input type="date" class="form-control form-control-sm" wire:model.defer="uiFromDate">
                         </div>
                         <div class="col-2 mb-2 mb-md-0">
                             <label class="form-label d-none d-lg-block">Fecha Fin</label>
                             {{-- UI sin disparar consulta: uiToDate --}}
-                            <input type="date" class="form-control" wire:model.defer="uiToDate">
+                            <input type="date" class="form-control form-control-sm" wire:model.defer="uiToDate">
                         </div>
                         <div class="col-2 mb-2 mb-md-0 d-flex align-items-end">
-                            <button style="font-size: 10px" class="btn btn-primary w-100"
+                            <button style="font-size: 10px" class="btn btn-primary btn-sm w-100"
                                     wire:click="applyDateRange"
                                     wire:loading.attr="disabled"
                                     wire:target="applyDateRange">
