@@ -125,7 +125,7 @@
                         </div>
                         <div class="col-lg-2 col-4">
                             <button wire:click="reportStats" class="btn btn-sm btn-primary w-100 ">
-                                <i  class="ti ti-report-analytics f-s-16"></i> Estadis.
+                                <i  class="ti ti-report-analytics f-s-12"></i> Estadis.
                             </button>
                         </div>
                         @endrole
