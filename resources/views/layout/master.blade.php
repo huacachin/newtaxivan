@@ -209,7 +209,20 @@
     });
 
     window.addEventListener('url-open', event => {
-        window.location.href = event.detail[0]['url'];
+        const url = event.detail?.[0]?.url || event.detail?.url;
+        if (!url) return;
+
+        // Nueva pestaña/ventana (seguro contra reverse-tabnabbing)
+        const win = window.open(url, '_blank', 'noopener,noreferrer');
+
+        // Fallback si el popup es bloqueado por el navegador
+        if (!win) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            a.click();
+        }
     });
 
     window.addEventListener('go-back', (e) => {

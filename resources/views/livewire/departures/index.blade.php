@@ -2,6 +2,22 @@
     <style>
         .hide-label { position:absolute; left:-9999px; }
 
+        table {
+            border-collapse: collapse; /* opcional */
+            width: 100%;
+        }
+
+        th,td{
+            padding: 3px !important;
+            font-size: 10px !important;
+            text-align: center !important;
+            vertical-align: middle;   /* <-- clave */
+        }
+
+        .btn, input,select {
+            font-size: 10px !important;
+        }
+
         .screen-overlay {
             position: fixed;
             inset: 0;                 /* full viewport */
@@ -25,7 +41,7 @@
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
                 <li class="d-flex">
-                    <i style="font-size:10px;" class="ti ti-door-exit f-s-16"></i>
+                    <i  class="ti ti-door-exit f-s-16"></i>
                     <a href="#" class="f-s-14 d-flex gap-2">
                         <span class="d-none d-md-block">Salidas</span>
                     </a>
@@ -49,17 +65,15 @@
                             <div class="col-3 mb-2 mb-md-0">
                                 <label class="form-label d-none d-lg-block">Buscar</label>
                                 <form class="app-form app-icon-form" action="#">
-                                    <div class="position-relative">
-                                        <input type="search" class="form-control form-control-sm" placeholder="Buscar..."
-                                               aria-label="Buscar" wire:model.live="searchText">
-                                        <i style="font-size:10px;" class="ti ti-search text-dark"></i>
-                                    </div>
+
+                                        <input type="search" class="form-control form-control-sm " placeholder="Buscar..." aria-label="Buscar" wire:model.live="searchText">
+
                                 </form>
                             </div>
                         @else
                             <div class="col-3 mb-2 mb-md-0">
                                 <label class="form-label d-none d-lg-block">Selecciona una sucursal</label>
-                                <select class="form-control form-control-sm" aria-label="Selecciona item a filtrar"
+                                <select class="form-control form-control-sm " aria-label="Selecciona item a filtrar"
                                         wire:model.live="searchText">
                                     <option value="">Todos</option>
                                     @foreach($headquarters as $h)
@@ -71,7 +85,7 @@
 
                         <div class="col-3 mb-2 mb-md-0">
                             <label class="form-label d-none d-lg-block">Filtro</label>
-                            <select class="form-control form-control-sm" aria-label="Selecciona item a filtrar"
+                            <select class="form-control form-control-sm " aria-label="Selecciona item a filtrar"
                                     wire:model.live="searchType">
                                 <option value="1">Placa</option>
                                 <option value="2">Usuario</option>
@@ -81,130 +95,129 @@
                         <div class="col-2 mb-2 mb-md-0">
                             <label class="form-label d-none d-lg-block">Fecha Inicio</label>
                             {{-- UI sin disparar consulta: uiFromDate --}}
-                            <input type="date" class="form-control form-control-sm" wire:model.defer="uiFromDate">
+                            <input type="date" class="form-control form-control-sm " wire:model.defer="uiFromDate">
                         </div>
                         <div class="col-2 mb-2 mb-md-0">
                             <label class="form-label d-none d-lg-block">Fecha Fin</label>
                             {{-- UI sin disparar consulta: uiToDate --}}
-                            <input type="date" class="form-control form-control-sm" wire:model.defer="uiToDate">
+                            <input type="date" class="form-control form-control-sm " wire:model.defer="uiToDate">
                         </div>
                         <div class="col-2 mb-2 mb-md-0 d-flex align-items-end">
-                            <button style="font-size: 10px" class="btn btn-primary btn-sm w-100"
+                            <button class="btn btn-primary btn-sm w-100"
                                     wire:click="applyDateRange"
                                     wire:loading.attr="disabled"
                                     wire:target="applyDateRange">
-                                <i style="font-size:10px;" class="ti ti-search f-s-16"></i>
+                                <i  class="ti ti-search f-s-12"></i>
                             </button>
                         </div>
                     </div>
                     <div class="row g-2 mb-2">
                         @role('admin')
                         <div class="col-lg-2 col-4">
-                            <button style="font-size: 10px" wire:click="reportMonthly" class="btn btn-sm btn-primary w-100">
-                                <i style="font-size:10px;" class="ti ti-report-analytics f-s-16 text--"></i> Mensual
+                            <button wire:click="reportMonthly" class="btn btn-sm btn-primary w-100 ">
+                                <i  class="ti ti-report-analytics f-s-12"></i> Mensual
                             </button>
                         </div>
                         <div class="col-lg-2 col-4">
-                            <button style="font-size: 10px" wire:click="reportRmp" class="btn btn-sm btn-primary w-100">
-                                <i style="font-size:10px;" class="ti ti-report-analytics f-s-16"></i> RMP V.T
+                            <button wire:click="reportRmp" class="btn btn-sm btn-primary w-100 ">
+                                <i  class="ti ti-report-analytics f-s-12"></i> RMP V.T
                             </button>
                         </div>
                         <div class="col-lg-2 col-4">
-                            <button style="font-size: 10px" wire:click="reportStats" class="btn btn-sm btn-primary w-100">
-                                <i style="font-size:10px;" class="ti ti-report-analytics f-s-16"></i> Estadis.
+                            <button wire:click="reportStats" class="btn btn-sm btn-primary w-100 ">
+                                <i  class="ti ti-report-analytics f-s-16"></i> Estadis.
                             </button>
                         </div>
                         @endrole
                         <div class="col-lg-2 col-4">
-                            <button style="font-size: 10px" class="btn btn-sm btn-primary w-100" wire:click="export">
-                                <i style="font-size:10px;" class="ti ti-file-analytics f-s-16"></i> Exportar
+                            <button class="btn btn-sm btn-primary w-100 " wire:click="export">
+                                <i  class="ti ti-file-analytics f-s-12"></i> Exportar
                             </button>
                         </div>
                         <div class="col-lg-2 col-4">
-                            <button style="font-size: 10px" class="btn btn-sm btn-primary w-100" wire:click="openAddModal">
-                                <i style="font-size:10px;" class="ti ti-square-plus f-s-16"></i> Nuevo
+                            <button class="btn btn-sm btn-primary w-100 " wire:click="openAddModal">
+                                <i  class="ti ti-square-plus f-s-12"></i> Nuevo
                             </button>
                         </div>
                         <div class="col-lg-1 col-2">
-                            <button style="font-size: 10px" class="btn btn-sm btn-primary w-100" id="down">
-                                <i style="font-size:10px;" class="ti ti-square-chevrons-down f-s-17"></i>
+                            <button class="btn btn-sm btn-primary w-100" id="down">
+                                <i  class=" ti ti-square-chevrons-down f-s-12"></i>
                             </button>
                         </div>
                         <div class="col-lg-1 col-2">
-                            <button style="font-size: 10px"
-                                class="btn btn-sm w-100 {{ $groupMode ? 'btn-success' : 'btn-primary' }}"
+                            <button
+                                class="btn btn-sm w-100  {{ $groupMode ? 'btn-success' : 'btn-primary' }}"
                                 wire:click="toggleGroup"
                                 aria-pressed="{{ $groupMode ? 'true' : 'false' }}"
                                 title="{{ $groupMode ? 'Agrupado: ON' : 'Agrupado: OFF' }}"
                             >
-                                <i style="font-size:10px;" class="ti ti-a-b-2 f-s-17"></i>
+                                <i  class=" ti ti-a-b-2 f-s-12"></i>
                             </button>
                         </div>
                     </div>
 
                     <div class="table-responsive">
-                        <table style="width: 100%; font-size: 10px;padding: 0px;" class=" table table-bordered table-striped table-hover"
+                        <table class="table table-bordered table-striped table-hover  p-0"
                                wire:key="dep-table-{{ $groupMode ? 'g' : 'd' }}">
 
                             <thead class="text-center bg-primary" >
                             <tr>
                                 @if(!$groupMode)
-                                    <th class="ta-center" rowspan="2"></th>
+                                    <th rowspan="2"></th>
                                 @endif
-                                <th class="ta-center" rowspan="2" style="padding: 3px !important;">N°</th>
-                                <th class="ta-center" rowspan="2" style="padding: 3px !important;">Placa</th>
-                                <th class="ta-center" rowspan="2" style="padding: 3px !important;">Fecha</th>
-                                <th class="ta-center" colspan="2" style="padding: 3px !important;">Hora</th>
-                                <th class="ta-center" rowspan="2" style="padding: 3px !important;">Sucursal</th>
-                                <th class="ta-center" rowspan="2" style="padding: 3px !important;">Usuario</th>
-                                <th class="ta-center" colspan="3" style="padding: 3px !important;">Empresa</th>
-                                <th class="ta-center" colspan="3" style="padding: 3px !important;">Vehiculo</th>
-                                <th class="ta-center" rowspan="2" style="padding: 3px !important;">Map</th>
+                                <th class="text-center " rowspan="2">N°</th>
+                                <th class="text-center " rowspan="2">Placa</th>
+                                <th class="text-center " rowspan="2">Fecha</th>
+                                <th class="text-center " colspan="2">Hora</th>
+                                <th class="text-center " rowspan="2">Sucursal</th>
+                                <th class="text-center " rowspan="2">Usuario</th>
+                                <th class="text-center " colspan="3">Empresa</th>
+                                <th class="text-center " colspan="3">Vehiculo</th>
+                                <th class="text-center " rowspan="2">Map</th>
                             </tr>
                             <tr>
-                                <th class="ta-center" style="padding: 3px !important;">Sal.</th>
-                                <th class="ta-center" style="padding: 3px !important;">Frec.</th>
+                                <th class="ta-center ">Sal.</th>
+                                <th class="ta-center ">Frec.</th>
 
-                                <th class="ta-center" style="padding: 3px !important;">Salida</th>
-                                <th class="ta-center" style="padding: 3px !important;">T. S</th>
-                                <th class="ta-center" style="padding: 3px !important;">S/</th>
+                                <th class="ta-center ">Salida</th>
+                                <th class="ta-center ">T. S</th>
+                                <th class="ta-center ">S/</th>
 
-                                <th class="ta-center" style="padding: 3px !important;">P.</th>
-                                <th class="ta-center" style="padding: 3px !important;">PJ</th>
-                                <th class="ta-center" style="padding: 3px !important;">S/</th>
+                                <th class="ta-center ">P.</th>
+                                <th class="ta-center ">PJ</th>
+                                <th class="ta-center ">S/</th>
                             </tr>
                             </thead>
 
                             <tbody>
                             @if($rows->count() > 0)
                                 @foreach($rows as $d)
-                                    <tr class="text-center">
+                                    <tr>
                                         @if(!$groupMode)
-                                            <td class="text-center" style="padding: 3px !important;">
-                                                <i style="font-size:10px;" class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
-                                                   wire:click="openEditModal({{ $d->id }})"></i>
+                                            <td class="text-center ">
+                                                <i  class="ti ti-edit f-s-18 text-success" wire:click="openEditModal({{ $d->id }})"></i>
                                             </td>
                                         @endif
 
                                         {{-- Nº --}}
                                         @if($groupMode)
-                                            <td style="padding: 3px !important;">{{ $d->ordinal }}</td>
+                                            <td>{{ $d->ordinal }}</td>
                                         @else
-                                            <td style="padding: 3px !important;">{{ $loop->iteration }}</td>
+                                            <td>{{ $loop->iteration }}</td>
                                         @endif
 
-                                        <td style="padding: 3px !important;" style="padding: 3px !important;">{{ $d->plate }}</td>
-                                        <td style="padding: 3px !important;">{{ \Illuminate\Support\Carbon::parse($d->date)->format('d/m/Y') }}</td>
+                                        <td>{{ $d->plate }}</td>
+                                        <td>{{ \Illuminate\Support\Carbon::parse($d->date)->format('d/m/Y') }}</td>
 
                                         {{-- Hora: Salida --}}
                                         @if(!$groupMode)
-                                            <td style="padding: 3px !important;" class="p-2">{{ $d->hour }}</td>
+                                            <td>{{ $d->hour }}</td>
                                         @else
-                                            <td style="padding: 3px !important;">-</td>
+                                            <td>-</td>
                                         @endif
 
                                         {{-- Hora: Frec. (fix para agrupar) --}}
-                                        <td style="padding: 3px !important;">
+                                        <td>
                                             @if($groupMode)
                                                 -
                                             @else
@@ -212,22 +225,22 @@
                                             @endif
                                         </td>
 
-                                        <td style="padding: 3px !important;">{{ $d->headquarter_name }}</td>
-                                        <td style="padding: 3px !important;">{{ $d->user_name }}</td>
+                                        <td>{{ $d->headquarter_name }}</td>
+                                        <td>{{ $d->user_name }}</td>
 
                                         {{-- Empresa --}}
-                                        <td style="padding: 3px !important;">{{ number_format($groupMode ? ($d->k1 ?? 0) : ($d->times ?? 0)) }}</td>
-                                        <td style="padding: 3px !important;">{{ number_format($groupMode ? ($d->k1 ?? 0) : ($d->times ?? 0)) }}</td>
-                                        <td style="padding: 3px !important;">{{ number_format($groupMode ? ($d->p1 ?? 0) : ($d->price ?? 0), 2) }}</td>
+                                        <td>{{ number_format($groupMode ? ($d->k1 ?? 0) : ($d->times ?? 0)) }}</td>
+                                        <td>{{ number_format($groupMode ? ($d->k1 ?? 0) : ($d->times ?? 0)) }}</td>
+                                        <td>{{ number_format($groupMode ? ($d->p1 ?? 0) : ($d->price ?? 0), 2) }}</td>
 
                                         {{-- Vehículo --}}
-                                        <td style="padding: 3px !important;">{{ number_format($groupMode ? ($d->pasajeros ?? 0) : ($d->passenger ?? 0)) }}</td>
-                                        <td style="padding: 3px !important;">{{ number_format($groupMode ? ($d->pasaje ?? 0) : ($d->passage ?? 0), 2) }}</td>
-                                        <td style="padding: 3px !important;">{{ number_format($d->total_pasaje ?? 0, 2) }}</td>
+                                        <td>{{ number_format($groupMode ? ($d->pasajeros ?? 0) : ($d->passenger ?? 0)) }}</td>
+                                        <td>{{ number_format($groupMode ? ($d->pasaje ?? 0) : ($d->passage ?? 0), 2) }}</td>
+                                        <td>{{ number_format($d->total_pasaje ?? 0, 2) }}</td>
 
                                         {{-- Map sólo en detalle --}}
                                         @if(!$groupMode)
-                                            <td style="padding: 3px !important;">
+                                            <td>
                                                 @if(!empty($d->latitude) && !empty($d->longitude))
                                                     <a href="https://maps.google.com/?q={{ $d->latitude }},{{ $d->longitude }}"
                                                        target="_blank" class="underline">🌍</a>
@@ -236,27 +249,27 @@
                                                 @endif
                                             </td>
                                         @else
-                                            <td style="padding: 3px !important;">-</td>
+                                            <td>-</td>
                                         @endif
                                     </tr>
                                 @endforeach
                             @else
                                 <tr>
-                                    <td style="padding: 3px !important;" colspan="15" class="text-center">No se encontrarón resultados</td>
+                                    <td colspan="15" class="text-center ">No se encontrarón resultados</td>
                                 </tr>
                             @endif
                             </tbody>
 
-                            <tfoot class="text-center f-w-600">
+                            <tfoot class="text-center f-w-600 bg-primary">
                             <tr>
-                                <td style="padding: 3px !important;" class="p-2" colspan="8">TOTAL</td>
-                                <td style="padding: 3px !important;" class="p-2 text-end">{{ number_format($totals->times_total ?? 0) }}</td>
-                                <td style="padding: 3px !important;" class="p-2 text-end">{{ number_format($totals->times_total ?? 0) }}</td>
-                                <td style="padding: 3px !important;" class="p-2 text-end">{{ number_format($totals->price_total ?? 0, 2) }}</td>
-                                <td style="padding: 3px !important;" class="p-2 text-end">{{ number_format($totals->passengers_total ?? 0) }}</td>
-                                <td style="padding: 3px !important;" class="p-2 text-end">{{ number_format($totals->passage_total ?? 0, 2) }}</td>
-                                <td style="padding: 3px !important;" class="p-2 text-end">{{ number_format($totals->total_pasaje_total ?? 0, 2) }}</td>
-                                <td style="padding: 3px !important;">-</td>
+                                <td colspan="8">TOTAL</td>
+                                <td>{{ number_format($totals->times_total ?? 0) }}</td>
+                                <td>{{ number_format($totals->times_total ?? 0) }}</td>
+                                <td>{{ number_format($totals->price_total ?? 0, 2) }}</td>
+                                <td>{{ number_format($totals->passengers_total ?? 0) }}</td>
+                                <td>{{ number_format($totals->passage_total ?? 0, 2) }}</td>
+                                <td>{{ number_format($totals->total_pasaje_total ?? 0, 2) }}</td>
+                                <td>-</td>
                             </tr>
                             </tfoot>
                         </table>
@@ -274,42 +287,42 @@
                 </div>
                 <div class="card-body">
                     <div class="table-responsive mb-3">
-                        <table class="table table-sm table-bordered table-striped table-hover support-table">
-                            <thead class="text-center">
+                        <table class=" table table-bordered table-striped table-hover  p-0">
+                            <thead class="text-center bg-primary">
                             <tr>
                                 @if(!$groupMode)
-                                    <th class="ta-center" rowspan="2"></th>
+                                    <th rowspan="2"></th>
                                 @endif
-                                <th class="ta-center" rowspan="2">N°</th>
-                                <th class="ta-center" rowspan="2">Placa</th>
-                                <th class="ta-center" rowspan="2">Fecha</th>
-                                <th class="ta-center" colspan="2">Hora</th>
-                                <th class="ta-center" rowspan="2">Sucursal</th>
-                                <th class="ta-center" rowspan="2">Usuario</th>
-                                <th class="ta-center" colspan="3">Empresa</th>
-                                <th class="ta-center" colspan="3">Vehiculo</th>
-                                <th class="ta-center" rowspan="2">Map</th>
+                                <th rowspan="2">N°</th>
+                                <th rowspan="2">Placa</th>
+                                <th rowspan="2">Fecha</th>
+                                <th colspan="2">Hora</th>
+                                <th rowspan="2">Sucursal</th>
+                                <th rowspan="2">Usuario</th>
+                                <th colspan="3">Empresa</th>
+                                <th colspan="3">Vehiculo</th>
+                                <th rowspan="2">Map</th>
                             </tr>
                             <tr>
-                                <th class="ta-center">Sal.</th>
-                                <th class="ta-center">Frec.</th>
+                                <th>Sal.</th>
+                                <th>Frec.</th>
 
-                                <th class="ta-center">Salida</th>
-                                <th class="ta-center">T. S</th>
-                                <th class="ta-center">S/</th>
+                                <th>Salida</th>
+                                <th>T. S</th>
+                                <th>S/</th>
 
-                                <th class="ta-center">P.</th>
-                                <th class="ta-center">PJ</th>
-                                <th class="ta-center">S/</th>
+                                <th>P.</th>
+                                <th>PJ</th>
+                                <th>S/</th>
                             </tr>
                             </thead>
 
                             <tbody wire:key="dep-support-tbody-{{ $groupMode ? 'g' : 'd' }}">
                             @forelse($supportRows as $d)
-                                <tr class="text-center">
+                                <tr class="text-center  bg-danger">
                                     @if(!$groupMode)
-                                        <td class="text-center">
-                                            <i style="font-size:10px;" class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
+                                        <td class="text-center ">
+                                            <i  class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
                                                wire:click="openEditModal({{ $d->id }})"></i>
                                         </td>
                                     @endif
@@ -336,22 +349,22 @@
                                         @endif
                                     </td>
 
-                                    <td>{{ $d->headquarter_name ?? '-' }}</td>
-                                    <td>{{ $d->user_name ?? '-' }}</td>
+                                    <td class="p-2" >{{ $d->headquarter_name ?? '-' }}</td>
+                                    <td class="p-2" >{{ $d->user_name ?? '-' }}</td>
 
                                     {{-- Empresa --}}
-                                    <td>{{ number_format($groupMode ? ($d->k1 ?? 0) : ($d->times ?? 0)) }}</td>
-                                    <td>{{ number_format($groupMode ? ($d->k1 ?? 0) : ($d->times ?? 0)) }}</td>
-                                    <td>{{ number_format($groupMode ? ($d->p1 ?? 0) : ($d->price ?? 0), 2) }}</td>
+                                    <td class="p-2" >{{ number_format($groupMode ? ($d->k1 ?? 0) : ($d->times ?? 0)) }}</td>
+                                    <td class="p-2" >{{ number_format($groupMode ? ($d->k1 ?? 0) : ($d->times ?? 0)) }}</td>
+                                    <td class="p-2" >{{ number_format($groupMode ? ($d->p1 ?? 0) : ($d->price ?? 0), 2) }}</td>
 
                                     {{-- Vehículo --}}
-                                    <td>{{ number_format($groupMode ? ($d->pasajeros ?? 0) : ($d->passenger ?? 0)) }}</td>
-                                    <td>{{ number_format($groupMode ? ($d->pasaje ?? 0) : ($d->passage ?? 0), 2) }}</td>
-                                    <td>{{ number_format($d->total_pasaje ?? 0, 2) }}</td>
+                                    <td class="p-2" >{{ number_format($groupMode ? ($d->pasajeros ?? 0) : ($d->passenger ?? 0)) }}</td>
+                                    <td class="p-2" >{{ number_format($groupMode ? ($d->pasaje ?? 0) : ($d->passage ?? 0), 2) }}</td>
+                                    <td class="p-2" >{{ number_format($d->total_pasaje ?? 0, 2) }}</td>
 
                                     {{-- Map solo en detalle --}}
                                     @if(!$groupMode)
-                                        <td>
+                                        <td >
                                             @if(!empty($d->latitude) && !empty($d->longitude))
                                                 <a href="https://maps.google.com/?q={{ $d->latitude }},{{ $d->longitude }}" target="_blank">🌍</a>
                                             @else
@@ -359,26 +372,26 @@
                                             @endif
                                         </td>
                                     @else
-                                        <td>-</td>
+                                        <td >-</td>
                                     @endif
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="15" class="text-center">No se encontraron resultados</td>
+                                    <td  colspan="15">No se encontraron resultados</td>
                                 </tr>
                             @endforelse
                             </tbody>
 
-                            <tfoot class="text-center f-w-600"
+                            <tfoot class="text-center f-w-600  bg-primary"
                                    wire:key="dep-support-tfoot-{{ $groupMode ? 'g' : 'd' }}">
                             <tr>
-                                <td colspan="8" class="text-end">TOTAL</td>
-                                <td class="text-end">{{ number_format((float) data_get($supportTotals, 'times_total', 0)) }}</td>
-                                <td class="text-end">{{ number_format((float) data_get($supportTotals, 'times_total', 0)) }}</td>
-                                <td class="text-end">{{ number_format((float) data_get($supportTotals, 'price_total', 0), 2) }}</td>
-                                <td class="text-end">{{ number_format((float) data_get($supportTotals, 'passengers_total', 0)) }}</td>
-                                <td class="text-end">{{ number_format((float) data_get($supportTotals, 'passage_total', 0), 2) }}</td>
-                                <td class="text-end">{{ number_format((float) data_get($supportTotals, 'total_pasaje_total', 0), 2) }}</td>
+                                <td colspan="8">TOTAL</td>
+                                <td>{{ number_format((float) data_get($supportTotals, 'times_total', 0)) }}</td>
+                                <td>{{ number_format((float) data_get($supportTotals, 'times_total', 0)) }}</td>
+                                <td>{{ number_format((float) data_get($supportTotals, 'price_total', 0), 2) }}</td>
+                                <td>{{ number_format((float) data_get($supportTotals, 'passengers_total', 0)) }}</td>
+                                <td>{{ number_format((float) data_get($supportTotals, 'passage_total', 0), 2) }}</td>
+                                <td>{{ number_format((float) data_get($supportTotals, 'total_pasaje_total', 0), 2) }}</td>
                                 <td>-</td>
                             </tr>
                             </tfoot>
@@ -386,33 +399,32 @@
                     </div>
 
                     {{-- TOTAL GENERAL dentro del mismo card --}}
-                    <div class="table-responsive">
-                        <table class="table table-sm table-bordered table-striped table-hover">
-                            <thead class="text-center">
+                    <div class="table-responsive ">
+                        <table class="table table-bordered table-striped table-hover  p-0">
+                            <thead class="text-center p-0 bg-primary">
                             <tr>
-                                <th class="ta-center" colspan="8">TOTAL GENERAL</th>
-                                <th class="ta-center">Salida</th>
-                                <th class="ta-center">T. S</th>
-                                <th class="ta-center">S/</th>
-                                <th class="ta-center">P.</th>
-                                <th class="ta-center">PJ</th>
-                                <th class="ta-center">S/</th>
+                                <th colspan="8">TOTAL GENERAL</th>
+                                <th>Salida</th>
+                                <th>T. S</th>
+                                <th>S/</th>
+                                <th>P.</th>
+                                <th>PJ</th>
+                                <th>S/</th>
                             </tr>
                             </thead>
                             <tbody>
-                            <tr class="text-center f-w-600">
-                                <td class="text-end p-2" colspan="8">TOTAL GENERAL</td>
+                            <tr class="text-center f-w-600 ">
+                                <td colspan="8">TOTAL GENERAL</td>
                                 {{-- Empresa --}}
-                                <td class="text-end p-2">{{ number_format($grandTotals->times_total ?? 0) }}</td>
-                                <td class="text-end p-2">{{ number_format($grandTotals->times_total ?? 0) }}</td>
-                                <td class="text-end p-2">{{ number_format($grandTotals->price_total ?? 0, 2) }}</td>
+                                <td>{{ number_format($grandTotals->times_total ?? 0) }}</td>
+                                <td>{{ number_format($grandTotals->times_total ?? 0) }}</td>
+                                <td>{{ number_format($grandTotals->price_total ?? 0, 2) }}</td>
                                 {{-- Vehículo --}}
-                                <td class="text-end p-2">{{ number_format($grandTotals->passengers_total ?? 0) }}</td>
-                                <td class="text-end p-2">{{ number_format($grandTotals->passage_total ?? 0, 2) }}</td>
-                                <td class="text-end p-2">{{ number_format($grandTotals->total_pasaje_total ?? 0, 2) }}</td>
+                                <td>{{ number_format($grandTotals->passengers_total ?? 0) }}</td>
+                                <td>{{ number_format($grandTotals->passage_total ?? 0, 2) }}</td>
+                                <td>{{ number_format($grandTotals->total_pasaje_total ?? 0, 2) }}</td>
                             </tr>
                             </tbody>
-                            <tfoot></tfoot>
                         </table>
                     </div>
                 </div>
@@ -425,7 +437,7 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Agregar Salida</h5>
-                        <button style="font-size: 10px" type="button" class="btn-close m-0 fs-5" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close m-0 fs-5" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
 
                     <div class="modal-body">
@@ -510,8 +522,8 @@
                     </div>
 
                     <div class="modal-footer">
-                        <button style="font-size: 10px" type="button" class="btn btn-primary" wire:click="save">Agregar</button>
-                        <button style="font-size: 10px" type="button" class="btn btn-primary" data-bs-dismiss="modal">Cerrar</button>
+                        <button type="button" class="btn btn-primary" wire:click="save">Agregar</button>
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cerrar</button>
                     </div>
                 </div>
             </div>
@@ -523,7 +535,7 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Editar Salida</h5>
-                        <button style="font-size: 10px" type="button" class="btn-close m-0 fs-5" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close m-0 fs-5" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
 
                     <div class="modal-body">
@@ -603,8 +615,8 @@
                     </div>
 
                     <div class="modal-footer">
-                        <button style="font-size: 10px" type="button" class="btn btn-primary" wire:click="update">Editar</button>
-                        <button style="font-size: 10px" type="button" class="btn btn-primary" data-bs-dismiss="modal">Cerrar</button>
+                        <button type="button" class="btn btn-primary" wire:click="update">Editar</button>
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cerrar</button>
                     </div>
                 </div>
             </div>
@@ -615,7 +627,7 @@
     <div class="screen-overlay"
          wire:loading.delay.flex
          wire:target="applyDateRange,groupMode,export,openAddModal,openEditModal,toggleGroup,save,update,reportMonthly,reportRmp,reportStats">
-        <div class="text-center">
+        <div>
             <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
             <div class="mt-2 text-white fw-semibold">Cargando…</div>
         </div>
