@@ -8,13 +8,13 @@
 
         th,td{
             padding: 3px !important;
-            font-size: 10px !important;
+            font-size: 11px !important;
             text-align: center !important;
             vertical-align: middle;   /* <-- clave */
         }
 
         .btn, input,select {
-            font-size: 10px !important;
+            font-size: 11px !important;
         }
 
         .screen-overlay {
