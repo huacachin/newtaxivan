@@ -1,61 +1,21 @@
 {{-- resources/views/livewire/reports/departures-monthly-by-stop.blade.php --}}
 @push('styles')
     <style>
-        /* ===== Encabezado/pie fijos (tema oscuro) ===== */
-        .tableFixHead thead th{
-            position: sticky; top: 0; z-index: 3;
-            background-color: #009BDC !important;
-            color: #fff !important;
-        }
-        .tableFixHead tfoot th,
-        .tableFixHead tfoot td{
-            position: sticky; bottom: 0; z-index: 2;
-            background-color: #009BDC !important;
-            color: #fff !important;
+        table {
+            border-collapse: collapse; /* opcional */
+            width: 100%;
         }
 
-        /* ===== Anchos mínimos (sin width fijo) ===== */
-        :root{
-            --min-controller: 7rem;  /* CONTROLADOR */
-            --min-stop:       10rem; /* PARADERO */
-            --min-day:        3.2rem;/* celdas de días */
-            --min-type:       4.5rem;/* TIPO */
-            --min-total:      5.5rem;/* TOTAL */
+        th,td{
+            padding: 3px !important;
+            font-size: 10px !important;
+            text-align: center !important;
+            vertical-align: middle;   /* <-- clave */
         }
 
-        /* Sticky cols: CONTROLADOR y PARADERO */
-        .tableFixHead .sticky-col{
-            position: sticky; left: 0; z-index: 4;
-            min-width: var(--min-controller);
-            white-space: nowrap;
+        .btn, input,select {
+            font-size: 10px !important;
         }
-        .tableFixHead .sticky-col-2{
-            position: sticky; left: calc(var(--min-controller)); z-index: 4;
-            min-width: var(--min-stop);
-            white-space: nowrap;
-        }
-
-        /* Fondo blanco en sticky del cuerpo para que no “trasluzca” */
-        .tableFixHead tbody td.sticky-col,
-        .tableFixHead tbody td.sticky-col-2{
-            background-color: #fff !important;
-            background-clip: padding-box;
-            box-shadow: 1px 0 0 rgba(0,0,0,.06) inset;
-        }
-
-        /* Celdas por tipo y totales */
-        .type-col{ min-width: var(--min-type); }
-        .total-col{ min-width: var(--min-total); font-weight: 600; }
-
-        /* Días compactos */
-        .day-col{ min-width: var(--min-day); }
-
-        /* Domingos */
-        .sunday{ background:#ef4444 !important; color:#fff !important; }
-
-        /* Alineaciones generales */
-        th, td{ vertical-align: middle; text-align: center; white-space: nowrap; }
-        .text-start{ text-align: left !important; }
 
         .screen-overlay {
             position: fixed;
@@ -110,7 +70,7 @@
                     <div class="row g-3 mt-2">
                         <div class="col-xl-3 col-md-3">
                             <label class="form-label">Mes</label>
-                            <select class="form-select" wire:model.live="month">
+                            <select class="form-control form-control-sm" wire:model.live="month">
                                 @foreach($months as $mVal => $mName)
                                     <option value="{{ $mVal }}">{{ $mName }}</option>
                                 @endforeach
@@ -118,7 +78,7 @@
                         </div>
                         <div class="col-xl-3 col-md-3">
                             <label class="form-label">Año</label>
-                            <select class="form-select" wire:model.live="year">
+                            <select class="form-control form-control-sm" wire:model.live="year">
                                 @foreach($years as $y)
                                     <option value="{{ $y }}">{{ $y }}</option>
                                 @endforeach
@@ -126,78 +86,78 @@
                         </div>
                         <div class="col-xl-3 col-md-3">
                             <label class="form-label d-block invisible">.</label>
-                            <a wire:click="export" class="btn btn-primary w-100">
-                                <i class="ti ti-file-analytics f-s-16"></i> Exportar
+                            <a wire:click="export" class="btn btn-sm btn-primary w-100">
+                                <i class="ti ti-file-analytics f-s-12"></i> Exportar
                             </a>
                         </div>
                         <div class="col-xl-3 col-md-3">
                             <label class="form-label d-block invisible">.</label>
-                            <a href="{{ route('departures.index') }}" class="btn btn-primary w-100">
-                                <i class="ti ti-rotate-2 f-s-16"></i> Regresar
+                            <a href="{{ route('departures.index') }}" class="btn btn-sm btn-primary w-100">
+                                <i class="ti ti-rotate-2 f-s-12"></i> Regresar
                             </a>
                         </div>
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive tableFixHead">
+                    <div class="table-responsive">
 
-                        <table class="table table-sm table-bordered table-hover align-middle">
-                            <thead class="text-center">
+                        <table class="table table-bordered table-hover">
+                            <thead class="text-center bg-primary">
                             <tr>
-                                <th class="sticky-col">CONTROLADOR</th>
-                                <th class="sticky-col-2">PARADERO</th>
-                                <th class="type-col">TIPO</th>
+                                <th>CONTROLADOR</th>
+                                <th>PARADERO</th>
+                                <th>TIPO</th>
                                 @for($d=1; $d<=$daysInMonth; $d++)
                                     @php $isSun = \Illuminate\Support\Carbon::create($year, $month, $d)->isSunday(); @endphp
-                                    <th class="day-col {{ $isSun ? 'sunday' : '' }}">{{ $d }}</th>
+                                    <th class="{{ $isSun ? 'sunday' : '' }}">{{ $d }}</th>
                                 @endfor
-                                <th class="total-col">TOTAL</th>
+                                <th>TOTAL</th>
                             </tr>
                             </thead>
 
                             <tbody>
                             @forelse($rows as $r)
                                 <tr>
-                                    <td class="sticky-col text-start">{{ $r['controller'] }}</td>
-                                    <td class="sticky-col-2 text-start">{{ $r['stop'] }}</td>
-                                    <td class="type-col">{{ $r['type'] === 'Emp' ? 'Emp.' : 'Apoyo.' }}</td>
+                                    <td>{{ $r['controller'] }}</td>
+                                    <td>{{ $r['stop'] }}</td>
+                                    <td>{{ $r['type'] === 'Emp' ? 'Emp.' : 'Apoyo.' }}</td>
 
                                     @for($d=1; $d<=$daysInMonth; $d++)
-                                        <td class="day-col">{{ $r['days'][$d] ?? 0 }}</td>
+                                        <td>{{ $r['days'][$d] ?? 0 }}</td>
                                     @endfor
 
-                                    <td class="total-col">{{ $r['total'] }}</td>
+                                    <td>{{ $r['total'] }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="{{ 3 + $daysInMonth + 1 }}" class="text-center text-muted py-4">
+                                    <td colspan="{{ 3 + $daysInMonth + 1 }}">
                                         No se encontraron resultados
                                     </td>
                                 </tr>
                             @endforelse
                             </tbody>
 
-                            <tfoot class="text-center fw-semibold">
+                            <tfoot class="text-center fw-semibold bg-primary">
                             <tr>
-                                <td class="sticky-col text-end p-2" colspan="3">T.E</td>
+                                <td colspan="3">T.E</td>
                                 @for($d=1; $d<=$daysInMonth; $d++)
-                                    <td class="p-2 day-col">{{ $totalsTE[$d] }}</td>
+                                    <td>{{ $totalsTE[$d] }}</td>
                                 @endfor
-                                <td class="p-2 total-col">{{ $grandTE }}</td>
+                                <td>{{ $grandTE }}</td>
                             </tr>
                             <tr>
-                                <td class="sticky-col text-end p-2" colspan="3">T.A</td>
+                                <td  colspan="3">T.A</td>
                                 @for($d=1; $d<=$daysInMonth; $d++)
                                     <td class="p-2 day-col">{{ $totalsTA[$d] }}</td>
                                 @endfor
-                                <td class="p-2 total-col">{{ $grandTA }}</td>
+                                <td>{{ $grandTA }}</td>
                             </tr>
                             <tr>
-                                <td class="sticky-col text-end p-2" colspan="3">V.T</td>
+                                <td  colspan="3">V.T</td>
                                 @for($d=1; $d<=$daysInMonth; $d++)
                                     <td class="p-2 day-col">{{ $totalsVT[$d] }}</td>
                                 @endfor
-                                <td class="p-2 total-col">{{ $grandVT }}</td>
+                                <td>{{ $grandVT }}</td>
                             </tr>
                             </tfoot>
                         </table>
@@ -206,8 +166,6 @@
                 </div>
             </div>
         </div>
-        <!-- Tabla RMP V.T end -->
-
     </div>
 
     <div class="screen-overlay"

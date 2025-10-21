@@ -1,34 +1,20 @@
 @push('styles')
     <style>
-        /* Ajustes generales y compacidad */
-        th, td { white-space: nowrap; vertical-align: middle; text-align: center; }
-        .text-start { text-align: left !important; }
 
-        /* Contenedor para header sticky */
-        .tableFixHead thead th {
-            position: sticky;
-            top: 0;
-            z-index: 2;
-            background-color: #009BDC !important;
-            color: #fff !important;
+        table {
+            border-collapse: collapse; /* opcional */
+            width: 100%;
         }
 
-        /* Footer con mismo color que el thead */
-        .tableFixHead tfoot th,
-        .tableFixHead tfoot td {
-            background-color: #009BDC !important;
-            color: #fff !important;
+        th,td{
+            padding: 3px !important;
+            font-size: 10px !important;
+            text-align: center !important;
+            vertical-align: middle;   /* <-- clave */
         }
 
-        /* Domingos */
-        .sunday { background-color: #ef4444 !important; color: #fff !important; }
-
-        /* Rayado sutil */
-        tbody tr:nth-child(even) td { background-color: #fafafa; }
-
-        /* Borde suave de toda la tabla */
-        .table-bordered > :not(caption) > * > * {
-            border-color: #cfd8dc !important;
+        .btn, input,select {
+            font-size: 10px !important;
         }
 
         .screen-overlay {
@@ -104,23 +90,23 @@
 
                         <div class="col-xl-3 col-md-3">
                             <label class="form-label d-block invisible">.</label>
-                            <a href="#" wire:click="export" class="btn btn-primary w-100">
-                                <i class="ti ti-file-analytics f-s-16"></i> Exportar
+                            <a href="#" wire:click="export" class="btn btn-sm btn-primary w-100">
+                                <i class="ti ti-file-analytics f-s-12"></i> Exportar
                             </a>
                         </div>
 
                         <div class="col-xl-3 col-md-3">
                             <label class="form-label d-block invisible">.</label>
-                            <a href="{{ route('departures.index') }}" class="btn btn-primary w-100">
-                                <i class="ti ti-rotate-2 f-s-16"></i> Regresar
+                            <a href="{{ route('departures.index') }}" class="btn btn-sm btn-primary w-100">
+                                <i class="ti ti-rotate-2 f-s-12"></i> Regresar
                             </a>
                         </div>
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive tableFixHead">
-                        <table class="table table-sm table-bordered table-striped table-hover">
-                            <thead class="text-center">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped table-hover">
+                            <thead class="text-center bg-primary">
                             <tr>
                                 <th>Item</th>
                                 <th>Placa</th>
@@ -153,7 +139,7 @@
                             @endforelse
                             </tbody>
 
-                            <tfoot class="text-center f-w-600">
+                            <tfoot class="text-center f-w-600 bg-primary">
                             <tr>
                                 <th colspan="2" class="text-start">Total Salidas</th>
                                 @foreach($days as $d)

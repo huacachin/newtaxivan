@@ -1,41 +1,23 @@
 {{-- resources/views/livewire/reports/departures-stats-monthly.blade.php --}}
 @push('styles')
     <style>
-        /* ===== Estilo matriz común ===== */
-        .tableFixHead thead th{
-            position: sticky; top: 0; z-index: 3;
-            background:#009BDC !important; color:#fff !important;
-            vertical-align: middle; text-align:center;
-        }
-        .tableFixHead tfoot th,
-        .tableFixHead tfoot td{
-            position: sticky; bottom: 0; z-index: 2;
-            background:#009BDC !important; color:#fff !important;
-            text-align:center;
-        }
-        .tableFixHead table.table th,
-        .tableFixHead table.table td{ white-space: nowrap; }
 
-        .num{ text-align:right; }
-        .text-start{ text-align:left !important; }
-
-        /* Domingos */
-        .sunday{ background:#ef4444 !important; color:#fff !important; }
-
-        /* Sticky cols para CONTROLADOR y PARADERO */
-        :root{
-            --w-col1: 180px; /* CONTROLADOR */
-            --w-col2: 220px; /* PARADERO */
+        table {
+            border-collapse: collapse; /* opcional */
+            width: 100%;
         }
-        .sticky-col{ position:sticky; left:0; z-index:4; min-width:var(--w-col1); }
-        .sticky-col-2{ position:sticky; left:var(--w-col1); z-index:4; min-width:var(--w-col2); }
 
-        /* Fondo blanco en sticky del body para que no “traspase” rayado */
-        tbody td.sticky-col,
-        tbody td.sticky-col-2{
-            background:#fff !important; background-clip:padding-box;
-            box-shadow: 1px 0 0 rgba(0,0,0,.06) inset;
+        th,td{
+            padding: 3px !important;
+            font-size: 10px !important;
+            text-align: center !important;
+            vertical-align: middle;   /* <-- clave */
         }
+
+        .btn, input,select {
+            font-size: 10px !important;
+        }
+
         .screen-overlay {
             position: fixed;
             inset: 0;                 /* full viewport */
@@ -105,25 +87,25 @@
                         </div>
                         <div class="col-xl-3 col-md-3">
                             <label class="form-label d-block invisible">.</label>
-                            <a href="#" wire:click="export" class="btn btn-primary w-100">
-                                <i class="ti ti-file-analytics f-s-16"></i> Exportar
+                            <a href="#" wire:click="export" class="btn btn-sm btn-primary w-100">
+                                <i class="ti ti-file-analytics f-s-12"></i> Exportar
                             </a>
                         </div>
                         <div class="col-xl-3 col-md-3">
                             <label class="form-label d-block invisible">.</label>
-                            <a href="{{ route('departures.index') }}" class="btn btn-primary w-100">
-                                <i class="ti ti-rotate-2 f-s-16"></i> Regresar
+                            <a href="{{ route('departures.index') }}" class="btn btn-sm btn-primary w-100">
+                                <i class="ti ti-rotate-2 f-s-12"></i> Regresar
                             </a>
                         </div>
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive tableFixHead">
-                        <table class="table table-sm table-bordered table-striped table-hover align-middle">
-                            <thead>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped table-hover">
+                            <thead class="bg-primary">
                             <tr>
-                                <th class="sticky-col">CONTROLADOR</th>
-                                <th class="sticky-col-2">PARADERO</th>
+                                <th>CONTROLADOR</th>
+                                <th>PARADERO</th>
                                 <th>TIPO</th>
                                 @foreach($days as $d)
                                     @php $isSun = \Carbon\Carbon::create($year,$month,$d)->isSunday(); @endphp
@@ -137,27 +119,27 @@
                             <tbody>
                             @forelse($rows as $r)
                                 <tr class="text-center">
-                                    <td class="sticky-col text-start">{{ $r['controller'] }}</td>
-                                    <td class="sticky-col-2 text-start">{{ $r['stop'] }}</td>
-                                    <td>{{ $r['type'] }}</td>
+                                    <td class="bg-primary text-white">{{ $r['controller'] }}</td>
+                                    <td class="bg-primary text-white">{{ $r['stop'] }}</td>
+                                    <td class="bg-primary text-white">{{ $r['type'] }}</td>
 
                                     @foreach($days as $d)
                                         @php $val = $r['days'][$d] ?? 0; @endphp
-                                        <td class="num">
+                                        <td>
                                             {{ $r['type']==='S/' ? number_format($val,2) : number_format($val) }}
                                         </td>
                                     @endforeach
 
-                                    <td class="num f-w-600">
+                                    <td>
                                         {{ $r['total_sal'] !== null ? number_format($r['total_sal']) : '' }}
                                     </td>
-                                    <td class="num f-w-600">
+                                    <td>
                                         {{ $r['total_soles'] !== null ? number_format($r['total_soles'],2) : '' }}
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="{{ 3 + $daysInMonth + 2 }}" class="py-4 text-muted text-center">
+                                    <td colspan="{{ 3 + $daysInMonth + 2 }}">
                                         No se encontraron resultados
                                     </td>
                                 </tr>
@@ -165,26 +147,26 @@
                             </tbody>
 
                             @if($daysInMonth>0)
-                                <tfoot class="fw-semibold">
+                                <tfoot class="fw-semibold bg-primary">
                                 <tr>
-                                    <td class="sticky-col"></td>
-                                    <td class="sticky-col-2 text-start">TOTAL GENERAL — Salidas</td>
+                                    <td></td>
+                                    <td>TOTAL GENERAL — Salidas</td>
                                     <td></td>
                                     @foreach($days as $d)
-                                        <td class="num">{{ number_format($totalsSalidas[$d] ?? 0) }}</td>
+                                        <td>{{ number_format($totalsSalidas[$d] ?? 0) }}</td>
                                     @endforeach
-                                    <td class="num">{{ number_format($grandSalidas) }}</td>
+                                    <td>{{ number_format($grandSalidas) }}</td>
                                     <td></td>
                                 </tr>
                                 <tr>
-                                    <td class="sticky-col"></td>
-                                    <td class="sticky-col-2 text-start">TOTAL GENERAL — S/</td>
+                                    <td></td>
+                                    <td>TOTAL GENERAL — S/</td>
                                     <td></td>
                                     @foreach($days as $d)
-                                        <td class="num">{{ number_format($totalsMonto[$d] ?? 0, 2) }}</td>
+                                        <td>{{ number_format($totalsMonto[$d] ?? 0, 2) }}</td>
                                     @endforeach
                                     <td></td>
-                                    <td class="num">{{ number_format($grandMonto,2) }}</td>
+                                    <td>{{ number_format($grandMonto,2) }}</td>
                                 </tr>
                                 </tfoot>
                             @endif
