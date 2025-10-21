@@ -1,5 +1,22 @@
 @push('styles')
     <style>
+
+        table {
+            border-collapse: collapse; /* opcional */
+            width: 100%;
+        }
+
+        th,td{
+            padding: 3px !important;
+            font-size: 10px !important;
+            text-align: center !important;
+            vertical-align: middle;   /* <-- clave */
+        }
+
+        .btn, input,select {
+            font-size: 10px !important;
+        }
+
         .screen-overlay {
             position: fixed;
             inset: 0;                 /* full viewport */
@@ -83,13 +100,13 @@
                     <div class="row g-3 align-items-end">
                         <div class="col-md-3">
                             <label class="form-label">Año</label>
-                            <select class="form-select" wire:model.live="year">
+                            <select class="form-control form-control-sm" wire:model.live="year">
                                 @foreach($years as $y) <option value="{{ $y }}">{{ $y }}</option> @endforeach
                             </select>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Mes</label>
-                            <select class="form-select" wire:model.live="month">
+                            <select class="form-control form-control-sm" wire:model.live="month">
                                 @foreach($months as $mVal => $mName)
                                     <option value="{{ $mVal }}">{{ $mName }}</option>
                                 @endforeach
@@ -97,67 +114,26 @@
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">Modo</label>
-                            <select class="form-select" wire:model.live="mode">
+                            <select class="form-control form-control-sm" wire:model.live="mode">
                                 <option value="Pago">Pago</option>
                                 <option value="Caja">Caja</option>
                             </select>
                         </div>
                         <div class="col-md-2 text-end">
-                            <a href="#" wire:click="export" class="btn btn-primary w-100">
+                            <a href="#" wire:click="export" class="btn btn-sm btn-primary w-100">
                                 <i class="ti ti-file-analytics"></i> Exportar
                             </a>
 
                         </div>
 
                         <div class="col-md-2">
-                            <a href="{{ route('payments.index') }}" class="btn btn-primary w-100">
+                            <a href="{{ route('payments.index') }}" class="btn btn-sm btn-primary w-100">
                                 <i class="ti ti-arrow-back-up"></i> Regresar
                             </a>
                         </div>
                     </div>
                 </div>
                 <div class="card-body">
-
-                    {{-- Estilos específicos de la tabla --}}
-                    <style>
-                        /* Encabezado pegajoso + colores */
-                        .tableFixHead thead th {
-                            position: sticky; top: 0; z-index: 2;
-                            background-color: #009BDC !important;
-                            color: #fff !important;
-                        }
-
-                        /* Pie de tabla con color oscuro */
-                        .tableFixHead tfoot th,
-                        .tableFixHead tfoot td {
-                            background-color: #009BDC !important;
-                            color: #fff !important;
-                        }
-
-                        /* Mantén blancos los sticky del cuerpo si los usas */
-                        .tableFixHead tbody td.sticky-col,
-                        .tableFixHead tbody td.sticky-col-2,
-                        .tableFixHead tbody td.sticky-col-3 {
-                            background-color: #fff !important;
-                            background-clip: padding-box;
-                            box-shadow: 1px 0 0 rgba(0,0,0,.06) inset;
-                        }
-
-                        /* Que la tabla calcule el ancho según el contenido */
-                        .tableFixHead table {
-                            table-layout: auto !important;
-                            width: auto;              /* el ancho crecerá según el contenido */
-                        }
-
-                        /* Evita quiebres de línea para que el ancho sea el del texto */
-                        .tableFixHead th,
-                        .tableFixHead td {
-                            white-space: nowrap;
-                        }
-
-                        /* Domingos en rojo */
-                        .sunday { background-color: #dc3545 !important; color: #fff !important; }
-                    </style>
 
                     @php
                         $days = range(1, $daysInMonth);
@@ -166,13 +142,13 @@
                         $totalCols = $baseCols + $extraCols;
                     @endphp
 
-                    <div class="table-responsive tableFixHead">
-                        <table class="table table-sm table-bordered table-hover align-middle text-nowrap">
-                            <thead class="table-primary text-center">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead class="bg-primary">
                             <tr>
-                                <th class="sticky-col">Item</th>
-                                <th class="sticky-col-2">Placa</th>
-                                <th class="sticky-col-3">Cond.</th>
+                                <th>Item</th>
+                                <th>Placa</th>
+                                <th>Cond.</th>
 
                                 @foreach($days as $d)
                                     @php
@@ -194,7 +170,7 @@
                             </tr>
                             </thead>
 
-                            <tbody class="text-center">
+                            <tbody>
                             @php $i=0; @endphp
                             @forelse($rows as $r)
                                 @php
@@ -206,9 +182,9 @@
                                     elseif ($cond === 'DT') { $condClass .= 'cond-DT'; }
                                 @endphp
                                 <tr>
-                                    <td class="sticky-col text-center">{{ $i }}</td>
-                                    <td class="sticky-col-2 text-start fw-semibold">{{ $r['plate'] }}</td>
-                                    <td class="sticky-col-3">
+                                    <td>{{ $i }}</td>
+                                    <td>{{ $r['plate'] }}</td>
+                                    <td>
                                         <span class="{{ $condClass }}">{{ $cond ?: '-' }}</span>
                                     </td>
 
@@ -216,55 +192,55 @@
                                         <td class="{{(number_format($r['days'][$d] ?? 0, 2) == 0.00) ? 'bg-danger':'bg-success'}} text-end">{{ number_format($r['days'][$d] ?? 0, 2) }}</td>
                                     @endforeach
 
-                                    <td class="text-end fw-semibold">{{ number_format($r['total'], 2) }}</td>
+                                    <td>{{ number_format($r['total'], 2) }}</td>
 
                                     {{-- Extra según modo --}}
-                                    <td class="text-end">{{ number_format($r['days_paid']) }}</td>
+                                    <td>{{ number_format($r['days_paid']) }}</td>
 
                                     @if($mode === 'Pago')
-                                        <td class="text-end">{{ number_format($r['debt_days']) }}</td>
-                                        <td class="text-end">{{ number_format($r['debt_amount'], 2) }}</td>
-                                        <td class="text-end">{{ number_format($r['real_debt_amount'], 2) }}</td>
+                                        <td>{{ number_format($r['debt_days']) }}</td>
+                                        <td>{{ number_format($r['debt_amount'], 2) }}</td>
+                                        <td>{{ number_format($r['real_debt_amount'], 2) }}</td>
                                     @endif
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="{{ $totalCols }}" class="text-center text-muted py-4">
+                                    <td colspan="{{ $totalCols }}">
                                         Sin datos para el mes seleccionado.
                                     </td>
                                 </tr>
                             @endforelse
                             </tbody>
 
-                            <tfoot class="table-primary text-center fw-semibold">
+                            <tfoot class="bg-primary fw-semibold">
                             <tr>
-                                <td class="sticky-col" colspan="3">Totales por día (S/)</td>
+                                <td colspan="3">Totales por día (S/)</td>
 
                                 @foreach($days as $d)
-                                    <td class="text-end">{{ number_format($totalsPerDay[$d] ?? 0, 2) }}</td>
+                                    <td>{{ number_format($totalsPerDay[$d] ?? 0, 2) }}</td>
                                 @endforeach
 
-                                <td class="text-end">{{ number_format($grandTotal, 2) }}</td>
+                                <td>{{ number_format($grandTotal, 2) }}</td>
 
                                 {{-- Footer de columnas extra --}}
-                                <td class="text-end">{{ number_format($sumDaysPaid) }}</td>
+                                <td>{{ number_format($sumDaysPaid) }}</td>
 
                                 @if($mode === 'Pago')
-                                    <td class="text-end">{{ number_format($sumDebtDays) }}</td>
-                                    <td class="text-end">{{ number_format($sumDebtAmount, 2) }}</td>
-                                    <td class="text-end">{{ number_format($sumRealDebtAmount, 2) }}</td>
+                                    <td>{{ number_format($sumDebtDays) }}</td>
+                                    <td>{{ number_format($sumDebtAmount, 2) }}</td>
+                                    <td>{{ number_format($sumRealDebtAmount, 2) }}</td>
                                 @endif
                             </tr>
 
                             <tr>
                                 <td colspan="{{ 3 + $daysInMonth + 1 }}" class="text-end pe-3"></td>
                                 @if($mode === 'Pago')
-                                    <td class="text-end" colspan="4">
+                                    <td colspan="4">
                                         <span class="me-2">Total Pagos (días):</span>
                                         <strong>{{ number_format($sumDaysPaid) }}</strong>
                                     </td>
                                 @else
-                                    <td class="text-end">
+                                    <td>
                                         <span class="me-2">Total Pagos (días):</span>
                                         <strong>{{ number_format($sumDaysPaid) }}</strong>
                                     </td>

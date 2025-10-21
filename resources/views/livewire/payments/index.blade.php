@@ -1,33 +1,21 @@
 @push('styles')
     <style>
-        /* Encabezado y pie oscuros */
-        .tableFixHead thead th {
-            position: sticky; top: 0; z-index: 2;
-            background-color: #009BDC !important;
-            color: #fff !important;
-            vertical-align: middle;
-        }
-        .tableFixHead tfoot th,
-        .tableFixHead tfoot td {
-            background-color: #009BDC !important;
-            color: #fff !important;
+
+        table {
+            border-collapse: collapse; /* opcional */
+            width: 100%;
         }
 
-        /* Ajuste al mínimo del ancho: que no rompa líneas y se contraiga al contenido */
-        .tableFixHead table.table th,
-        .tableFixHead table.table td {
-            white-space: nowrap;
+        th,td{
+            padding: 3px !important;
+            font-size: 10px !important;
+            text-align: center !important;
+            vertical-align: middle;   /* <-- clave */
         }
 
-        /* Zebra + hover suave */
-        .tableFixHead tbody tr:hover {
-            background: #f8fafc;
+        .btn, input,select {
+            font-size: 10px !important;
         }
-
-        /* Inputs con icono alineado */
-        .app-icon-form .ti { position: absolute; right: .75rem; top: 50%; transform: translateY(-50%); }
-
-        /* Botones iguales al resto del sistema (ya usas .btn-primary) */
 
         .screen-overlay {
             position: fixed;
@@ -75,7 +63,7 @@
                             <label class="form-label">Buscar</label>
                             <form class="app-form app-icon-form" action="#">
 
-                                    <input type="search" class="form-control" placeholder="Buscar..."
+                                    <input type="search" class="form-control form-control-sm" placeholder="Buscar..."
                                            aria-label="Buscar" wire:model.live="search">
 
 
@@ -83,7 +71,7 @@
                         </div>
                         <div class="col-4">
                             <label class="form-label">Filtro</label>
-                            <select class="form-select" aria-label="Selecciona item a filtrar" wire:model.live="filter">
+                            <select class="form-control form-control-sm" aria-label="Selecciona item a filtrar" wire:model.live="filter">
                                 <option value="">Seleccione un filtro</option>
                                 <option value="1">Placa</option>
                                 <option value="2">Usuario</option>
@@ -94,15 +82,15 @@
 
                         <div class="col-4">
                             <label class="form-label">Fecha Inicio</label>
-                            <input type="date" class="form-control" wire:model="date_start">
+                            <input type="date" class="form-control form-control-sm" wire:model="date_start">
                         </div>
                         <div class="col-3">
                             <label class="form-label">Fecha Fin</label>
-                            <input type="date" class="form-control" wire:model="date_end">
+                            <input type="date" class="form-control form-control-sm" wire:model="date_end">
                         </div>
                         <div class="col-3">
                             <label class="form-label">Sucursal</label>
-                            <select class="form-select" wire:model.live="headquarter_id" aria-label="Selecciona sucursal">
+                            <select class="form-control form-control-sm" wire:model.live="headquarter_id" aria-label="Selecciona sucursal">
                                 <option value="">Todos</option>
                                 @foreach($headquarters as $h)
                                     <option value="{{ $h->id }}">{{ $h->name }}</option>
@@ -111,58 +99,58 @@
                         </div>
                         <div class="col-3">
                             <label class="form-label">Tipo</label>
-                            <select class="form-select" wire:model.live="type" aria-label="Selecciona tipo">
+                            <select class="form-control form-control-sm" wire:model.live="type" aria-label="Selecciona tipo">
                                 <option value="">Todos</option>
                                 <option value="PAGO">Pago</option>
                                 <option value="DEUDA">Deuda</option>
                                 <option value="RETRASO">Retraso</option>
                             </select>
                         </div>
-                        <div class="col-3 col-md-2 d-flex align-items-end">
-                            <button class="btn btn-primary w-100" wire:click="applyDate">
-                                <i class="ti ti-search f-s-17"></i>
+                        <div class="col-3 d-flex align-items-end">
+                            <button class="btn btn-sm btn-primary w-100" wire:click="applyDate">
+                                <i class="ti ti-search f-s-12"></i>
                             </button>
                         </div>
                     </div>
                     <div class="row g-2 mt-2">
                         @role('admin')
                         <div class="col-lg-2 col-4">
-                            <button class="btn btn-primary w-100" wire:click="daily">
-                                <i class="ti ti-report-analytics f-s-16"></i> Diario
+                            <button class="btn btn-sm btn-primary w-100" wire:click="daily">
+                                <i class="ti ti-report-analytics f-s-12"></i> Diario
                             </button>
                         </div>
                         <div class="col-lg-2 col-4">
-                            <button class="btn btn-primary w-100" wire:click="monthly">
-                                <i class="ti ti-report-analytics f-s-16"></i> Mensual
+                            <button class="btn btn-sm btn-primary w-100" wire:click="monthly">
+                                <i class="ti ti-report-analytics f-s-12"></i> Mensual
                             </button>
                         </div>
                         <div class="col-lg-2 col-4">
-                            <button class="btn btn-primary w-100" wire:click="stats">
-                                <i class="ti ti-report-analytics f-s-16"></i> Estadis.
+                            <button class="btn btn-sm btn-primary w-100" wire:click="stats">
+                                <i class="ti ti-report-analytics f-s-12"></i> Estadis.
                             </button>
                         </div>
                         <div class="col-lg-2 col-4">
-                            <button class="btn btn-primary w-100" wire:click="export">
-                                <i class="ti ti-file-analytics f-s-16"></i> Exportar
+                            <button class="btn btn-sm btn-primary w-100" wire:click="export">
+                                <i class="ti ti-file-analytics f-s-12"></i> Exportar
                             </button>
                         </div>
                         @endrole
                         <div class="col-lg-2 col-4">
-                            <button class="btn btn-primary w-100" wire:click="openAddModal">
-                                <i class="ti ti-square-plus f-s-16"></i> Nuevo
+                            <button class="btn btn-sm btn-primary w-100" wire:click="openAddModal">
+                                <i class="ti ti-square-plus f-s-12"></i> Nuevo
                             </button>
                         </div>
                         <div class="col-lg-2 col-4">
-                            <button class="btn btn-primary w-100" id="down">
-                                <i class="ti ti-square-chevrons-down f-s-17"></i>
+                            <button class="btn btn-sm btn-primary w-100" id="down">
+                                <i class="ti ti-square-chevrons-down f-s-12"></i>
                             </button>
                         </div>
                     </div>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive tableFixHead">
-                        <table class="table table-sm table-bordered table-striped table-hover align-middle">
-                            <thead class="text-center">
+                        <table class="table table-bordered table-striped table-hover">
+                            <thead class="text-center bg-primary">
                             <tr>
                                 <th>Acción</th>
                                 <th>Ítem</th>
@@ -179,7 +167,7 @@
                             </tr>
                             </thead>
 
-                            <tbody class="text-center">
+                            <tbody>
                             @forelse($payments as $p)
                                 <tr>
                                     <td>
@@ -187,7 +175,7 @@
                                            wire:click="openEditModal({{ $p->id }})"></i>
                                     </td>
                                     <td>{{ $loop->iteration }}</td>
-                                    <td class="text-nowrap">{{ $p->legacy_plate }}</td>
+                                    <td>{{ $p->legacy_plate }}</td>
                                     <td>{{ $p->serie }}</td>
                                     <td>{{ optional($p->date_register)->format('Y-m-d') }}</td>
                                     <td>{{ optional($p->date_payment)->format('Y-m-d') }}</td>
@@ -207,15 +195,15 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="12" class="py-4 text-muted">No se encontraron resultados</td>
+                                    <td colspan="12" class="text-muted">No se encontraron resultados</td>
                                 </tr>
                             @endforelse
                             </tbody>
 
-                            <tfoot class="text-center fw-semibold">
+                            <tfoot class="fw-semibold bg-primary">
                             <tr>
-                                <th colspan="10" class="text-end">Total general:</th>
-                                <th class="text-end">{{ number_format($total_general, 2) }}</th>
+                                <th colspan="10">Total general:</th>
+                                <th>{{ number_format($total_general, 2) }}</th>
                                 <th></th>
                             </tr>
                             </tfoot>

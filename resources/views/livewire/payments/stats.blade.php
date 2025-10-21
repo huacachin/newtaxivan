@@ -1,26 +1,22 @@
 {{-- resources/views/livewire/reports/report-stats.blade.php --}}
 @push('styles')
     <style>
-        /* Encabezado/foot oscuros y pegajosos */
-        .tableFixHead thead th {
-            position: sticky; top: 0; z-index: 2;
-            background-color: #009BDC !important;
-            color: #fff !important;
-            vertical-align: middle;
-            text-align: center;
-        }
-        .tableFixHead tfoot th,
-        .tableFixHead tfoot td {
-            background-color: #009BDC !important;
-            color: #fff !important;
-            text-align: center;
+
+        table {
+            border-collapse: collapse; /* opcional */
+            width: 100%;
         }
 
-        /* Ajuste al contenido y números alineados a la derecha */
-        .tableFixHead table.table th,
-        .tableFixHead table.table td { white-space: nowrap; }
-        .num { text-align: right; }
+        th,td{
+            padding: 3px !important;
+            font-size: 10px !important;
+            text-align: center !important;
+            vertical-align: middle;   /* <-- clave */
+        }
 
+        .btn, input,select {
+            font-size: 10px !important;
+        }
         /* Domingos en rojo (solo cabecera de día) */
         .sunday { background-color: #ef4444 !important; color:#fff !important; }
 
@@ -61,13 +57,13 @@
         <div class="col-12">
             <div class="card shadow-sm">
                 <div class="card-header">
-                    <h5 style="color:#e11d48;">
+                    <h5>
                         REPORTE ESTADÍSTICO DE PAGO – {{ $this->monthName() }} {{ $year }}
                     </h5>
                     <div class="row g-3 align-items-end mt-2">
                         <div class="col-md-4">
                             <label class="form-label">Mes</label>
-                            <select class="form-select" wire:model.live="month">
+                            <select class="form-control form-control-sm" wire:model.live="month">
                                 @foreach($months as $mVal => $mName)
                                     <option value="{{ $mVal }}">{{ $mName }}</option>
                                 @endforeach
@@ -75,20 +71,20 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Año</label>
-                            <select class="form-select" wire:model.live="year">
+                            <select class="form-control form-control-sm" wire:model.live="year">
                                 @foreach($years as $y)
                                     <option value="{{ $y }}">{{ $y }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="col-md-2 d-flex">
-                            <a href="#" wire:click="export" class="btn btn-primary w-100">
+                            <a href="#" wire:click="export" class="btn btn-sm btn-primary w-100">
                                 <i class="ti ti-file-analytics"></i> Exportar
                             </a>
                         </div>
 
                         <div class="col-md-2">
-                            <a href="{{ route('payments.index') }}" class="btn btn-primary w-100">
+                            <a href="{{ route('payments.index') }}" class="btn btn-sm btn-primary w-100">
                                 <i class="ti ti-arrow-back-up"></i> Regresar
                             </a>
                         </div>
@@ -99,9 +95,9 @@
 
                     @php $days = range(1, $daysInMonth); @endphp
 
-                    <div class="table-responsive tableFixHead">
-                        <table class="table table-sm table-bordered table-striped table-hover align-middle">
-                            <thead>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped table-hover">
+                            <thead class="bg-primary">
                             <tr>
                                 <th>CONTROL.</th>
                                 <th colspan="2">PARADERO</th>
@@ -116,7 +112,7 @@
                             </tr>
                             </thead>
 
-                            <tbody class="text-center">
+                            <tbody>
                             @forelse($rows as $controller => $byHq)
                                 @php
                                     $rowspan = max(1, count($byHq) * 3);
@@ -127,12 +123,12 @@
                                     {{-- PAGO --}}
                                     <tr>
                                         @if($printController)
-                                            <td rowspan="{{ $rowspan }}" class="fw-semibold text-start">{{ $controller }}</td>
+                                            <td rowspan="{{ $rowspan }}" class="fw-semibold bg-primary text-white">{{ $controller }}</td>
                                             @php $printController = false; @endphp
                                         @endif
 
-                                        <td rowspan="3" class="fw-semibold text-start">{{ $hqName }}</td>
-                                        <td class="fw-semibold">Pago</td>
+                                        <td rowspan="3" class="fw-semibold bg-primary text-white">{{ $hqName }}</td>
+                                        <td class="fw-semibold bg-primary text-white">Pago</td>
 
                                         @foreach($days as $d)
                                             <td class="num">{{ number_format($blocks['PAGO']['days'][$d] ?? 0, 2) }}</td>
@@ -142,7 +138,7 @@
 
                                     {{-- RETRASO --}}
                                     <tr>
-                                        <td class="fw-semibold">Retraso</td>
+                                        <td class="fw-semibold bg-primary text-white">Retraso</td>
                                         @foreach($days as $d)
                                             <td class="num">{{ number_format($blocks['RETRASO']['days'][$d] ?? 0, 2) }}</td>
                                         @endforeach
@@ -151,7 +147,7 @@
 
                                     {{-- DEUDA --}}
                                     <tr>
-                                        <td class="fw-semibold">Deuda</td>
+                                        <td class="fw-semibold bg-primary text-white">Deuda</td>
                                         @foreach($days as $d)
                                             <td class="num">{{ number_format($blocks['DEUDA']['days'][$d] ?? 0, 2) }}</td>
                                         @endforeach
@@ -165,7 +161,7 @@
                             @endforelse
                             </tbody>
 
-                            <tfoot class="fw-semibold">
+                            <tfoot class="fw-semibold bg-primary">
                             <tr>
                                 <td colspan="3">TOTAL GENERAL</td>
                                 @foreach($days as $d)

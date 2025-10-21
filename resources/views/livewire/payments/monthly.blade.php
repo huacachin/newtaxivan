@@ -1,42 +1,19 @@
 @push('styles')
     <style>
-        /* ===== Tabla estilo Daily ===== */
-        .tableFixHead thead th {
-            position: sticky; top: 0; z-index: 3;
-            background-color: #009BDC !important;
-            color: #fff !important;
-        }
-        .tableFixHead tfoot th,
-        .tableFixHead tfoot td {
-            background-color: #009BDC !important;
-            color: #fff !important;
-            position: sticky; bottom: 0; z-index: 2; /* pie fijo si hay overflow */
+        table {
+            border-collapse: collapse; /* opcional */
+            width: 100%;
         }
 
-        /* Variables para anchos mínimos de columnas sticky */
-        :root {
-            --w-item: 64px;    /* ajusta a gusto */
-            --w-plate: 120px;  /* ajusta a gusto */
+        th,td{
+            padding: 3px !important;
+            font-size: 10px !important;
+            text-align: center !important;
+            vertical-align: middle;   /* <-- clave */
         }
 
-        /* Sticky cols (solo Item y Placa) */
-        .tableFixHead .sticky-col   { position: sticky; left: 0;               z-index: 4; width: var(--w-item); }
-        .tableFixHead .sticky-col-2 { position: sticky; left: var(--w-item);   z-index: 4; width: var(--w-plate); }
-
-        /* Fondo BLANCO en sticky cells del cuerpo para que no se “transparente” */
-        .tableFixHead tbody td.sticky-col,
-        .tableFixHead tbody td.sticky-col-2 {
-            background-color: #fff !important;
-            background-clip: padding-box;
-            box-shadow: 1px 0 0 rgba(0,0,0,.06) inset;
-            white-space: nowrap; /* que no se rompa placa */
-        }
-
-        /* Encabezado mantiene el fondo oscuro en celdas sticky */
-        .tableFixHead thead th.sticky-col,
-        .tableFixHead thead th.sticky-col-2 {
-            background-color: #009BDC !important;
-            color: #fff !important;
+        .btn, input,select {
+            font-size: 10px !important;
         }
 
         /* Badges de condición (mismo esquema del Daily) */
@@ -98,7 +75,7 @@
                     <div class="row g-3 align-items-end mt-2">
                         <div class="col-md-3">
                             <label class="form-label">Mes</label>
-                            <select class="form-select" wire:model.live="month">
+                            <select class="form-control form-control-sm" wire:model.live="month">
                                 @foreach($months as $mVal => $mName)
                                     <option value="{{ $mVal }}">{{ $mName }}</option>
                                 @endforeach
@@ -106,7 +83,7 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Año</label>
-                            <select class="form-select" wire:model.live="year">
+                            <select class="form-control form-control-sm" wire:model.live="year">
                                 @foreach($years as $y)
                                     <option value="{{ $y }}">{{ $y }}</option>
                                 @endforeach
@@ -114,7 +91,7 @@
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">Condición</label>
-                            <select class="form-select" wire:model.live="cond">
+                            <select class="form-control form-control-sm" wire:model.live="cond">
                                 <option value="">Todos</option>
                                 <option value="EX">EX</option>
                                 <option value="GN">GN</option>
@@ -124,35 +101,35 @@
                         </div>
 
                         <div class="col-md-2 d-flex gap-2">
-                            <a href="#" wire:click="export" class="btn btn-primary w-100">
-                                <i class="ti ti-file-spreadsheet f-s-16"></i> Exportar
+                            <a href="#" wire:click="export" class="btn btn-sm btn-primary w-100">
+                                <i class="ti ti-file-spreadsheet f-s-12"></i> Exportar
                             </a>
 
                         </div>
 
                         <div class="col-md-2 d-flex gap-2">
-                            <a href="{{ route('payments.index') }}" class="btn btn-primary w-100">
-                                <i class="ti ti-arrow-back-up"></i> Regresar
+                            <a href="{{ route('payments.index') }}" class="btn btn-sm btn-primary w-100">
+                                <i class="ti ti-arrow-back-up f-s-12"></i> Regresar
                             </a>
                         </div>
                     </div>
                 </div>
                 <div class="card-body pb-2">
 
-                    <div class="table-responsive tableFixHead">
-                        <table class="table table-sm table-bordered table-striped table-hover align-middle">
-                            <thead class="text-center">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped table-hover">
+                            <thead class="bg-primary">
                             <tr>
-                                <th class="sticky-col">Item</th>
+                                <th>Item</th>
                                 <th>Cod</th>
-                                <th class="sticky-col-2">Placa</th>
+                                <th>Placa</th>
                                 <th colspan="3">Deuda del mes anterior</th>
                                 <th colspan="6">Pagos</th>
                             </tr>
                             <tr>
-                                <th class="sticky-col"></th>
+                                <th></th>
                                 <th> </th>
-                                <th class="sticky-col-2"></th>
+                                <th></th>
 
                                 <th>Deuda</th>
                                 <th>Exonerado</th>
@@ -167,7 +144,7 @@
                             </tr>
                             </thead>
 
-                            <tbody class="text-center">
+                            <tbody>
                             @forelse($rows as $vid => $r)
                                 @php
                                     $cond = strtoupper($r['condition'] ?? '');
@@ -177,24 +154,24 @@
                                     elseif ($cond === 'DT') { $condClass .= 'cond-DT'; }
                                 @endphp
                                 <tr>
-                                    <td class="sticky-col">{{ $loop->iteration }}</td>
+                                    <td>{{ $loop->iteration }}</td>
                                     <td>{{ $r['order'] ?: '-' }}</td>
-                                    <td class="sticky-col-2 text-start fw-semibold">{{ $r['plate'] }}</td>
+                                    <td>{{ $r['plate'] }}</td>
 
                                     {{-- Deuda anterior (debt_days) --}}
-                                    <td class="text-end">{{ number_format($r['prev_debt'], 2) }}</td>
-                                    <td class="text-end">{{ number_format($r['prev_exonerated'], 2) }}</td>
-                                    <td class="text-end">{{ number_format($r['prev_paid_debt'], 2) }}</td>
+                                    <td>{{ number_format($r['prev_debt'], 2) }}</td>
+                                    <td>{{ number_format($r['prev_exonerated'], 2) }}</td>
+                                    <td>{{ number_format($r['prev_paid_debt'], 2) }}</td>
 
                                     {{-- Mes actual --}}
-                                    <td class="text-end">{{ number_format($r['month_amount'], 2) }}</td>
+                                    <td>{{ number_format($r['month_amount'], 2) }}</td>
                                     <td>{{ $laborableDays }}</td>
                                     <td>{{ $r['dt_days'] }}</td>
                                     <td>{{ $r['dnt_days'] }}</td>
                                     <td><span class="{{ $condClass }}">{{ $cond ?: '-' }}</span></td>
 
                                     @php $tdebt = (float)$r['tdebt']; @endphp
-                                    <td class="text-end">
+                                    <td>
                                         <span @class([
                                             'text-danger' => $tdebt > 0 && !str_starts_with($cond,'EX'),
                                             'text-success' => $tdebt == 0
@@ -205,37 +182,37 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="12" class="text-center py-4 text-muted">
+                                    <td colspan="12" class="text-center">
                                         No hay datos para el mes seleccionado.
                                     </td>
                                 </tr>
                             @endforelse
                             </tbody>
 
-                            <tfoot class="text-center fw-semibold">
+                            <tfoot class="bg-primary fw-semibold">
                             <tr>
-                                <td class="sticky-col"></td>
+                                <td></td>
                                 <td><b>TOTAL</b></td>
-                                <td class="sticky-col-2"></td>
+                                <td></td>
 
-                                <td class="text-end">{{ number_format($sumPrevDebt, 2) }}</td>
-                                <td class="text-end">{{ number_format($sumPrevExonerated, 2) }}</td>
-                                <td class="text-end">{{ number_format($sumPrevPaidDebt, 2) }}</td>
+                                <td>{{ number_format($sumPrevDebt, 2) }}</td>
+                                <td>{{ number_format($sumPrevExonerated, 2) }}</td>
+                                <td>{{ number_format($sumPrevPaidDebt, 2) }}</td>
 
-                                <td class="text-end">{{ number_format($sumMonthAmount, 2) }}</td>
+                                <td>{{ number_format($sumMonthAmount, 2) }}</td>
                                 <td>{{ $laborableDays }}</td>
                                 <td>{{ $sumDtDays }}</td>
                                 <td>{{ $sumDntDays }}</td>
                                 <td></td>
-                                <td class="text-end">{{ number_format($sumTDebt, 2) }}</td>
+                                <td>{{ number_format($sumTDebt, 2) }}</td>
                             </tr>
                             <tr>
-                                <td class="sticky-col"></td>
+                                <td></td>
                                 <td><b>TOTAL</b></td>
-                                <td class="sticky-col-2"></td>
                                 <td></td>
                                 <td></td>
-                                <td class="text-center" colspan="2">
+                                <td></td>
+                                <td colspan="2">
                                     {{ number_format($sumMonthAmount + $sumPrevPaidDebt, 2) }}
                                 </td>
                                 <td></td>
@@ -246,12 +223,6 @@
                             </tr>
                             </tfoot>
                         </table>
-                    </div>
-
-                    <div class="mt-2" wire:loading.delay>
-                        <span class="text-muted">
-                            <span class="spinner-border spinner-border-sm"></span> Actualizando…
-                        </span>
                     </div>
                 </div>
             </div>
