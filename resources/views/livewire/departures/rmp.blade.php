@@ -84,12 +84,12 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-3 col-6">
+                        <div class="col-md-3 col-6 d-flex align-items-end">
                             <a wire:click="export" class="btn btn-sm btn-primary w-100">
                                 <i class="ti ti-file-analytics f-s-12"></i> Exportar
                             </a>
                         </div>
-                        <div class="col-md-3 col-6">
+                        <div class="col-md-3 col-6 d-flex align-items-end">
                             <a href="{{ route('departures.index') }}" class="btn btn-sm btn-primary w-100">
                                 <i class="ti ti-rotate-2 f-s-12"></i> Regresar
                             </a>

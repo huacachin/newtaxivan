@@ -79,7 +79,7 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="ol-md-3 col-6">
+                        <div class="col-md-3 col-6">
                             <label class="form-label">Año</label>
                             <select class="form-select form-select-sm" wire:model.live="year">
                                 @foreach($years as $y)
