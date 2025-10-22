@@ -61,7 +61,7 @@
                         REPORTE ESTADÍSTICO DE PAGO – {{ $this->monthName() }} {{ $year }}
                     </h5>
                     <div class="row g-3 align-items-end mt-2">
-                        <div class="col-md-4">
+                        <div class="col-md-4 col-6">
                             <label class="form-label">Mes</label>
                             <select class="form-control form-control-sm" wire:model.live="month">
                                 @foreach($months as $mVal => $mName)
@@ -69,7 +69,7 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-4 col-6">
                             <label class="form-label">Año</label>
                             <select class="form-control form-control-sm" wire:model.live="year">
                                 @foreach($years as $y)
@@ -77,13 +77,13 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-2 d-flex">
+                        <div class="col-md-2 col-6">
                             <a href="#" wire:click="export" class="btn btn-sm btn-primary w-100">
                                 <i class="ti ti-file-analytics"></i> Exportar
                             </a>
                         </div>
 
-                        <div class="col-md-2">
+                        <div class="col-md-2 col-6">
                             <a href="{{ route('payments.index') }}" class="btn btn-sm btn-primary w-100">
                                 <i class="ti ti-arrow-back-up"></i> Regresar
                             </a>

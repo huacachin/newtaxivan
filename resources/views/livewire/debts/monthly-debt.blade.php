@@ -1,19 +1,25 @@
 @push('styles')
     <style>
-        /* Encabezado/foot oscuros y pegajosos — igual que Payments */
-        .tableFixHead thead th{
-            position: sticky; top: 0; z-index: 2;
-            background-color:#009BDC !important; color:#fff !important; vertical-align: middle;
-        }
-        .tableFixHead tfoot th,
-        .tableFixHead tfoot td{
-            background-color:#009BDC !important; color:#fff !important;
+
+        table {
+            border-collapse: collapse; /* opcional */
+            width: 100%;
         }
 
-        /* Ajuste al contenido y números alineados a la derecha */
-        .tableFixHead table.table th,
-        .tableFixHead table.table td{ white-space:nowrap; }
-        .num{ text-align:right; }
+        th,td{
+            padding: 3px !important;
+            font-size: 10px !important;
+            text-align: center !important;
+            vertical-align: middle;   /* <-- clave */
+        }
+
+        .btn, input,select {
+            font-size: 10px !important;
+        }
+
+        thead,tfoot{
+            font-weight: bold;
+        }
 
         .screen-overlay {
             position: fixed;
@@ -80,7 +86,7 @@
             <div class="card shadow-sm">
                 <div class="card-header">
                     <div class="row g-2 align-items-end">
-                        <div class="col-md-2">
+                        <div class="col-md-2 col-4">
                             <label class="form-label">Mes</label>
                             <select class="form-select" wire:model.live="month">
                                 @foreach($months as $val => $label)
@@ -88,7 +94,7 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-2 col-4">
                             <label class="form-label">Año</label>
                             <select class="form-select" wire:model.live="year">
                                 @foreach($years as $y)
@@ -96,12 +102,12 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-3 col-4">
                             <label class="form-label">Buscar placa</label>
                             <input type="search" class="form-control" placeholder="ABC-123"
                                    wire:model.live.debounce.750ms="search">
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-2 col-4">
                             <label class="form-label">Condición</label>
                             <select class="form-select" wire:model.live="condition">
                                 <option value="">Todas</option>
@@ -113,30 +119,30 @@
                                 <option value="Amortizado">Amortizado</option>
                             </select>
                         </div>
-                        <div class="col-md-2">
-                            <button class="btn btn-primary w-100" wire:click="export">
-                                <i class="ti ti-file-analytics f-s-16"></i> Exportar
+                        <div class="col-md-2 col-4">
+                            <button class="btn btn-sm btn-primary w-100" wire:click="export">
+                                <i class="ti ti-file-analytics f-s-12"></i> Exportar
                             </button>
                         </div>
-                        <div class="col-md-1">
-                            <button id="down" class="btn btn-primary w-100" title="Ir al final">
-                                <i class="ti ti-square-chevrons-down f-s-17"></i>
+                        <div class="col-md-1 col-4">
+                            <button id="down" class="btn btn-sm btn-primary w-100" title="Ir al final">
+                                <i class="ti ti-square-chevrons-down f-s-12"></i>
                             </button>
                         </div>
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive tableFixHead">
+                    <div class="table-responsive">
                         <div class="screen-overlay-local"
                              wire:loading.flex
                              wire:target="search">
-                            <div class="text-center">
+                            <div>
                                 <div class="spinner-border text-light" role="status" aria-label="Buscando…"></div>
                                 <div class="loader-text">Buscando…</div>
                             </div>
                         </div>
-                        <table class="table table-sm table-bordered table-striped table-hover align-middle">
-                            <thead class="text-center">
+                        <table class="table table-bordered table-striped table-hover">
+                            <thead class="bg-primary">
                             <tr>
                                 <th>Op</th>
                                 <th>Cod</th>
@@ -144,11 +150,11 @@
                                 <th>Condición</th>
                                 <th title="Días NO trabajados">Días NO trabajados</th>
                                 <th title="Total Días no Trabajados">T. d.n.t</th>
-                                <th title="Total Deuda (S/)" class="num">T. D. (S/)</th>
-                                <th title="Exonerado (S/)" class="num">Ex (S/)</th>
-                                <th title="Total por pagar (S/)" class="num">T. D.x.P (S/)</th>
-                                <th title="Amortización (S/)" class="num">Amor (S/)</th>
-                                <th title="Pendiente (S/)" class="num">Pend (S/)</th>
+                                <th title="Total Deuda (S/)">T. D. (S/)</th>
+                                <th title="Exonerado (S/)">Ex (S/)</th>
+                                <th title="Total por pagar (S/)">T. D.x.P (S/)</th>
+                                <th title="Amortización (S/)">Amor (S/)</th>
+                                <th title="Pendiente (S/)">Pend (S/)</th>
                             </tr>
                             </thead>
 
@@ -156,39 +162,39 @@
                             {{-- filas --}}
                             @forelse($rows as $r)
                                 <tr wire:key="row-{{ $r['item'] }}" wire:loading.class="d-none">
-                                    <td class="text-center">
+                                    <td>
                                         @if(($r['total'] ?? 0) > 0)
                                             <a href="#" title="Editar" wire:click.prevent="detail({{ $r['id'] }})">
-                                                <i class="ti ti-edit"></i>
+                                                <i class="ti ti-edit f-s-12 text-success"></i>
                                             </a>
                                         @endif
                                     </td>
-                                    <td class="text-center">{{ $r['cod'] }}</td>
-                                    <td class="text-center"><strong>{{ $r['plate'] }}</strong></td>
-                                    <td class="text-center">{{ $r['condition'] }}</td>
-                                    <td class="text-start">{!! $r['days_text'] !!}</td>
-                                    <td class="text-center">{{ $r['days_late'] }}</td>
-                                    <td class="num">{{ number_format($r['total'], 2) }}</td>
-                                    <td class="num text-danger">{{ number_format($r['exonerated'], 2) }}</td>
-                                    <td class="num">{{ number_format($r['to_pay'], 2) }}</td>
-                                    <td class="num">{{ number_format($r['amortized'], 2) }}</td>
-                                    <td class="num">{{ number_format($r['pending'], 2) }}</td>
+                                    <td>{{ $r['cod'] }}</td>
+                                    <td><strong>{{ $r['plate'] }}</strong></td>
+                                    <td>{{ $r['condition'] }}</td>
+                                    <td>{!! $r['days_text'] !!}</td>
+                                    <td>{{ $r['days_late'] }}</td>
+                                    <td>{{ number_format($r['total'], 2) }}</td>
+                                    <td class="text-danger">{{ number_format($r['exonerated'], 2) }}</td>
+                                    <td>{{ number_format($r['to_pay'], 2) }}</td>
+                                    <td>{{ number_format($r['amortized'], 2) }}</td>
+                                    <td>{{ number_format($r['pending'], 2) }}</td>
                                 </tr>
                             @empty
                                 <tr wire:loading.class="d-none">
-                                    <td colspan="11" class="text-center">No se encontraron resultados.</td>
+                                    <td colspan="11">No se encontraron resultados.</td>
                                 </tr>
                             @endforelse
                             </tbody>
 
-                            <tfoot class="text-center fw-semibold">
+                            <tfoot class="bg-primary">
                             <tr>
                                 <td colspan="6">TOTAL GENERAL</td>
-                                <td class="num">{{ number_format($totals['total'] ?? 0, 2) }}</td>
-                                <td class="num">{{ number_format($totals['exonerated'] ?? 0, 2) }}</td>
-                                <td class="num">{{ number_format($totals['to_pay'] ?? 0, 2) }}</td>
-                                <td class="num">{{ number_format($totals['amortized'] ?? 0, 2) }}</td>
-                                <td class="num">{{ number_format($totals['pending'] ?? 0, 2) }}</td>
+                                <td>{{ number_format($totals['total'] ?? 0, 2) }}</td>
+                                <td>{{ number_format($totals['exonerated'] ?? 0, 2) }}</td>
+                                <td>{{ number_format($totals['to_pay'] ?? 0, 2) }}</td>
+                                <td>{{ number_format($totals['amortized'] ?? 0, 2) }}</td>
+                                <td>{{ number_format($totals['pending'] ?? 0, 2) }}</td>
                             </tr>
                             </tfoot>
                         </table>
@@ -206,7 +212,7 @@
     <div class="screen-overlay"
          wire:loading.delay.flex
          wire:target="export,month,year,condition">
-        <div class="text-center">
+        <div>
             <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
             <div class="mt-2 text-white fw-semibold">Cargando…</div>
         </div>

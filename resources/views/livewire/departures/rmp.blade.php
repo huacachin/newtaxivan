@@ -68,7 +68,7 @@
                 <div class="card-header">
                     <h5 class="mb-0">Reporte mensual por paradero (V.T.)</h5>
                     <div class="row g-3 mt-2">
-                        <div class="col-xl-3 col-md-3">
+                        <div class="col-md-3 col-6">
                             <label class="form-label">Mes</label>
                             <select class="form-control form-control-sm" wire:model.live="month">
                                 @foreach($months as $mVal => $mName)
@@ -76,7 +76,7 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-xl-3 col-md-3">
+                        <div class="col-md-3 col-6">
                             <label class="form-label">Año</label>
                             <select class="form-control form-control-sm" wire:model.live="year">
                                 @foreach($years as $y)
@@ -84,14 +84,12 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-xl-3 col-md-3">
-                            <label class="form-label d-block invisible">.</label>
+                        <div class="col-md-3 col-6">
                             <a wire:click="export" class="btn btn-sm btn-primary w-100">
                                 <i class="ti ti-file-analytics f-s-12"></i> Exportar
                             </a>
                         </div>
-                        <div class="col-xl-3 col-md-3">
-                            <label class="form-label d-block invisible">.</label>
+                        <div class="col-md-3 col-6">
                             <a href="{{ route('departures.index') }}" class="btn btn-sm btn-primary w-100">
                                 <i class="ti ti-rotate-2 f-s-12"></i> Regresar
                             </a>

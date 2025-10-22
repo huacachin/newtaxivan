@@ -1,37 +1,26 @@
 @push('styles')
     <style>
-        /* ===== Encabezado y pie oscuros pegajosos (modelo Payments) ===== */
-        .tableFixHead thead,
-        .tableFixHead thead th{
-            background-color:#009BDC !important;
-            color:#fff !important;
-        }
-        .tableFixHead thead th{
-            position: sticky; top: 0; z-index: 2;
-            vertical-align: middle;
-        }
-        .tableFixHead tfoot,
-        .tableFixHead tfoot th,
-        .tableFixHead tfoot td{
-            background-color:#009BDC !important;
-            color:#fff !important;
+
+        table {
+            border-collapse: collapse; /* opcional */
+            width: 100%;
         }
 
-        /* Compacta y no cortar líneas */
-        .tableFixHead table.table th,
-        .tableFixHead table.table td{
-            white-space: nowrap;
+        th,td{
+            padding: 3px !important;
+            font-size: 10px !important;
+            text-align: center !important;
+            vertical-align: middle;   /* <-- clave */
         }
 
-        /* Hover suave */
-        .tableFixHead tbody tr:hover{ background:#f8fafc; }
-
-        /* Utilidades */
-        .text-end{ text-align:right !important; }
-        .chip{
-            display:inline-block; padding:.25rem .5rem; border-radius:999px;
-            background:#f8fafc; border:1px solid #e5e7eb; font-size:.875rem; font-weight:600;
+        .btn, input,select {
+            font-size: 10px !important;
         }
+
+        thead,tfoot{
+            font-weight: bold;
+        }
+
 
         .screen-overlay {
             position: fixed;
@@ -88,32 +77,32 @@
                             <span class="chip">Pendiente: S/ {{ number_format($pending,2) }}</span>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-4">
                         <label class="form-label">Placa</label>
                         <input type="text" class="form-control" value="{{ $plate }}" readonly style="background:#eee;">
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-4">
                         <label class="form-label">Fecha</label>
                         <input type="text" class="form-control" value="{{ $date }}" readonly>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-4">
                         <label class="form-label">Días (no trabajados)</label>
                         <input type="text" class="form-control" value="{{ $days }}" readonly style="background:#eee;">
                     </div>
 
 
                     <div class="col-12">
-                        <label class="form-label"><b style="color:red;">Días no trabajados — detalle</b></label>
-                        <div class="form-control" style="min-height:38px; background:#fff;">
-                            {!! $this->daysString !!}
-                        </div>
+                        <label class="form-label"><b class="text-danger">Días no trabajados — detalle</b></label>
+                        <input class="form-control" value="{!! $this->daysString !!}" readonly>
+
+                        </input>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-4">
                         <label class="form-label">Deuda Total (S/)</label>
                         <input type="text" class="form-control text-end" value="{{ number_format($total,2) }}" readonly style="background:#eee;">
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-4">
                         <label class="form-label">Exonerado (S/)</label>
                         <input type="number" step="0.01"
                                class="form-control text-end @error('exonerateInput') is-invalid @enderror"
@@ -122,7 +111,7 @@
                     </div>
 
                     {{-- Oculto (legacy) --}}
-                    <div class="col-md- d-none">
+                    <div class=" d-none">
                         <label class="form-label">Amortización (S/)</label>
                         <input type="number" step="0.01"
                                class="form-control text-end @error('amortizeInput') is-invalid @enderror"
@@ -130,7 +119,7 @@
                         @error('amortizeInput') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-4">
                         <label class="form-label">Detalle exoneración</label>
                         <input type="text"
                                class="form-control @error('detailInput') is-invalid @enderror"
@@ -144,28 +133,28 @@
                 </div>
             </form>
             <div class="row justify-content-end g-2 mt-2">
-                <div class="col-xl-2 col-md-3">
-                    <button class="btn btn-primary w-100" wire:click="save" wire:loading.attr="disabled">
-                        <i class="ti ti-device-floppy f-s-16"></i> Guardar
+                <div class="col-md-3 col-6 ">
+                    <button class="btn btn-sm btn-primary w-100" wire:click="save" wire:loading.attr="disabled">
+                        <i class="ti ti-device-floppy f-s-12"></i> Guardar
                     </button>
                 </div>
-                <div class="col-xl-2 col-md-3">
-                    <a class="btn btn-primary w-100" href="{{ route('debts.monthly') }}">
-                        <i class="ti ti-arrow-left f-s-16"></i> Regresar
+                <div class="col-md-3 col-6">
+                    <a class="btn btn-sm btn-primary w-100" href="{{ route('debts.monthly') }}">
+                        <i class="ti ti-arrow-left f-s-12"></i> Regresar
                     </a>
                 </div>
             </div>
         </div><div class="card-body">
             <h6 class="mb-2">Detalles</h6>
 
-            <div class="table-responsive tableFixHead">
-                <table class="table table-sm table-bordered table-striped table-hover align-middle">
-                    <thead class="text-center">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped table-hover">
+                    <thead class="bg-primary">
                     <tr>
                         <th>Acción</th>
                         <th>ID</th>
                         <th>Fecha</th>
-                        <th class="text-start">Detalle</th>
+                        <th>Detalle</th>
                         <th>Exonerado (S/)</th>
                         <th>Amortización (S/)</th>
                         <th>Usuario</th>
@@ -175,31 +164,31 @@
                     <tbody>
 
                     @forelse($details as $row)
-                        <tr wire:loading.remove class="text-center">
+                        <tr wire:loading.remove>
                             <td>
-                                <button  class="btn btn-sm btn-danger ms-1" wire:click="questionDelete({{ $row['id'] }})">
+                                <button  class="btn btn-sm btn-danger" wire:click="questionDelete({{ $row['id'] }})">
                                     Eliminar
                                 </button>
                             </td>
                             <td>{{ $row['id'] }}</td>
                             <td>{{ $row['date'] }}</td>
-                            <td class="text-start">{{ $row['detail'] }}</td>
-                            <td class="text-end">{{ number_format($row['exonerated'], 2) }}</td>
-                            <td class="text-end">{{ number_format($row['amortized'], 2) }}</td>
+                            <td>{{ $row['detail'] }}</td>
+                            <td>{{ number_format($row['exonerated'], 2) }}</td>
+                            <td>{{ number_format($row['amortized'], 2) }}</td>
                             <td>{{ $row['user'] }}</td>
                         </tr>
                     @empty
                         <tr wire:loading.remove>
-                            <td colspan="7" class="text-center">Sin detalles aún.</td>
+                            <td colspan="7">Sin detalles aún.</td>
                         </tr>
                     @endforelse
                     </tbody>
 
-                    <tfoot class="text-center fw-semibold">
+                    <tfoot class="bg-primary">
                     <tr>
-                        <th colspan="4" class="text-end">Total general:</th>
-                        <th class="text-end">{{ number_format($sumExonerated, 2) }}</th>
-                        <th class="text-end">{{ number_format($sumAmortized, 2) }}</th>
+                        <th colspan="4">Total general:</th>
+                        <th>{{ number_format($sumExonerated, 2) }}</th>
+                        <th>{{ number_format($sumAmortized, 2) }}</th>
                         <th>Pendiente: S/ {{ number_format($pending, 2) }}</th>
                     </tr>
                     </tfoot>

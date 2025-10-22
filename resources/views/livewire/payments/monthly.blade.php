@@ -73,7 +73,7 @@
                         REPORTE MENSUAL DE PAGO – {{ $monthName }} {{ $year }}
                     </h5>
                     <div class="row g-3 align-items-end mt-2">
-                        <div class="col-md-3">
+                        <div class="col-md-3 col-4">
                             <label class="form-label">Mes</label>
                             <select class="form-control form-control-sm" wire:model.live="month">
                                 @foreach($months as $mVal => $mName)
@@ -81,7 +81,7 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-3 col-4">
                             <label class="form-label">Año</label>
                             <select class="form-control form-control-sm" wire:model.live="year">
                                 @foreach($years as $y)
@@ -89,7 +89,7 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-2 col-4">
                             <label class="form-label">Condición</label>
                             <select class="form-control form-control-sm" wire:model.live="cond">
                                 <option value="">Todos</option>
@@ -100,14 +100,14 @@
                             </select>
                         </div>
 
-                        <div class="col-md-2 d-flex gap-2">
+                        <div class="col-md-2 col-6">
                             <a href="#" wire:click="export" class="btn btn-sm btn-primary w-100">
                                 <i class="ti ti-file-spreadsheet f-s-12"></i> Exportar
                             </a>
 
                         </div>
 
-                        <div class="col-md-2 d-flex gap-2">
+                        <div class="col-md-2 col-6">
                             <a href="{{ route('payments.index') }}" class="btn btn-sm btn-primary w-100">
                                 <i class="ti ti-arrow-back-up f-s-12"></i> Regresar
                             </a>

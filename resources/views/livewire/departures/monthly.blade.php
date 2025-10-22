@@ -71,7 +71,7 @@
                     </h5>
 
                     <div class="row g-3 align-items-end mt-2">
-                        <div class="col-xl-3 col-md-3">
+                        <div class="col-md-3 col-6">
                             <label class="form-label">Mes</label>
                             <select class="form-select form-select-sm" wire:model.live="month">
                                 @foreach($months as $mVal => $mName)
@@ -79,7 +79,7 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-xl-3 col-md-3">
+                        <div class="ol-md-3 col-6">
                             <label class="form-label">Año</label>
                             <select class="form-select form-select-sm" wire:model.live="year">
                                 @foreach($years as $y)
@@ -88,15 +88,13 @@
                             </select>
                         </div>
 
-                        <div class="col-xl-3 col-md-3">
-                            <label class="form-label d-block invisible">.</label>
+                        <div class="col-md-3 col-6">
                             <a href="#" wire:click="export" class="btn btn-sm btn-primary w-100">
                                 <i class="ti ti-file-analytics f-s-12"></i> Exportar
                             </a>
                         </div>
 
-                        <div class="col-xl-3 col-md-3">
-                            <label class="form-label d-block invisible">.</label>
+                        <div class="col-md-3 col-6">
                             <a href="{{ route('departures.index') }}" class="btn btn-sm btn-primary w-100">
                                 <i class="ti ti-rotate-2 f-s-12"></i> Regresar
                             </a>
@@ -106,7 +104,7 @@
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped table-hover">
-                            <thead class="text-center bg-primary">
+                            <thead class="bg-primary">
                             <tr>
                                 <th>Item</th>
                                 <th>Placa</th>
