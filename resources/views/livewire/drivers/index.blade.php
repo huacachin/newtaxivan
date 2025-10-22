@@ -1,30 +1,20 @@
 @push('styles')
     <style>
-        /* Encabezado y pie oscuros (todas las tablas de esta vista) */
-        .table-section .table thead th{
-            background-color:#009BDC!important;
-            color:#fff!important;
-            vertical-align:middle;
-        }
-        .table-section .table tfoot th,
-        .table-section .table tfoot td{
-            background-color:#009BDC!important;
-            color:#fff!important;
+        table {
+            border-collapse: collapse; /* opcional */
+            width: 100%;
         }
 
-        /* Segundo cuadro (LIBRES) en gris más fuerte */
-        .support-table tbody td{
-            background-color:#e5e7eb!important;
-        }
-        .support-table tbody tr:hover td{
-            background-color:#d1d5db!important;
-        }
-        .support-table.table-striped tbody tr:nth-of-type(odd) td{
-            background-color:#e5e7eb!important;
+        th,td{
+            padding: 3px !important;
+            font-size: 10px !important;
+            text-align: center !important;
+            vertical-align: middle;   /* <-- clave */
         }
 
-        .ta-center{ text-align:center; }
-        .f-w-600{ font-weight:600; }
+        .btn, input,select {
+            font-size: 10px !important;
+        }
 
         .screen-overlay {
             position: fixed;
@@ -68,16 +58,15 @@
                 <div class="card-header">
                     <h5>Total conductores: {{ $drivers->count() }}</h5>
                     <div class="row g-2 align-items-end mt-2">
-                        <div class="col-xl-5 col-md-3">
+                        <div class="col-md-3 col-6">
                             <form class="app-form app-icon-form" action="#">
-                                <div class="position-relative">
+
                                     <input type="search" class="form-control" placeholder="Buscar..." aria-label="Buscar" wire:model.live="search">
-                                    <i class="ti ti-search text-dark"></i>
-                                </div>
+
                             </form>
                         </div>
 
-                        <div class="col-xl-2 col-md-3">
+                        <div class="col-md-3 col-6">
                             <select class="form-select" aria-label="Selecciona item a filtrar" wire:model.live="filter">
                                 <option value="plate">Placa</option>
                                 <option value="name">Nombre</option>
@@ -85,29 +74,29 @@
                             </select>
                         </div>
 
-                        <div class="col-xl-2 col-md-2">
+                        <div class="col-md-2 col-4">
                             <button class="btn btn-primary w-100" wire:click="openAddModal">
-                                <i class="ti ti-square-plus f-s-17"></i> Nuevo
+                                <i class="ti ti-square-plus f-s-12"></i> Nuevo
                             </button>
                         </div>
 
-                        <div class="col-xl-2 col-md-2">
+                        <div class="col-md-2 col-4">
                             <button class="btn btn-primary w-100" wire:click="export">
-                                <i class="ti ti-file-analytics f-s-17"></i> Exportar
+                                <i class="ti ti-file-analytics f-s-12"></i> Exportar
                             </button>
                         </div>
 
-                        <div class="col-xl-1 col-md-2">
+                        <div class="col-md-2 col-4">
                             <button id="down" class="btn btn-primary w-100">
-                                <i class="ti ti-square-chevrons-down f-s-17"></i>
+                                <i class="ti ti-square-chevrons-down f-s-12"></i>
                             </button>
                         </div>
                     </div>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-sm table-bordered table-striped table-hover">
-                            <thead class="text-center">
+                        <table class="table table-bordered table-striped table-hover">
+                            <thead class="bg-primary">
                             <tr>
                                 <th>Id</th>
                                 <th>Placa</th>
@@ -120,13 +109,13 @@
                                 <th>Acción</th>
                             </tr>
                             </thead>
-                            <tbody class="text-center">
+                            <tbody>
                             @if($drivers->count() > 0)
                                 @foreach($drivers as $driver)
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
                                         <td>{{ $driver->vehicles->first()->plate ?? '—' }}</td>
-                                        <td class="text-start">{{ $driver->name }}</td>
+                                        <td>{{ $driver->name }}</td>
                                         <td>{{ $driver->document_number }}</td>
                                         <td>
                                             {{ ($driver->contract_start && $driver->contract_start !== '0000-00-00')
@@ -138,17 +127,17 @@
                                         </td>
                                         <td>{{ $driver->phone }}</td>
                                         <td>{{ $driver->condition }}</td>
-                                        <td width="10" class="text-center">
+                                        <td width="10">
                                             <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
                                                wire:click="openEditModal({{ $driver->id }})"></i>
                                         </td>
                                     </tr>
                                 @endforeach
                             @else
-                                <tr><td colspan="9" class="text-center">No se encontrarón resultados</td></tr>
+                                <tr><td colspan="9">No se encontrarón resultados</td></tr>
                             @endif
                             </tbody>
-                            <tfoot>
+                            <tfoot class="bg-primary">
                             <tr>
                                 <td colspan="9" class="text-end f-w-600">TOTAL: {{ $drivers->count() }}</td>
                             </tr>
@@ -165,8 +154,8 @@
                 <div class="card-header"><h5>Conductores Libres: {{ $driversFree->count() }}</h5></div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-sm table-bordered table-striped table-hover support-table">
-                            <thead class="text-center">
+                        <table class="table table-bordered table-striped table-hover">
+                            <thead class="bg-primary">
                             <tr>
                                 <th>Id</th>
                                 <th>Nombre</th>
@@ -178,11 +167,11 @@
                                 <th>Acción</th>
                             </tr>
                             </thead>
-                            <tbody class="text-center">
+                            <tbody>
                             @forelse($driversFree as $driver)
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
-                                    <td class="text-start">{{ $driver->name }}</td>
+                                    <td>{{ $driver->name }}</td>
                                     <td>{{ $driver->document_number }}</td>
                                     <td>
                                         {{ ($driver->contract_start && $driver->contract_start !== '0000-00-00')
@@ -194,16 +183,16 @@
                                     </td>
                                     <td>{{ $driver->phone }}</td>
                                     <td>{{ $driver->condition }}</td>
-                                    <td width="10" class="text-center">
+                                    <td width="10">
                                         <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
                                            wire:click="openEditModal({{ $driver->id }})"></i>
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="8" class="text-center">No se encontrarón resultados</td></tr>
+                                <tr><td colspan="8">No se encontrarón resultados</td></tr>
                             @endforelse
                             </tbody>
-                            <tfoot>
+                            <tfoot class="bg-primary">
                             <tr>
                                 <td colspan="8" class="text-end f-w-600">TOTAL: {{ $driversFree->count() }}</td>
                             </tr>

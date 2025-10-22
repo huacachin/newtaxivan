@@ -1,35 +1,21 @@
 {{-- resources/views/livewire/cost-per-plate/days.blade.php --}}
 @push('styles')
     <style>
-        /* ===== Encabezado y pie oscuros, pegajosos ===== */
-        .tableFixHead thead th{
-            position: sticky; top: 0; z-index: 3;
-            background-color:#009BDC !important; color:#fff !important;
-            vertical-align: middle; text-align:center;
-        }
-        .tableFixHead tfoot th,
-        .tableFixHead tfoot td{
-            position: sticky; bottom: 0; z-index: 2;
-            background-color:#009BDC !important; color:#fff !important;
-            vertical-align: middle;
+        table {
+            border-collapse: collapse; /* opcional */
+            width: 100%;
         }
 
-        /* Zebra y ajustes generales */
-        .tableFixHead table.table th,
-        .tableFixHead table.table td{ white-space: nowrap; vertical-align: middle; }
-        tbody tr:nth-child(even) td{ background-color:#f9fafb; }
-
-        /* Sticky cols (Item + Mes) */
-        :root{ --w-item:72px; --w-mes:140px; }
-        .tableFixHead .sticky-col   { position: sticky; left: 0;             z-index: 4; width: var(--w-item); }
-        .tableFixHead .sticky-col-2 { position: sticky; left: var(--w-item); z-index: 4; width: var(--w-mes); }
-        .tableFixHead tbody td.sticky-col,
-        .tableFixHead tbody td.sticky-col-2{
-            background:#fff !important; background-clip: padding-box;
-            box-shadow: 1px 0 0 rgba(0,0,0,.06) inset;
+        th,td{
+            padding: 3px !important;
+            font-size: 10px !important;
+            text-align: center !important;
+            vertical-align: middle;   /* <-- clave */
         }
 
-        .num{ text-align: right; }
+        .btn, input,select {
+            font-size: 10px !important;
+        }
     </style>
 @endpush
 
@@ -59,7 +45,7 @@
             <div class="card shadow-sm">
                 <div class="card-body pt-3">
                     <div class="row g-3 align-items-end">
-                        <div class="col-md-10">
+                        <div class="col-md-10 col-6">
                             <form class="app-form app-icon-form" action="#">
                                 <div class="position-relative">
                                     <input type="text" class="form-control" placeholder="Buscar por placa"
@@ -68,8 +54,8 @@
                                 </div>
                             </form>
                         </div>
-                        <div class="col-md-2 d-grid">
-                            <button class="btn btn-primary" wire:click="goBack">
+                        <div class="col-md-2 col-6 d-grid">
+                            <button class="btn btn-sm btn-primary" wire:click="goBack">
                                 <i class="ti ti-arrow-back-up f-s-17"></i> Regresar
                             </button>
                         </div>
@@ -94,15 +80,15 @@
                 </div>
                 <div class="card-body pb-2">
                     <div class="table-responsive tableFixHead">
-                        <table class="table table-sm table-bordered table-striped table-hover align-middle">
-                            <thead>
+                        <table class="table table-bordered table-striped table-hover">
+                            <thead class="bg-primary">
                             <tr>
-                                <th class="sticky-col">Item</th>
-                                <th class="sticky-col-2">Mes</th>
+                                <th>Item</th>
+                                <th>Mes</th>
                                 <th>Año</th>
                                 <th>Placa</th>
                                 <th>Monto ({{ $now->format('d/m/Y') }})</th>
-                                <th width="10" class="text-center">Modificar</th>
+                                <th width="10" >Modificar</th>
                             </tr>
                             </thead>
 
@@ -110,12 +96,12 @@
                             @if($result->count() > 0)
                                 @foreach($result as $item)
                                     <tr>
-                                        <td class="sticky-col text-center">{{ $loop->iteration }}</td>
-                                        <td class="sticky-col-2 fw-semibold">{{ $item->month }}</td>
+                                        <td>{{ $loop->iteration }}</td>
+                                        <td>{{ $item->month }}</td>
                                         <td>{{ $item->year }}</td>
-                                        <td class="fw-semibold">{{ $item->plate }}</td>
-                                        <td class="num">{{ number_format($item->amount, 2) }}</td>
-                                        <td class="text-center">
+                                        <td>{{ $item->plate }}</td>
+                                        <td>{{ number_format($item->amount, 2) }}</td>
+                                        <td>
                                             <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
                                                wire:click="openCalendar('{{ $item->plate }}', {{ $item->year }}, {{ $item->month }})"></i>
                                         </td>
@@ -123,17 +109,17 @@
                                 @endforeach
                             @else
                                 <tr>
-                                    <td colspan="6" class="text-center py-4 text-muted">No se encontraron resultados</td>
+                                    <td colspan="6" class="py-4 text-muted">No se encontraron resultados</td>
                                 </tr>
                             @endif
                             </tbody>
 
-                            <tfoot class="fw-semibold">
+                            <tfoot class="bg-primary">
                             <tr>
-                                <td class="sticky-col"></td>
-                                <td class="sticky-col-2 text-start">TOTAL</td>
                                 <td></td>
-                                <td class="text-start">
+                                <td>TOTAL</td>
+                                <td></td>
+                                <td>
                                     {{-- cantidad de registros (placas listadas) --}}
                                     {{ $result->count() }} registro{{ $result->count() === 1 ? '' : 's' }}
                                 </td>
@@ -144,12 +130,6 @@
                             </tr>
                             </tfoot>
                         </table>
-                    </div>
-
-                    <div class="mt-2" wire:loading.delay>
-                        <span class="text-muted">
-                            <span class="spinner-border spinner-border-sm"></span> Actualizando…
-                        </span>
                     </div>
                 </div>
             </div>

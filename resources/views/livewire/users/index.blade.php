@@ -1,35 +1,23 @@
 {{-- resources/views/livewire/users/index.blade.php --}}
 @push('styles')
     <style>
-        /* ===== Estilo matriz (igual a Pagos/Vehículos) ===== */
-        .tableFixHead thead th{
-            position: sticky; top: 0; z-index: 3;
-            background-color:#009BDC !important; color:#fff !important;
-            vertical-align: middle; text-align:center;
-        }
-        .tableFixHead tfoot th,
-        .tableFixHead tfoot td{
-            position: sticky; bottom: 0; z-index: 2;
-            background-color:#009BDC !important; color:#fff !important;
+
+
+        table {
+            border-collapse: collapse; /* opcional */
+            width: 100%;
         }
 
-        /* Zebra suave y ajustes */
-        .tableFixHead table.table th,
-        .tableFixHead table.table td{ white-space: nowrap; vertical-align: middle; }
-        tbody tr:nth-child(even) td{ background-color:#f9fafb; }
-
-        /* Sticky cols (Id + Nombres) */
-        :root{ --w-id:72px; --w-name:220px; }
-        .tableFixHead .sticky-col   { position: sticky; left: 0;             z-index: 4; width: var(--w-id); }
-        .tableFixHead .sticky-col-2 { position: sticky; left: var(--w-id);   z-index: 4; width: var(--w-name); }
-        .tableFixHead tbody td.sticky-col,
-        .tableFixHead tbody td.sticky-col-2{
-            background:#fff !important; background-clip: padding-box;
-            box-shadow: 1px 0 0 rgba(0,0,0,.06) inset;
+        th,td{
+            padding: 3px !important;
+            font-size: 10px !important;
+            text-align: center !important;
+            vertical-align: middle;   /* <-- clave */
         }
 
-        .num{ text-align: right; }
-        .text-start{ text-align: left !important; }
+        .btn, input,select {
+            font-size: 10px !important;
+        }
 
         .screen-overlay {
             position: fixed;
@@ -69,31 +57,30 @@
         <div class="col-xl-12">
             <div class="card shadow-sm">
                 <div class="card-header">
-                    <h5 class="mb-0" style="color:#e11d48;">LISTADO DE USUARIOS</h5>
+                    <h5>LISTADO DE USUARIOS</h5>
                     <div class="row g-3 align-items-end mt-2">
-                        <div class="col-xl-10 col-md-6">
+                        <div class="col-md-10 col-6">
                             <form class="app-form app-icon-form" action="#" onsubmit="return false;">
-                                <div class="position-relative">
+
                                     <input type="search" class="form-control" placeholder="Buscar..."
                                            aria-label="Buscar" wire:model.live="search">
-                                    <i class="ti ti-search text-dark"></i>
-                                </div>
+
                             </form>
                         </div>
-                        <div class="col-xl-2 col-md-6 d-flex justify-content-md-end">
-                            <button class="btn btn-primary w-100" wire:click="openAddModal">
-                                <i class="ti ti-square-plus f-s-17"></i> Nuevo
+                        <div class="col-md-2 col-6 d-flex justify-content-md-end">
+                            <button class="btn btn-sm btn-primary w-100" wire:click="openAddModal">
+                                <i class="ti ti-square-plus f-s-12"></i> Nuevo
                             </button>
                         </div>
                     </div>
                 </div>
                 <div class="card-body pb-2">
                     <div class="table-responsive tableFixHead">
-                        <table class="table table-sm table-bordered table-striped table-hover align-middle">
-                            <thead>
+                        <table class="table table-bordered table-striped table-hover">
+                            <thead class="bg-primary">
                             <tr>
-                                <th class="sticky-col">Id</th>
-                                <th class="sticky-col-2">Nombres</th>
+                                <th>Id</th>
+                                <th>Nombres</th>
                                 <th>Usuario</th>
                                 <th>Teléfono</th>
                                 <th>Sede</th>
@@ -107,17 +94,17 @@
                             @if($users->count() > 0)
                                 @foreach($users as $user)
                                     <tr>
-                                        <td class="sticky-col text-center">{{ $loop->iteration }}</td>
-                                        <td class="sticky-col-2 text-start fw-semibold">{{ $user->name }}</td>
+                                        <td>{{ $loop->iteration }}</td>
+                                        <td>{{ $user->name }}</td>
                                         <td>{{ $user->username }}</td>
                                         <td>{{ $user->phone ?: '—' }}</td>
-                                        <td class="text-start">
+                                        <td>
                                             {{ $user->headquarters->pluck('name')->implode(', ') ?: '—' }}
                                             @if($user->headquarter)
                                                 <br><small class="text-muted">Primaria: {{ $user->headquarter->name }}</small>
                                             @endif
                                         </td>
-                                        <td class="text-start">
+                                        <td>
                                             {{ optional($user->roles->first())->name ?? '—' }}
                                         </td>
                                         <td>
@@ -125,7 +112,7 @@
                                                 {{ $user->permissions->count() }} permisos
                                             </span>
                                         </td>
-                                        <td class="text-center">
+                                        <td>
                                             <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
                                                wire:click="openEditModal({{ $user->id }})"></i>
                                         </td>
@@ -133,17 +120,17 @@
                                 @endforeach
                             @else
                                 <tr>
-                                    <td colspan="8" class="text-center py-4 text-muted">No se encontraron resultados</td>
+                                    <td colspan="8" class="py-4 text-muted">No se encontraron resultados</td>
                                 </tr>
                             @endif
                             </tbody>
 
-                            <tfoot class="fw-semibold">
+                            <tfoot class="bg-primary">
                             <tr>
-                                <td class="sticky-col"></td>
-                                <td class="sticky-col-2 text-start">TOTAL USUARIOS</td>
+                                <td></td>
+                                <td>TOTAL USUARIOS</td>
                                 <td colspan="4"></td>
-                                <td class="num text-center">{{ number_format($users->count()) }}</td>
+                                <td>{{ number_format($users->count()) }}</td>
                                 <td></td>
                             </tr>
                             </tfoot>

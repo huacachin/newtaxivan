@@ -1,32 +1,24 @@
 {{-- resources/views/livewire/vehicles/index.blade.php --}}
 @push('styles')
+
+
+
     <style>
-        /* ===== Encabezado/pie oscuros y sticky ===== */
-        .tableFixHead thead th{
-            position: sticky; top: 0; z-index: 3;
-            background-color:#009BDC !important; color:#fff !important;
-            vertical-align: middle;
-        }
-        .tableFixHead tfoot th,
-        .tableFixHead tfoot td{
-            position: sticky; bottom: 0; z-index: 2;
-            background-color:#009BDC !important; color:#fff !important;
+        table {
+            border-collapse: collapse; /* opcional */
+            width: 100%;
         }
 
-        /* ===== Columnas sticky (Id y Placa) ===== */
-        :root{ --w-item:64px; --w-plate:120px; }
-        .tableFixHead .sticky-col   { position: sticky; left:0;              z-index:4; min-width:var(--w-item); }
-        .tableFixHead .sticky-col-2 { position: sticky; left:var(--w-item);  z-index:4; min-width:var(--w-plate); }
-        .tableFixHead tbody td.sticky-col,
-        .tableFixHead tbody td.sticky-col-2{
-            background:#fff !important; background-clip: padding-box;
-            box-shadow: 1px 0 0 rgba(0,0,0,.06) inset; white-space: nowrap;
+        th,td{
+            padding: 3px !important;
+            font-size: 10px !important;
+            text-align: center !important;
+            vertical-align: middle;   /* <-- clave */
         }
 
-        /* ===== Utilidades ===== */
-        th, td{ white-space:nowrap; vertical-align:middle; text-align:center; }
-        .text-start{ text-align:left !important; }
-
+        .btn, input,select {
+            font-size: 10px !important;
+        }
         .screen-overlay {
             position: fixed;
             inset: 0;                 /* full viewport */
@@ -87,24 +79,23 @@
                         <strong>Conductor:</strong> {{ $drivers }}
                     </p>
                     <div class="row g-3 align-items-end mt-2">
-                        <div class="col-xl-3 col-md-2">
+                        <div class="col-md-2 col-4">
                             <form class="app-form app-icon-form" action="#">
-                                <div class="position-relative">
+
                                     <input type="search" class="form-control" placeholder="Buscar..."
                                            aria-label="Buscar" wire:model.live="search">
-                                    <i class="ti ti-search text-dark"></i>
-                                </div>
+
                             </form>
                         </div>
 
-                        <div class="col-xl-2 col-md-2">
+                        <div class="col-md-2 col-4">
                             <select class="form-select" aria-label="Estado del vehiculo" wire:model.live="status">
                                 <option value="active">Activo</option>
                                 <option value="inactive">Cesado</option>
                             </select>
                         </div>
 
-                        <div class="col-xl-2 col-md-2">
+                        <div class="col-md-2 col-4">
                             <select class="form-select" aria-label="Filtro" wire:model.live="filter">
                                 <option value="plate">Placa</option>
                                 <option value="brand">Marca</option>
@@ -118,28 +109,28 @@
                             </select>
                         </div>
 
-                        <div class="col-xl-2 col-md-2">
-                            <button class="btn btn-primary w-100" wire:click="openAddModal">
-                                <i class="ti ti-square-plus f-s-17"></i> Nuevo
+                        <div class="col-md-2 col-4">
+                            <button class="btn btn-sm btn-primary w-100" wire:click="openAddModal">
+                                <i class="ti ti-square-plus f-s-12"></i> Nuevo
                             </button>
                         </div>
-                        <div class="col-xl-2 col-md-2">
-                            <button class="btn btn-primary w-100" wire:click="export">
-                                <i class="ti ti-file-analytics f-s-17"></i> Exportar
+                        <div class="col-md-2 col-4">
+                            <button class="btn btn-sm btn-primary w-100" wire:click="export">
+                                <i class="ti ti-file-analytics f-s-12"></i> Exportar
                             </button>
                         </div>
-                        <div class="col-xl-1 col-md-2">
-                            <button id="down" class="btn btn-primary w-100">
-                                <i class="ti ti-square-chevrons-down f-s-17"></i>
+                        <div class="col-md-2 col-4">
+                            <button id="down" class="btn btn-sm btn-sm btn-primary w-100">
+                                <i class="ti ti-square-chevrons-down f-s-12"></i>
                             </button>
                         </div>
                     </div>
                 </div>
 
                 <div class="card-body">
-                    <div class="table-responsive tableFixHead">
-                        <table class="table table-sm table-bordered table-striped table-hover align-middle">
-                            <thead class="text-center">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped table-hover">
+                            <thead class="bg-primary">
                             <tr>
                                 <th class="sticky-col">Acción</th>
                                 <th>Id</th>
@@ -170,7 +161,7 @@
                                         elseif ($cond === 'DT') { $condClass .= 'cond-DT'; }
                                     @endphp
                                     <tr>
-                                        <td class="sticky-col">
+                                        <td>
                                             <i class="ti ti-edit f-s-18 text-success"
                                                style="cursor:pointer"
                                                wire:click="openEditModal({{ $vehicle->id }})"></i>
@@ -178,7 +169,7 @@
 
                                         <td>{{ $loop->iteration }}</td>
 
-                                        <td class="sticky-col-2 text-start">
+                                        <td>
                                             {{ $vehicle->plate }}
                                             @if(!empty($vehicle->badges))
                                                 <span class="ms-2 d-inline-flex gap-1 align-items-center">
@@ -194,14 +185,14 @@
                                         <td>{{ $vehicle->brand }}</td>
                                         <td>{{ $vehicle->year }}</td>
                                         <td>{{ $vehicle->class }}</td>
-                                        <td class="text-start">{{ $vehicle->owner->name ?? '-' }}</td>
-                                        <td class="text-start">{{ $vehicle->driver->name ?? '-' }}</td>
+                                        <td>{{ $vehicle->owner->name ?? '-' }}</td>
+                                        <td>{{ $vehicle->driver->name ?? '-' }}</td>
                                         <td>{{ $vehicle->type }}</td>
                                         <td>{{ $vehicle->fuel }}</td>
                                         <td>
                                             <span class="{{ $condClass }}">{{ $cond ?: '-' }}</span>
                                         </td>
-                                        <td class="text-start">{{ $vehicle->affiliated_company }}</td>
+                                        <td>{{ $vehicle->affiliated_company }}</td>
 
                                         @if($status === "inactive")
                                             <td>{{ $vehicle->termination_date?->format('d/m/Y') ?? '-' }}</td>
@@ -211,7 +202,7 @@
                             @else
                                 <tr>
                                     @php $colspan = 12 + ($status === "inactive" ? 1 : 0); @endphp
-                                    <td colspan="{{ $colspan }}" class="text-center">No se encontrarón resultados</td>
+                                    <td colspan="{{ $colspan }}">No se encontrarón resultados</td>
                                 </tr>
                             @endif
                             </tbody>

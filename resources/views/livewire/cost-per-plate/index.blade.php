@@ -1,35 +1,21 @@
 {{-- resources/views/livewire/cost-per-plate/index.blade.php --}}
 @push('styles')
     <style>
-        /* ===== Estilo matriz (igual al de Pagos/Usuarios/Vehículos) ===== */
-        .tableFixHead thead th{
-            position: sticky; top: 0; z-index: 3;
-            background-color:#009BDC !important; color:#fff !important;
-            vertical-align: middle; text-align:center;
-        }
-        .tableFixHead tfoot th,
-        .tableFixHead tfoot td{
-            position: sticky; bottom: 0; z-index: 2;
-            background-color:#009BDC !important; color:#fff !important;
-            vertical-align: middle;
+        table {
+            border-collapse: collapse; /* opcional */
+            width: 100%;
         }
 
-        /* Zebra suave y ajustes */
-        .tableFixHead table.table th,
-        .tableFixHead table.table td{ white-space: nowrap; vertical-align: middle; }
-        tbody tr:nth-child(even) td{ background-color:#f9fafb; }
-
-        /* Sticky cols (Item + Mes) */
-        :root{ --w-item:72px; --w-mes:140px; }
-        .tableFixHead .sticky-col   { position: sticky; left: 0;             z-index: 4; width: var(--w-item); }
-        .tableFixHead .sticky-col-2 { position: sticky; left: var(--w-item); z-index: 4; width: var(--w-mes); }
-        .tableFixHead tbody td.sticky-col,
-        .tableFixHead tbody td.sticky-col-2{
-            background:#fff !important; background-clip: padding-box;
-            box-shadow: 1px 0 0 rgba(0,0,0,.06) inset;
+        th,td{
+            padding: 3px !important;
+            font-size: 10px !important;
+            text-align: center !important;
+            vertical-align: middle;   /* <-- clave */
         }
 
-        .num{ text-align: right; }
+        .btn, input,select {
+            font-size: 10px !important;
+        }
     </style>
 @endpush
 
@@ -61,54 +47,54 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0" style="color:#e11d48;">COSTO POR PLACA</h5>
                     @role('admin')
-                        <button class="btn btn-primary" wire:click="questionGenerate">
-                            <i class="ti ti-square-rounded-plus f-s-14"></i> Generar
+                        <button class="btn btn-sm btn-primary" wire:click="questionGenerate">
+                            <i class="ti ti-square-rounded-plus f-s-12"></i> Generar
                         </button>
                     @endrole
                 </div>
                 <div class="card-body pb-2">
                     <div class="table-responsive tableFixHead">
-                        <table class="table table-sm table-bordered table-striped table-hover align-middle">
-                            <thead>
+                        <table class="table table-bordered table-striped table-hover">
+                            <thead class="bg-primary">
                             <tr>
-                                <th class="sticky-col">Item</th>
-                                <th class="sticky-col-2">Mes</th>
+                                <th>Item</th>
+                                <th>Mes</th>
                                 <th>Año</th>
                                 <th>Placas</th>
                                 <th>Monto</th>
-                                <th width="10" class="text-center">Modificar</th>
+                                <th width="10" >Modificar</th>
                             </tr>
                             </thead>
 
                             <tbody>
                             @forelse($result as $item)
                                 <tr>
-                                    <td class="sticky-col text-center">{{ $loop->iteration }}</td>
-                                    <td class="sticky-col-2 fw-semibold">{{ $item->month }}</td>
+                                    <td>{{ $loop->iteration }}</td>
+                                    <td>{{ $item->month }}</td>
                                     <td>{{ $item->year }}</td>
-                                    <td class="num">{{ number_format($item->plates) }}</td>
-                                    <td class="num">{{ number_format($item->amount, 2) }}</td>
-                                    <td class="text-center">
+                                    <td>{{ number_format($item->plates) }}</td>
+                                    <td>{{ number_format($item->amount, 2) }}</td>
+                                    <td>
                                         <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
                                            wire:click="openDetail({{ $item->year }}, {{ $item->month }})"></i>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td class="text-center py-4 text-muted" colspan="6">No se encontraron resultados</td>
+                                    <td class="py-4 text-muted" colspan="6">No se encontraron resultados</td>
                                 </tr>
                             @endforelse
                             </tbody>
 
-                            <tfoot class="fw-semibold">
+                            <tfoot class="bg-primary">
                             <tr>
-                                <td class="sticky-col"></td>
-                                <td class="sticky-col-2 text-start">TOTAL</td>
                                 <td></td>
-                                <td class="num">
+                                <td>TOTAL</td>
+                                <td></td>
+                                <td>
                                     {{ number_format(collect($result)->sum('plates')) }}
                                 </td>
-                                <td class="num">
+                                <td>
                                     {{ number_format(collect($result)->sum('amount'), 2) }}
                                 </td>
                                 <td></td>

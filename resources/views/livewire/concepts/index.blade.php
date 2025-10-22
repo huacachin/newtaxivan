@@ -1,46 +1,34 @@
 {{-- resources/views/livewire/concepts/index.blade.php --}}
 @push('styles')
     <style>
-        /* ===== Estilo matriz (igual al de Pagos/Usuarios/Vehículos) ===== */
-        .tableFixHead thead th{
-            position: sticky; top: 0; z-index: 3;
-            background-color:#009BDC !important; color:#fff !important;
-            vertical-align: middle; text-align:center;
-        }
-        .tableFixHead tfoot th,
-        .tableFixHead tfoot td{
-            position: sticky; bottom: 0; z-index: 2;
-            background-color:#009BDC !important; color:#fff !important;
+
+
+        table {
+            border-collapse: collapse; /* opcional */
+            width: 100%;
         }
 
-        /* Zebra suave y ajustes */
-        .tableFixHead table.table th,
-        .tableFixHead table.table td{ white-space: nowrap; vertical-align: middle; }
-        tbody tr:nth-child(even) td{ background-color:#f9fafb; }
-
-        /* Sticky cols (Id + Nombre) */
-        :root{ --w-id:72px; --w-name:240px; }
-        .tableFixHead .sticky-col   { position: sticky; left: 0;             z-index: 4; width: var(--w-id); }
-        .tableFixHead .sticky-col-2 { position: sticky; left: var(--w-id);   z-index: 4; width: var(--w-name); }
-        .tableFixHead tbody td.sticky-col,
-        .tableFixHead tbody td.sticky-col-2{
-            background:#fff !important; background-clip: padding-box;
-            box-shadow: 1px 0 0 rgba(0,0,0,.06) inset;
+        th, td {
+            padding: 3px !important;
+            font-size: 10px !important;
+            text-align: center !important;
+            vertical-align: middle; /* <-- clave */
         }
 
-        .text-start{ text-align: left !important; }
-        .num{ text-align: right; }
+        .btn, input, select {
+            font-size: 10px !important;
+        }
 
         .screen-overlay {
             position: fixed;
-            inset: 0;                 /* full viewport */
-            display: none;            /* Livewire lo pondrá en flex */
+            inset: 0; /* full viewport */
+            display: none; /* Livewire lo pondrá en flex */
             align-items: center;
             justify-content: center;
-            background: rgba(0,0,0,.35);
+            background: rgba(0, 0, 0, .35);
             backdrop-filter: blur(2px);
-            z-index: 2000;            /* sobre modals/backdrops de Bootstrap */
-            pointer-events: all;      /* bloquea clics */
+            z-index: 2000; /* sobre modals/backdrops de Bootstrap */
+            pointer-events: all; /* bloquea clics */
         }
     </style>
 @endpush
@@ -72,33 +60,32 @@
         <div class="col-xl-12">
             <div class="card shadow-sm">
                 <div class="card-header">
-                    <h5 class="mb-0" style="color:#e11d48;">LISTADO DE CONCEPTOS</h5>
+                    <h5>LISTADO DE CONCEPTOS</h5>
 
                     <div class="row g-3 align-items-end mt-2">
-                        <div class="col-md-10">
-                            <form class="app-form app-icon-form" action="#" onsubmit="return false;">
-                                <div class="position-relative">
-                                    <input type="search" class="form-control" placeholder="Buscar..."
-                                           aria-label="Buscar" wire:model.live="search">
-                                    <i class="ti ti-search text-dark"></i>
-                                </div>
-                            </form>
+                        <div class="col-md-10 col-6">
+
+
+                            <input type="search" class="form-control" placeholder="Buscar..."
+                                   aria-label="Buscar" wire:model.live="search">
+
+
                         </div>
-                        <div class="col-md-2 d-flex justify-content-md-end">
-                            <button class="btn btn-primary w-100" wire:click="openAddModal">
-                                <i class="ti ti-square-plus f-s-17"></i> Nuevo
+                        <div class="col-md-2 col-6 d-flex justify-content-md-end">
+                            <button class="btn btn-sm btn-primary w-100" wire:click="openAddModal">
+                                <i class="ti ti-square-plus f-s-12"></i> Nuevo
                             </button>
                         </div>
                     </div>
                 </div>
                 <div class="card-body pb-2">
                     <div class="table-responsive tableFixHead">
-                        <table class="table table-sm table-bordered table-striped table-hover align-middle">
-                            <thead>
+                        <table class="table table-bordered table-striped table-hover">
+                            <thead class="bg-primary">
                             <tr>
-                                <th class="sticky-col">Id</th>
+                                <th>Id</th>
                                 <th>Código</th>
-                                <th class="sticky-col-2">Nombre</th>
+                                <th>Nombre</th>
                                 <th>Tipo</th>
                                 <th>Acción</th>
                             </tr>
@@ -108,11 +95,11 @@
                             @if($concepts->count() > 0)
                                 @foreach($concepts as $concept)
                                     <tr>
-                                        <td class="sticky-col text-center">{{ $loop->iteration }}</td>
+                                        <td>{{ $loop->iteration }}</td>
                                         <td>{{ $concept->code }}</td>
-                                        <td class="sticky-col-2 text-start fw-semibold">{{ $concept->name }}</td>
+                                        <td>{{ $concept->name }}</td>
                                         <td>{{ ucfirst($concept->type) }}</td>
-                                        <td class="text-center">
+                                        <td>
                                             <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
                                                wire:click="openEditModal({{ $concept->id }})"></i>
                                         </td>
@@ -120,12 +107,13 @@
                                 @endforeach
                             @else
                                 <tr>
-                                    <td class="text-center py-4 text-muted" colspan="5">No se encontraron resultados</td>
+                                    <td class=" py-4 text-muted" colspan="5">No se encontraron resultados
+                                    </td>
                                 </tr>
                             @endif
                             </tbody>
 
-                            <tfoot class="fw-semibold">
+                            <tfoot class="bg-primary">
                             <tr>
                                 <td class="sticky-col"></td>
                                 <td class="text-start">TOTAL</td>
@@ -135,18 +123,13 @@
                             </tfoot>
                         </table>
                     </div>
-
-                    <div class="mt-2" wire:loading.delay>
-                        <span class="text-muted">
-                            <span class="spinner-border spinner-border-sm"></span> Actualizando…
-                        </span>
-                    </div>
                 </div>
             </div>
         </div>
 
         {{-- MODAL: AGREGAR --}}
-        <div class="modal fade" id="modalAddConcept" aria-hidden="true" tabindex="-1" data-bs-backdrop="static" wire:ignore.self>
+        <div class="modal fade" id="modalAddConcept" aria-hidden="true" tabindex="-1" data-bs-backdrop="static"
+             wire:ignore.self>
             <div class="modal-dialog modal-dialog-centered modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -159,14 +142,16 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="code" class="form-label">Código</label>
-                                    <input id="code" type="text" class="form-control" placeholder="Ingresar Código" wire:model="code">
+                                    <input id="code" type="text" class="form-control" placeholder="Ingresar Código"
+                                           wire:model="code">
                                     @error('code') <span class="text-danger">{{ $message }}</span> @enderror
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="name" class="form-label">Nombre del Concepto</label>
-                                    <input id="name" type="text" class="form-control" placeholder="Ingresar Nombre del Concepto" wire:model="name">
+                                    <input id="name" type="text" class="form-control"
+                                           placeholder="Ingresar Nombre del Concepto" wire:model="name">
                                     @error('name') <span class="text-danger">{{ $message }}</span> @enderror
                                 </div>
                             </div>
@@ -201,7 +186,8 @@
         </div>
 
         {{-- MODAL: EDITAR --}}
-        <div class="modal fade" id="modalEditConcept" aria-hidden="true" tabindex="-1" data-bs-backdrop="static" wire:ignore.self>
+        <div class="modal fade" id="modalEditConcept" aria-hidden="true" tabindex="-1" data-bs-backdrop="static"
+             wire:ignore.self>
             <div class="modal-dialog modal-dialog-centered modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -214,14 +200,16 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="code_e" class="form-label">Código</label>
-                                    <input id="code_e" type="text" class="form-control" placeholder="Ingresar Código" wire:model="code">
+                                    <input id="code_e" type="text" class="form-control" placeholder="Ingresar Código"
+                                           wire:model="code">
                                     @error('code') <span class="text-danger">{{ $message }}</span> @enderror
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="name_e" class="form-label">Nombre del Concepto</label>
-                                    <input id="name_e" type="text" class="form-control" placeholder="Ingresar Nombre del Concepto" wire:model="name">
+                                    <input id="name_e" type="text" class="form-control"
+                                           placeholder="Ingresar Nombre del Concepto" wire:model="name">
                                     @error('name') <span class="text-danger">{{ $message }}</span> @enderror
                                 </div>
                             </div>
