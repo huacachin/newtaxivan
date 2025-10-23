@@ -42,7 +42,7 @@
                     @endif
 
                     <div id="edit-departure-form" class="row">
-                        <div class="col-md-4">
+                        <div class="col-md-4 col-6">
                             <div class="mb-3">
                                 <label for="dep_plate_edit" class="form-label">Placa</label>
                                 <input id="dep_plate_edit"
@@ -57,7 +57,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4">
+                        <div class="col-md-4 col-6">
                             <div class="mb-3">
                                 <label class="form-label">Fecha</label>
                                 <input type="date" class="form-control" wire:model.defer="date">
@@ -65,7 +65,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4">
+                        <div class="col-md-4 col-6">
                             <div class="mb-3">
                                 <label class="form-label">Sucursal</label>
                                 <select class="form-select" wire:model.defer="headquarter_id">
@@ -78,26 +78,30 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4">
+                        <div class="col-md-4 col-6">
                             <div class="mb-3">
                                 <label class="form-label">Precio (S/)</label>
-                                <input type="number" step="0.01" class="form-control" wire:model.defer="price" min="1">
+                                <input type="number" step="0.01" class="form-control"
+                                       wire:model.defer="price" min="1" inputmode="decimal">
                                 @error('price') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
 
-                        <div class="col-md-4">
+                        <div class="col-md-4 col-6">
                             <div class="mb-3">
                                 <label class="form-label">Pasajeros</label>
-                                <input type="number" class="form-control" wire:model.defer="passenger" min="1">
+                                <input type="number" class="form-control"
+                                       wire:model.defer="passenger" min="1"
+                                       inputmode="numeric" pattern="[0-9]*">
                                 @error('passenger') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
 
-                        <div class="col-md-4">
+                        <div class="col-md-4 col-6">
                             <div class="mb-3">
                                 <label class="form-label">Pasaje (S/)</label>
-                                <input type="number" step="0.01" class="form-control" wire:model.defer="passage" min="1">
+                                <input type="number" step="0.01" class="form-control"
+                                       wire:model.defer="passage" min="1" inputmode="decimal">
                                 @error('passage') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>

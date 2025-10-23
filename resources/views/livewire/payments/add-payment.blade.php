@@ -42,7 +42,7 @@
                     @endif
 
                     <div id="add-payment-form" class="row">
-                        <div class="col-md-4">
+                        <div class="col-md-4 col-6">
                             <div class="mb-3">
                                 <label for="pay_plate" class="form-label">Placa</label>
                                 <input id="pay_plate" type="text" class="form-control" placeholder="ABC-123"
@@ -54,7 +54,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4">
+                        <div class="col-md-4 col-6">
                             <div class="mb-3">
                                 <label class="form-label">Serie</label>
                                 <input type="text" class="form-control" wire:model.defer="serie">
@@ -62,7 +62,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4">
+                        <div class="col-md-4 col-6">
                             <div class="mb-3">
                                 <label class="form-label">Sucursal</label>
                                 <select class="form-select" wire:model.live="headquarter_id_form">
@@ -75,7 +75,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4">
+                        <div class="col-md-4 col-6">
                             <div class="mb-3">
                                 <label class="form-label">Fecha Registro</label>
                                 <input type="date" class="form-control" wire:model.live="date_register" readonly>
@@ -83,7 +83,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4">
+                        <div class="col-md-4 col-6">
                             <div class="mb-3">
                                 <label class="form-label">Fecha Pago</label>
                                 <input type="date" class="form-control"
@@ -99,7 +99,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4">
+                        <div class="col-md-4 col-6">
                             <div class="mb-3">
                                 <label class="form-label">Hora</label>
                                 <input type="time" class="form-control" wire:model.defer="hour">
@@ -107,7 +107,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4">
+                        <div class="col-md-4 col-6">
                             <div class="mb-3">
                                 <label class="form-label">Tipo</label>
                                 <select class="form-select" wire:model.live="type_form">
@@ -125,7 +125,8 @@
                                 <label class="form-label">Monto (S/)</label>
                                 <input type="number" step="0.01" min="0.01" class="form-control"
                                        wire:model.defer="amount"
-                                       @if($type_form !== 'DEUDA' && !is_null($detected_cost)) readonly @endif>
+                                       @if($type_form !== 'DEUDA' && !is_null($detected_cost)) readonly @endif
+                                       inputmode="decimal">
                                 @error('amount') <span class="text-danger">{{ $message }}</span> @enderror
 
                                 @if($type_form === 'DEUDA')
