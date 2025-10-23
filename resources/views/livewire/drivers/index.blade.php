@@ -59,11 +59,11 @@
                     <h5>Total conductores: {{ $drivers->count() }}</h5>
                     <div class="row g-2 align-items-end mt-2">
                         <div class="col-md-3 col-6">
-                            <form class="app-form app-icon-form" action="#">
+
 
                                     <input type="search" class="form-control" placeholder="Buscar..." aria-label="Buscar" wire:model.live="search">
 
-                            </form>
+
                         </div>
 
                         <div class="col-md-3 col-6">

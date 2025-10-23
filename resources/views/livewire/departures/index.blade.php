@@ -64,11 +64,11 @@
                             {{-- Ajuste a col-4 para dejar espacio al botón Aplicar --}}
                             <div class="col-3 mb-2 mb-md-0">
                                 <label class="form-label d-none d-lg-block">Buscar</label>
-                                <form class="app-form app-icon-form" action="#">
+
 
                                         <input type="search" class="form-control form-control-sm " placeholder="Buscar..." aria-label="Buscar" wire:model.live="searchText">
 
-                                </form>
+
                             </div>
                         @else
                             <div class="col-3 mb-2 mb-md-0">

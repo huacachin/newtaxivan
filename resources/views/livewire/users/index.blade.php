@@ -60,12 +60,12 @@
                     <h5>LISTADO DE USUARIOS</h5>
                     <div class="row g-3 align-items-end mt-2">
                         <div class="col-md-10 col-6">
-                            <form class="app-form app-icon-form" action="#" onsubmit="return false;">
+
 
                                     <input type="search" class="form-control" placeholder="Buscar..."
                                            aria-label="Buscar" wire:model.live="search">
 
-                            </form>
+
                         </div>
                         <div class="col-md-2 col-6 d-flex justify-content-md-end">
                             <button class="btn btn-sm btn-primary w-100" wire:click="openAddModal">

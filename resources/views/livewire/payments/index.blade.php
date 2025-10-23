@@ -61,13 +61,13 @@
                     <div class="row g-3">
                         <div class="col-4">
                             <label class="form-label">Buscar</label>
-                            <form class="app-form app-icon-form" action="#">
+
 
                                     <input type="search" class="form-control form-control-sm" placeholder="Buscar..."
                                            aria-label="Buscar" wire:model.live="search">
 
 
-                            </form>
+
                         </div>
                         <div class="col-4">
                             <label class="form-label">Filtro</label>
