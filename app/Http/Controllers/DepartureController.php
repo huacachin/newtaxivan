@@ -37,6 +37,14 @@ class DepartureController extends Controller
         return view('departures.stats');
     }
 
+    public function add(){
+        return view('departures.add');
+    }
+
+    public function edit($id){
+        return view('departures.edit',compact('id'));
+    }
+
     public function export(Request $request)
     {
         $searchType = (int)$request->query('searchType', 1);

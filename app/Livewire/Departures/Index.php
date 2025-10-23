@@ -307,12 +307,12 @@ class Index extends Component
      * Dispara evento JS para enfoque y geolocalización.
      * @return void
      */
-    public function openAddModal(): void
+    public function openAddWindow(): void
     {
-        $this->resetValidation();
-        $this->resetForm();
-        $this->dispatch('open-modal', ['name' => 'modalAddDeparture', 'focus' => 'dep_plate']);
-        // el JS del modal obtendrá geolocalización y actualizará latitude/longitude
+
+        $route = route('departures.add');
+
+        $this->dispatch('url-open',["url" => $route]);
     }
 
     // ==============================
@@ -373,31 +373,11 @@ class Index extends Component
      * @param int $id ID del departure a editar
      * @return void
      */
-    public function openEditModal(int $id): void
+    public function openEditWindow(int $id): void
     {
-        $this->resetValidation();
+        $route = route('departures.edit',["id" => $id]);
 
-        $row = DB::table('departures')->where('id',$id)->first();
-        if (!$row) return;
-
-        $this->depId         = $id;
-        $this->date          = $row->date;
-        $this->hour          = $row->hour;
-        $this->headquarter_id= $row->headquarter_id;
-        $this->price         = (float)$row->price;
-        $this->passenger     = (int)$row->passenger;
-        $this->passage       = (float)$row->passage;
-        $this->latitude      = $row->latitude;
-        $this->longitude     = $row->longitude;
-
-        // plate visible para el usuario (si existe vehicle_id usa la placa real)
-        if ($row->vehicle_id) {
-            $this->plate = (string) DB::table('vehicles')->where('id',$row->vehicle_id)->value('plate');
-        } else {
-            $this->plate = (string) $row->legacy_plate;
-        }
-
-        $this->dispatch('open-modal', ['name' => 'modalEditDeparture', 'focus' => 'dep_plate']);
+        $this->dispatch('url-open',["url" => $route]);
     }
 
     /**

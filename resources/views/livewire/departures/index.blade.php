@@ -58,7 +58,7 @@
         <!-- Tabla principal -->
         <div class="col-xl-12">
             <div class="card">
-                <div class="card-body">
+                <div class="card-header">
                     <div class="row mb-2">
                         @if($searchType != 3)
                             {{-- Ajuste a col-4 para dejar espacio al botón Aplicar --}}
@@ -66,7 +66,7 @@
                                 <label class="form-label d-none d-lg-block">Buscar</label>
 
 
-                                        <input type="search" class="form-control form-control-sm " placeholder="Buscar..." aria-label="Buscar" wire:model.live="searchText">
+                                <input type="search" class="form-control form-control-sm " placeholder="Buscar..." aria-label="Buscar" wire:model.live="searchText">
 
 
                             </div>
@@ -106,17 +106,17 @@
                             <input type="date" class="form-control form-control-sm " wire:model.defer="uiToDate">
                         </div>
 
-                            <div class="col-2 mb-2 mb-md-0 d-flex align-items-end justify-center">
-                                <button class="btn btn-primary btn-sm w-100"
-                                        wire:click="applyDateRange"
-                                        wire:loading.attr="disabled"
-                                        wire:target="applyDateRange">
-                                    <i  class="ti ti-search f-s-12"></i>
-                                </button>
-                            </div>
+                        <div class="col-2 mb-2 mb-md-0 d-flex align-items-end justify-center">
+                            <button class="btn btn-primary btn-sm w-100"
+                                    wire:click="applyDateRange"
+                                    wire:loading.attr="disabled"
+                                    wire:target="applyDateRange">
+                                <i  class="ti ti-search f-s-12"></i>
+                            </button>
+                        </div>
 
                     </div>
-                    <div class="row g-2 mb-2">
+                    <div class="row g-2 mb-2 d-flex justify-content-end">
                         @role('admin')
                         <div class="col-lg-2 col-4">
                             <button wire:click="reportMonthly" class="btn btn-sm btn-primary w-100 ">
@@ -140,7 +140,7 @@
                             </button>
                         </div>
                         <div class="col-lg-2 col-4">
-                            <button class="btn btn-sm btn-primary w-100 " wire:click="openAddModal">
+                            <button class="btn btn-sm btn-primary w-100 " wire:click="openAddWindow">
                                 <i  class="ti ti-square-plus f-s-12"></i> Nuevo
                             </button>
                         </div>
@@ -160,6 +160,9 @@
                             </button>
                         </div>
                     </div>
+                </div>
+                <div class="card-body">
+
 
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped table-hover  p-0"
@@ -200,7 +203,7 @@
                                     <tr>
                                         @if(!$groupMode)
                                             <td class="text-center ">
-                                                <i  class="ti ti-edit f-s-18 text-success" wire:click="openEditModal({{ $d->id }})"></i>
+                                                <i  class="ti ti-edit f-s-18 text-success" wire:click="openEditWindow({{ $d->id }})"></i>
                                             </td>
                                         @endif
 
@@ -328,7 +331,7 @@
                                     @if(!$groupMode)
                                         <td class="text-center ">
                                             <i  class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
-                                               wire:click="openEditModal({{ $d->id }})"></i>
+                                               wire:click="openEditWindow({{ $d->id }})"></i>
                                         </td>
                                     @endif
 
@@ -436,196 +439,6 @@
             </div>
         </div>
 
-        {{-- Modal: Agregar Salida --}}
-        <div class="modal fade" id="modalAddDeparture" aria-hidden="true" tabindex="-1" data-bs-backdrop="static" wire:ignore.self>
-            <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Agregar Salida</h5>
-                        <button type="button" class="btn-close m-0 fs-5" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-
-                    <div class="modal-body">
-                        @if ($errors->any())
-                            <div class="alert alert-danger">
-                                <strong>Revisa los siguientes errores:</strong>
-                                <ul class="mb-0 mt-2 ps-3">
-                                    @foreach ($errors->all() as $error) <li>{{ $error }}</li> @endforeach
-                                </ul>
-                            </div>
-                        @endif
-
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label for="dep_plate" class="form-label">Placa</label>
-                                    <input id="dep_plate" type="text" class="form-control" placeholder="ABC-123"
-                                           wire:model.defer="plate">
-                                    @error('plate') <span class="text-danger">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
-
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label class="form-label">Fecha</label>
-                                    <input type="date" class="form-control" wire:model.defer="date">
-                                    @error('date') <span class="text-danger">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
-
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label class="form-label">Sucursal</label>
-                                    <select class="form-select" wire:model.defer="headquarter_id">
-                                        <option value="">Seleccionar</option>
-                                        @foreach($listHeadquarters as $hq)
-                                            <option value="{{ $hq->id }}">{{ $hq->name }}</option>
-                                        @endforeach
-                                    </select>
-                                    @error('headquarter_id') <span class="text-danger">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
-
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label class="form-label">Precio (S/)</label>
-                                    <input type="number" step="0.01" min="1" class="form-control" wire:model.defer="price">
-                                    @error('price') <span class="text-danger">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
-
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label class="form-label">Pasajeros</label>
-                                    <input type="number" class="form-control" wire:model.defer="passenger" min="1">
-                                    @error('passenger') <span class="text-danger">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
-
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label class="form-label">Pasaje (S/)</label>
-                                    <input type="number" class="form-control" wire:model.defer="passage" step="0.01" min="1">
-                                    @error('passage') <span class="text-danger">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
-
-                            {{-- Geolocalización (solo lectura; se llena automáticamente) --}}
-                            <div class="col-md-6 hide-label">
-                                <div class="mb-3">
-                                    <label class="form-label visually-hidden">Latitud</label>
-                                    <input id="dep_lat_add" type="text" class="form-control" wire:model.defer="latitude" readonly>
-                                </div>
-                            </div>
-                            <div class="col-md-6 hide-label">
-                                <div class="mb-3">
-                                    <label class="form-label visually-hidden">Longitud</label>
-                                    <input id="dep_lng_add" type="text" class="form-control" wire:model.defer="longitude" readonly>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-primary" wire:click="save">Agregar</button>
-                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cerrar</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- Modal: Editar Salida --}}
-        <div class="modal fade" id="modalEditDeparture" aria-hidden="true" tabindex="-1" data-bs-backdrop="static" wire:ignore.self>
-            <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Editar Salida</h5>
-                        <button type="button" class="btn-close m-0 fs-5" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-
-                    <div class="modal-body">
-                        @if ($errors->any())
-                            <div class="alert alert-danger">
-                                <strong>Revisa los siguientes errores:</strong>
-                                <ul class="mb-0 mt-2 ps-3">
-                                    @foreach ($errors->all() as $error) <li>{{ $error }}</li> @endforeach
-                                </ul>
-                            </div>
-                        @endif
-
-                        <div class="row">
-                            {{-- placa / fecha / sucursal / precio / pasajeros / pasaje --}}
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label for="dep_plate_edit" class="form-label">Placa</label>
-                                    <input id="dep_plate_edit" type="text" class="form-control" wire:model.defer="plate">
-                                    @error('plate') <span class="text-danger">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label class="form-label">Fecha</label>
-                                    <input type="date" class="form-control" wire:model.defer="date">
-                                    @error('date') <span class="text-danger">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label class="form-label">Sucursal</label>
-                                    <select class="form-select" wire:model.defer="headquarter_id">
-                                        <option value="">Seleccionar</option>
-                                        @foreach($listHeadquarters as $hq)
-                                            <option value="{{ $hq->id }}">{{ $hq->name }}</option>
-                                        @endforeach
-                                    </select>
-                                    @error('headquarter_id') <span class="text-danger">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label class="form-label">Precio (S/)</label>
-                                    <input type="number" step="0.01" class="form-control" wire:model.defer="price" min="1">
-                                    @error('price') <span class="text-danger">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label class="form-label">Pasajeros</label>
-                                    <input type="number" class="form-control" wire:model.defer="passenger" min="1">
-                                    @error('passenger') <span class="text-danger">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label class="form-label">Pasaje (S/)</label>
-                                    <input type="number" step="0.01" class="form-control" wire:model.defer="passage" min="1">
-                                    @error('passage') <span class="text-danger">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
-
-                            {{-- Geolocalización --}}
-                            <div class="col-md-6 hide-label">
-                                <div class="mb-3">
-                                    <label class="form-label visually-hidden">Latitud</label>
-                                    <input id="dep_lat_edit" type="text" class="form-control" wire:model.defer="latitude" readonly>
-                                </div>
-                            </div>
-                            <div class="col-md-6 hide-label">
-                                <div class="mb-3">
-                                    <label class="form-label visually-hidden">Longitud</label>
-                                    <input id="dep_lng_edit" type="text" class="form-control" wire:model.defer="longitude" readonly>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-primary" wire:click="update">Editar</button>
-                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cerrar</button>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
     {{-- Overlay de carga scopeado (ya no targetea fromDate/toDate) --}}
@@ -638,40 +451,3 @@
         </div>
     </div>
 </div>
-
-@push('scripts')
-    <script>
-        (function () {
-            function getGeoAndFill(latId, lngId) {
-                if (!navigator.geolocation) return;
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => {
-                        const lat = pos.coords.latitude.toFixed(6);
-                        const lng = pos.coords.longitude.toFixed(6);
-                        const latInput = document.getElementById(latId);
-                        const lngInput = document.getElementById(lngId);
-                        if (latInput && lngInput) {
-                            latInput.value = lat;
-                            lngInput.value = lng;
-                            // notifica a Livewire el cambio del input
-                            latInput.dispatchEvent(new Event('input', { bubbles: true }));
-                            lngInput.dispatchEvent(new Event('input', { bubbles: true }));
-                        }
-                    },
-                    () => {}, // silencioso
-                    { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
-                );
-            }
-
-            document.addEventListener('shown.bs.modal', function (e) {
-                const id = e.target?.id || '';
-                if (id === 'modalAddDeparture') {
-                    getGeoAndFill('dep_lat_add','dep_lng_add');
-                }
-                if (id === 'modalEditDeparture') {
-                    getGeoAndFill('dep_lat_edit','dep_lng_edit');
-                }
-            });
-        })();
-    </script>
-@endpush

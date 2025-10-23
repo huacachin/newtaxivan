@@ -32,6 +32,14 @@ class PaymentController extends Controller
         return view('payments.stats');
     }
 
+    public function add(){
+        return view('payments.add');
+    }
+
+    public function edit($id){
+        return view('payments.edit',compact('id'));
+    }
+
     public function export(Request $request){
 
         $search        = (string) $request->query('search', '');

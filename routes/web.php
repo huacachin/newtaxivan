@@ -55,12 +55,16 @@ Route::middleware('auth')->group(function () {
     Route::get('departures/monthly', [DepartureController::class,'monthly'])->name('departures.monthly');
     Route::get('departures/rmp', [DepartureController::class,'rmp'])->name('departures.rmp');
     Route::get('departures/stats', [DepartureController::class,'stats'])->name('departures.stats');
+    Route::get('departures/add',[DepartureController::class,'add'])->name('departures.add');
+    Route::get('departures/edit/{id}',[DepartureController::class,'edit'])->name('departures.edit');
 
     // Pagos
     Route::get('payments', [PaymentController::class,'index'])->name('payments.index');
     Route::get('payments/daily', [PaymentController::class,'daily'])->name('payments.daily');
     Route::get('payments/monthly', [PaymentController::class,'monthly'])->name('payments.monthly');
     Route::get('payments/stats', [PaymentController::class,'stats'])->name('payments.stats');
+    Route::get('payments/add',[PaymentController::class,'add'])->name('payments.add');
+    Route::get('payments/edit/{id}',[PaymentController::class,'edit'])->name('payments.edit');
 
     // Deudas
     Route::get('debts-per-days', [DebtController::class,'debtPerDays'])->name('debts.debt-per-days');

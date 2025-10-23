@@ -136,7 +136,7 @@
                         </div>
                         @endrole
                         <div class="col-lg-2 col-4">
-                            <button class="btn btn-sm btn-primary w-100" wire:click="openAddModal">
+                            <button class="btn btn-sm btn-primary w-100" wire:click="openAddWindow">
                                 <i class="ti ti-square-plus f-s-12"></i> Nuevo
                             </button>
                         </div>
@@ -172,7 +172,7 @@
                                 <tr>
                                     <td>
                                         <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
-                                           wire:click="openEditModal({{ $p->id }})"></i>
+                                           wire:click="openEditWindow({{ $p->id }})"></i>
                                     </td>
                                     <td>{{ $loop->iteration }}</td>
                                     <td>{{ $p->legacy_plate }}</td>

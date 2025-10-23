@@ -443,47 +443,21 @@ class Index extends Component
     }
 
     // ===== Modales =====
-    public function openAddModal(): void
+    public function openAddWindow(): void
     {
-        $this->clearValidationState();
-        $now   = now(config('app.timezone','America/Lima'));
-        $today = $now->toDateString();
+        $route = route('payments.add');
 
-        $this->resetForm();
-
-        // 🔹 Siempre hoy al abrir
-        $this->date_register       = $today;
-        $this->date_payment        = $today;
-        $this->hour                = $now->format('H:i');
-        $this->headquarter_id_form = $this->headquarter_id !== '' ? (int)$this->headquarter_id : null;
-
-        $this->prefillAmountFromCost();
-
-        $this->dispatch('open-modal', ['name' => 'modalAddPayment', 'focus' => 'pay_plate']);
+        $this->dispatch('url-open',["url" => $route]);
     }
 
-    public function openEditModal(int $id): void
+
+    public function openEditWindow(int $id): void
     {
-        $this->clearValidationState();
-        $this->paymentId = $id;
-        $p = Payment::with(['headquarter','vehicle'])->findOrFail($id);
+        $route = route('payments.edit',["id" => $id]);
 
-        $this->plate               = $p->legacy_plate ?: ($p->vehicle->plate ?? '');
-        $this->serie               = $p->serie ?? '';
-        $this->date_register       = $p->date_register ? $p->date_register->format('Y-m-d') : '';
-        $this->date_payment        = $p->date_payment ? $p->date_payment->format('Y-m-d') : '';
-        $this->hour                = $p->hour ? substr($p->hour, 0, 5) : '';
-        $this->type_form           = $p->type ? strtoupper($p->type) : '';
-        $this->headquarter_id_form = $p->headquarter_id ?? null;
-        $this->amount              = $p->amount !== null ? (float)$p->amount : '';
-        $this->latitude            = $p->latitude;
-        $this->longitude           = $p->longitude;
-
-        $this->recalcPendingDebt();
-        $this->prefillAmountFromCost();
-
-        $this->dispatch('open-modal', ['name' => 'modalEditPayment', 'focus' => 'pay_plate_edit']);
+        $this->dispatch('url-open',["url" => $route]);
     }
+
     public function updatedTypeForm($value): void
     {
         $tz = config('app.timezone','America/Lima');
