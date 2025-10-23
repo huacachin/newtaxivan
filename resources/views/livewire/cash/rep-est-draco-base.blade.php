@@ -1,6 +1,22 @@
 @push('styles')
     <style>
 
+        table {
+            border-collapse: collapse; /* opcional */
+            width: 100%;
+        }
+
+        th, td {
+            padding: 3px !important;
+            font-size: 10px !important;
+            text-align: center !important;
+            vertical-align: middle; /* <-- clave */
+        }
+
+        .btn, input, select {
+            font-size: 10px !important;
+        }
+
         .screen-overlay {
             position: fixed;
             inset: 0;                 /* full viewport */
@@ -45,19 +61,19 @@
             <div class="card">
                 <div class="card-header">
                     <div class="row g-2">
-                        <div class="col-md-6 d-flex align-items-center">
+                        <div class="col-md-6 col-12">
                             <h5>REPORTE ESTADÍSTICO DRACO {{ $year }}</h5>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-3 col-6">
                             <select class="form-select" wire:model.live="year">
                                 @for($y = now()->year + 1; $y >= 2015; $y--)
                                     <option value="{{ $y }}">{{ $y }}</option>
                                 @endfor
                             </select>
                         </div>
-                        <div class="col-md-3">
-                            <button class="btn btn-primary w-100" wire:click="export">
-                                <i class="ti ti-file-analytics f-s-16"></i> Exportar
+                        <div class="col-md-3 col-6 d-flex align-items-end">
+                            <button class="btn btn-sm btn-primary w-100" wire:click="export">
+                                <i class="ti ti-file-analytics f-s-12"></i> Exportar
                             </button>
                         </div>
                     </div>
@@ -65,23 +81,23 @@
                 <div class="card-body lw-holder">
 
                     <div class="table-responsive">
-                        <table class="table table-sm table-bordered table-striped compact-table-xxs">
+                        <table class="table table-bordered table-striped">
                             <thead class="bg-primary">
                             <tr>
-                                <th class="sticky col-ctrl">CONTROLADOR</th>
-                                <th class="sticky col-hq">PARADERO</th>
+                                <th>CONTROLADOR</th>
+                                <th>PARADERO</th>
                                 @foreach($months as $mn)
-                                    <th class="sticky">{{ $mn }}</th>
+                                    <th>{{ $mn }}</th>
                                 @endforeach
-                                <th class="sticky col-tot">TOTAL</th>
+                                <th>TOTAL</th>
                             </tr>
                             </thead>
 
                             <tbody>
                             {{-- Oficina / Base --}}
                             <tr>
-                                <td class="text-start"><strong>OFICINA</strong></td>
-                                <td class="text-start"><strong>BASE</strong></td>
+                                <td><strong>OFICINA</strong></td>
+                                <td><strong>BASE</strong></td>
                                 @php $tBase = 0; @endphp
                                 @foreach($baseMonthly as $val)
                                     @php $tBase += $val; @endphp
@@ -93,7 +109,7 @@
                             {{-- Grupos DRACO: Usuario -> HQs --}}
                             @forelse($groups as $g)
                                 <tr>
-                                    <td class="text-start"><strong>{{ strtoupper($g['user']) }}</strong></td>
+                                    <td><strong>{{ strtoupper($g['user']) }}</strong></td>
                                     <td></td>
                                     @foreach($months as $_) <td></td> @endforeach
                                     <td></td>
@@ -101,7 +117,7 @@
                                 @foreach($g['hq_rows'] as $row)
                                     <tr>
                                         <td></td>
-                                        <td class="text-start"><strong>{{ $row['hq'] }}</strong></td>
+                                        <td><strong>{{ $row['hq'] }}</strong></td>
                                         @foreach($row['m'] as $val)
                                             <td>{{ number_format($val, 2) }}</td>
                                         @endforeach
@@ -110,14 +126,14 @@
                                 @endforeach
                             @empty
                                 <tr>
-                                    <td colspan="{{ 2 + count($months) + 1 }}" class="text-center text-muted">
+                                    <td colspan="{{ 2 + count($months) + 1 }}">
                                         No hay registros DRACO para {{ $year }}.
                                     </td>
                                 </tr>
                             @endforelse
                             </tbody>
 
-                            <tfoot class="table-primary">
+                            <tfoot class="bg-primary">
                             {{-- Si quieres fila de SOLO DRACO, descomenta:
                             <tr>
                               <th colspan="2">TOTAL DRACO</th>
@@ -143,37 +159,44 @@
         </div>
 
         {{-- Resumen por Sucursal (DRACO) + BASE + Total --}}
-        <div class="col-12 mt-2">
+        <div class="col-12">
             <div class="card">
+                <div class="card-header">
+                    <h6>Resumen por Sucursal</h6>
+                </div>
                 <div class="card-body">
-                    <h6 class="mb-2">Resumen por Sucursal</h6>
-                    <div class="table-responsive">
-                        <table class="table table-sm table-bordered mini-table" style="max-width:420px;">
-                            <thead class="bg-primary">
-                            <tr><th class="text-start">SUCURSAL</th><th class="text-end">TOTAL</th></tr>
-                            </thead>
-                            <tbody>
-                            @php $sumHQ = 0; @endphp
-                            @foreach($byHeadquarter as $h)
-                                @php $sumHQ += $h['total']; @endphp
-                                <tr>
-                                    <td class="text-start">{{ $h['hq'] }}</td>
-                                    <td class="text-end">{{ number_format($h['total'], 2) }}</td>
-                                </tr>
-                            @endforeach
-                            <tr>
-                                <td class="text-start">BASE</td>
-                                <td class="text-end">{{ number_format($grandTotalBase, 2) }}</td>
-                            </tr>
-                            </tbody>
-                            <tfoot class="table-primary">
-                            <tr>
-                                <th class="text-start">TOTAL</th>
-                                <th class="text-end">{{ number_format($sumHQ + $grandTotalBase, 2) }}</th>
-                            </tr>
-                            </tfoot>
-                        </table>
-                    </div>
+
+                    <div class="row table-responsive">
+
+                           <div class="col-md-4 col-12">
+                               <table class="table table-bordered" >
+                                   <thead class="bg-primary">
+                                   <tr><th>SUCURSAL</th><th class="text-end">TOTAL</th></tr>
+                                   </thead>
+                                   <tbody>
+                                   @php $sumHQ = 0; @endphp
+                                   @foreach($byHeadquarter as $h)
+                                       @php $sumHQ += $h['total']; @endphp
+                                       <tr>
+                                           <td>{{ $h['hq'] }}</td>
+                                           <td class="text-end">{{ number_format($h['total'], 2) }}</td>
+                                       </tr>
+                                   @endforeach
+                                   <tr>
+                                       <td>BASE</td>
+                                       <td class="text-end">{{ number_format($grandTotalBase, 2) }}</td>
+                                   </tr>
+                                   </tbody>
+                                   <tfoot class="table-primary">
+                                   <tr>
+                                       <th>TOTAL</th>
+                                       <th class="text-end">{{ number_format($sumHQ + $grandTotalBase, 2) }}</th>
+                                   </tr>
+                                   </tfoot>
+                               </table>
+                           </div>
+                       </div>
+
                 </div>
             </div>
         </div>
@@ -188,15 +211,3 @@
         </div>
     </div>
 </div>
-
-@push('scripts')
-    <script>
-        (function(){
-            const downBtn = document.getElementById('down');
-            downBtn?.addEventListener('click', function(e){
-                e.preventDefault();
-                window.scrollTo({ top: document.body.scrollHeight, behavior:'smooth' });
-            });
-        })();
-    </script>
-@endpush
