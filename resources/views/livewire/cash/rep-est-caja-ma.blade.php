@@ -1,6 +1,23 @@
 
 @push('styles')
     <style>
+
+        table {
+            border-collapse: collapse; /* opcional */
+            width: 100%;
+        }
+
+        th, td {
+            padding: 3px !important;
+            font-size: 10px !important;
+            text-align: center !important;
+            vertical-align: middle; /* <-- clave */
+        }
+
+        .btn, input, select {
+            font-size: 10px !important;
+        }
+
         .screen-overlay {
             position: fixed;
             inset: 0;                 /* full viewport */
@@ -38,7 +55,7 @@
         <div class="card">
             <div class="card-header">
                 <div class="row">
-                    <div class="col-md-4">
+                    <div class="col-md-4 col-6">
                         <label>Mes</label>
                         <select wire:model.live="month" class="form-select">
                             @for ($m=1; $m<=12; $m++)
@@ -46,7 +63,7 @@
                             @endfor
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-3 col-6">
                         <label>Año</label>
                         <select wire:model.live="year" class="form-select">
                             @for ($y = 2015; $y <= 2030; $y++)
@@ -54,7 +71,7 @@
                             @endfor
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-3 col-6">
                         <label>Sede</label>
                         <select wire:model.live="headquarterId" class="form-select">
                             <option value="">Todas</option>
@@ -63,8 +80,8 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button class="btn btn-primary w-100" wire:click="export">
+                    <div class="col-md-2 col-6 d-flex align-items-end">
+                        <button class="btn btn-sm btn-primary w-100" wire:click="export">
                             <i class="ti ti-file-analytics f-s-16"></i> Exportar
                         </button>
                     </div>
@@ -73,28 +90,28 @@
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-striped">
+                    <table class="table table-bordered table-striped">
                         <thead class="bg-primary text-center">
                         <tr>
-                            <th rowspan="3" class="p-2 border">Fecha</th>
-                            <th colspan="9" class="p-2 border">Ingreso</th>
-                            <th rowspan="3" class="p-2 border">Egreso</th>
-                            <th rowspan="3" class="p-2 border">Utilidad</th>
+                            <th rowspan="3">Fecha</th>
+                            <th colspan="9">Ingreso</th>
+                            <th rowspan="3">Egreso</th>
+                            <th rowspan="3">Utilidad</th>
                         </tr>
                         <tr>
-                            <th colspan="4" class="p-2 border">Pagos</th>
-                            <th colspan="3" class="p-2 border">Salidas</th>
-                            <th rowspan="2" class="p-2 border">Otros</th>
-                            <th rowspan="3" class="p-2 border">Total</th>
+                            <th colspan="4">Pagos</th>
+                            <th colspan="3">Salidas</th>
+                            <th rowspan="2">Otros</th>
+                            <th rowspan="3">Total</th>
                         </tr>
                         <tr>
-                            <th class="p-2 border">Cotización</th>
-                            <th class="p-2 border">Retraso</th>
-                            <th class="p-2 border">Deuda</th>
-                            <th class="p-2 border">Total</th>
-                            <th class="p-2 border">Empresa</th>
-                            <th class="p-2 border">Apoyo</th>
-                            <th class="p-2 border">Total</th>
+                            <th>Cotización</th>
+                            <th>Retraso</th>
+                            <th>Deuda</th>
+                            <th>Total</th>
+                            <th>Empresa</th>
+                            <th>Apoyo</th>
+                            <th>Total</th>
                         </tr>
                         </thead>
                         <tbody class="text-center">
@@ -102,7 +119,7 @@
                             @php
                                 $isSunday = \Carbon\Carbon::createFromFormat('d/m/Y',$r['fecha'])->isSunday();
                             @endphp
-                            <tr @if($isSunday) class="bg-danger " @endif>
+                            <tr @if($isSunday) class="bg-danger" @endif>
                                 <td @if($isSunday) class="text-white" @endif >{{ $r['fecha'] }}</td>
 
                                 <td @if($isSunday) class="text-white" @endif >{{ number_format($r['cotizacion'],2,'.',',') }}</td>
@@ -130,22 +147,22 @@
 
                         @if(!empty($rows))
                             <tr class="bg-primary">
-                                <td class="border p-2 text-right">Total</td>
+                                <td>Total</td>
 
-                                <td class="border p-2 text-right">{{ number_format($totales['pago'],2,'.',',') }}</td>
-                                <td class="border p-2 text-right">{{ number_format($totales['retraso'],2,'.',',') }}</td>
-                                <td class="border p-2 text-right">{{ number_format($totales['deuda'],2,'.',',') }}</td>
-                                <td class="border p-2 text-right">{{ number_format($totales['pago_total'],2,'.',',') }}</td>
+                                <td>{{ number_format($totales['pago'],2,'.',',') }}</td>
+                                <td>{{ number_format($totales['retraso'],2,'.',',') }}</td>
+                                <td>{{ number_format($totales['deuda'],2,'.',',') }}</td>
+                                <td>{{ number_format($totales['pago_total'],2,'.',',') }}</td>
 
-                                <td class="border p-2 text-right">{{ number_format($totales['empresa'],2,'.',',') }}</td>
-                                <td class="border p-2 text-right">{{ number_format($totales['apoyo'],2,'.',',') }}</td>
-                                <td class="border p-2 text-right">{{ number_format($totales['salidas_total'],2,'.',',') }}</td>
+                                <td>{{ number_format($totales['empresa'],2,'.',',') }}</td>
+                                <td>{{ number_format($totales['apoyo'],2,'.',',') }}</td>
+                                <td>{{ number_format($totales['salidas_total'],2,'.',',') }}</td>
 
-                                <td class="border p-2 text-right">{{ number_format($totales['otros'],2,'.',',') }}</td>
-                                <td class="border p-2 text-right text-red-600">{{ number_format($totales['ingresos_total'],2,'.',',') }}</td>
+                                <td>{{ number_format($totales['otros'],2,'.',',') }}</td>
+                                <td>{{ number_format($totales['ingresos_total'],2,'.',',') }}</td>
 
-                                <td class="border p-2 text-right">{{ number_format($totales['egreso'],2,'.',',') }}</td>
-                                <td class="border p-2 text-right text-red-600">{{ number_format($totales['utilidad'],2,'.',',') }}</td>
+                                <td>{{ number_format($totales['egreso'],2,'.',',') }}</td>
+                                <td>{{ number_format($totales['utilidad'],2,'.',',') }}</td>
                             </tr>
                         @endif
                         </tbody>
@@ -162,90 +179,93 @@
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead class="bg-primary text-center">
+                    <table class="table table-striped table-bordered">
+                        <thead class="bg-primary">
                         <tr>
-                            <th rowspan="3" class="p-2 border">Mes</th>
-                            <th colspan="9" class="p-2 border">Ingreso</th>
-                            <th rowspan="3" class="p-2 border">Egreso</th>
-                            <th rowspan="3" class="p-2 border">Utilidad</th>
+                            <th rowspan="3">Mes</th>
+                            <th colspan="9">Ingreso</th>
+                            <th rowspan="3">Egreso</th>
+                            <th rowspan="3">Utilidad</th>
                         </tr>
                         <tr>
-                            <th colspan="4" class="p-2 border">Pago</th>
-                            <th colspan="3" class="p-2 border">Salidas</th>
-                            <th rowspan="2" class="p-2 border">Otros</th>
-                            <th rowspan="3" class="p-2 border">Total</th>
+                            <th colspan="4">Pago</th>
+                            <th colspan="3">Salidas</th>
+                            <th rowspan="2">Otros</th>
+                            <th rowspan="3">Total</th>
                         </tr>
                         <tr>
-                            <th class="p-2 border">Cotización</th>
-                            <th class="p-2 border">Retraso</th>
-                            <th class="p-2 border">Deuda</th>
-                            <th class="p-2 border">Total</th>
-                            <th class="p-2 border">Empresa</th>
-                            <th class="p-2 border">Apoyo</th>
-                            <th class="p-2 border">Total</th>
+                            <th>Cotización</th>
+                            <th>Retraso</th>
+                            <th>Deuda</th>
+                            <th>Total</th>
+                            <th>Empresa</th>
+                            <th>Apoyo</th>
+                            <th>Total</th>
                         </tr>
                         </thead>
                         <tbody>
                         @foreach($anual as $r)
                             <tr>
-                                <td class="border p-2 font-medium">{{ $r['mes'] }}</td>
+                                <td>{{ $r['mes'] }}</td>
 
-                                <td class="border p-2 text-right">{{ number_format($r['pago'],2,'.',',') }}</td>
-                                <td class="border p-2 text-right">{{ number_format($r['retraso'],2,'.',',') }}</td>
-                                <td class="border p-2 text-right">{{ number_format($r['deuda'],2,'.',',') }}</td>
-                                <td class="border p-2 text-right">{{ number_format($r['pago_total'],2,'.',',') }}</td>
+                                <td>{{ number_format($r['pago'],2,'.',',') }}</td>
+                                <td>{{ number_format($r['retraso'],2,'.',',') }}</td>
+                                <td>{{ number_format($r['deuda'],2,'.',',') }}</td>
+                                <td>{{ number_format($r['pago_total'],2,'.',',') }}</td>
 
-                                <td class="border p-2 text-right">{{ number_format($r['empresa'],2,'.',',') }}</td>
-                                <td class="border p-2 text-right">{{ number_format($r['apoyo'],2,'.',',') }}</td>
-                                <td class="border p-2 text-right">{{ number_format($r['salidas_total'],2,'.',',') }}</td>
+                                <td>{{ number_format($r['empresa'],2,'.',',') }}</td>
+                                <td>{{ number_format($r['apoyo'],2,'.',',') }}</td>
+                                <td>{{ number_format($r['salidas_total'],2,'.',',') }}</td>
 
-                                <td class="border p-2 text-right">{{ number_format($r['otros'],2,'.',',') }}</td>
-                                <td class="border p-2 text-right text-red-600">{{ number_format($r['ingresos_total'],2,'.',',') }}</td>
+                                <td>{{ number_format($r['otros'],2,'.',',') }}</td>
+                                <td>{{ number_format($r['ingresos_total'],2,'.',',') }}</td>
 
-                                <td class="border p-2 text-right">{{ number_format($r['egreso'],2,'.',',') }}</td>
-                                <td class="border p-2 text-right text-red-600">{{ number_format($r['utilidad'],2,'.',',') }}</td>
+                                <td>{{ number_format($r['egreso'],2,'.',',') }}</td>
+                                <td>{{ number_format($r['utilidad'],2,'.',',') }}</td>
                             </tr>
                         @endforeach
 
+
+                        </tbody>
+                        <tfoot class="bg-primary">
                         @if(!empty($anual))
-                            <tr class="bg-primary">
-                                <td class="border p-2">Total</td>
-                                <td class="border p-2 text-right">{{ number_format($anualTotales['pago'],2,'.',',') }}</td>
-                                <td class="border p-2 text-right">{{ number_format($anualTotales['retraso'],2,'.',',') }}</td>
-                                <td class="border p-2 text-right">{{ number_format($anualTotales['deuda'],2,'.',',') }}</td>
-                                <td class="border p-2 text-right">{{ number_format($anualTotales['pago_total'],2,'.',',') }}</td>
+                            <tr>
+                                <td>Total</td>
+                                <td>{{ number_format($anualTotales['pago'],2,'.',',') }}</td>
+                                <td>{{ number_format($anualTotales['retraso'],2,'.',',') }}</td>
+                                <td>{{ number_format($anualTotales['deuda'],2,'.',',') }}</td>
+                                <td>{{ number_format($anualTotales['pago_total'],2,'.',',') }}</td>
 
-                                <td class="border p-2 text-right">{{ number_format($anualTotales['empresa'],2,'.',',') }}</td>
-                                <td class="border p-2 text-right">{{ number_format($anualTotales['apoyo'],2,'.',',') }}</td>
-                                <td class="border p-2 text-right">{{ number_format($anualTotales['salidas_total'],2,'.',',') }}</td>
+                                <td>{{ number_format($anualTotales['empresa'],2,'.',',') }}</td>
+                                <td>{{ number_format($anualTotales['apoyo'],2,'.',',') }}</td>
+                                <td>{{ number_format($anualTotales['salidas_total'],2,'.',',') }}</td>
 
-                                <td class="border p-2 text-right">{{ number_format($anualTotales['otros'],2,'.',',') }}</td>
-                                <td class="border p-2 text-right text-red-600">{{ number_format($anualTotales['ingresos_total'],2,'.',',') }}</td>
+                                <td>{{ number_format($anualTotales['otros'],2,'.',',') }}</td>
+                                <td>{{ number_format($anualTotales['ingresos_total'],2,'.',',') }}</td>
 
-                                <td class="border p-2 text-right">{{ number_format($anualTotales['egreso'],2,'.',',') }}</td>
-                                <td class="border p-2 text-right text-red-600">{{ number_format($anualTotales['utilidad'],2,'.',',') }}</td>
+                                <td>{{ number_format($anualTotales['egreso'],2,'.',',') }}</td>
+                                <td>{{ number_format($anualTotales['utilidad'],2,'.',',') }}</td>
                             </tr>
 
-                            <tr class="bg-primary">
-                                <td class="border p-2">Promedio</td>
-                                <td class="border p-2 text-right">{{ number_format($anualPromedios['pago'],2,'.',',') }}</td>
-                                <td class="border p-2 text-right">{{ number_format($anualPromedios['retraso'],2,'.',',') }}</td>
-                                <td class="border p-2 text-right">{{ number_format($anualPromedios['deuda'],2,'.',',') }}</td>
-                                <td class="border p-2 text-right">{{ number_format($anualPromedios['pago_total'],2,'.',',') }}</td>
+                            <tr>
+                                <td>Promedio</td>
+                                <td>{{ number_format($anualPromedios['pago'],2,'.',',') }}</td>
+                                <td>{{ number_format($anualPromedios['retraso'],2,'.',',') }}</td>
+                                <td>{{ number_format($anualPromedios['deuda'],2,'.',',') }}</td>
+                                <td>{{ number_format($anualPromedios['pago_total'],2,'.',',') }}</td>
 
-                                <td class="border p-2 text-right">{{ number_format($anualPromedios['empresa'],2,'.',',') }}</td>
-                                <td class="border p-2 text-right">{{ number_format($anualPromedios['apoyo'],2,'.',',') }}</td>
-                                <td class="border p-2 text-right">{{ number_format($anualPromedios['salidas_total'],2,'.',',') }}</td>
+                                <td>{{ number_format($anualPromedios['empresa'],2,'.',',') }}</td>
+                                <td>{{ number_format($anualPromedios['apoyo'],2,'.',',') }}</td>
+                                <td>{{ number_format($anualPromedios['salidas_total'],2,'.',',') }}</td>
 
-                                <td class="border p-2 text-right">{{ number_format($anualPromedios['otros'],2,'.',',') }}</td>
-                                <td class="border p-2 text-right text-red-600">{{ number_format($anualPromedios['ingresos_total'],2,'.',',') }}</td>
+                                <td>{{ number_format($anualPromedios['otros'],2,'.',',') }}</td>
+                                <td>{{ number_format($anualPromedios['ingresos_total'],2,'.',',') }}</td>
 
-                                <td class="border p-2 text-right">{{ number_format($anualPromedios['egreso'],2,'.',',') }}</td>
-                                <td class="border p-2 text-right text-red-600">{{ number_format($anualPromedios['utilidad'],2,'.',',') }}</td>
+                                <td>{{ number_format($anualPromedios['egreso'],2,'.',',') }}</td>
+                                <td>{{ number_format($anualPromedios['utilidad'],2,'.',',') }}</td>
                             </tr>
                         @endif
-                        </tbody>
+                        </tfoot>
                     </table>
                 </div>
             </div>

@@ -160,7 +160,7 @@
 
 
                          </tbody>
-                         <tfoot class="bg-primary"
+                         <tfoot class="bg-primary">
                          @if (!empty($this->rows))
                              <tr>
                                  <td colspan="3"><strong>SALDO A FAVOR</strong></td>
