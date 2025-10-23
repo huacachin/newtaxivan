@@ -61,9 +61,9 @@
             <div class="card-header">
                 <div class="row g-2">
                     <div class="col-md-4">
-                        <form class="app-form app-icon-form" action="#">
+
                             <label class="form-label">Buscar</label>
-                            <div class="position-relative">
+
                                 <input
                                     type="search"
                                     class="form-control"
@@ -71,9 +71,9 @@
                                     aria-label="Buscar"
                                     wire:model.live.debounce.400ms="search"
                                 >
-                                <i class="ti ti-search text-dark"></i>
-                            </div>
-                        </form>
+
+
+
                     </div>
 
                     <div class="col-md-2">
@@ -98,23 +98,23 @@
                 </div>
                 <div class="row justify-content-end g-2 mt-2">
                     <div class="col-md-3">
-                        <button class="btn btn-primary w-100" wire:click="applyDate">
-                            <i class="ti ti-search f-s-16"></i> Buscar
+                        <button class="btn btn-sm btn-primary w-100" wire:click="applyDate">
+                            <i class="ti ti-search f-s-12"></i> Buscar
                         </button>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-primary w-100" wire:click="export">
-                            <i class="ti ti-file-analytics f-s-16"></i> Exportar
+                        <button class="btn btn-sm btn-primary w-100" wire:click="export">
+                            <i class="ti ti-file-analytics f-s-12"></i> Exportar
                         </button>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-primary w-100" wire:click="openCreateModal">
-                            <i class="ti ti-square-plus f-s-16"></i> Nuevo
+                        <button class="btn btn-sm btn-primary w-100" wire:click="openCreateModal">
+                            <i class="ti ti-square-plus f-s-12"></i> Nuevo
                         </button>
                     </div>
                     <div class="col-md-3">
-                        <button id="down" class="btn btn-primary w-100" type="button">
-                            <i class="ti ti-square-chevrons-down f-s-17"></i>
+                        <button id="down" class="btn btn-sm btn-primary w-100" type="button">
+                            <i class="ti ti-square-chevrons-down f-s-12"></i>
                         </button>
                     </div>
                 </div>
@@ -122,7 +122,7 @@
             <div class="card-body">
                 <div class="table-responsive">
 
-                    <table class="table table-sm table-bordered table-striped table-hover">
+                    <table class="table table-bordered table-striped table-hover">
                         <thead class="bg-primary">
                         <tr>
                             <th>Op</th>
@@ -131,8 +131,8 @@
                             <th>Usuario</th>
                             <th>A</th>
                             <th>Motivo</th>
-                            <th class="text-center">T.Comp.</th>
-                            <th class="text-center">Respons.</th>
+                            <th>T.Comp.</th>
+                            <th>Respons.</th>
                             <th class="text-end">Monto</th>
                         </tr>
                         </thead>
@@ -152,18 +152,18 @@
                                 <td>{{ $e->user->name ?? '-' }}</td>
                                 <td>{{ $e->reason }}</td>
                                 <td>{{ $e->detail }}</td>
-                                <td class="text-center">{{ $e->document_type }}</td>
-                                <td class="text-center">{{ $e->in_charge }}</td>
+                                <td>{{ $e->document_type }}</td>
+                                <td>{{ $e->in_charge }}</td>
                                 <td class="text-end">{{ number_format($e->total, 2) }}</td>
                             </tr>
                         @empty
                             <tr wire:loading.remove>
-                                <td colspan="9" class="text-center">Sin resultados para los filtros seleccionados.</td>
+                                <td colspan="9">Sin resultados para los filtros seleccionados.</td>
                             </tr>
                         @endforelse
                         </tbody>
 
-                        <tfoot class="bg-foot">
+                        <tfoot class="bg-primary">
                         <tr>
                             <td colspan="8" class="text-end f-fw-700">Total general</td>
                             <td class="text-end f-fw-700">{{ number_format($totalGeneral ?? 0, 2) }}</td>
@@ -301,7 +301,7 @@
     <div class="screen-overlay"
          wire:loading.delay.flex
          wire:target="export,applyDate">
-        <div class="text-center">
+        <div>
             <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
             <div class="mt-2 text-white fw-semibold">Cargando…</div>
         </div>
