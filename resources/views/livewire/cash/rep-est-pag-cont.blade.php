@@ -1,5 +1,21 @@
 @push('styles')
     <style>
+
+        table {
+            border-collapse: collapse; /* opcional */
+            width: 100%;
+        }
+
+        th, td {
+            padding: 3px !important;
+            font-size: 10px !important;
+            text-align: center !important;
+            vertical-align: middle; /* <-- clave */
+        }
+
+        .btn, input, select {
+            font-size: 10px !important;
+        }
         .screen-overlay {
             position: fixed;
             inset: 0;                 /* full viewport */
@@ -41,7 +57,7 @@
            <div class="card">
                <div class="card-header">
                    <div class="row d-flex justify-content-end">
-                       <div class="col-md-4">
+                       <div class="col-md-4 col-6">
                            <label for="year" class="text-sm">Año</label>
                            <select id="year" class="form-select" wire:model.live="year">
                                @for ($y = 2015; $y <= 2030; $y++)
@@ -51,8 +67,8 @@
                        </div>
 
 
-                      <div class="col-md-2 d-flex align-items-end">
-                          <button class="btn btn-primary w-100" wire:click="export">
+                      <div class="col-md-2 col-6 d-flex align-items-end">
+                          <button class="btn btn-sm btn-primary w-100" wire:click="export">
                               Exportar
                           </button>
                       </div>
@@ -89,7 +105,7 @@
                                          <th class="bg-primary text-white">{{ $p['sucursal'] }}</th>
                                          <th class="bg-primary text-white">Ingr. Sal.</th>
                                          @for ($m=1; $m<=12; $m++)
-                                             <td class="text-center">{{ number_format($p['ingresos_mes'][$m], 2, '.', ',') }}</td>
+                                             <td>{{ number_format($p['ingresos_mes'][$m], 2, '.', ',') }}</td>
                                          @endfor
                                          <td class="text-center font-semibold">{{ number_format($p['total'], 2, '.', ',') }}</td>
                                      </tr>
@@ -100,11 +116,11 @@
                                      <tr>
                                          <th class="bg-primary text-white" colspan="2">Egreso Pago</th>
                                          @for ($m=1; $m<=12; $m++)
-                                             <td class="text-center">
+                                             <td>
                                                  {{ number_format($ctrl['egreso_pago'][$m], 2, '.', ',') }}
                                              </td>
                                          @endfor
-                                         <td class="text-center">
+                                         <td>
                                              {{ number_format($ctrl['tot_egr_pago'], 2, '.', ',') }}
                                          </td>
                                      </tr>
@@ -113,11 +129,11 @@
                                      <tr>
                                          <th class="bg-primary text-white" colspan="2">Egreso Draco</th>
                                          @for ($m=1; $m<=12; $m++)
-                                             <td class="text-center">
+                                             <td>
                                                  {{ number_format($ctrl['egreso_draco'][$m], 2, '.', ',') }}
                                              </td>
                                          @endfor
-                                         <td class="text-center">
+                                         <td>
                                              {{ number_format($ctrl['tot_egr_draco'], 2, '.', ',') }}
                                          </td>
                                      </tr>
@@ -126,7 +142,7 @@
                                      <tr>
                                          <th class="bg-primary" colspan="2">Saldo</th>
                                          @for ($m=1; $m<=12; $m++)
-                                             <td class="text-center" id="saldo">
+                                             <td id="saldo">
                                                  <strong>{{ number_format($ctrl['saldos'][$m], 2, '.', ',') }}</strong>
                                              </td>
                                          @endfor
@@ -136,26 +152,29 @@
                                      </tr>
                                      @empty
                                          <tr>
-                                             <td colspan="16" class="text-center">
+                                             <td colspan="16">
                                                  Sin datos para {{ $year }}.
                                              </td>
                                          </tr>
                                      @endforelse
 
-                                     @if (!empty($this->rows))
-                                         <tr>
-                                             <td colspan="3"><strong>SALDO A FAVOR</strong></td>
-                                             @for ($m=1; $m<=12; $m++)
-                                                 <td class="text-center">
-                                                     <strong>{{ number_format($this->totalesSaldoMes[$m] ?? 0, 2, '.', ',') }}</strong>
-                                                 </td>
-                                             @endfor
-                                             <td class="text-center">
-                                                 <strong>{{ number_format($this->totalSaldoFavor, 2, '.', ',') }}</strong>
-                                             </td>
-                                         </tr>
-                                     @endif
+
                          </tbody>
+                         <tfoot class="bg-primary"
+                         @if (!empty($this->rows))
+                             <tr>
+                                 <td colspan="3"><strong>SALDO A FAVOR</strong></td>
+                                 @for ($m=1; $m<=12; $m++)
+                                     <td>
+                                         <strong>{{ number_format($this->totalesSaldoMes[$m] ?? 0, 2, '.', ',') }}</strong>
+                                     </td>
+                                 @endfor
+                                 <td>
+                                     <strong>{{ number_format($this->totalSaldoFavor, 2, '.', ',') }}</strong>
+                                 </td>
+                             </tr>
+                         @endif
+                         </tfoot>
                      </table>
                  </div>
                </div>
@@ -169,71 +188,73 @@
             <div class="card">
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-striped w-50">
+                        <table class="table table-bordered table-striped">
                             <thead class="bg-primary">
                             <tr>
-                                <th rowspan="4" class="p-2 border">Item</th>
-                                <th rowspan="4" class="p-2 border">Mes</th>
-                                <th class="p-2 border">Luis</th>
-                                <th class="p-2 border">Elmer</th>
-                                <th rowspan="4" class="p-2 border">Diferencia</th>
-                                <th class="p-2 border">Luis</th>
-                                <th class="p-2 border">Elmer</th>
-                                <th rowspan="4" class="p-2 border">Diferencia</th>
-                                <th rowspan="4" class="p-2 border">Diferencia Huaycan / La victoria</th>
+                                <th rowspan="4">Item</th>
+                                <th rowspan="4">Mes</th>
+                                <th>Luis</th>
+                                <th>Elmer</th>
+                                <th rowspan="4">Diferencia</th>
+                                <th>Luis</th>
+                                <th>Elmer</th>
+                                <th rowspan="4">Diferencia</th>
+                                <th rowspan="4">Diferencia Huaycan / La victoria</th>
                             </tr>
                             <tr>
-                                <th class="p-2 border">Huaycan</th>
-                                <th class="p-2 border">Huaycan</th>
-                                <th class="p-2 border">La victoria</th>
-                                <th class="p-2 border">La victoria</th>
+                                <th>Huaycan</th>
+                                <th>Huaycan</th>
+                                <th>La victoria</th>
+                                <th>La victoria</th>
                             </tr>
                             <tr>
-                                <th class="p-2 border">Ingreso</th>
-                                <th class="p-2 border">Ingreso</th>
-                                <th class="p-2 border">Ingreso</th>
-                                <th class="p-2 border">Ingreso</th>
+                                <th>Ingreso</th>
+                                <th>Ingreso</th>
+                                <th>Ingreso</th>
+                                <th>Ingreso</th>
                             </tr>
                             <tr>
-                                <th class="p-2 border">Salida</th>
-                                <th class="p-2 border">Salida</th>
-                                <th class="p-2 border">Salida</th>
-                                <th class="p-2 border">Salida</th>
+                                <th>Salida</th>
+                                <th>Salida</th>
+                                <th>Salida</th>
+                                <th>Salida</th>
                             </tr>
                             </thead>
                             <tbody>
                             @foreach ($this->comparativo as $r)
                                 <tr>
-                                    <td class="border p-2"><b>{{ $r['item'] }}</b></td>
-                                    <td class="border p-2"><b>{{ $r['mes'] }}</b></td>
+                                    <td><b>{{ $r['item'] }}</b></td>
+                                    <td><b>{{ $r['mes'] }}</b></td>
 
-                                    <td class="border p-2 text-right">{{ number_format($r['a_h'], 2, '.', ',') }}</td>
-                                    <td class="border p-2 text-right">{{ number_format($r['b_h'], 2, '.', ',') }}</td>
-                                    <td class="border p-2 text-right text-red-600">{{ number_format($r['dif_h'], 2, '.', ',') }}</td>
+                                    <td>{{ number_format($r['a_h'], 2, '.', ',') }}</td>
+                                    <td>{{ number_format($r['b_h'], 2, '.', ',') }}</td>
+                                    <td>{{ number_format($r['dif_h'], 2, '.', ',') }}</td>
 
-                                    <td class="border p-2 text-right">{{ number_format($r['a_v'], 2, '.', ',') }}</td>
-                                    <td class="border p-2 text-right">{{ number_format($r['b_v'], 2, '.', ',') }}</td>
-                                    <td class="border p-2 text-right text-red-600">{{ number_format($r['dif_v'], 2, '.', ',') }}</td>
+                                    <td>{{ number_format($r['a_v'], 2, '.', ',') }}</td>
+                                    <td>{{ number_format($r['b_v'], 2, '.', ',') }}</td>
+                                    <td>{{ number_format($r['dif_v'], 2, '.', ',') }}</td>
 
-                                    <td class="border p-2 text-right">{{ number_format($r['dif_h_vs_v'], 2, '.', ',') }}</td>
+                                    <td>{{ number_format($r['dif_h_vs_v'], 2, '.', ',') }}</td>
                                 </tr>
                             @endforeach
 
+                            </tbody>
+                            <tfoot>
                             @if (!empty($this->comparativo))
-                                <tr class="bg-slate-100 font-semibold">
-                                    <td class="border p-2" colspan="2">Total</td>
-                                    <td class="border p-2 text-right">{{ number_format($this->comparativoTotales['a_h'], 2, '.', ',') }}</td>
-                                    <td class="border p-2 text-right">{{ number_format($this->comparativoTotales['b_h'], 2, '.', ',') }}</td>
-                                    <td class="border p-2 text-right text-red-600">{{ number_format($this->comparativoTotales['dif_h'], 2, '.', ',') }}</td>
+                                <tr class="bg-primary">
+                                    <td colspan="2">Total</td>
+                                    <td>{{ number_format($this->comparativoTotales['a_h'], 2, '.', ',') }}</td>
+                                    <td>{{ number_format($this->comparativoTotales['b_h'], 2, '.', ',') }}</td>
+                                    <td>{{ number_format($this->comparativoTotales['dif_h'], 2, '.', ',') }}</td>
 
-                                    <td class="border p-2 text-right">{{ number_format($this->comparativoTotales['a_v'], 2, '.', ',') }}</td>
-                                    <td class="border p-2 text-right">{{ number_format($this->comparativoTotales['b_v'], 2, '.', ',') }}</td>
-                                    <td class="border p-2 text-right text-red-600">{{ number_format($this->comparativoTotales['dif_v'], 2, '.', ',') }}</td>
+                                    <td>{{ number_format($this->comparativoTotales['a_v'], 2, '.', ',') }}</td>
+                                    <td>{{ number_format($this->comparativoTotales['b_v'], 2, '.', ',') }}</td>
+                                    <td>{{ number_format($this->comparativoTotales['dif_v'], 2, '.', ',') }}</td>
 
-                                    <td class="border p-2 text-right">{{ number_format($this->comparativoTotales['dif_h_vs_v'], 2, '.', ',') }}</td>
+                                    <td>{{ number_format($this->comparativoTotales['dif_h_vs_v'], 2, '.', ',') }}</td>
                                 </tr>
                             @endif
-                            </tbody>
+                            </tfoot>
                         </table>
                     </div>
                 </div>
@@ -244,7 +265,7 @@
         <div class="screen-overlay"
              wire:loading.delay.flex
              wire:target="year,export">
-            <div class="text-center">
+            <div>
                 <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
                 <div class="mt-2 text-white fw-semibold">Cargando…</div>
             </div>
