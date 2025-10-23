@@ -60,7 +60,7 @@
         <div class="card">
             <div class="card-header">
                 <div class="row g-2">
-                    <div class="col-md-4">
+                    <div class="col-md-4 col-6">
 
                             <label class="form-label">Buscar</label>
 
@@ -76,7 +76,7 @@
 
                     </div>
 
-                    <div class="col-md-2">
+                    <div class="col-md-2 col-6">
                         <label class="form-label">Filtro</label>
                         <select class="form-select" wire:model.live="filterType">
                             <option value="1">A</option>
@@ -86,33 +86,34 @@
                         </select>
                     </div>
 
-                    <div class="col-md-3">
+                    <div class="col-md-3 col-4">
                         <label class="form-label">Fecha Inicio</label>
                         <input type="date" class="form-control" wire:model="date_start">
                     </div>
 
-                    <div class="col-md-3">
+                    <div class="col-md-3 col-4">
                         <label class="form-label">Fecha Fin</label>
                         <input type="date" class="form-control" wire:model="date_end">
                     </div>
-                </div>
-                <div class="row justify-content-end g-2 mt-2">
-                    <div class="col-md-3">
+
+
+
+                    <div class="col-md-3 col-4 d-flex align-items-end">
                         <button class="btn btn-sm btn-primary w-100" wire:click="applyDate">
                             <i class="ti ti-search f-s-12"></i> Buscar
                         </button>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-3 col-4 d-flex align-items-end">
                         <button class="btn btn-sm btn-primary w-100" wire:click="export">
                             <i class="ti ti-file-analytics f-s-12"></i> Exportar
                         </button>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-3 col-4 d-flex align-items-end">
                         <button class="btn btn-sm btn-primary w-100" wire:click="openCreateModal">
                             <i class="ti ti-square-plus f-s-12"></i> Nuevo
                         </button>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-3 col-4 d-flex align-items-end">
                         <button id="down" class="btn btn-sm btn-primary w-100" type="button">
                             <i class="ti ti-square-chevrons-down f-s-12"></i>
                         </button>
