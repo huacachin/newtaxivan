@@ -144,7 +144,7 @@
                             </tr>
                             --}}
                             <tr>
-                                <th colspan="2">TOTAL GENERAL (DRACO + BASE)</th>
+                                <th colspan="2">TOTAL GENERAL</th>
                                 @for($i=1;$i<=12;$i++)
                                     <th>{{ number_format($totalsCombinedByMonth[$i] ?? 0, 2) }}</th>
                                 @endfor
