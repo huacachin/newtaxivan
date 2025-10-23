@@ -1,13 +1,20 @@
 @push('styles')
     <style>
-        .bg-saldo{
-            background: #009BDC;
-            color: #fff;
-        }
-        .table thead th {
-            color: #fff;
+        table {
+            border-collapse: collapse; /* opcional */
+            width: 100%;
         }
 
+        th, td {
+            padding: 3px !important;
+            font-size: 10px !important;
+            text-align: center !important;
+            vertical-align: middle; /* <-- clave */
+        }
+
+        .btn, input, select {
+            font-size: 10px !important;
+        }
         .screen-overlay {
             position: fixed;
             inset: 0;                 /* full viewport */
@@ -51,7 +58,7 @@
                 <div class="card-header">
 
                     <div class="row g-3">
-                        <div class="col-md-5">
+                        <div class="col-md-5 col-6">
                             <label class="form-label">Mes</label>
                             <select wire:model.live="month" class="form-select">
                                 @for($m=1;$m<=12;$m++)
@@ -59,7 +66,7 @@
                                 @endfor
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-3 col-6">
                             <label class="form-label">Año</label>
                             <select wire:model.live="year" class="form-select">
                                 @for($y=now()->year-5;$y<=now()->year+1;$y++)
@@ -67,14 +74,14 @@
                                 @endfor
                             </select>
                         </div>
-                        <div class="col-md-3  d-flex align-items-end">
-                            <button class="btn btn-primary w-100" wire:click="export">
-                                <i class="ti ti-file-analytics f-s-17"></i> Exportar
+                        <div class="col-md-3 col-6  d-flex align-items-end">
+                            <button class="btn btn-primary btn-primary w-100" wire:click="export">
+                                <i class="ti ti-file-analytics f-s-12"></i> Exportar
                             </button>
                         </div>
-                        <div class="col-md-1  d-flex align-items-end">
-                            <button class="btn btn-primary w-100" id="down">
-                                <i class="ti ti-square-chevrons-down f-s-17"></i>
+                        <div class="col-md-1 col-6  d-flex align-items-end">
+                            <button class="btn btn-primary btn-primary w-100" id="down">
+                                <i class="ti ti-square-chevrons-down f-s-12"></i>
                             </button>
                         </div>
                     </div>
@@ -84,12 +91,12 @@
                     <table class="table table-bordered table-hover">
                         <thead class="bg-primary">
                         <tr>
-                            <th class="px-2 py-2 w-14">ITEM</th>
-                            <th class="px-2 py-2 w-28">FECHA</th>
-                            <th class="px-2 py-2 w-72">DATOS CLIENTE</th>
-                            <th class="px-2 py-2">GLOSA</th>
-                            <th class="px-2 py-2 w-28 text-end">INGRESO</th>
-                            <th class="px-2 py-2 w-28 text-end">EGRESO</th>
+                            <th>ITEM</th>
+                            <th>FECHA</th>
+                            <th>DATOS CLIENTE</th>
+                            <th>GLOSA</th>
+                            <th>INGRESO</th>
+                            <th>EGRESO</th>
                         </tr>
                         </thead>
 
@@ -110,33 +117,33 @@
                             {{-- Filas del día (si no hay, este foreach no imprime nada) --}}
                             @foreach($rows as $r)
                                 <tr>
-                                    <td class="px-2 py-1 text-center">{{ $item++ }}</td>
-                                    <td class="px-2 py-1">{{ $r['date'] }}</td>
-                                    <td class="px-2 py-1">{{ $r['cliente'] ?? '—' }}</td>  {{-- DATOS CLIENTE --}}
-                                    <td class="px-2 py-1">{{ $r['glosa'] }}</td>
-                                    <td class="px-2 py-1 text-end">{{ $r['ingreso'] ? number_format($r['ingreso'],2) : '0.00' }}</td>
-                                    <td class="px-2 py-1 text-end">{{ $r['egreso'] ? number_format($r['egreso'],2) : '0.00' }}</td>
+                                    <td>{{ $item++ }}</td>
+                                    <td>{{ $r['date'] }}</td>
+                                    <td>{{ $r['cliente'] ?? '—' }}</td>  {{-- DATOS CLIENTE --}}
+                                    <td>{{ $r['glosa'] }}</td>
+                                    <td>{{ $r['ingreso'] ? number_format($r['ingreso'],2) : '0.00' }}</td>
+                                    <td>{{ $r['egreso'] ? number_format($r['egreso'],2) : '0.00' }}</td>
                                 </tr>
                             @endforeach
 
                             @if($hayMov)
                                 {{-- FOOT del día: SALDO FINAL–INICIAL + Saldos en la misma fila --}}
-                                <tr class="bg-saldo fw-semibold">
+                                <tr class="bg-primary">
 
                                     {{-- Columna "DATOS CLIENTE" --}}
-                                    <td class="px-2 py-2" colspan="4">
+                                    <td colspan="4">
                                         SALDO FINAL–INICIAL
-                                        <span class="me-3 opacity-75">
+                                        <span>
                     Saldo del día:
-                    <span class="font-monospace">{{ number_format($saldoD, 2) }}</span>
+                    <span>{{ number_format($saldoD, 2) }}</span>
                 </span>
-                                        <span class="fw-medium">Saldo acumulado:</span>
-                                        <span class="font-monospace">{{ number_format($saldoA, 2) }}</span>
+                                        <span>Saldo acumulado:</span>
+                                        <span>{{ number_format($saldoA, 2) }}</span>
                                     </td>
 
                                     {{-- Totales del día --}}
-                                    <td class="px-2 py-2 text-end">{{ number_format($sumI, 2) }}</td>
-                                    <td class="px-2 py-2 text-end">{{ number_format($sumE, 2) }}</td>
+                                    <td>{{ number_format($sumI, 2) }}</td>
+                                    <td>{{ number_format($sumE, 2) }}</td>
                                 </tr>
                             @endif
                         @endforeach
@@ -144,15 +151,15 @@
                         </tbody>
 
                         {{-- FOOTER del mes --}}
-                        <tfoot>
-                        <tr class=" bg-saldo text-white fw-bold">
-                            <td class="px-2 py-2 text-end" colspan="4">TOTAL GENERAL</td>
-                            <td class="px-2 py-2 text-end">{{ number_format($totalIncomes,2) }}</td>
-                            <td class="px-2 py-2 text-end">{{ number_format($totalExpenses,2) }}</td>
+                        <tfoot class="bg-primary">
+                        <tr>
+                            <td colspan="4">TOTAL GENERAL</td>
+                            <td>{{ number_format($totalIncomes,2) }}</td>
+                            <td>{{ number_format($totalExpenses,2) }}</td>
                         </tr>
-                        <tr class="bg-saldo fw-bold">
-                            <td class="px-2 py-2 text-end" colspan="4">UTILIDAD</td>
-                            <td class="px-2 py-2 text-center" colspan="2">
+                        <tr>
+                            <td colspan="4">UTILIDAD</td>
+                            <td colspan="2">
                                 {{ number_format($finalBalance,2) }}
                             </td>
                         </tr>
