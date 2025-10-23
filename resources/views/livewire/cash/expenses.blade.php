@@ -1,6 +1,23 @@
 {{-- resources/views/livewire/cash/expenses.blade.php --}}
 @push('styles')
     <style>
+
+        table {
+            border-collapse: collapse; /* opcional */
+            width: 100%;
+        }
+
+        th, td {
+            padding: 3px !important;
+            font-size: 10px !important;
+            text-align: center !important;
+            vertical-align: middle; /* <-- clave */
+        }
+
+        .btn, input, select {
+            font-size: 10px !important;
+        }
+
         .screen-overlay {
             position: fixed;
             inset: 0;                 /* full viewport */
@@ -13,9 +30,7 @@
             pointer-events: all;      /* bloquea clics */
         }
 
-        .bg-foot{
-            background: #009BDC;
-        }
+
     </style>
 @endpush
 <div class="container-fluid">

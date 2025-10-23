@@ -80,12 +80,8 @@
                     </p>
                     <div class="row g-3 align-items-end mt-2">
                         <div class="col-md-2 col-4">
-                            <form class="app-form app-icon-form" action="#">
-
                                     <input type="search" class="form-control" placeholder="Buscar..."
                                            aria-label="Buscar" wire:model.live="search">
-
-                            </form>
                         </div>
 
                         <div class="col-md-2 col-4">

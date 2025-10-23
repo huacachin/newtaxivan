@@ -1,18 +1,35 @@
 @push('styles')
     <style>
-        .screen-overlay {
-            position: fixed;
-            inset: 0;                 /* full viewport */
-            display: none;            /* Livewire lo pondrá en flex */
-            align-items: center;
-            justify-content: center;
-            background: rgba(0,0,0,.35);
-            backdrop-filter: blur(2px);
-            z-index: 2000;            /* sobre modals/backdrops de Bootstrap */
-            pointer-events: all;      /* bloquea clics */
+
+        table {
+            border-collapse: collapse; /* opcional */
+            width: 100%;
         }
 
-        .bg-foot{
+        th, td {
+            padding: 3px !important;
+            font-size: 10px !important;
+            text-align: center !important;
+            vertical-align: middle; /* <-- clave */
+        }
+
+        .btn, input, select {
+            font-size: 10px !important;
+        }
+
+        .screen-overlay {
+            position: fixed;
+            inset: 0; /* full viewport */
+            display: none; /* Livewire lo pondrá en flex */
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, .35);
+            backdrop-filter: blur(2px);
+            z-index: 2000; /* sobre modals/backdrops de Bootstrap */
+            pointer-events: all; /* bloquea clics */
+        }
+
+        .bg-foot {
             background: #009BDC;
         }
     </style>
@@ -47,53 +64,53 @@
                 <div class="card-header">
 
                     <div class="row g-3">
-                    <div class="col-md-4 mb-2">
-                        <form class="app-form app-icon-form" action="#" onsubmit="return false;">
+                        <div class="col-md-4 col-4 ">
+
                             <label class="form-label">Buscar: </label>
-                            <div class="position-relative">
-                                <input type="search" class="form-control" placeholder="Buscar..." aria-label="Buscar" wire:model.live.debounce.400ms="search">
-                                <i class="ti ti-search text-dark"></i>
-                            </div>
-                        </form>
-                    </div>
 
-                    <div class="col-md-2">
-                        <label class="form-label">Filtro</label>
-                        <select class="form-select" aria-label="Filtro" wire:model.live="filterType">
-                            <option value="1">A</option>
-                            <option value="2">Motivo</option>
-                            <option value="3">Usuario</option>
-                        </select>
-                    </div>
+                            <input type="search" class="form-control" placeholder="Buscar..." aria-label="Buscar"
+                                   wire:model.live.debounce.400ms="search">
 
-                    <div class="col-md-3 mb-2">
-                        <label class="form-label">Fecha Inicio</label>
-                        <input type="date" class="form-control" wire:model="date_start">
-                    </div>
-                    <div class="col-md-3 mb-2">
-                        <label class="form-label">Fecha Fin</label>
-                        <input type="date" class="form-control" wire:model="date_end">
-                    </div>
-                </div>
-                    <div class="row justify-content-end g-2 mt-2">
-                        <div class="col-md-3">
-                            <button class="btn btn-primary w-100" wire:click="applyDate">
-                                <i class="ti ti-search f-s-16"></i> Buscar
+
+                        </div>
+
+                        <div class="col-md-2 col-4">
+                            <label class="form-label">Filtro</label>
+                            <select class="form-select" aria-label="Filtro" wire:model.live="filterType">
+                                <option value="1">A</option>
+                                <option value="2">Motivo</option>
+                                <option value="3">Usuario</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-3 col-4">
+                            <label class="form-label">Fecha Inicio</label>
+                            <input type="date" class="form-control" wire:model="date_start">
+                        </div>
+                        <div class="col-md-3 col-4">
+                            <label class="form-label">Fecha Fin</label>
+                            <input type="date" class="form-control" wire:model="date_end">
+                        </div>
+
+
+                        <div class="col-md-3 col-4 d-flex align-items-end">
+                            <button class="btn btn-sm btn-primary w-100" wire:click="applyDate">
+                                <i class="ti ti-search f-s-12"></i> Buscar
                             </button>
                         </div>
-                        <div class="col-md-3">
-                            <button class="btn btn-primary w-100" wire:click="export">
-                                <i class="ti ti-file-analytics f-s-16"></i> Exportar
+                        <div class="col-md-3 col-4 d-flex align-items-end">
+                            <button class="btn btn-sm btn-primary w-100" wire:click="export">
+                                <i class="ti ti-file-analytics f-s-12"></i> Exportar
                             </button>
                         </div>
-                        <div class="col-md-3">
-                            <button class="btn btn-primary w-100" wire:click="openAddModal">
-                                <i class="ti ti-square-plus f-s-16"></i> Nuevo
+                        <div class="col-md-3 col-6 d-flex align-items-end">
+                            <button class="btn btn-sm btn-primary w-100" wire:click="openAddModal">
+                                <i class="ti ti-square-plus f-s-12"></i> Nuevo
                             </button>
                         </div>
-                        <div class="col-md-3">
-                            <button id="down" class="btn btn-primary w-100" wire:click="downloadLast">
-                                <i class="ti ti-square-chevrons-down f-s-17"></i>
+                        <div class="col-md-3 col-6 d-flex align-items-end">
+                            <button id="down" class="btn btn-sm btn-primary w-100" wire:click="downloadLast">
+                                <i class="ti ti-square-chevrons-down f-s-12"></i>
                             </button>
                         </div>
                     </div>
@@ -101,7 +118,7 @@
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-sm table-bordered table-striped table-hover">
+                        <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">
                             <tr>
                                 <th>Op</th>
@@ -118,7 +135,8 @@
                             @forelse($incomes as $i)
                                 <tr>
                                     <td data-label="Opciones">
-                                        <i wire:ignore class="ti ti-edit f-s-18 text-success" style="cursor:pointer" wire:click="openEditModal({{ $i->id }})"></i>
+                                        <i wire:ignore class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
+                                           wire:click="openEditModal({{ $i->id }})"></i>
                                     </td>
                                     <td>{{ $incomes->firstItem() + $loop->index }}</td>
                                     <td data-label="Fecha">{{ \Carbon\Carbon::parse($i->date)->format('d/m/Y') }}</td>
@@ -129,14 +147,14 @@
                                 </tr>
                             @empty
                                 <tr wire:loading.remove>
-                                    <td colspan="7" class="text-center">Sin resultados para los filtros seleccionados.</td>
+                                    <td colspan="7">Sin resultados para los filtros seleccionados.</td>
                                 </tr>
                             @endforelse
                             </tbody>
-                            <tfoot class="bg-foot">
+                            <tfoot class="bg-primary">
                             <tr>
                                 <td colspan="6" class="f-fw-700 text-end">Total General</td>
-                                <td class="f-fw-700 text-end">{{ number_format($totalGeneral, 2) }}</td>
+                                <td>{{ number_format($totalGeneral, 2) }}</td>
                             </tr>
                             </tfoot>
                         </table>
@@ -150,12 +168,14 @@
     </div>
 
     {{-- ===== Modal: Nuevo Ingreso ===== --}}
-    <div class="modal fade" id="modalAddIncome" aria-hidden="true" tabindex="-1" data-bs-backdrop="static" wire:ignore.self>
+    <div class="modal fade" id="modalAddIncome" aria-hidden="true" tabindex="-1" data-bs-backdrop="static"
+         wire:ignore.self>
         <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Nuevo ingreso</h5>
-                    <button type="button" class="btn-close btn-close-white m-0 fs-5" data-bs-dismiss="modal" aria-label="Close" wire:click="closeModal('modalAddIncome')"></button>
+                    <button type="button" class="btn-close btn-close-white m-0 fs-5" data-bs-dismiss="modal"
+                            aria-label="Close" wire:click="closeModal('modalAddIncome')"></button>
                 </div>
 
                 <div class="modal-body">
@@ -188,7 +208,8 @@
 
                         <div class="col-md-4">
                             <label class="form-label">Monto</label>
-                            <input type="number" step="0.01" min="0.01" class="form-control" placeholder="0.00" wire:model.live="amount_input">
+                            <input type="number" step="0.01" min="0.01" class="form-control" placeholder="0.00"
+                                   wire:model.live="amount_input">
                             @error('amount_input') <span class="text-danger">{{ $message }}</span> @enderror
                             @if(!is_null($converted_total))
                                 <small class="text-muted">Total en S/: {{ number_format($converted_total, 2) }}</small>
@@ -197,7 +218,8 @@
 
                         <div class="col-md-6">
                             <label class="form-label">A</label>
-                            <input type="text" class="form-control" placeholder="A quién / Área" wire:model.defer="reason">
+                            <input type="text" class="form-control" placeholder="A quién / Área"
+                                   wire:model.defer="reason">
                             @error('reason') <span class="text-danger">{{ $message }}</span> @enderror
                         </div>
 
@@ -215,7 +237,8 @@
                             {{-- Vista previa si el usuario ya seleccionó una imagen --}}
                             @if ($image_file)
                                 <div class="mt-2">
-                                    <img src="{{ $image_file->temporaryUrl() }}" alt="Vista previa" class="img-fluid rounded border" style="max-height: 220px;">
+                                    <img src="{{ $image_file->temporaryUrl() }}" alt="Vista previa"
+                                         class="img-fluid rounded border" style="max-height: 220px;">
                                 </div>
                             @endif
                         </div>
@@ -227,20 +250,24 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal" wire:click="closeModal('modalAddIncome')">Cerrar</button>
-                    <button type="button" class="btn btn-light-primary" wire:click="save">Guardar</button>
+                    <button type="button" class="btn btn-sm btn-light-secondary" data-bs-dismiss="modal"
+                            wire:click="closeModal('modalAddIncome')">Cerrar
+                    </button>
+                    <button type="button" class="btn btn-sm btn-light-primary" wire:click="save">Guardar</button>
                 </div>
             </div>
         </div>
     </div>
 
     {{-- ===== Modal: Editar Ingreso ===== --}}
-    <div class="modal fade" id="modalEditIncome" aria-hidden="true" tabindex="-1" data-bs-backdrop="static" wire:ignore.self>
+    <div class="modal fade" id="modalEditIncome" aria-hidden="true" tabindex="-1" data-bs-backdrop="static"
+         wire:ignore.self>
         <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Editar ingreso</h5>
-                    <button type="button" class="btn-close btn-close-white m-0 fs-5" data-bs-dismiss="modal" aria-label="Close" wire:click="closeModal('modalEditIncome')"></button>
+                    <button type="button" class="btn-close btn-close-white m-0 fs-5" data-bs-dismiss="modal"
+                            aria-label="Close" wire:click="closeModal('modalEditIncome')"></button>
                 </div>
 
                 <div class="modal-body">
@@ -273,7 +300,8 @@
 
                         <div class="col-md-4">
                             <label class="form-label">Monto</label>
-                            <input type="number" step="0.01" min="0.01" class="form-control" placeholder="0.00" wire:model.live="amount_input">
+                            <input type="number" step="0.01" min="0.01" class="form-control" placeholder="0.00"
+                                   wire:model.live="amount_input">
                             @error('amount_input') <span class="text-danger">{{ $message }}</span> @enderror
                             @if(!is_null($converted_total))
                                 <small class="text-muted">Total en S/: {{ number_format($converted_total, 2) }}</small>
@@ -282,7 +310,8 @@
 
                         <div class="col-md-6">
                             <label class="form-label">A</label>
-                            <input type="text" class="form-control" placeholder="A quién / Área" wire:model.defer="reason">
+                            <input type="text" class="form-control" placeholder="A quién / Área"
+                                   wire:model.defer="reason">
                             @error('reason') <span class="text-danger">{{ $message }}</span> @enderror
                         </div>
 
@@ -300,7 +329,8 @@
                             <div class="mt-2">
                                 @if ($image_file)
                                     {{-- Si el usuario acaba de seleccionar una nueva imagen, preview temporal --}}
-                                    <img src="{{ $image_file->temporaryUrl() }}" alt="Vista previa" class="img-fluid rounded border" style="max-height: 220px;">
+                                    <img src="{{ $image_file->temporaryUrl() }}" alt="Vista previa"
+                                         class="img-fluid rounded border" style="max-height: 220px;">
                                 @else
                                     @php
                                         // Usa el disco 'public' y arma la URL con asset('storage/...') para evitar problemas de APP_URL/subcarpetas
@@ -308,7 +338,8 @@
                                         $exists = $path && \Illuminate\Support\Facades\Storage::disk('public')->exists($path);
                                         $url = $exists ? asset('storage/'.$path) : asset('images/placeholder-income.png');
                                     @endphp
-                                    <img src="{{ $url }}" alt="Comprobante" class="img-fluid rounded border" style="max-height: 220px;">
+                                    <img src="{{ $url }}" alt="Comprobante" class="img-fluid rounded border"
+                                         style="max-height: 220px;">
                                 @endif
                             </div>
                         </div>
@@ -320,8 +351,10 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal" wire:click="closeModal('modalEditIncome')">Cerrar</button>
-                    <button type="button" class="btn btn-light-primary" wire:click="update">Guardar cambios</button>
+                    <button type="button" class="btn btn-sm btn-light-secondary" data-bs-dismiss="modal"
+                            wire:click="closeModal('modalEditIncome')">Cerrar
+                    </button>
+                    <button type="button" class="btn btn-sm btn-light-primary" wire:click="update">Guardar cambios</button>
                 </div>
             </div>
         </div>
