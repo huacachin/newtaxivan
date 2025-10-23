@@ -62,7 +62,7 @@
                     <div class="row mb-2">
                         @if($searchType != 3)
                             {{-- Ajuste a col-4 para dejar espacio al botón Aplicar --}}
-                            <div class="col-3 mb-2 mb-md-0">
+                            <div class="col-md-3 col-6 mb-2 mb-md-0">
                                 <label class="form-label d-none d-lg-block">Buscar</label>
 
 
@@ -71,7 +71,7 @@
 
                             </div>
                         @else
-                            <div class="col-3 mb-2 mb-md-0">
+                            <div class="col-md-3 col-6 mb-2 mb-md-0">
                                 <label class="form-label d-none d-lg-block">Selecciona una sucursal</label>
                                 <select class="form-control form-control-sm " aria-label="Selecciona item a filtrar"
                                         wire:model.live="searchText">
@@ -83,7 +83,8 @@
                             </div>
                         @endif
 
-                        <div class="col-3 mb-2 mb-md-0">
+
+                        <div class="col-md-3 col-6 mb-2 mb-md-0">
                             <label class="form-label d-none d-lg-block">Filtro</label>
                             <select class="form-control form-control-sm " aria-label="Selecciona item a filtrar"
                                     wire:model.live="searchType">
@@ -92,24 +93,28 @@
                                 <option value="3">Sucursal</option>
                             </select>
                         </div>
-                        <div class="col-2 mb-2 mb-md-0">
+
+
+                        <div class="col-md-2 col-5 mb-2 mb-md-0">
                             <label class="form-label d-none d-lg-block">Fecha Inicio</label>
                             {{-- UI sin disparar consulta: uiFromDate --}}
                             <input type="date" class="form-control form-control-sm " wire:model.defer="uiFromDate">
                         </div>
-                        <div class="col-2 mb-2 mb-md-0">
+                        <div class="col-md-2 col-5 mb-2 mb-md-0">
                             <label class="form-label d-none d-lg-block">Fecha Fin</label>
                             {{-- UI sin disparar consulta: uiToDate --}}
                             <input type="date" class="form-control form-control-sm " wire:model.defer="uiToDate">
                         </div>
-                        <div class="col-2 mb-2 mb-md-0 d-flex align-items-end">
-                            <button class="btn btn-primary btn-sm w-100"
-                                    wire:click="applyDateRange"
-                                    wire:loading.attr="disabled"
-                                    wire:target="applyDateRange">
-                                <i  class="ti ti-search f-s-12"></i>
-                            </button>
-                        </div>
+
+                            <div class="col-2 mb-2 mb-md-0 d-flex align-items-end justify-center">
+                                <button class="btn btn-primary btn-sm w-100"
+                                        wire:click="applyDateRange"
+                                        wire:loading.attr="disabled"
+                                        wire:target="applyDateRange">
+                                    <i  class="ti ti-search f-s-12"></i>
+                                </button>
+                            </div>
+
                     </div>
                     <div class="row g-2 mb-2">
                         @role('admin')
