@@ -1,34 +1,19 @@
 {{-- resources/views/livewire/users/index.blade.php --}}
 @push('styles')
     <style>
-
-
-        table {
-            border-collapse: collapse; /* opcional */
-            width: 100%;
-        }
-
+        table { border-collapse: collapse; width: 100%; }
         th,td{
             padding: 3px !important;
             font-size: 10px !important;
             text-align: center !important;
-            vertical-align: middle;   /* <-- clave */
+            vertical-align: middle;
         }
-
-        .btn, input,select {
-            font-size: 10px !important;
-        }
-
+        .btn, input,select { font-size: 10px !important; }
         .screen-overlay {
-            position: fixed;
-            inset: 0;                 /* full viewport */
-            display: none;            /* Livewire lo pondrá en flex */
-            align-items: center;
-            justify-content: center;
-            background: rgba(0,0,0,.35);
-            backdrop-filter: blur(2px);
-            z-index: 2000;            /* sobre modals/backdrops de Bootstrap */
-            pointer-events: all;      /* bloquea clics */
+            position: fixed; inset: 0;
+            display: none; align-items: center; justify-content: center;
+            background: rgba(0,0,0,.35); backdrop-filter: blur(2px);
+            z-index: 2000; pointer-events: all;
         }
     </style>
 @endpush
@@ -51,8 +36,6 @@
     </div>
 
     <div class="row table-section">
-
-
         <!-- Tabla -->
         <div class="col-xl-12">
             <div class="card shadow-sm">
@@ -60,12 +43,8 @@
                     <h5>LISTADO DE USUARIOS</h5>
                     <div class="row g-3 align-items-end mt-2">
                         <div class="col-md-10 col-6">
-
-
-                                    <input type="search" class="form-control" placeholder="Buscar..."
-                                           aria-label="Buscar" wire:model.live="search">
-
-
+                            <input type="search" class="form-control" placeholder="Buscar..."
+                                   aria-label="Buscar" wire:model.live="search">
                         </div>
                         <div class="col-md-2 col-6 d-flex justify-content-md-end">
                             <button class="btn btn-sm btn-primary w-100" wire:click="openAddModal">
@@ -104,17 +83,26 @@
                                                 <br><small class="text-muted">Primaria: {{ $user->headquarter->name }}</small>
                                             @endif
                                         </td>
-                                        <td>
-                                            {{ optional($user->roles->first())->name ?? '—' }}
-                                        </td>
+                                        <td>{{ optional($user->roles->first())->name ?? '—' }}</td>
                                         <td>
                                             <span class="badge bg-dark">
                                                 {{ $user->permissions->count() }} permisos
                                             </span>
                                         </td>
-                                        <td>
-                                            <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
-                                               wire:click="openEditModal({{ $user->id }})"></i>
+                                        <td class="text-nowrap">
+                                            {{-- Editar datos --}}
+                                            <button class="btn btn-sm btn-outline-success me-1"
+                                                    title="Editar datos"
+                                                    wire:click="openEditModal({{ $user->id }})">
+                                                <i class="ti ti-edit"></i>
+                                            </button>
+
+                                            {{-- Rol & Permisos (modal nuevo) --}}
+                                            <button class="btn btn-sm btn-outline-dark"
+                                                    title="Rol & Permisos"
+                                                    wire:click="openPermsModal({{ $user->id }})">
+                                                <i class="ti ti-shield-lock"></i>
+                                            </button>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -141,7 +129,7 @@
         </div>
     </div>
 
-    {{-- MODAL: AGREGAR (todos los campos) --}}
+    {{-- MODAL: AGREGAR --}}
     <div class="modal fade" id="modalAddUser" aria-hidden="true" tabindex="-1" data-bs-backdrop="static" wire:ignore.self>
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
@@ -223,8 +211,6 @@
                                                        wire:model="selectedHeadquarters">
                                                 <span>{{ $h->name }}</span>
                                             </label>
-
-                                            {{-- Radio para marcar como primaria --}}
                                             <div class="form-check mb-0" title="Marcar como sede primaria">
                                                 <input class="form-check-input"
                                                        type="radio"
@@ -245,7 +231,6 @@
                                 Selecciona una o más sucursales y elige cuál será la <strong>primaria</strong>.
                             </small>
                         </div>
-
 
                         <div class="col-12 mt-2">
                             <h6 class="mb-2">Rol</h6>
@@ -280,7 +265,7 @@
         </div>
     </div>
 
-    {{-- MODAL: EDITAR (todos los campos + permisos) --}}
+    {{-- MODAL: EDITAR (sin permisos aquí) --}}
     <div class="modal fade" id="modalEditUser" aria-hidden="true" tabindex="-1" data-bs-backdrop="static" wire:ignore.self>
         <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
             <div class="modal-content">
@@ -289,7 +274,7 @@
                     <button type="button" class="btn-close m-0 fs-5" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    {{-- === Mismos campos que en Agregar === --}}
+                    {{-- Mismos campos que en Agregar --}}
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
@@ -364,8 +349,6 @@
                                                    wire:model="selectedHeadquarters">
                                             <span>{{ $h->name }}</span>
                                         </label>
-
-                                        {{-- Radio para marcar como primaria --}}
                                         <div class="form-check mb-0" title="Marcar como sede primaria">
                                             <input class="form-check-input"
                                                    type="radio"
@@ -387,7 +370,33 @@
                         </small>
                     </div>
 
-                    {{-- === ROLES (crear/editar) === --}}
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light-primary" wire:click="update">Actualizar</button>
+                    <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- === MODAL: Rol & Permisos (DINÁMICO, sin CRUD) === --}}
+    <div class="modal fade" id="modalPerms" aria-hidden="true" tabindex="-1" data-bs-backdrop="static" wire:ignore.self>
+        <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        Rol & Permisos
+                        @if($permsUserName)
+                            <small class="text-muted d-block">Usuario: {{ $permsUserName }}</small>
+                        @endif
+                    </h5>
+                    <button type="button" class="btn-close m-0 fs-5" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+
+                    {{-- Rol único --}}
+                    {{-- ROLES (puedes dejarlo aquí también) --}}
                     <div class="row mt-2">
                         <div class="col-12">
                             <h6 class="mb-2">Rol</h6>
@@ -418,62 +427,79 @@
                             </div>
                         </div>
                     </div>
+                    {{-- SIN permisos aquí (van al modalPerms) --}}
 
-                    {{-- === /ROLES === --}}
+                    {{-- Permisos por módulo (dinámico) --}}
+                    <div class="mb-3">
+                        <h6 class="mb-2">Permisos por módulo</h6>
 
-                    {{-- === PERMISOS (solo en EDITAR) === --}}
-                    <div class="row mt-2">
-                        <div class="col-12">
-                            <h6 class="mb-2">Permisos por módulo</h6>
-                        </div>
+                        @foreach($aclGroups as $groupKey => $group)
+                            @php
+                                $count = count($group['items'] ?? []);
+                                // "Compacto" si: (a) es single, o (b) tiene exactamente 1 ítem
+                                $compact = ($group['type'] === 'single') || ($count === 1);
+                            @endphp
 
-                        @forelse($permissionGroups as $module => $perms)
-                            @php $moduleTitle = $perms->first()->module_label ?? ucfirst($module); @endphp
+                            @if($compact)
+                                {{-- === Versión compacta: título + checkbox al costado === --}}
+                                @php
+                                    // Obtiene el único item (en single siempre hay 1; si es group de 1, también)
+                                    $it = $group['items'][0] ?? null;
+                                @endphp
+                                @if($it)
+                                    <div class="border rounded p-2 d-flex align-items-center justify-content-between mb-2">
+                                        <strong class="me-3">{{ $group['title'] }}</strong>
 
-                            <div class="col-12 mb-3">
-                                <div class="card border">
+                                        <label class="form-check-label d-flex align-items-center gap-2 mb-0" title="{{ $it['key'] }}">
+                                            <input class="form-check-input"
+                                                   type="checkbox"
+                                                   value="{{ $it['key'] }}"
+                                                   wire:model="selectedPermissionNames">
+                                            {{-- Si quieres que el texto del check sea el mismo título, usa $group['title'].
+                                               Si prefieres el label específico del ítem, usa $it['label']. --}}
+                                            <span class="d-none">{{ $it['label'] }}</span>
+                                        </label>
+                                    </div>
+                                @endif
+                            @else
+                                {{-- === Versión tarjeta (varios ítems) === --}}
+                                <div class="card border mb-3">
                                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                                        <strong>{{ $moduleTitle }}</strong>
+                                        <strong>{{ $group['title'] }}</strong>
                                         <div class="d-flex gap-2">
                                             <button type="button" class="btn btn-sm btn-outline-secondary"
-                                                    wire:click="selectModule('{{ $module }}')">
+                                                    wire:click="selectGroup('{{ $groupKey }}')">
                                                 Marcar todo
                                             </button>
                                             <button type="button" class="btn btn-sm btn-outline-secondary"
-                                                    wire:click="deselectModule('{{ $module }}')">
+                                                    wire:click="deselectGroup('{{ $groupKey }}')">
                                                 Desmarcar
                                             </button>
                                         </div>
                                     </div>
                                     <div class="card-body">
                                         <div class="row g-2">
-                                            @foreach($perms as $p)
-                                                <div class="col-6 col-md-3">
-                                                    <label class="form-check-label" title="{{ $p->description }}">
+                                            @foreach($group['items'] as $it)
+                                                <div class="col-12 col-md-6 col-lg-4">
+                                                    <label class="form-check-label" title="{{ $it['key'] }}">
                                                         <input class="form-check-input"
                                                                type="checkbox"
-                                                               value="{{ $p->id }}"
-                                                               wire:model="selectedPermissions">
-                                                        <span class="ms-1">{{ $p->label ?? $p->name }}</span>
+                                                               value="{{ $it['key'] }}"
+                                                               wire:model="selectedPermissionNames">
+                                                        <span class="ms-1">{{ $it['label'] }}</span>
                                                     </label>
                                                 </div>
                                             @endforeach
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        @empty
-                            <div class="col-12">
-                                <div class="alert alert-warning mb-0">
-                                    No hay permisos cargados. Ejecuta el seeder de catálogo.
-                                </div>
-                            </div>
-                        @endforelse
+                            @endif
+                        @endforeach
                     </div>
-                    {{-- === /PERMISOS === --}}
+
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-light-primary" wire:click="update">Actualizar</button>
+                    <button type="button" class="btn btn-light-primary" wire:click="savePerms">Guardar</button>
                     <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal">Cerrar</button>
                 </div>
             </div>
@@ -482,7 +508,7 @@
 
     <div class="screen-overlay"
          wire:loading.delay.flex
-         wire:target="openAddModal,openEditModal,toggleGroup,save,update">
+         wire:target="openAddModal,openEditModal,openPermsModal,selectGroup,deselectGroup,save,update,savePerms">
         <div class="text-center">
             <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
             <div class="mt-2 text-white fw-semibold">Cargando…</div>

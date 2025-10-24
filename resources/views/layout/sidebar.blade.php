@@ -10,7 +10,7 @@
             'title' => 'Dashboard',
             'icon'  => 'ti ti-home',
             'route' => 'dashboard.index',
-            'can'   => 'dashboard.view',
+            'can'   => 'dashboard',
         ],
 
         [
@@ -18,14 +18,14 @@
             'title'    => 'Configuración',
             'icon'     => 'ti ti-settings',
             // visible si tiene al menos UNO de estos permisos:
-            'canAny'   => ['vehicles.view','owners.view','drivers.view','cost-per-plate.view','users.view','concepts.view'],
+            'canAny'   => ['configuracion.vehicles','configuracion.drivers','configuracion.owners','configuracion.cost-per-plate','configuracion.concepts'],
             'children' => [
-                ['title' => 'Vehículos',     'route' => 'settings.vehicles.index',       'can' => 'vehicles.view'],
-                ['title' => 'Propietarios',  'route' => 'settings.owners.index',         'can' => 'owners.view'],
-                ['title' => 'Conductores',   'route' => 'settings.drivers.index',        'can' => 'drivers.view'],
-                ['title' => 'Costo Placa',   'route' => 'settings.cost-per-plate.index', 'can' => 'cost-per-plate.view'],
-                ['title' => 'Usuarios',      'route' => 'settings.users.index',          'can' => 'users.view'],
-                ['title' => 'Conceptos',     'route' => 'settings.concepts.index',       'can' => 'concepts.view'],
+                ['title' => 'Vehículos',     'route' => 'settings.vehicles.index',       'can' => 'configuracion.vehicles'],
+                ['title' => 'Propietarios',  'route' => 'settings.owners.index',         'can' => 'configuracion.owners'],
+                ['title' => 'Conductores',   'route' => 'settings.drivers.index',        'can' => 'configuracion.drivers'],
+                ['title' => 'Costo Placa',   'route' => 'settings.cost-per-plate.index', 'can' => 'configuracion.cost-per-plate'],
+                ['title' => 'Usuarios',      'route' => 'settings.users.index',          'can' => 'configuracion.users'],
+                ['title' => 'Conceptos',     'route' => 'settings.concepts.index',       'can' => 'configuracion.concepts'],
             ],
         ],
 
@@ -34,7 +34,7 @@
             'title' => 'Salidas',
             'icon'  => 'ti ti-door-exit',
             'route' => 'departures.index',
-            'can'   => 'departures.view',
+            'can'   => 'departures',
         ],
 
         [
@@ -42,17 +42,17 @@
             'title' => 'Pagos',
             'icon'  => 'ti ti-currency-dollar',
             'route' => 'payments.index',
-            'can'   => 'payments.view',
+            'can'   => 'payments',
         ],
 
         [
             'id'       => 'debts',
             'title'    => 'Deuda',
             'icon'     => 'ti ti-currency-dollar-off',
-            'canAny'   => ['debts.report','debts.view'],
+            'canAny'   => ['debts.day','debts.monthly'],
             'children' => [
-                ['title' => 'Deuda x Días',  'route' => 'debts.debt-per-days', 'can' => 'debts.view'],
-                ['title' => 'Deuda Mensual', 'route' => 'debts.monthly',       'can' => 'debts.view'],
+                ['title' => 'Deuda x Días',  'route' => 'debts.debt-per-days', 'can' => 'debts.days'],
+                ['title' => 'Deuda Mensual', 'route' => 'debts.monthly',       'can' => 'debts.monthly'],
                 // agrega más si los usas:
                 // ['title' => 'Generar deuda', 'route' => 'debts.generate', 'can' => 'debts.create'],
                 // ['title' => 'Eliminar deuda','route' => 'debts.delete',  'can' => 'debts.delete'],
@@ -63,16 +63,16 @@
             'id'       => 'caja',
             'title'    => 'Caja',
             'icon'     => 'ti ti-home-dollar',
-            'canAny'   => ['cash.view','cash.report'],
+            'canAny'   => ['cash.incomes','cash.expenses'],
             'children' => [
                // ['title' => 'Apertura Caja',         'route' => 'cash.open',                  'can' => 'cash.view'],
-                ['title' => 'Ingreso',               'route' => 'cash.incomes',               'can' => 'cash.view'],
-                ['title' => 'Egreso',                'route' => 'cash.expenses',              'can' => 'cash.view'],
+                ['title' => 'Ingreso',               'route' => 'cash.incomes',               'can' => 'cash.incomes'],
+                ['title' => 'Egreso',                'route' => 'cash.expenses',              'can' => 'cash.expenses'],
                 //['title' => 'Reporte Movimiento',    'route' => 'cash.report.movement',       'can' => 'cash.report'],
-                ['title' => 'Reporte General',       'route' => 'cash.report.general',        'can' => 'cash.report'],
-                ['title' => 'Rep Est Draco Base',    'route' => 'cash.report.est-draco-base', 'can' => 'cash.report'],
-                ['title' => 'Rep Esp Sal Pag Cont',  'route' => 'cash.report.est-sal-pag-cont','can' => 'cash.report'],
-                ['title' => 'Rep Est Caja M.A',      'route' => 'cash.report.est-caja-ma',     'can' => 'cash.report'],
+                ['title' => 'Reporte General',       'route' => 'cash.report.general',        'can' => 'cash.reports'],
+                ['title' => 'Rep Est Draco Base',    'route' => 'cash.report.est-draco-base', 'can' => 'cash.reports'],
+                ['title' => 'Rep Esp Sal Pag Cont',  'route' => 'cash.report.est-sal-pag-cont','can' => 'cash.reports'],
+                ['title' => 'Rep Est Caja M.A',      'route' => 'cash.report.est-caja-ma',     'can' => 'cash.reports'],
             ],
         ],
     ];
@@ -89,6 +89,7 @@
     </div>
 
     <div class="app-nav" id="app-simple-bar">
+
         @if(!empty($sidebarItems))
             @include('partials.sidebar-menu', ['items' => $sidebarItems])
         @else
