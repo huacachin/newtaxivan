@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Vehicle extends Model
 {
     protected $fillable = [
-        'order',
+        'sort_order',
         'plate',
         'headquarters',
         'entry_date',

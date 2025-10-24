@@ -43,7 +43,7 @@ class MigrateVehiclesFromHuaca extends Command
 
         // Chequeo suave de columnas de origen (no bloquea)
         $expected = [
-            'id','order','placa','sede','fechai','fechap','clase','marca','ano','modelo',
+            'id','order','orden','placa','sede','fechai','fechap','clase','marca','ano','modelo',
             'carroceria','color','conductor','propietario','condicion','condiciond','movil',
             'chipn','soat','certificado','revisiontecnica','obs','validity_status',
         ];
@@ -135,7 +135,7 @@ class MigrateVehiclesFromHuaca extends Command
 
                 $payload = [
                     'id'               => $id, // preserve id
-                    'sort_order'       => $this->toInt($r->order ?? null),
+                    'sort_order'       => $this->toInt($r->orden ?? $r->order ?? null),
                     'plate'            => $this->normalizePlate($r->placa ?? null),
 
                     'headquarters'     => $usesHQId ? null : $hqName,

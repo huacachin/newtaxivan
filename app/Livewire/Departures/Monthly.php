@@ -94,14 +94,25 @@ class Monthly extends Component
         $end   = Carbon::create($this->year, $this->month, 1)->endOfMonth()->toDateString();
 
         // Vehículos
-        $orderCol = Schema::hasColumn('vehicles', 'order')
-            ? 'order'
-            : (Schema::hasColumn('vehicles', 'orden') ? 'orden' : 'plate');
+        if (Schema::hasColumn('vehicles', 'sort_order')) {
+            $vehicles = DB::table('vehicles')
+                ->select('id', 'plate')
+                ->where('status','active')
+                ->orderByRaw('sort_order IS NULL, sort_order ASC')
+                ->orderBy('plate') // desempate
+                ->get();
+        } else {
+            // Fallbacks legacy si no existiera sort_order
+            $orderCol = Schema::hasColumn('vehicles', 'order')
+                ? 'order'
+                : (Schema::hasColumn('vehicles', 'orden') ? 'orden' : 'plate');
 
-        $vehicles = DB::table('vehicles')
-            ->select('id', 'plate')
-            ->orderBy($orderCol)
-            ->get();
+            $vehicles = DB::table('vehicles')
+                ->select('id', 'plate')
+                ->orderBy($orderCol)
+                ->orderBy('plate') // desempate
+                ->get();
+        }
 
         foreach ($vehicles as $v) {
             $this->rows[(int)$v->id] = [
