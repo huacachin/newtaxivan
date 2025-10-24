@@ -6,18 +6,13 @@ use App\Models\DebtDay;
 use App\Models\Vehicle;
 use Carbon\Carbon;
 use Maatwebsite\Excel\Concerns\FromArray;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Style\Border;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use PhpOffice\PhpSpreadsheet\RichText\RichText;
 
-class MonthlyDebtExport implements FromArray, ShouldAutoSize, WithHeadings, WithEvents, WithStyles
+class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyles
 {
     public function __construct(
         protected string $monthDate,
@@ -27,7 +22,6 @@ class MonthlyDebtExport implements FromArray, ShouldAutoSize, WithHeadings, With
 
     private int $rowCount = 0;
     private int $daysInMonth = 30;
-    /** Guarda por fila los días X y X1 para pintar RichText */
     private array $daysPerRow = []; // [rowIndex => ['x'=>[...], 'x1'=>[...]]]
 
     /* ================= DATA ================= */
@@ -70,14 +64,13 @@ class MonthlyDebtExport implements FromArray, ShouldAutoSize, WithHeadings, With
         foreach ($rows as $r) {
             $item++;
 
-            $veh  = $r->vehicle_id ? ($vehicles[$r->vehicle_id] ?? null) : null;
+            $veh   = $r->vehicle_id ? ($vehicles[$r->vehicle_id] ?? null) : null;
             $plate = $veh?->plate ?? ($r->legacy_plate ?? '');
             $cond  = $r->condition ?: ($veh->condition ?? '');
 
             [$x, $x1] = $this->splitDays($r, $this->daysInMonth);
             $this->daysPerRow[$item] = ['x'=>$x, 'x1'=>$x1];
 
-            // Unión ordenada para mostrar; el color se aplica en AfterSheet
             $union = array_values(array_unique(array_merge($x, $x1)));
             sort($union);
             $daysMixed = implode(',', $union);
@@ -93,7 +86,7 @@ class MonthlyDebtExport implements FromArray, ShouldAutoSize, WithHeadings, With
                 'item'       => $item,
                 'plate'      => $plate,
                 'condition'  => $cond,
-                'days_mix'   => $daysMixed, // RichText se aplica luego
+                'days_mix'   => $daysMixed, // RichText después
                 'days_late'  => $daysLate,
                 'total'      => $total,
                 'exonerated' => $exonerated,
@@ -109,24 +102,23 @@ class MonthlyDebtExport implements FromArray, ShouldAutoSize, WithHeadings, With
 
     public function headings(): array
     {
-        // 10 columnas (A..J)
         return [
             'Item',
             'Placa',
-            'Condición',
-            'Días no trabajados (mes)', // X y X1 juntos (X1 en azul)
+            'Cond.',
+            'No trabajados',
             'D. deuda',
             'Total',
-            'Exonerado',
+            'Exon.',
             'A pagar',
-            'Amortizado',
-            'Pendiente',
+            'Amort.',
+            'Pend.',
         ];
     }
 
     public function styles(Worksheet $sheet)
     {
-        // El header real quedará en la fila 2 (título en la 1)
+        // El header real está en la fila 2 (título en la 1)
         return [2 => ['font' => ['bold' => true]]];
     }
 
@@ -137,8 +129,9 @@ class MonthlyDebtExport implements FromArray, ShouldAutoSize, WithHeadings, With
             AfterSheet::class => function (AfterSheet $e) {
                 $ws = $e->sheet->getDelegate();
 
-                // Fuente base 10
-                $ws->getParent()->getDefaultStyle()->getFont()->setSize(10);
+                // Fuente base + alturas comprimidas
+                $ws->getParent()->getDefaultStyle()->getFont()->setSize(9);
+                $ws->getDefaultRowDimension()->setRowHeight(12.5);
 
                 // Insertar 1 fila para TÍTULO
                 $ws->insertNewRowBefore(1, 1);
@@ -152,9 +145,9 @@ class MonthlyDebtExport implements FromArray, ShouldAutoSize, WithHeadings, With
                 $monthL = \Carbon\Carbon::parse($this->monthDate)->startOfMonth()->locale('es')->translatedFormat('F Y');
                 $ws->setCellValue('A1', 'REPORTE DE DEUDA MENSUAL' . ($monthL ? " – {$monthL}" : ''));
                 $ws->mergeCells("A1:{$lastCol}1");
-                $ws->getRowDimension(1)->setRowHeight(18);
+                $ws->getRowDimension(1)->setRowHeight(16);
                 $ws->getStyle('A1')->applyFromArray([
-                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['rgb' => 'FFFFFF']],
+                    'font'      => ['bold' => true, 'size' => 9, 'color' => ['rgb' => 'FFFFFF']],
                     'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER, 'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER],
                     'fill'      => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => '2874A6']],
                 ]);
@@ -165,10 +158,10 @@ class MonthlyDebtExport implements FromArray, ShouldAutoSize, WithHeadings, With
                     'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER, 'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER],
                     'fill'      => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => '2874A6']],
                 ]);
-                $ws->getRowDimension($headerRow)->setRowHeight(16);
+                $ws->getRowDimension($headerRow)->setRowHeight(13.5);
 
-                // Freeze pane
-                $ws->freezePane("A{$dataStartRow}");
+                // ===== SIN STICKY HEAD (no congelar encabezado) =====
+                // (No usar freezePane para que no quede fijo)
 
                 // ===== Bordes + zebra =====
                 $ws->getStyle("A{$headerRow}:{$lastCol}" . max($headerRow, $lastRow))
@@ -186,16 +179,16 @@ class MonthlyDebtExport implements FromArray, ShouldAutoSize, WithHeadings, With
                     $ws->getStyle($range)->setConditionalStyles($styles);
                 }
 
-                // ===== Anchos ULTRA-compactos (más angosto) =====
+                // ===== Anchos (D más ancho) =====
                 $set = fn($col,$w)=>$ws->getColumnDimension($col)->setWidth($w);
-                $set('A',4.2);   // Item
-                $set('B',8.0);   // Placa
-                $set('C',7.0);   // Condición
-                $set('D',13.5);  // Días mixtos
-                $set('E',6.0);   // D. deuda
-                foreach (['F','G','H','I','J'] as $c) $set($c,9.0); // Montos más angostos
+                $set('A', 4.2);   // Item
+                $set('B', 10.0);  // Placa
+                $set('C', 4.8);   // Cond.
+                $set('D', 25.8);  // No trabajados (más ancho)
+                $set('E', 6.2);   // D. deuda
+                foreach (['F','G','H','I','J'] as $c) $set($c, 10.8); // Montos
 
-                // Reducir/ajustar sin cortar
+                // Apretar texto: shrink en todo, wrap solo en D
                 foreach (range('A','J') as $c) {
                     $ws->getStyle("{$c}{$dataStartRow}:{$c}" . max($dataStartRow, $lastRow))
                         ->getAlignment()->setShrinkToFit(true);
@@ -204,11 +197,25 @@ class MonthlyDebtExport implements FromArray, ShouldAutoSize, WithHeadings, With
                     $ws->getStyle("D{$dataStartRow}:D{$lastRow}")->getAlignment()->setWrapText(true);
                 }
 
-                // ===== Todo CENTRADO (incluye montos y pie) =====
+                // ===== Todo CENTRADO =====
                 $ws->getStyle("A{$headerRow}:{$lastCol}" . max($headerRow, $lastRow))
-                    ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                    ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
+                    ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
 
-                // Mantener formato moneda, pero centrado
+                /* ===== RELLENAR VACÍOS EN MONTOS CON 0 (F..J) ===== */
+                if ($lastRow >= $dataStartRow) {
+                    foreach (range('F','J') as $col) {
+                        for ($r = $dataStartRow; $r <= $lastRow; $r++) {
+                            $cell = $ws->getCell("{$col}{$r}");
+                            $val  = $cell->getValue();
+                            if ($val === null || $val === '') {
+                                $cell->setValue(0);
+                            }
+                        }
+                    }
+                }
+
+                // ===== Formato moneda compacta =====
                 if ($lastRow >= $dataStartRow) {
                     foreach (['F','G','H','I','J'] as $c) {
                         $ws->getStyle("{$c}{$dataStartRow}:{$c}{$lastRow}")
@@ -239,10 +246,11 @@ class MonthlyDebtExport implements FromArray, ShouldAutoSize, WithHeadings, With
                     }
                 }
 
-                // ===== Footer celeste #CEE7FF (centrado) =====
+                // ===== Footer celeste + totales =====
                 $totalRow = ($lastRow >= $dataStartRow) ? $lastRow + 1 : $headerRow + 1;
                 $ws->mergeCells("A{$totalRow}:E{$totalRow}");
                 $ws->setCellValue("A{$totalRow}", 'Total');
+
                 if ($lastRow >= $dataStartRow) {
                     $ws->setCellValue("F{$totalRow}", "=SUM(F{$dataStartRow}:F{$lastRow})");
                     $ws->setCellValue("G{$totalRow}", "=SUM(G{$dataStartRow}:G{$lastRow})");
@@ -261,13 +269,17 @@ class MonthlyDebtExport implements FromArray, ShouldAutoSize, WithHeadings, With
                 $ws->getStyle("A{$totalRow}:{$lastCol}{$totalRow}")
                     ->getBorders()->getTop()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM);
 
-                // Totales centrados + formato moneda
                 foreach (['F','G','H','I','J'] as $c) {
                     $ws->getStyle("{$c}{$totalRow}")
                         ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
                     $ws->getStyle("{$c}{$totalRow}")
                         ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
                 }
+
+                // Vista de impresión compacta
+                $ws->getPageSetup()->setFitToWidth(1)->setFitToHeight(0);
+                $m = $ws->getPageMargins();
+                $m->setTop(0.2)->setBottom(0.2)->setLeft(0.2)->setRight(0.2);
             },
         ];
     }
