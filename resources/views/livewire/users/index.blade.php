@@ -1,6 +1,7 @@
 {{-- resources/views/livewire/users/index.blade.php --}}
 @push('styles')
     <style>
+        /* ====== Estilos base tabla / botones ====== */
         table { border-collapse: collapse; width: 100%; }
         th,td{
             padding: 3px !important;
@@ -14,6 +15,55 @@
             display: none; align-items: center; justify-content: center;
             background: rgba(0,0,0,.35); backdrop-filter: blur(2px);
             z-index: 2000; pointer-events: all;
+        }
+
+        /* ====== Utilidades compactas reutilizables (Agregar/Editar/Permisos) ====== */
+        .perm-row {
+            display: grid;
+            grid-template-columns: 180px 1fr; /* título fijo | controles flex */
+            gap: 8px;
+            align-items: center;
+            padding: 6px 8px;
+            border-radius: 8px;
+            background: #fff;
+            border: 1px solid #eee;
+            margin-bottom: 6px;
+        }
+        .perm-col-title { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .perm-col-controls { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .perm-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+
+        .chip-check, .chip-radio, .chip-hq {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 4px 8px;
+            border: 1px solid #e5e7eb; border-radius: 999px;
+            background: #fff; cursor: pointer; user-select: none;
+        }
+        .chip-check input, .chip-radio input, .chip-hq input { margin: 0; width: 14px; height: 14px; }
+        .chip-check span, .chip-radio span, .chip-hq span { line-height: 1; }
+
+        /* Sucursal: radio "Primaria" embebido */
+        .chip-hq .hq-primary {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding-left: 6px; margin-left: 6px;
+            border-left: 1px dashed #e5e7eb;
+            font-size: 11px;
+        }
+        .chip-hq.is-default { border-color: #60a5fa; background: #f0f9ff; }
+        .chip-hq.is-selected { border-color: #a7f3d0; background: #ecfdf5; }
+
+        /* ====== Modal Permisos: detalles visuales ====== */
+        #modalPerms .modal-content { font-size: 12px; }
+        #modalPerms .modal-header, #modalPerms .modal-footer { background: #fafafa; }
+        #modalPerms .btn, #modalPerms input, #modalPerms label, #modalPerms small { font-size: 12px !important; }
+        #modalPerms .form-check-input { width: 14px; height: 14px; margin-top: 0; }
+        .action-icon { display: inline-flex; align-items: center; color: #6b7280; }
+        .action-icon:hover { color: #111827; }
+
+        @media (max-width: 576px) {
+            .perm-row { grid-template-columns: 1fr; padding: 6px; }
+            .perm-col-title { margin-bottom: 2px; }
+            .chip-check, .chip-radio, .chip-hq { padding: 3px 6px; }
         }
     </style>
 @endpush
@@ -129,7 +179,7 @@
         </div>
     </div>
 
-    {{-- MODAL: AGREGAR --}}
+    {{-- MODAL: AGREGAR (compacto) --}}
     <div class="modal fade" id="modalAddUser" aria-hidden="true" tabindex="-1" data-bs-backdrop="static" wire:ignore.self>
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
@@ -197,60 +247,65 @@
                             </div>
                         </div>
 
-                        {{-- Sucursales (múltiple) + Primaria --}}
+                        {{-- Sucursales (compacto con chips + primaria integrada) --}}
                         <div class="col-12">
-                            <label class="form-label">Sucursales</label>
-                            <div class="row g-2">
-                                @foreach($headquartes as $h)
-                                    <div class="col-12 col-md-6 col-lg-4">
-                                        <div class="border rounded p-2 d-flex align-items-center justify-content-between">
-                                            <label class="form-check-label d-flex align-items-center gap-2 mb-0">
+                            <div class="perm-row">
+                                <div class="perm-col-title">Sucursales</div>
+                                <div class="perm-col-controls">
+                                    <div class="perm-chips">
+                                        @foreach($headquartes as $h)
+                                            @php
+                                                $isSelected = in_array($h->id, (array)$selectedHeadquarters, true);
+                                                $isDefault  = (int)$defaultHeadquarter === (int)$h->id;
+                                            @endphp
+                                            <label class="chip-hq {{ $isSelected ? 'is-selected' : '' }} {{ $isDefault ? 'is-default' : '' }}">
+                                                {{-- seleccionar sucursal --}}
                                                 <input class="form-check-input"
                                                        type="checkbox"
                                                        value="{{ $h->id }}"
                                                        wire:model="selectedHeadquarters">
                                                 <span>{{ $h->name }}</span>
-                                            </label>
-                                            <div class="form-check mb-0" title="Marcar como sede primaria">
-                                                <input class="form-check-input"
-                                                       type="radio"
-                                                       name="default_hq"
-                                                       value="{{ $h->id }}"
-                                                       wire:model="defaultHeadquarter">
-                                                <small class="text-muted">Primaria</small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
 
+                                                {{-- marcar como primaria --}}
+                                                <span class="hq-primary" title="Marcar como sede primaria">
+                                                    <input class="form-check-input"
+                                                           type="radio"
+                                                           name="default_hq_add"
+                                                           value="{{ $h->id }}"
+                                                           wire:model="defaultHeadquarter">
+                                                    <small>Primaria</small>
+                                                </span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
                             @error('selectedHeadquarters') <span class="text-danger d-block mt-1">{{ $message }}</span> @enderror
                             @error('defaultHeadquarter')  <span class="text-danger d-block mt-1">{{ $message }}</span> @enderror
-
                             <small class="text-muted d-block mt-1">
-                                Selecciona una o más sucursales y elige cuál será la <strong>primaria</strong>.
+                                Marca una o más sucursales y elige cuál será la <strong>primaria</strong>.
                             </small>
                         </div>
 
+                        {{-- Rol (línea compacta con chips) --}}
                         <div class="col-12 mt-2">
-                            <h6 class="mb-2">Rol</h6>
-                            <div class="row g-2">
-                                @forelse($roles as $r)
-                                    <div class="col-6 col-md-3">
-                                        <label class="form-check-label">
-                                            <input class="form-check-input"
-                                                   type="radio"
-                                                   name="role_single_add"
-                                                   value="{{ $r->id }}"
-                                                   wire:model="selectedRoleId">
-                                            <span class="ms-1">{{ $r->name }}</span>
-                                        </label>
+                            <div class="perm-row border rounded px-2 py-2">
+                                <div class="perm-col-title">Rol</div>
+                                <div class="perm-col-controls">
+                                    <div class="perm-chips">
+                                        @forelse($roles as $r)
+                                            <label class="chip-radio" title="{{ $r->name }}">
+                                                <input type="radio" class="form-check-input"
+                                                       name="role_single_add"
+                                                       value="{{ $r->id }}"
+                                                       wire:model="selectedRoleId">
+                                                <span>{{ $r->name }}</span>
+                                            </label>
+                                        @empty
+                                            <span class="text-warning small">No hay roles definidos.</span>
+                                        @endforelse
                                     </div>
-                                @empty
-                                    <div class="col-12">
-                                        <div class="alert alert-warning mb-0">No hay roles definidos.</div>
-                                    </div>
-                                @endforelse
+                                </div>
                             </div>
                             @error('selectedRoleId') <span class="text-danger">{{ $message }}</span> @enderror
                         </div>
@@ -265,7 +320,7 @@
         </div>
     </div>
 
-    {{-- MODAL: EDITAR (sin permisos aquí) --}}
+    {{-- MODAL: EDITAR (compacto, sin permisos aquí) --}}
     <div class="modal fade" id="modalEditUser" aria-hidden="true" tabindex="-1" data-bs-backdrop="static" wire:ignore.self>
         <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
             <div class="modal-content">
@@ -335,41 +390,68 @@
                         </div>
                     </div>
 
-                    {{-- Sucursales (múltiple) + Primaria --}}
+                    {{-- Sucursales (compacto con chips + primaria integrada) --}}
                     <div class="col-12">
-                        <label class="form-label">Sucursales</label>
-                        <div class="row g-2">
-                            @foreach($headquartes as $h)
-                                <div class="col-12 col-md-6 col-lg-4">
-                                    <div class="border rounded p-2 d-flex align-items-center justify-content-between">
-                                        <label class="form-check-label d-flex align-items-center gap-2 mb-0">
+                        <div class="perm-row">
+                            <div class="perm-col-title">Sucursales</div>
+                            <div class="perm-col-controls">
+                                <div class="perm-chips">
+                                    @foreach($headquartes as $h)
+                                        @php
+                                            $isSelected = in_array($h->id, (array)$selectedHeadquarters, true);
+                                            $isDefault  = (int)$defaultHeadquarter === (int)$h->id;
+                                        @endphp
+                                        <label class="chip-hq {{ $isSelected ? 'is-selected' : '' }} {{ $isDefault ? 'is-default' : '' }}">
+                                            {{-- seleccionar sucursal --}}
                                             <input class="form-check-input"
                                                    type="checkbox"
                                                    value="{{ $h->id }}"
                                                    wire:model="selectedHeadquarters">
                                             <span>{{ $h->name }}</span>
+
+                                            {{-- marcar como primaria --}}
+                                            <span class="hq-primary" title="Marcar como sede primaria">
+                                                <input class="form-check-input"
+                                                       type="radio"
+                                                       name="default_hq_edit"
+                                                       value="{{ $h->id }}"
+                                                       wire:model="defaultHeadquarter">
+                                                <small>Primaria</small>
+                                            </span>
                                         </label>
-                                        <div class="form-check mb-0" title="Marcar como sede primaria">
-                                            <input class="form-check-input"
-                                                   type="radio"
-                                                   name="default_hq"
-                                                   value="{{ $h->id }}"
-                                                   wire:model="defaultHeadquarter">
-                                            <small class="text-muted">Primaria</small>
-                                        </div>
-                                    </div>
+                                    @endforeach
                                 </div>
-                            @endforeach
+                            </div>
                         </div>
 
                         @error('selectedHeadquarters') <span class="text-danger d-block mt-1">{{ $message }}</span> @enderror
                         @error('defaultHeadquarter')  <span class="text-danger d-block mt-1">{{ $message }}</span> @enderror
 
                         <small class="text-muted d-block mt-1">
-                            Selecciona una o más sucursales y elige cuál será la <strong>primaria</strong>.
+                            Marca una o más sucursales y elige cuál será la <strong>primaria</strong>.
                         </small>
                     </div>
 
+                    {{-- Rol (línea compacta con chips) --}}
+                    <div class="perm-row border rounded px-2 py-2 mt-2">
+                        <div class="perm-col-title">Rol</div>
+                        <div class="perm-col-controls">
+                            <div class="perm-chips">
+                                @forelse($roles as $r)
+                                    <label class="chip-radio" title="{{ $r->name }}">
+                                        <input type="radio" class="form-check-input"
+                                               name="role_single_edit"
+                                               value="{{ $r->id }}"
+                                               wire:model="selectedRoleId">
+                                        <span>{{ $r->name }}</span>
+                                    </label>
+                                @empty
+                                    <span class="text-warning small">No hay roles definidos.</span>
+                                @endforelse
+                            </div>
+                        </div>
+                    </div>
+                    @error('selectedRoleId') <span class="text-danger">{{ $message }}</span> @enderror
 
                 </div>
                 <div class="modal-footer">
@@ -382,7 +464,7 @@
 
     {{-- === MODAL: Rol & Permisos (FULLSCREEN, ULTRA-COMPACT) === --}}
     <div class="modal fade" id="modalPerms" aria-hidden="true" tabindex="-1" data-bs-backdrop="static" wire:ignore.self>
-        {{-- Fullscreen en TODAS las resoluciones para evitar scroll --}}
+        {{-- Fullscreen para evitar scroll --}}
         <div class="modal-dialog modal-fullscreen">
             <div class="modal-content">
                 <div class="modal-header py-2">
@@ -416,7 +498,7 @@
                         </div>
                     </div>
 
-                    {{-- Permisos (grid sin tarjetas) --}}
+                    {{-- Permisos (grid sin tarjetas; compacto si solo hay 1 permiso en el grupo) --}}
                     <div class="perm-grid">
                         @foreach($aclGroups as $groupKey => $group)
                             @php
@@ -425,7 +507,7 @@
                                 $only    = $group['items'][0] ?? null;
                             @endphp
 
-                            {{-- FILA: Grupo con 1 solo permiso (compacto) --}}
+                            {{-- Grupo con un solo permiso: título + checkbox a la derecha --}}
                             @if($compact && $only)
                                 <div class="perm-row">
                                     <div class="perm-col-title">{{ $group['title'] }}</div>
@@ -439,11 +521,10 @@
                                     </div>
                                 </div>
                             @else
-                                {{-- FILA: Grupo con varios permisos --}}
+                                {{-- Grupo con varios permisos --}}
                                 <div class="perm-row">
                                     <div class="perm-col-title d-flex align-items-center gap-2">
                                         <span>{{ $group['title'] }}</span>
-                                        {{-- Acciones mini: marcar/desmarcar --}}
                                         <a href="javascript:void(0)" class="action-icon" title="Marcar todo"
                                            wire:click="selectGroup('{{ $groupKey }}')">
                                             <i class="ti ti-square-check"></i>
@@ -479,54 +560,6 @@
             </div>
         </div>
     </div>
-
-    @push('styles')
-        <style>
-            /* ====== Modal compacto ====== */
-            #modalPerms .modal-content { font-size: 12px; }
-            #modalPerms .modal-header, #modalPerms .modal-footer { background: #fafafa; }
-            #modalPerms .btn, #modalPerms input, #modalPerms label, #modalPerms small { font-size: 12px !important; }
-            #modalPerms .form-check-input { width: 14px; height: 14px; margin-top: 0; }
-
-            /* ====== Layout de permisos tipo tabla ====== */
-            .perm-grid { display: flex; flex-direction: column; gap: 6px; }
-            .perm-row {
-                display: grid;
-                grid-template-columns: 180px 1fr; /* título fijo | controles flex */
-                gap: 8px;
-                align-items: center;
-                padding: 6px 8px;
-                border-radius: 8px;
-                background: #fff;
-                border: 1px solid #eee;
-            }
-            .perm-col-title { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-            .perm-col-controls { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-
-            /* ====== Chips compactos ====== */
-            .perm-chips { display: flex; gap: 6px; flex-wrap: wrap; }
-            .chip-check, .chip-radio {
-                display: inline-flex; align-items: center; gap: 6px;
-                padding: 4px 8px;
-                border: 1px solid #e5e7eb; border-radius: 999px;
-                background: #fff; cursor: pointer; user-select: none;
-            }
-            .chip-check input, .chip-radio input { margin: 0; }
-            .chip-check span, .chip-radio span { line-height: 1; }
-
-            /* ====== Acciones mini ====== */
-            .action-icon { display: inline-flex; align-items: center; color: #6b7280; }
-            .action-icon:hover { color: #111827; }
-
-            /* ====== Mobile: todo más apretado y 1 columna ====== */
-            @media (max-width: 576px) {
-                .perm-row { grid-template-columns: 1fr; padding: 6px; }
-                .perm-col-title { margin-bottom: 2px; }
-                .chip-check, .chip-radio { padding: 3px 6px; }
-            }
-        </style>
-    @endpush
-
 
     <div class="screen-overlay"
          wire:loading.delay.flex
