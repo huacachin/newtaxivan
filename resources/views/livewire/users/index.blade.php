@@ -141,14 +141,14 @@
                     <div class="row">
                         {{-- Campos --}}
                         <div class="col-md-6">
-                            <div class="mb-3">
+                            <div>
                                 <label for="name" class="form-label">Nombre</label>
                                 <input id="name" type="text" class="form-control" placeholder="Ingresar nombre" wire:model.live="name">
                                 @error('name') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="mb-3">
+                            <div>
                                 <label for="username" class="form-label">Usuario</label>
                                 <input id="username" type="text" class="form-control" placeholder="Ingresar usuario" wire:model="username">
                                 @error('username') <span class="text-danger">{{ $message }}</span> @enderror
@@ -156,14 +156,14 @@
                         </div>
 
                         <div class="col-md-6">
-                            <div class="mb-3">
+                            <div>
                                 <label for="pwd" class="form-label">Contraseña</label>
                                 <input id="pwd" type="text" class="form-control" placeholder="Ingresar contraseña" wire:model.live="pwd">
                                 @error('pwd') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="mb-3">
+                            <div>
                                 <label for="email" class="form-label">Email</label>
                                 <input id="email" type="email" class="form-control" placeholder="Ingresar email" wire:model="email">
                                 @error('email') <span class="text-danger">{{ $message }}</span> @enderror
@@ -171,7 +171,7 @@
                         </div>
 
                         <div class="col-md-6">
-                            <div class="mb-3">
+                            <div>
                                 <label for="document_type" class="form-label">Tipo de Documento</label>
                                 <select id="document_type" class="form-select" wire:model="document_type">
                                     <option value="dni">DNI</option>
@@ -182,7 +182,7 @@
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="mb-3">
+                            <div>
                                 <label for="document_number" class="form-label">Número de Documento</label>
                                 <input id="document_number" type="text" class="form-control" placeholder="Ingresar número" wire:model="document_number">
                                 @error('document_number') <span class="text-danger">{{ $message }}</span> @enderror
@@ -190,7 +190,7 @@
                         </div>
 
                         <div class="col-md-6">
-                            <div class="mb-3">
+                            <div>
                                 <label for="phone" class="form-label">Teléfono</label>
                                 <input id="phone" type="text" class="form-control" placeholder="Ingresar teléfono" wire:model="phone">
                                 @error('phone') <span class="text-danger">{{ $message }}</span> @enderror
@@ -277,14 +277,14 @@
                     {{-- Mismos campos que en Agregar --}}
                     <div class="row">
                         <div class="col-md-6">
-                            <div class="mb-3">
+                            <div>
                                 <label for="name_e" class="form-label">Nombre</label>
                                 <input id="name_e" type="text" class="form-control" placeholder="Ingresar nombre" wire:model.live="name">
                                 @error('name') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="mb-3">
+                            <div>
                                 <label for="username_e" class="form-label">Usuario</label>
                                 <input id="username_e" type="text" class="form-control" placeholder="Ingresar usuario" wire:model="username">
                                 @error('username') <span class="text-danger">{{ $message }}</span> @enderror
@@ -292,7 +292,7 @@
                         </div>
 
                         <div class="col-md-6">
-                            <div class="mb-3">
+                            <div>
                                 <label for="pwd_e" class="form-label">Contraseña</label>
                                 <input id="pwd_e" type="text" class="form-control" placeholder="Nueva contraseña (opcional)" wire:model.live="pwd">
                                 @error('pwd') <span class="text-danger">{{ $message }}</span> @enderror
@@ -300,7 +300,7 @@
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="mb-3">
+                            <div>
                                 <label for="email_e" class="form-label">Email</label>
                                 <input id="email_e" type="email" class="form-control" placeholder="Ingresar email" wire:model="email">
                                 @error('email') <span class="text-danger">{{ $message }}</span> @enderror
@@ -308,7 +308,7 @@
                         </div>
 
                         <div class="col-md-6">
-                            <div class="mb-3">
+                            <div>
                                 <label for="document_type_e" class="form-label">Tipo de Documento</label>
                                 <select id="document_type_e" class="form-select" wire:model="document_type">
                                     <option value="dni">DNI</option>
@@ -319,7 +319,7 @@
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="mb-3">
+                            <div>
                                 <label for="document_number_e" class="form-label">Número de Documento</label>
                                 <input id="document_number_e" type="text" class="form-control" placeholder="Ingresar número" wire:model="document_number">
                                 @error('document_number') <span class="text-danger">{{ $message }}</span> @enderror
@@ -327,7 +327,7 @@
                         </div>
 
                         <div class="col-md-6">
-                            <div class="mb-3">
+                            <div>
                                 <label for="phone_e" class="form-label">Teléfono</label>
                                 <input id="phone_e" type="text" class="form-control" placeholder="Ingresar teléfono" wire:model="phone">
                                 @error('phone') <span class="text-danger">{{ $message }}</span> @enderror
@@ -380,115 +380,88 @@
         </div>
     </div>
 
-    {{-- === MODAL: Rol & Permisos (DINÁMICO, sin CRUD) === --}}
+    {{-- === MODAL: Rol & Permisos (FULLSCREEN, ULTRA-COMPACT) === --}}
     <div class="modal fade" id="modalPerms" aria-hidden="true" tabindex="-1" data-bs-backdrop="static" wire:ignore.self>
-        <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        {{-- Fullscreen en TODAS las resoluciones para evitar scroll --}}
+        <div class="modal-dialog modal-fullscreen">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
+                <div class="modal-header py-2">
+                    <h6 class="modal-title mb-0">
                         Rol & Permisos
                         @if($permsUserName)
-                            <small class="text-muted d-block">Usuario: {{ $permsUserName }}</small>
+                            <small class="text-muted d-block fw-normal">Usuario: {{ $permsUserName }}</small>
                         @endif
-                    </h5>
-                    <button type="button" class="btn-close m-0 fs-5" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </h6>
+                    <button type="button" class="btn-close m-0" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
 
-                    {{-- Rol único --}}
-                    {{-- ROLES (puedes dejarlo aquí también) --}}
-                    <div class="row mt-2">
-                        <div class="col-12">
-                            <h6 class="mb-2">Rol</h6>
-                        </div>
-                        <div class="col-12">
-                            <div class="card border">
-                                <div class="card-body">
-                                    <div class="row g-2">
-                                        @forelse($roles as $r)
-                                            <div class="col-6 col-md-3">
-                                                <label class="form-check-label">
-                                                    <input class="form-check-input"
-                                                           type="radio"
-                                                           name="role_single_edit"
-                                                           value="{{ $r->id }}"
-                                                           wire:model="selectedRoleId">
-                                                    <span class="ms-1">{{ $r->name }}</span>
-                                                </label>
-                                            </div>
-                                        @empty
-                                            <div class="col-12">
-                                                <div class="alert alert-warning mb-0">No hay roles definidos.</div>
-                                            </div>
-                                        @endforelse
-                                    </div>
-                                    @error('selectedRoleId') <span class="text-danger">{{ $message }}</span> @enderror
-                                </div>
+                <div class="modal-body p-2">
+
+                    {{-- Rol (línea compacta) --}}
+                    <div class="perm-row border rounded px-2 py-2 mb-2">
+                        <div class="perm-col-title">Rol</div>
+                        <div class="perm-col-controls">
+                            <div class="perm-chips">
+                                @forelse($roles as $r)
+                                    <label class="chip-radio" title="{{ $r->name }}">
+                                        <input type="radio" class="form-check-input" name="role_single_perms"
+                                               value="{{ $r->id }}" wire:model="selectedRoleId">
+                                        <span>{{ $r->name }}</span>
+                                    </label>
+                                @empty
+                                    <span class="text-warning small">No hay roles definidos.</span>
+                                @endforelse
                             </div>
+                            @error('selectedRoleId') <span class="text-danger small">{{ $message }}</span> @enderror
                         </div>
                     </div>
-                    {{-- SIN permisos aquí (van al modalPerms) --}}
 
-                    {{-- Permisos por módulo (dinámico) --}}
-                    <div class="mb-3">
-                        <h6 class="mb-2">Permisos por módulo</h6>
-
+                    {{-- Permisos (grid sin tarjetas) --}}
+                    <div class="perm-grid">
                         @foreach($aclGroups as $groupKey => $group)
                             @php
-                                $count = count($group['items'] ?? []);
-                                // "Compacto" si: (a) es single, o (b) tiene exactamente 1 ítem
+                                $count   = count($group['items'] ?? []);
                                 $compact = ($group['type'] === 'single') || ($count === 1);
+                                $only    = $group['items'][0] ?? null;
                             @endphp
 
-                            @if($compact)
-                                {{-- === Versión compacta: título + checkbox al costado === --}}
-                                @php
-                                    // Obtiene el único item (en single siempre hay 1; si es group de 1, también)
-                                    $it = $group['items'][0] ?? null;
-                                @endphp
-                                @if($it)
-                                    <div class="border rounded p-2 d-flex align-items-center justify-content-between mb-2">
-                                        <strong class="me-3">{{ $group['title'] }}</strong>
-
-                                        <label class="form-check-label d-flex align-items-center gap-2 mb-0" title="{{ $it['key'] }}">
-                                            <input class="form-check-input"
-                                                   type="checkbox"
-                                                   value="{{ $it['key'] }}"
+                            {{-- FILA: Grupo con 1 solo permiso (compacto) --}}
+                            @if($compact && $only)
+                                <div class="perm-row">
+                                    <div class="perm-col-title">{{ $group['title'] }}</div>
+                                    <div class="perm-col-controls">
+                                        <label class="chip-check" title="{{ $only['key'] }}">
+                                            <input class="form-check-input" type="checkbox"
+                                                   value="{{ $only['key'] }}"
                                                    wire:model="selectedPermissionNames">
-                                            {{-- Si quieres que el texto del check sea el mismo título, usa $group['title'].
-                                               Si prefieres el label específico del ítem, usa $it['label']. --}}
-                                            <span class="d-none">{{ $it['label'] }}</span>
+                                            <span>{{ $group['title'] }}</span>
                                         </label>
                                     </div>
-                                @endif
+                                </div>
                             @else
-                                {{-- === Versión tarjeta (varios ítems) === --}}
-                                <div class="card border mb-3">
-                                    <div class="card-header d-flex justify-content-between align-items-center py-2">
-                                        <strong>{{ $group['title'] }}</strong>
-                                        <div class="d-flex gap-2">
-                                            <button type="button" class="btn btn-sm btn-outline-secondary"
-                                                    wire:click="selectGroup('{{ $groupKey }}')">
-                                                Marcar todo
-                                            </button>
-                                            <button type="button" class="btn btn-sm btn-outline-secondary"
-                                                    wire:click="deselectGroup('{{ $groupKey }}')">
-                                                Desmarcar
-                                            </button>
-                                        </div>
+                                {{-- FILA: Grupo con varios permisos --}}
+                                <div class="perm-row">
+                                    <div class="perm-col-title d-flex align-items-center gap-2">
+                                        <span>{{ $group['title'] }}</span>
+                                        {{-- Acciones mini: marcar/desmarcar --}}
+                                        <a href="javascript:void(0)" class="action-icon" title="Marcar todo"
+                                           wire:click="selectGroup('{{ $groupKey }}')">
+                                            <i class="ti ti-square-check"></i>
+                                        </a>
+                                        <a href="javascript:void(0)" class="action-icon" title="Desmarcar"
+                                           wire:click="deselectGroup('{{ $groupKey }}')">
+                                            <i class="ti ti-square-x"></i>
+                                        </a>
                                     </div>
-                                    <div class="card-body">
-                                        <div class="row g-2">
+                                    <div class="perm-col-controls">
+                                        <div class="perm-chips">
                                             @foreach($group['items'] as $it)
-                                                <div class="col-12 col-md-6 col-lg-4">
-                                                    <label class="form-check-label" title="{{ $it['key'] }}">
-                                                        <input class="form-check-input"
-                                                               type="checkbox"
-                                                               value="{{ $it['key'] }}"
-                                                               wire:model="selectedPermissionNames">
-                                                        <span class="ms-1">{{ $it['label'] }}</span>
-                                                    </label>
-                                                </div>
+                                                <label class="chip-check" title="{{ $it['key'] }}">
+                                                    <input class="form-check-input" type="checkbox"
+                                                           value="{{ $it['key'] }}"
+                                                           wire:model="selectedPermissionNames">
+                                                    <span>{{ $it['label'] }}</span>
+                                                </label>
                                             @endforeach
                                         </div>
                                     </div>
@@ -498,13 +471,62 @@
                     </div>
 
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light-primary" wire:click="savePerms">Guardar</button>
-                    <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal">Cerrar</button>
+
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-primary btn-sm" wire:click="savePerms">Guardar</button>
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
                 </div>
             </div>
         </div>
     </div>
+
+    @push('styles')
+        <style>
+            /* ====== Modal compacto ====== */
+            #modalPerms .modal-content { font-size: 12px; }
+            #modalPerms .modal-header, #modalPerms .modal-footer { background: #fafafa; }
+            #modalPerms .btn, #modalPerms input, #modalPerms label, #modalPerms small { font-size: 12px !important; }
+            #modalPerms .form-check-input { width: 14px; height: 14px; margin-top: 0; }
+
+            /* ====== Layout de permisos tipo tabla ====== */
+            .perm-grid { display: flex; flex-direction: column; gap: 6px; }
+            .perm-row {
+                display: grid;
+                grid-template-columns: 180px 1fr; /* título fijo | controles flex */
+                gap: 8px;
+                align-items: center;
+                padding: 6px 8px;
+                border-radius: 8px;
+                background: #fff;
+                border: 1px solid #eee;
+            }
+            .perm-col-title { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .perm-col-controls { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+            /* ====== Chips compactos ====== */
+            .perm-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+            .chip-check, .chip-radio {
+                display: inline-flex; align-items: center; gap: 6px;
+                padding: 4px 8px;
+                border: 1px solid #e5e7eb; border-radius: 999px;
+                background: #fff; cursor: pointer; user-select: none;
+            }
+            .chip-check input, .chip-radio input { margin: 0; }
+            .chip-check span, .chip-radio span { line-height: 1; }
+
+            /* ====== Acciones mini ====== */
+            .action-icon { display: inline-flex; align-items: center; color: #6b7280; }
+            .action-icon:hover { color: #111827; }
+
+            /* ====== Mobile: todo más apretado y 1 columna ====== */
+            @media (max-width: 576px) {
+                .perm-row { grid-template-columns: 1fr; padding: 6px; }
+                .perm-col-title { margin-bottom: 2px; }
+                .chip-check, .chip-radio { padding: 3px 6px; }
+            }
+        </style>
+    @endpush
+
 
     <div class="screen-overlay"
          wire:loading.delay.flex
