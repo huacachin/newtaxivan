@@ -18,6 +18,7 @@
         }
 
         /* ====== Utilidades compactas reutilizables (Agregar/Editar/Permisos) ====== */
+        .perm-grid { display: flex; flex-direction: column; gap: 6px; }
         .perm-row {
             display: grid;
             grid-template-columns: 180px 1fr; /* título fijo | controles flex */
@@ -60,11 +61,41 @@
         .action-icon { display: inline-flex; align-items: center; color: #6b7280; }
         .action-icon:hover { color: #111827; }
 
+        /* === 2 columnas en móvil para AGREGAR/EDITAR === */
+        #modalAddUser .form-two-cols,
+        #modalEditUser .form-two-cols {
+            display: grid;
+            grid-template-columns: 1fr 1fr;   /* móvil: 2 columnas */
+            gap: 6px;
+        }
+        #modalAddUser .form-two-cols .perm-row,
+        #modalEditUser .form-two-cols .perm-row { margin: 0; }
+        #modalAddUser .form-two-cols .span-2,
+        #modalEditUser .form-two-cols .span-2 { grid-column: 1 / -1; }
+
+        /* Inputs compactos en modales Add/Edit */
+        #modalAddUser .form-control, #modalAddUser .form-select,
+        #modalEditUser .form-control, #modalEditUser .form-select {
+            padding: 4px 8px;
+            min-height: 30px;
+            font-size: 12px;
+        }
+
+        /* Responsive interno de cada fila */
         @media (max-width: 576px) {
             .perm-row { grid-template-columns: 1fr; padding: 6px; }
             .perm-col-title { margin-bottom: 2px; }
             .chip-check, .chip-radio, .chip-hq { padding: 3px 6px; }
         }
+
+        /* Si quieres 3 columnas en desktop (opcional):
+        @media (min-width: 992px) {
+            #modalAddUser .form-two-cols,
+            #modalEditUser .form-two-cols {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+        }
+        */
     </style>
 @endpush
 
@@ -179,8 +210,7 @@
         </div>
     </div>
 
-    {{-- MODAL: AGREGAR (compacto) --}}
-    {{-- MODAL: AGREGAR (FULLSCREEN, ULTRA-COMPACT) --}}
+    {{-- MODAL: AGREGAR (FULLSCREEN, ULTRA-COMPACT + 2 columnas móvil) --}}
     <div class="modal fade" id="modalAddUser" aria-hidden="true" tabindex="-1" data-bs-backdrop="static" wire:ignore.self>
         <div class="modal-dialog modal-fullscreen">
             <div class="modal-content">
@@ -190,7 +220,7 @@
                 </div>
 
                 <div class="modal-body p-2">
-                    <div class="perm-grid">
+                    <div class="perm-grid form-two-cols">
                         {{-- Nombre --}}
                         <div class="perm-row">
                             <div class="perm-col-title">Nombre</div>
@@ -229,7 +259,7 @@
 
                         {{-- Tipo Documento --}}
                         <div class="perm-row">
-                            <div class="perm-col-title">Tipo de Documento</div>
+                            <div class="perm-col-title">Tipo Documento</div>
                             <div class="perm-col-controls">
                                 <select id="document_type" class="form-select" wire:model="document_type">
                                     <option value="dni">DNI</option>
@@ -240,7 +270,7 @@
                             </div>
                         </div>
 
-                        {{-- Número Documento --}}
+                        {{-- N° Documento --}}
                         <div class="perm-row">
                             <div class="perm-col-title">N° Documento</div>
                             <div class="perm-col-controls">
@@ -259,7 +289,7 @@
                         </div>
 
                         {{-- Sucursales (chips + primaria integrada) --}}
-                        <div class="perm-row">
+                        <div class="perm-row span-2">
                             <div class="perm-col-title">Sucursales</div>
                             <div class="perm-col-controls">
                                 <div class="perm-chips">
@@ -273,11 +303,11 @@
                                                    value="{{ $h->id }}" wire:model="selectedHeadquarters">
                                             <span>{{ $h->name }}</span>
                                             <span class="hq-primary" title="Marcar como sede primaria">
-                                            <input class="form-check-input" type="radio"
-                                                   name="default_hq_add"
-                                                   value="{{ $h->id }}" wire:model="defaultHeadquarter">
-                                            <small>Primaria</small>
-                                        </span>
+                                                <input class="form-check-input" type="radio"
+                                                       name="default_hq_add"
+                                                       value="{{ $h->id }}" wire:model="defaultHeadquarter">
+                                                <small>Primaria</small>
+                                            </span>
                                         </label>
                                     @endforeach
                                 </div>
@@ -287,7 +317,7 @@
                         </div>
 
                         {{-- Rol (chips) --}}
-                        <div class="perm-row">
+                        <div class="perm-row span-2">
                             <div class="perm-col-title">Rol</div>
                             <div class="perm-col-controls">
                                 <div class="perm-chips">
@@ -305,7 +335,7 @@
                             </div>
                         </div>
 
-                    </div> {{-- /perm-grid --}}
+                    </div> {{-- /perm-grid form-two-cols --}}
                 </div>
 
                 <div class="modal-footer py-2">
@@ -316,10 +346,7 @@
         </div>
     </div>
 
-
-    {{-- MODAL: EDITAR (compacto, sin permisos aquí) --}}
-    {{-- MODAL: AGREGAR (FULLSCREEN, ULTRA-COMPACT) --}}
-    {{-- MODAL: EDITAR (FULLSCREEN, ULTRA-COMPACT) --}}
+    {{-- MODAL: EDITAR (FULLSCREEN, ULTRA-COMPACT + 2 columnas móvil) --}}
     <div class="modal fade" id="modalEditUser" aria-hidden="true" tabindex="-1" data-bs-backdrop="static" wire:ignore.self>
         <div class="modal-dialog modal-fullscreen">
             <div class="modal-content">
@@ -329,7 +356,7 @@
                 </div>
 
                 <div class="modal-body p-2">
-                    <div class="perm-grid">
+                    <div class="perm-grid form-two-cols">
                         {{-- Nombre --}}
                         <div class="perm-row">
                             <div class="perm-col-title">Nombre</div>
@@ -368,7 +395,7 @@
 
                         {{-- Tipo Documento --}}
                         <div class="perm-row">
-                            <div class="perm-col-title">Tipo de Documento</div>
+                            <div class="perm-col-title">Tipo Documento</div>
                             <div class="perm-col-controls">
                                 <select id="document_type_e" class="form-select" wire:model="document_type">
                                     <option value="dni">DNI</option>
@@ -379,7 +406,7 @@
                             </div>
                         </div>
 
-                        {{-- Número Documento --}}
+                        {{-- N° Documento --}}
                         <div class="perm-row">
                             <div class="perm-col-title">N° Documento</div>
                             <div class="perm-col-controls">
@@ -398,7 +425,7 @@
                         </div>
 
                         {{-- Sucursales (chips + primaria integrada) --}}
-                        <div class="perm-row">
+                        <div class="perm-row span-2">
                             <div class="perm-col-title">Sucursales</div>
                             <div class="perm-col-controls">
                                 <div class="perm-chips">
@@ -412,11 +439,11 @@
                                                    value="{{ $h->id }}" wire:model="selectedHeadquarters">
                                             <span>{{ $h->name }}</span>
                                             <span class="hq-primary" title="Marcar como sede primaria">
-                                            <input class="form-check-input" type="radio"
-                                                   name="default_hq_edit"
-                                                   value="{{ $h->id }}" wire:model="defaultHeadquarter">
-                                            <small>Primaria</small>
-                                        </span>
+                                                <input class="form-check-input" type="radio"
+                                                       name="default_hq_edit"
+                                                       value="{{ $h->id }}" wire:model="defaultHeadquarter">
+                                                <small>Primaria</small>
+                                            </span>
                                         </label>
                                     @endforeach
                                 </div>
@@ -426,7 +453,7 @@
                         </div>
 
                         {{-- Rol (chips) --}}
-                        <div class="perm-row">
+                        <div class="perm-row span-2">
                             <div class="perm-col-title">Rol</div>
                             <div class="perm-col-controls">
                                 <div class="perm-chips">
@@ -444,7 +471,7 @@
                             </div>
                         </div>
 
-                    </div> {{-- /perm-grid --}}
+                    </div> {{-- /perm-grid form-two-cols --}}
                 </div>
 
                 <div class="modal-footer py-2">
@@ -454,8 +481,6 @@
             </div>
         </div>
     </div>
-
-
 
     {{-- === MODAL: Rol & Permisos (FULLSCREEN, ULTRA-COMPACT) === --}}
     <div class="modal fade" id="modalPerms" aria-hidden="true" tabindex="-1" data-bs-backdrop="static" wire:ignore.self>
@@ -473,7 +498,6 @@
                 </div>
 
                 <div class="modal-body p-2">
-
                     {{-- Rol (línea compacta) --}}
                     <div class="perm-row border rounded px-2 py-2 mb-2">
                         <div class="perm-col-title">Rol</div>
