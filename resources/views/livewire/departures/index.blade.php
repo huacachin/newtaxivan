@@ -8,14 +8,14 @@
         }
 
         th,td{
-            padding: 3px !important;
-            font-size: 10px !important;
+            padding: 1ßpx !important;
+            font-size: 8px !important;
             text-align: center !important;
             vertical-align: middle;   /* <-- clave */
         }
 
         .btn, input,select {
-            font-size: 10px !important;
+            font-size: 8px !important;
         }
 
         .screen-overlay {
