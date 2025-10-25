@@ -295,7 +295,7 @@
                 </div>
                 <div class="card-body">
                     <div class="table-responsive mb-3">
-                        <table class=" table table-bordered table-striped table-hover  p-0">
+                        <table class=" table table-bordered   p-0">
                             <thead class="text-center bg-primary">
                             <tr>
                                 @if(!$groupMode)
@@ -408,7 +408,7 @@
 
                     {{-- TOTAL GENERAL dentro del mismo card --}}
                     <div class="table-responsive ">
-                        <table class="table table-bordered table-striped table-hover  p-0">
+                        <table class="table table-bordered  p-0">
                             <thead class="text-center p-0 bg-primary">
                             <tr>
                                 <th colspan="8">TOTAL GENERAL</th>

@@ -144,7 +144,6 @@ class Expenses extends Component
             'total'  => ['required', 'numeric', 'min:0.01'],
             'document_type' => ['nullable', 'string', 'max:100'],
             'in_charge'     => ['nullable', 'string', 'max:100'],
-
             // Imagen opcional
             'image_file'    => ['nullable', 'image', 'max:3072'], // ~3MB
         ];
@@ -192,7 +191,7 @@ class Expenses extends Component
     {
         $this->reset([
             'editId','expenseKind','concept_id','reason_text','date','detail','total','document_type','in_charge',
-            'image_file','image_path' // limpia imagen
+            'image_file','image_path'
         ]);
         $this->expenseKind = 'Otros';
         $this->reason_text = '';
@@ -206,6 +205,15 @@ class Expenses extends Component
         $this->validate();
 
         $userId = optional(auth()->user())->id ?? 1;
+
+        // === Resolver HQ primario del usuario que se está guardando en user_id
+        $hqId = $this->resolveUserPrimaryHeadquarterId((int)$userId);
+
+        // Si la tabla expenses tiene la columna headquarter_id, debe existir valor resuelto
+        if (Schema::hasColumn('expenses','headquarter_id') && empty($hqId)) {
+            $this->addError('headquarter_id', 'No se pudo determinar el Headquarter primario del usuario.');
+            return;
+        }
 
         $reason = $this->expenseKind === 'Fijos'
             ? $this->conceptNameById($this->concept_id)
@@ -226,7 +234,15 @@ class Expenses extends Component
             'document_type' => trim((string)$this->document_type),
             'in_charge'     => trim((string)$this->in_charge),
         ];
-        if ($newImagePath) $payload['image_path'] = $newImagePath;
+
+        // Adjuntar HQ si la columna existe
+        if (Schema::hasColumn('expenses','headquarter_id')) {
+            $payload['headquarter_id'] = (int)$hqId;
+        }
+
+        if ($newImagePath) {
+            $payload['image_path'] = $newImagePath;
+        }
 
         if ($this->editId) {
             $e = Expense::findOrFail($this->editId);
@@ -286,5 +302,48 @@ class Expenses extends Component
         if (!$id) return '';
         $row = collect($this->concepts)->firstWhere('id', (int)$id);
         return $row['name'] ?? '';
+    }
+
+    /**
+     * Resuelve el headquarter primario del usuario dado.
+     * Estrategia:
+     *  1) users.headquarter_id
+     *  2) users.primary_headquarter_id
+     *  3) pivot headquarter_user (is_primary=1) o el primero
+     */
+    private function resolveUserPrimaryHeadquarterId(int $userId): ?int
+    {
+        if (!Schema::hasTable('users')) {
+            return null;
+        }
+
+        // 1) users.headquarter_id
+        if (Schema::hasColumn('users', 'headquarter_id')) {
+            $val = DB::table('users')->where('id', $userId)->value('headquarter_id');
+            if (!empty($val)) return (int)$val;
+        }
+
+        // 2) users.primary_headquarter_id
+        if (Schema::hasColumn('users', 'primary_headquarter_id')) {
+            $val = DB::table('users')->where('id', $userId)->value('primary_headquarter_id');
+            if (!empty($val)) return (int)$val;
+        }
+
+        // 3) Pivot: headquarter_user
+        if (Schema::hasTable('headquarter_user')) {
+            // Preferir is_primary = 1 si la columna existe
+            $query = DB::table('headquarter_user')->where('user_id', $userId);
+
+            if (Schema::hasColumn('headquarter_user', 'is_primary')) {
+                $val = (clone $query)->where('is_primary', 1)->value('headquarter_id');
+                if (!empty($val)) return (int)$val;
+            }
+
+            // Si no hay is_primary o no hay marcado, tomar el primero
+            $val = $query->orderBy('headquarter_id')->value('headquarter_id');
+            if (!empty($val)) return (int)$val;
+        }
+
+        return null;
     }
 }
