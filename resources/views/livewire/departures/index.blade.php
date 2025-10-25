@@ -1,6 +1,6 @@
 @push('styles')
     <style>
-        .hide-label { position:absolute; left:-9999px; }
+
 
         table {
             border-collapse: collapse; /* opcional */
@@ -447,7 +447,7 @@
          wire:target="applyDateRange,groupMode,export,openAddModal,openEditModal,toggleGroup,save,update,reportMonthly,reportRmp,reportStats">
         <div>
             <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
-            <div class="text-white fw-semibold">Cargando…</div>
+            <div class="mt-2 text-white fw-semibold">Cargando…</div>
         </div>
     </div>
 </div>
