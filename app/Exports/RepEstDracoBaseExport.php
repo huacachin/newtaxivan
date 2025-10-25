@@ -20,6 +20,10 @@ class RepEstDracoBaseExport implements FromArray, ShouldAutoSize, WithHeadings, 
 {
     public function __construct(protected int $year) {}
 
+    // ======= Ajusta si tu campo de fecha es distinto =======
+    protected string $dateColumn = 'date'; // 'date_register' si aplica
+    protected string $userModelClass = \App\Models\User::class;
+
     private int $mainRowCount = 0;     // filas del bloque principal
     private int $summaryHeadRow = 0;   // fila (en dataset) del encabezado de mini tabla
     private int $summaryLastRow = 0;   // última fila total (dataset)
@@ -31,6 +35,7 @@ class RepEstDracoBaseExport implements FromArray, ShouldAutoSize, WithHeadings, 
 
     public function array(): array
     {
+        // ===== Mapas de nombres frescos =====
         $userMap=[]; $hqMap=[];
         if (Schema::hasTable('users')) {
             DB::table('users')->select('id','name')->orderBy('name')->chunk(1000,function($rows)use(&$userMap){
@@ -43,52 +48,99 @@ class RepEstDracoBaseExport implements FromArray, ShouldAutoSize, WithHeadings, 
             });
         }
 
-        // BASE
+        // ===== Roles / usuarios =====
+        [$controllerIds, $adminIds] = $this->loadUserIdsByRole($this->year);
+
+        // ===== BASE por mes =====
         $baseMonthly = array_fill(1,12,0.0); $grandBase=0.0;
         if (Schema::hasTable('expenses')) {
             $base = DB::table('expenses')
-                ->whereYear('date',$this->year)->where('reason','like','%BASE%')
-                ->selectRaw('MONTH(date) m, SUM(total) s')->groupBy('m')->pluck('s','m');
-            foreach($base as $m=>$s){ $i=(int)$m; if($i>=1&&$i<=12){ $baseMonthly[$i]=(float)$s; $grandBase+=(float)$s; } }
-        }
+                ->whereYear($this->dateColumn, $this->year)
+                ->where('reason','like','%BASE%')
+                ->selectRaw('MONTH('.$this->dateColumn.') m, SUM(total) s')
+                ->groupBy('m')->pluck('s','m');
 
-        // DRACO
-        $groups=[]; $totByMonth=array_fill(1,12,0.0); $grandDraco=0.0;
-        if (Schema::hasTable('expenses')) {
-            $rows = DB::table('expenses as e')->whereYear('e.date',$this->year)
-                ->where('e.reason','like','%DRACO%')
-                ->selectRaw('e.user_id, e.headquarter_id, MONTH(e.date) m, SUM(e.total) s')
-                ->groupBy('e.user_id','e.headquarter_id','m')->get();
-            $mk=fn()=>array_fill(1,12,0.0);
-            foreach($rows as $r){
-                $uid=(int)($r->user_id??0); $hid=(int)($r->headquarter_id??0);
-                $mi=max(1,min(12,(int)$r->m)); $val=(float)$r->s;
-                $groups[$uid] ??= ['user'=>$userMap[$uid]??'-','hq_rows'=>[]];
-                $groups[$uid]['hq_rows'][$hid] ??= ['hq'=>$hqMap[$hid]??($hid?'HQ#'.$hid:'-'),'m'=>$mk(),'total'=>0.0];
-                $groups[$uid]['hq_rows'][$hid]['m'][$mi]+=$val;
-                $groups[$uid]['hq_rows'][$hid]['total']+=$val;
-                $totByMonth[$mi]+=$val; $grandDraco+=$val;
+            foreach($base as $m=>$s){
+                $i=(int)$m;
+                if($i>=1&&$i<=12){
+                    $baseMonthly[$i]=(float)$s;
+                    $grandBase+=(float)$s;
+                }
             }
-            uasort($groups,fn($a,$b)=>strcmp($a['user'],$b['user']));
-            foreach($groups as &$g){ uasort($g['hq_rows'],fn($a,$b)=>strcmp($a['hq'],$b['hq'])); }
-            unset($g);
         }
 
-        // Combinado DRACO + BASE (pie)
-        $combByMonth=[]; $grandComb=0.0;
-        for($i=1;$i<=12;$i++){ $combByMonth[$i]=($totByMonth[$i]??0)+($baseMonthly[$i]??0); $grandComb+=$combByMonth[$i]; }
+        // ===== DRACO (solo controllers) =====
+        $groups=[];                                  // uid => ['user'=>..., 'hq_rows'=>[ hid => ['hq'=>..., 'm'=>[1..12], 'total'=>...] ] ]
+        $totByMonth=array_fill(1,12,0.0);
+        $grandDraco=0.0;
+        $mkMonths=fn()=>array_fill(1,12,0.0);
 
-        // ===== Tabla principal =====
+        // Pre-seed: todos los controllers, aunque no tengan gastos
+        foreach ($controllerIds as $uid) {
+            $groups[$uid] = ['user'=>$userMap[$uid]??('User#'.$uid),'hq_rows'=>[]];
+        }
+
+        if (Schema::hasTable('expenses') && !empty($controllerIds)) {
+            $rows = DB::table('expenses as e')
+                ->whereYear('e.'.$this->dateColumn, $this->year)
+                ->where('e.reason','like','%DRACO%')
+                ->whereIn('e.user_id', $controllerIds)
+                ->selectRaw('e.user_id, e.headquarter_id, MONTH(e.'.$this->dateColumn.') m, SUM(e.total) s')
+                ->groupBy('e.user_id','e.headquarter_id','m')
+                ->get();
+
+            foreach($rows as $r){
+                $uid=(int)($r->user_id??0);
+                $hid=(int)($r->headquarter_id??0);
+                $mi = max(1, min(12, (int)$r->m));
+                $val=(float)$r->s;
+
+                $groups[$uid]['hq_rows'][$hid] ??= [
+                    'hq'    => $hid>0 ? ($hqMap[$hid]??('HQ#'.$hid)) : '–',
+                    'm'     => $mkMonths(),
+                    'total' => 0.0,
+                ];
+                $groups[$uid]['hq_rows'][$hid]['m'][$mi] += $val;
+                $groups[$uid]['hq_rows'][$hid]['total']  += $val;
+
+                $totByMonth[$mi] += $val;
+                $grandDraco      += $val;
+            }
+        }
+
+        // Para controllers sin ningún gasto, fuerza fila "–"
+        foreach ($groups as $uid => &$g) {
+            if (empty($g['hq_rows'])) {
+                $g['hq_rows'][0] = ['hq'=>'–','m'=>$mkMonths(),'total'=>0.0];
+            }
+        }
+        unset($g);
+
+        // Ordenar usuarios y HQs por nombre
+        uasort($groups,fn($a,$b)=>strcmp($a['user'],$b['user']));
+        foreach($groups as &$g){ uasort($g['hq_rows'],fn($a,$b)=>strcmp($a['hq'],$b['hq'])); }
+        unset($g);
+
+        // ===== Combinado DRACO(controllers) + BASE =====
+        $combByMonth=[]; $grandComb=0.0;
+        for($i=1;$i<=12;$i++){
+            $combByMonth[$i]=($totByMonth[$i]??0)+($baseMonthly[$i]??0);
+            $grandComb+=$combByMonth[$i];
+        }
+
+        // ===== Armado dataset =====
         $data=[];
 
-        // Oficina / Base
+        // Fila Oficina / BASE
         $rowBase=['OFICINA','BASE']; $tBase=0.0;
         for($m=1;$m<=12;$m++){ $v=(float)($baseMonthly[$m]??0); $tBase+=$v; $rowBase[]=$v; }
-        $rowBase[]=$tBase; $data[]=$rowBase;
+        $rowBase[]=$tBase;
+        $data[]=$rowBase;
 
-        // Usuarios
+        // Bloques por usuario controller
         if(!empty($groups)){
             foreach($groups as $g){
+                // Encabezado de usuario
                 $data[]=["__USER__:".mb_strtoupper($g['user']),'','','','','','','','','','','','',''];
                 foreach($g['hq_rows'] as $row){
                     $line=['',$row['hq']];
@@ -101,7 +153,7 @@ class RepEstDracoBaseExport implements FromArray, ShouldAutoSize, WithHeadings, 
             $data[]=['__EMPTY__','','','','','','','','','','','','','',''];
         }
 
-        // Pie TOTAL GENERAL
+        // Pie TOTAL GENERAL (DRACO controllers + BASE)
         $footer=["TOTAL GENERAL (DRACO + BASE)",''];
         for($m=1;$m<=12;$m++){ $footer[]=(float)$combByMonth[$m]; }
         $footer[]=(float)$grandComb;
@@ -115,17 +167,41 @@ class RepEstDracoBaseExport implements FromArray, ShouldAutoSize, WithHeadings, 
         $data[]=['SUCURSAL','TOTAL','','','','','','','','','','','','',''];
 
         $sumHQ=0.0;
-        if (Schema::hasTable('expenses')) {
-            $byHQ=DB::table('expenses as e')->whereYear('e.date',$this->year)
+
+        // Resumen por HQ SOLO controllers (JOIN para nombre correcto)
+        if (Schema::hasTable('expenses') && !empty($controllerIds)) {
+            $byHQ=DB::table('expenses as e')
+                ->leftJoin('headquarters as h','h.id','=','e.headquarter_id')
+                ->whereYear('e.'.$this->dateColumn,$this->year)
                 ->where('e.reason','like','%DRACO%')
-                ->selectRaw('e.headquarter_id, SUM(e.total) s')->groupBy('e.headquarter_id')->get();
-            $tmp=[];
+                ->whereIn('e.user_id', $controllerIds)
+                ->selectRaw('COALESCE(h.name,"–") as hq_name, SUM(e.total) s')
+                ->groupBy('hq_name')
+                ->orderBy('hq_name')
+                ->get();
+
             foreach($byHQ as $h){
-                $tmp[]=['hq'=>$hqMap[(int)$h->headquarter_id]??((int)$h->headquarter_id?'HQ#'.(int)$h->headquarter_id:'-'),'total'=>(float)$h->s];
+                $sumHQ += (float)$h->s;
+                $data[]=[(string)$h->hq_name,(float)$h->s,'','','','','','','','','','','','',''];
             }
-            usort($tmp,fn($a,$b)=>$b['total']<=>$a['total']);
-            foreach($tmp as $row){ $sumHQ+=$row['total']; $data[]=[$row['hq'],(float)$row['total'],'','','','','','','','','','','','','']; }
         }
+
+        // Fila "Sucursal vacía" = total DRACO de admins (activos solo en año actual)
+        $adminVacuumTotal = 0.0;
+        if (!empty($adminIds)) {
+            $adminVacuumTotal = (float) DB::table('expenses as e')
+                ->whereYear('e.'.$this->dateColumn, $this->year)
+                ->where('e.reason','like','%DRACO%')
+                ->whereIn('e.user_id', $adminIds)
+                ->sum('e.total');
+
+            if ($adminVacuumTotal > 0) {
+                $data[]=['Sucursal vacía', (float)$adminVacuumTotal,'','','','','','','','','','','','',''];
+                $sumHQ += $adminVacuumTotal;
+            }
+        }
+
+        // Agrega BASE y TOTAL del resumen
         $data[]=['BASE',(float)$grandBase,'','','','','','','','','','','','',''];
         $data[]=['__RSTOTAL__',(float)($sumHQ+$grandBase),'','','','','','','','','','','','',''];
 
@@ -206,7 +282,7 @@ class RepEstDracoBaseExport implements FromArray, ShouldAutoSize, WithHeadings, 
                 $mainLastRow = $dataStartRow + $this->mainRowCount - 1;
                 for ($r = $dataStartRow; $r <= $mainLastRow; $r++) {
                     $a = (string)$ws->getCell("A{$r}")->getValue();
-                    if (str_starts_with($a,'__USER__') || $a==='__EMPTY__') { continue; } // saltar filas de título de usuario / mensaje
+                    if (str_starts_with($a,'__USER__') || $a==='__EMPTY__') { continue; }
                     for ($col = 'C'; $col <= 'O'; $col++) {
                         $cell = $ws->getCell("{$col}{$r}");
                         $val  = $cell->getValue();
@@ -244,7 +320,6 @@ class RepEstDracoBaseExport implements FromArray, ShouldAutoSize, WithHeadings, 
                         $ws->getStyle("A{$r}:{$lastCol}{$r}")->getFill()
                             ->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB($FOOT);
                         $ws->getStyle("A{$r}:B{$r}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-                        // asegurar ceros en C..O del pie
                         for ($col='C'; $col<='O'; $col++){
                             $cell=$ws->getCell("{$col}{$r}");
                             if ($cell->getValue()==='' || $cell->getValue()===null){ $cell->setValue(0); }
@@ -289,9 +364,36 @@ class RepEstDracoBaseExport implements FromArray, ShouldAutoSize, WithHeadings, 
                         if ($cell->getValue()==='' || $cell->getValue()===null){ $cell->setValue(0); }
                     }
                 }
-
-                // Sin filtros, sin zebra.
             },
         ];
+    }
+
+    /** IDs por rol. Para el año actual, filtra por status=active. Para años pasados, no filtra status. */
+    private function loadUserIdsByRole(int $year): array
+    {
+        if (!Schema::hasTable('roles') || !Schema::hasTable('model_has_roles') || !Schema::hasTable('users')) {
+            return [[],[]];
+        }
+
+        $onlyActive = ($year === (int) Carbon::now()->year);
+
+        $fetch = function(array $roleNames) use ($onlyActive){
+            $q = DB::table('model_has_roles as mr')
+                ->join('roles as r', 'r.id', '=', 'mr.role_id')
+                ->join('users as u', 'u.id', '=', 'mr.model_id')
+                ->where('mr.model_type', $this->userModelClass)
+                ->whereIn('r.name', $roleNames);
+
+            if ($onlyActive) {
+                $q->where('u.status', 'active');
+            }
+
+            return $q->pluck('u.id')->map(fn($v)=>(int)$v)->unique()->values()->all();
+        };
+
+        $controllers = $fetch(['controller','controlador']);
+        $admins      = $fetch(['admin','administrator','administrador']);
+
+        return [$controllers, $admins];
     }
 }

@@ -29,6 +29,9 @@ class OwnersReportExport implements
         protected string  $filter = 'plate' // plate|name|code
     ) {}
 
+    /** Correlativo para el primer cuadro (activos) */
+    private int $rowNum = 0;
+
     /* ==================== PRIMER CUADRO (ACTIVOS) ==================== */
     public function query(): Builder
     {
@@ -51,8 +54,10 @@ class OwnersReportExport implements
                 'v.plate',
                 'o.document_number',
                 'o.phone',
+                'v.sort_order',
             ])
-            ->orderBy('o.name')
+            // Ordenar por sort_order ASC (nulos al final), luego por placa
+            ->orderByRaw('v.sort_order IS NULL, v.sort_order ASC')
             ->orderBy('v.plate');
     }
 
@@ -64,8 +69,9 @@ class OwnersReportExport implements
 
     public function map($r): array
     {
+        // ID correlativo (no el real)
         return [
-            $r->id,
+            ++$this->rowNum,
             (string)$r->name,
             strtoupper((string)$r->plate),
             (string)$r->document_number, // texto
@@ -166,14 +172,14 @@ class OwnersReportExport implements
                     $ws->getStyle($range1)->setConditionalStyles($styles1);
 
                     // Alineaciones de datos
-                    $ws->getStyle("A{$start1}:A{$end1}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // ID
+                    $ws->getStyle("A{$start1}:A{$end1}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // ID (correlativo)
                     $ws->getStyle("B{$start1}:B{$end1}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT)->setShrinkToFit(true); // Nombre
                     $ws->getStyle("C{$start1}:C{$end1}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // Placa
                     $ws->getStyle("D{$start1}:E{$end1}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT)->setShrinkToFit(true); // Doc/Tel
                     $ws->getStyle("A{$start1}:E{$end1}")->getFont()->setSize(11);
                 }
 
-                // Pie (TOTAL ACTIVOS) con color #CEE7FF
+                // Pie (TOTAL ACTIVOS)
                 $foot1 = $end1 + 1;
                 $ws->mergeCells("A{$foot1}:D{$foot1}");
                 $ws->setCellValue("A{$foot1}", 'TOTAL ACTIVOS');
@@ -209,7 +215,7 @@ class OwnersReportExport implements
 
                 // Data libres
                 $start2 = $head2 + 1;
-                $freeRows = $this->fetchFreeOwners(); // array mapeado (ID, Nombre, Placa, Doc, Tel)
+                $freeRows = $this->fetchFreeOwners(); // correlativo propio del segundo cuadro
                 if (!empty($freeRows)) {
                     $ws->fromArray($freeRows, null, "A{$start2}");
                     $end2 = $start2 + count($freeRows) - 1;
@@ -223,7 +229,7 @@ class OwnersReportExport implements
                         ->getStartColor()->setARGB('FFE5E7EB');
 
                     // Alineaciones
-                    $ws->getStyle("A{$start2}:A{$end2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // ID
+                    $ws->getStyle("A{$start2}:A{$end2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // ID correlativo
                     $ws->getStyle("B{$start2}:B{$end2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT)->setShrinkToFit(true); // Nombre
                     $ws->getStyle("C{$start2}:C{$end2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // Placa
                     $ws->getStyle("D{$start2}:E{$end2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT)->setShrinkToFit(true); // Doc/Tel
@@ -258,7 +264,7 @@ class OwnersReportExport implements
         ];
     }
 
-    /** “Propietarios libres” mapeados a las 5 columnas pedidas. */
+    /** “Propietarios libres” mapeados a las 5 columnas pedidas, con ID correlativo propio. */
     private function fetchFreeOwners(): array
     {
         $s    = trim((string)$this->search);
@@ -277,13 +283,14 @@ class OwnersReportExport implements
             ->get();
 
         $out = [];
+        $i = 1; // correlativo del segundo cuadro
         foreach ($rows as $r) {
             $out[] = [
-                $r->id,
-                (string)$r->name,
-                '—', // Placa (libre)
-                (string)$r->document_number,
-                (string)$r->phone,
+                $i++,                         // ID correlativo
+                (string)$r->name,             // Nombre
+                '—',                          // Placa (libre)
+                (string)$r->document_number,  // N° Documento
+                (string)$r->phone,            // Teléfono
             ];
         }
         return $out;

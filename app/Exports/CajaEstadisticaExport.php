@@ -181,7 +181,7 @@ class CajaEstadisticaExport implements WithEvents
             $row++;
         }
 
-        // Fila Total (mantener igual que antes)
+        // Fila Total
         $this->paintLightTotal($sheet, "B{$row}:M{$row}");
         $sheet->setCellValue("B{$row}", 'Total');
         $t = $data['totales'];
@@ -197,7 +197,10 @@ class CajaEstadisticaExport implements WithEvents
         $this->num($sheet, "L{$row}", $t['egreso'],         $numFmt);
         $this->num($sheet, "M{$row}", $t['utilidad'],       $numFmt);
 
-        // <- Ya no agregamos la fila “Promedio” aquí
+        // Colorear de rojo toda la columna de Utilidad (datos + total)
+        $firstDataRow = $r3 + 1;
+        $this->paintUtilidadRed($sheet, $firstDataRow, $row);
+
         return $row;
     }
 
@@ -298,6 +301,10 @@ class CajaEstadisticaExport implements WithEvents
         $this->num($sheet, "K{$row}", $promedios['ingresos_total'], $numFmt);
         $this->num($sheet, "L{$row}", $promedios['egreso'],         $numFmt);
         $this->num($sheet, "M{$row}", $promedios['utilidad'],       $numFmt);
+
+        // Colorear de rojo toda la columna de Utilidad (datos + total + promedio)
+        $firstDataRow = $r3 + 1;
+        $this->paintUtilidadRed($sheet, $firstDataRow, $row);
 
         return $row;
     }
@@ -513,9 +520,17 @@ class CajaEstadisticaExport implements WithEvents
             ->getNumberFormat()
             ->setFormatCode($fmt);
 
-        // Ceros en gris claro para distinguir vacíos (opcional; quita si no lo quieres)
+        // Ceros en gris claro para distinguir vacíos (opcional)
         if ((float)$val === 0.0) {
             $sheet->getStyle($cell)->getFont()->getColor()->setRGB('444444');
+        }
+    }
+
+    private function paintUtilidadRed(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet, int $fromRow, int $toRow): void
+    {
+        if ($toRow >= $fromRow) {
+            $sheet->getStyle("M{$fromRow}:M{$toRow}")
+                ->applyFromArray(['font' => ['color' => ['rgb' => self::RED_TITLE]]]);
         }
     }
 

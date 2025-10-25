@@ -23,6 +23,10 @@ class DriversReportExport implements FromArray, ShouldAutoSize, WithColumnFormat
         protected ?string $filter = 'plate' // plate | name | code
     ) {}
 
+    /** Correlativos por tabla */
+    private int $rowNumActive = 0;
+    private int $rowNumFree   = 0;
+
     protected function headings(): array
     {
         // A..H
@@ -39,15 +43,22 @@ class DriversReportExport implements FromArray, ShouldAutoSize, WithColumnFormat
         $head = $this->headings();
         $rows = [];
 
-        // Tabla 1: CON VEHÍCULO ACTIVO
+        // ===== Tabla 1: CON VEHÍCULO ACTIVO =====
         $rows[] = $head;
         foreach ($active as $d) {
+            // Placas ordenadas por sort_order (NULL al final), luego plate
             $plates = $d->relationLoaded('vehicles')
-                ? $d->vehicles->pluck('plate')->filter()->unique()->values()->implode(', ')
+                ? $d->vehicles
+                    ->sortBy([
+                        fn($a, $b) => ($a->sort_order === null ? 1 : 0) <=> ($b->sort_order === null ? 1 : 0),
+                        ['sort_order', 'asc'],
+                        ['plate', 'asc'],
+                    ])
+                    ->pluck('plate')->filter()->unique()->values()->implode(', ')
                 : '';
 
             $rows[] = [
-                $d->id,
+                ++$this->rowNumActive,                   // ID correlativo
                 $plates ?: '',
                 (string)$d->name,
                 (string)$d->document_number,
@@ -62,11 +73,11 @@ class DriversReportExport implements FromArray, ShouldAutoSize, WithColumnFormat
         // Separador
         $rows[] = array_fill(0, count($head), '');
 
-        // Tabla 2: CONDUCTORES LIBRES
+        // ===== Tabla 2: CONDUCTORES LIBRES =====
         $rows[] = $head;
         foreach ($free as $d) {
             $rows[] = [
-                $d->id,
+                ++$this->rowNumFree,                     // ID correlativo (tabla 2)
                 '—',
                 (string)$d->name,
                 (string)$d->document_number,
@@ -103,7 +114,7 @@ class DriversReportExport implements FromArray, ShouldAutoSize, WithColumnFormat
                 $white    = 'FFFFFFFF';
                 $borderC  = 'FFCFD8DC';
 
-                // Tamaño de fuente global = 10 (no se toca)
+                // Tamaño de fuente global = 10
                 $ws->getParent()->getDefaultStyle()->getFont()->setSize(10);
 
                 // Insertar 2 filas para título y (sin subtítulo)
@@ -120,10 +131,9 @@ class DriversReportExport implements FromArray, ShouldAutoSize, WithColumnFormat
                 ]);
                 $ws->getRowDimension(1)->setRowHeight(16);
 
-                // ======= Fila 2 vacía (sin “Filtros”), solo como separador fino =======
+                // ======= Fila 2 vacía (separador fino) =======
                 $ws->mergeCells("A2:{$lastCol}2");
                 $ws->setCellValue('A2', '');
-                // mantenemos una línea azul muy delgada para continuidad visual
                 $ws->getStyle('A2')->applyFromArray([
                     'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blue]],
                 ]);
@@ -189,7 +199,7 @@ class DriversReportExport implements FromArray, ShouldAutoSize, WithColumnFormat
                     $ws->getStyle("H{$r1}:H{$r2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // Cond
                 }
 
-                // ======= Footers (mismo esquema, fondo #CEE7FF) =======
+                // ======= Footers (fondo #CEE7FF) =======
                 // Total T1
                 $ws->mergeCells("A{$total1}:G{$total1}");
                 $ws->setCellValue("A{$total1}", 'TOTAL CONDUCTORES (con vehículo activo)');
@@ -214,47 +224,65 @@ class DriversReportExport implements FromArray, ShouldAutoSize, WithColumnFormat
                 ]);
                 $ws->getStyle("H{$total2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-                // ======= Anchos AÚN MÁS COMPACTOS (sin cambiar la letra) =======
-                // A:ID, B:Placa, C:Nombre, D:Doc, E:Ini, F:Fin, G:Tel, H:Cond
+                // ======= Anchos compactos =======
                 $ws->getColumnDimension('A')->setWidth(5.0);
                 $ws->getColumnDimension('B')->setWidth(9.5);
-                $ws->getColumnDimension('C')->setWidth(13.0); // bajado (más compacto)
-                $ws->getColumnDimension('D')->setWidth(12.0); // bajado
-                $ws->getColumnDimension('E')->setWidth(9.0);  // bajado
-                $ws->getColumnDimension('F')->setWidth(9.0);  // bajado
-                $ws->getColumnDimension('G')->setWidth(10.0); // bajado
-                $ws->getColumnDimension('H')->setWidth(8.5);  // bajado
+                $ws->getColumnDimension('C')->setWidth(13.0);
+                $ws->getColumnDimension('D')->setWidth(12.0);
+                $ws->getColumnDimension('E')->setWidth(9.0);
+                $ws->getColumnDimension('F')->setWidth(9.0);
+                $ws->getColumnDimension('G')->setWidth(10.0);
+                $ws->getColumnDimension('H')->setWidth(8.5);
             },
         ];
     }
 
+    /**
+     * Trae:
+     *  - $active: conductores con al menos un vehículo 'active/activo', con atributo virtual sort_order_min
+     *             y relación vehicles ya ordenada por sort_order (NULL al final) y luego plate.
+     *  - $free:   conductores sin vehículos activos.
+     */
     protected function fetchData(): array
     {
         $statuses = ['active','activo'];
         $filter   = (string) $this->filter;
         $search   = trim((string) $this->search);
 
+        // === Activos: orden por vehicles.sort_order (NULL al final), después por name ===
         $active = Driver::query()
+            // Asegura que tenga vehículos activos
             ->whereHas('vehicles', fn($q) =>
             $q->whereIn(DB::raw("LOWER(TRIM(status))"), $statuses)
             )
-            ->with(['vehicles' => fn($q) =>
-            $q->whereIn(DB::raw("LOWER(TRIM(status))"), $statuses)
-                ->select('id','driver_id','plate','status')
-            ])
+            // Atributo agregado: mínimo sort_order de sus vehículos activos
+            ->withMin(['vehicles as sort_order_min' => function ($q) use ($statuses) {
+                $q->whereIn(DB::raw("LOWER(TRIM(status))"), $statuses);
+            }], 'sort_order')
+            // Eager load de vehículos activos ordenados por sort_order (NULL al final) y luego plate
+            ->with(['vehicles' => function ($q) use ($statuses) {
+                $q->whereIn(DB::raw("LOWER(TRIM(status))"), $statuses)
+                    ->select('id','driver_id','plate','status','sort_order')
+                    ->orderByRaw('sort_order IS NULL, sort_order ASC')
+                    ->orderBy('plate');
+            }])
+            // Filtros de búsqueda
             ->when($filter && $search !== '', function ($q) use ($filter, $search) {
                 return match ($filter) {
                     'plate' => $q->whereHas('vehicles', fn($qq) => $qq->where('plate','like',"%{$search}%")),
                     'name'  => $q->where('name','like',"%{$search}%"),
                     'code'  => ctype_digit($search)
-                        ? $q->whereHas('vehicles', fn($qq) => $qq->where('id',(int)$search))
+                        ? $q->where('id', (int)$search)
                         : $q,
                     default => $q,
                 };
             })
+            // Orden principal por sort_order_min (NULL al final), luego por nombre
+            ->orderByRaw('sort_order_min IS NULL, sort_order_min ASC')
             ->orderBy('name')
             ->get(['id','name','document_number','phone','condition','contract_start','contract_end']);
 
+        // === Libres: no tienen vehículos activos ===
         $free = Driver::query()
             ->whereDoesntHave('vehicles', fn($q) =>
             $q->whereIn(DB::raw("LOWER(TRIM(status))"), $statuses)
@@ -264,7 +292,7 @@ class DriversReportExport implements FromArray, ShouldAutoSize, WithColumnFormat
                     'plate' => $q->whereHas('vehicles', fn($qq) => $qq->where('plate','like',"%{$search}%")),
                     'name'  => $q->where('name','like',"%{$search}%"),
                     'code'  => ctype_digit($search)
-                        ? $q->whereHas('vehicles', fn($qq) => $qq->where('id',(int)$search))
+                        ? $q->where('id', (int)$search)
                         : $q,
                     default => $q,
                 };

@@ -65,7 +65,7 @@ class DepartureController extends Controller
         $year  = (int) ($request->integer('year') ?: $now->year);
         $month = (int) ($request->integer('month') ?: $now->month);
 
-        $file = sprintf('RMP_VT_%04d_%02d.xlsx', $year, $month);
+        $file = sprintf('Reporte_Mensual_Por_Paradero.VT.xlsx', $year, $month);
 
         return Excel::download(new DeparturesMonthlyByStopExport($year, $month), $file);
     }

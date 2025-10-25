@@ -26,6 +26,9 @@ class VehiclesReportExport implements
         protected ?string $filter = 'plate'
     ) {}
 
+    /** contador para la columna Item */
+    private int $rowNum = 0;
+
     public function query(): Builder
     {
         $status = strtolower(trim((string) $this->status));
@@ -45,50 +48,79 @@ class VehiclesReportExport implements
                     'fuel'      => $q->where('fuel','like',"%{$search}%"),
                     'condition' => $q->where('condition','like',"%{$search}%"),
                     'company'   => $q->where('affiliated_company','like',"%{$search}%"),
+                    'plate'     => $q->where('plate','like',"%{$search}%"),
                     default     => $q,
                 };
             })
             ->with(['owner:id,name','driver:id,name'])
+            // ⬇️ Orden principal por sort_order (no nulos primero), luego id
+            ->orderByRaw('sort_order IS NULL, sort_order ASC')
             ->orderBy('id','asc')
-            ->select(['id','owner_id','driver_id','brand','type','fuel','condition','affiliated_company']);
+            ->select([
+                'id','sort_order','plate','brand','year','class','type','fuel',
+                'condition','affiliated_company','owner_id','driver_id'
+            ]);
     }
 
     public function headings(): array
     {
-        return ['ID','Marca','Propietario','Conductor','Tipo','Combustible','Condición','Compañía Afiliada'];
+        return [
+            'Item',        // A
+            'Cod',         // B  (sort_order)
+            'Placa',       // C
+            'Marca',       // D
+            'Año',         // E
+            'Categoría',   // F
+            'Propietario', // G
+            'Conductor',   // H
+            'Modalidad',   // I
+            'Comb.',       // J
+            'Condición',   // K
+            'Empresa Afil.'// L
+        ];
     }
 
     public function map($v): array
     {
+        $this->rowNum++;
+
         return [
-            $v->id,
-            $v->brand,
-            optional($v->owner)->name ?? '—',
-            optional($v->driver)->name ?? '—',
-            $v->type,
-            $v->fuel,
-            $v->condition,
-            $v->affiliated_company,
+            $this->rowNum,                            // Item
+            $v->sort_order ?? $v->id,                 // Cod (homologado)
+            $v->plate,                                // Placa
+            $v->brand,                                // Marca
+            $v->year,                                 // Año
+            $v->class,                                // Categoría
+            optional($v->owner)->name ?? '—',         // Propietario
+            optional($v->driver)->name ?? '—',        // Conductor
+            $v->type,                                 // Modalidad
+            $v->fuel,                                 // Comb.
+            $v->condition,                            // Condición
+            $v->affiliated_company,                   // Empresa Afil.
         ];
     }
 
     public function columnWidths(): array
     {
         return [
-            'A' => 4.6,  // ID
-            'B' => 8.8,  // Marca
-            'C' => 16.5, // Propietario
-            'D' => 16.5, // Conductor
-            'E' => 7.8,  // Tipo
-            'F' => 7.2,  // Combustible
-            'G' => 6.6,  // Condición
-            'H' => 17.6, // Compañía Afiliada
+            'A' => 4.2,  // Item
+            'B' => 5.2,  // Cod
+            'C' => 9.2,  // Placa
+            'D' => 10.0, // Marca
+            'E' => 5.8,  // Año
+            'F' => 6.6,  // Categoría
+            'G' => 22.0, // Propietario
+            'H' => 22.0, // Conductor
+            'I' => 12.5, // Modalidad
+            'J' => 6.0,  // Comb.
+            'K' => 7.0,  // Condición
+            'L' => 20.0, // Empresa Afil.
         ];
     }
 
     public function styles(Worksheet $sheet)
     {
-        return [1 => ['font' => ['bold' => true]]];
+        return [3 => ['font' => ['bold' => true, 'size' => 10]]];
     }
 
     public function registerEvents(): array
@@ -102,16 +134,20 @@ class VehiclesReportExport implements
                 $white    = 'FFFFFFFF';
                 $borderC  = 'FFCFD8DC';
 
-                // Título (12pt) y subtítulo (10pt)
+                // Base 10 pt
+                $ws->getParent()->getDefaultStyle()->getFont()->setSize(10);
+                $ws->getDefaultRowDimension()->setRowHeight(15);
+
+                // Título y subtítulo
                 $ws->insertNewRowBefore(1, 2);
-                $ws->mergeCells('A1:H1');
+                $ws->mergeCells('A1:L1');
                 $ws->setCellValue('A1', 'REPORTE DE VEHÍCULOS');
-                $ws->getStyle('A1:H1')->applyFromArray([
-                    'font' => ['bold'=>true,'size'=>12,'color'=>['argb'=>$white]],
+                $ws->getStyle('A1:L1')->applyFromArray([
+                    'font'      => ['bold'=>true,'size'=>10,'color'=>['argb'=>$white]],
                     'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
-                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blue]],
+                    'fill'      => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blue]],
                 ]);
-                $ws->getRowDimension(1)->setRowHeight(20);
+                $ws->getRowDimension(1)->setRowHeight(18);
 
                 $sub = sprintf(
                     'Generado: %s | Estado: %s%s%s',
@@ -120,28 +156,28 @@ class VehiclesReportExport implements
                     $this->filter ? " | Filtro: {$this->filter}" : '',
                     ($this->search ?? '') !== '' ? " = '{$this->search}'" : ''
                 );
-                $ws->mergeCells('A2:H2');
+                $ws->mergeCells('A2:L2');
                 $ws->setCellValue('A2', $sub);
-                $ws->getStyle('A2:H2')->applyFromArray([
-                    'font' => ['italic'=>true,'size'=>10,'color'=>['argb'=>$white]],
+                $ws->getStyle('A2:L2')->applyFromArray([
+                    'font'      => ['italic'=>true,'size'=>10,'color'=>['argb'=>$white]],
                     'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER,'wrapText'=>true],
-                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blue]],
+                    'fill'      => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blue]],
                 ]);
                 $ws->getRowDimension(2)->setRowHeight(16);
 
-                // Encabezado (11pt)
+                // Encabezado
                 $headerRow    = 3;
                 $dataStartRow = 4;
-                $lastCol      = 'H';
+                $lastCol      = 'L';
 
                 $ws->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->applyFromArray([
-                    'font' => ['bold'=>true,'size'=>11,'color'=>['argb'=>$white]],
+                    'font'      => ['bold'=>true,'size'=>10,'color'=>['argb'=>$white]],
                     'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
-                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blue]],
+                    'fill'      => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blue]],
                 ]);
-                $ws->getRowDimension($headerRow)->setRowHeight(18);
+                $ws->getRowDimension($headerRow)->setRowHeight(17);
 
-                // Congelar
+                // Congelar encabezado
                 $ws->freezePane("A{$dataStartRow}");
 
                 // Bordes
@@ -150,9 +186,9 @@ class VehiclesReportExport implements
                     ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)
                     ->getColor()->setARGB($borderC);
 
-                // Datos (11pt)
+                // Datos 10 pt
                 if ($last >= $dataStartRow) {
-                    $ws->getStyle("A{$dataStartRow}:{$lastCol}{$last}")->getFont()->setSize(11);
+                    $ws->getStyle("A{$dataStartRow}:{$lastCol}{$last}")->getFont()->setSize(10);
                 }
 
                 // Zebra
@@ -168,37 +204,30 @@ class VehiclesReportExport implements
                     $ws->getStyle($rangeData)->setConditionalStyles($styles);
                 }
 
-                // Refuerzo de anchos
-                $ws->getColumnDimension('A')->setWidth(4.6);
-                $ws->getColumnDimension('B')->setWidth(8.8);
-                $ws->getColumnDimension('C')->setWidth(16.5);
-                $ws->getColumnDimension('D')->setWidth(16.5);
-                $ws->getColumnDimension('E')->setWidth(7.8);
-                $ws->getColumnDimension('F')->setWidth(7.2);
-                $ws->getColumnDimension('G')->setWidth(6.6);
-                $ws->getColumnDimension('H')->setWidth(17.6);
-
-                // Alineaciones + shrink en columnas largas
-                $ws->getStyle("A{$dataStartRow}:A{$last}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                $ws->getStyle("B{$dataStartRow}:B{$last}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-                $ws->getStyle("C{$dataStartRow}:D{$last}")->getAlignment()
+                // Alineaciones + ajuste
+                $ws->getStyle("A{$dataStartRow}:B{$last}")->getAlignment()
+                    ->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $ws->getStyle("C{$dataStartRow}:F{$last}")->getAlignment()
+                    ->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $ws->getStyle("G{$dataStartRow}:H{$last}")->getAlignment()
                     ->setHorizontal(Alignment::HORIZONTAL_LEFT)->setShrinkToFit(true)->setWrapText(false);
-                $ws->getStyle("E{$dataStartRow}:G{$last}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                $ws->getStyle("H{$dataStartRow}:H{$last}")->getAlignment()
+                $ws->getStyle("I{$dataStartRow}:K{$last}")->getAlignment()
+                    ->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $ws->getStyle("L{$dataStartRow}:L{$last}")->getAlignment()
                     ->setHorizontal(Alignment::HORIZONTAL_LEFT)->setShrinkToFit(true)->setWrapText(false);
 
                 // Pie
                 $totalRow = $last + 1;
-                $ws->mergeCells("A{$totalRow}:G{$totalRow}");
+                $ws->mergeCells("A{$totalRow}:K{$totalRow}");
                 $ws->setCellValue("A{$totalRow}", 'TOTAL VEHÍCULOS');
-                $ws->setCellValue("H{$totalRow}", "=COUNT(A{$dataStartRow}:A{$last})");
-                $ws->getStyle("A{$totalRow}:H{$totalRow}")->applyFromArray([
-                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$footerBg]],
-                    'font' => ['bold'=>true,'size'=>11,'color'=>['argb'=>'FF000000']],
+                $ws->setCellValue("L{$totalRow}", "=COUNT(A{$dataStartRow}:A{$last})");
+                $ws->getStyle("A{$totalRow}:L{$totalRow}")->applyFromArray([
+                    'fill'    => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$footerBg]],
+                    'font'    => ['bold'=>true,'size'=>10,'color'=>['argb'=>'FF000000']],
                     'borders' => ['outline' => ['borderStyle'=>Border::BORDER_MEDIUM,'color'=>['argb'=>$blue]]],
                 ]);
-                $ws->getStyle("A{$totalRow}:G{$totalRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-                $ws->getStyle("H{$totalRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $ws->getStyle("A{$totalRow}:K{$totalRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+                $ws->getStyle("L{$totalRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             },
         ];
     }
