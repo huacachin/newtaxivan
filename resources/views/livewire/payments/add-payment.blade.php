@@ -165,10 +165,10 @@
                     </div>
 
                     <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-primary" wire:click="save" wire:loading.attr="disabled">
+                        <button type="button" class="btn btn-sm btn-primary" wire:click="save" wire:loading.attr="disabled">
                             Agregar
                         </button>
-                        <a href="{{ route('payments.index') }}" class="btn btn-primary">Volver</a>
+                        <a href="{{ route('payments.index') }}" class="btn btn-sm btn-primary">Volver</a>
                     </div>
                 </div>
             </div>
@@ -188,6 +188,10 @@
 
 @push('styles')
     <style>
+        input,button{
+            font-size: 10px;
+        }
+
         .screen-overlay {
             position: fixed; inset: 0; display: none;
             align-items: center; justify-content: center;
