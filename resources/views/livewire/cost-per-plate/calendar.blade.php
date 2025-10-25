@@ -9,7 +9,7 @@
         }
 
         th,td{
-            padding: 3px !important;
+            padding: 1px !important;
             font-size: 10px !important;
             text-align: center !important;
             vertical-align: middle;   /* <-- clave */

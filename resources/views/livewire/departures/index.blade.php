@@ -9,13 +9,13 @@
 
         th,td{
             padding: 1px !important;
-            font-size: 8px !important;
+            font-size: 10px !important;
             text-align: center !important;
             vertical-align: middle;   /* <-- clave */
         }
 
         .btn, input,select {
-            font-size: 8px !important;
+            font-size: 10px !important;
         }
 
         .screen-overlay {
