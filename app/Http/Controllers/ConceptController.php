@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 class ConceptController extends Controller
 {
     public function __construct(){
-        $this->middleware(['auth','permission:concepts.view'])->only(['index']);
+        $this->middleware(['auth','permission:configuracion.concepts'])->only(['index']);
     }
     public function index()
     {

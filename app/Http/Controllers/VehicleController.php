@@ -9,7 +9,7 @@ use Maatwebsite\Excel\Facades\Excel;
 class VehicleController extends Controller
 {
     public function __construct(){
-        $this->middleware(['auth','permission:vehicles.view'])->only(['index']);
+        $this->middleware(['auth','permission:configuracion.vehicles'])->only(['index','export']);
     }
     public function index()
     {

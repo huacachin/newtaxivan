@@ -26,8 +26,6 @@ Route::post('/logout', function (Request $request) {
 // === Protegido (requiere auth) ===
 Route::middleware('auth')->group(function () {
 
-    Route::get('/admin', fn() => 'ok')->middleware(['auth','role:admin']);
-
     // Dashboard (raíz autenticada)
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
 
@@ -42,7 +40,7 @@ Route::middleware('auth')->group(function () {
     Route::get('cost-per-plate/calendar/{plate}/{year}/{month}', [CostPerPlateController::class,'calendar'])->name('settings.cost-per-plate.calendar');
 
     // Eliminar deudas - salidas y pagos
-    Route::get('debts-departures-payments', [DspController::class,'index'])->name('settings.dsp.index');
+    //Route::get('debts-departures-payments', [DspController::class,'index'])->name('settings.dsp.index');
 
     // Usuarios
     Route::resource('users', UserController::class)->names('settings.users');

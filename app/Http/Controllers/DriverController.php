@@ -9,7 +9,7 @@ use Maatwebsite\Excel\Facades\Excel;
 class DriverController extends Controller
 {
     public function __construct(){
-        $this->middleware(['auth','permission:drivers.view'])->only(['index']);
+        $this->middleware(['auth','permission:configuracion.drivers'])->only(['index','export']);
     }
     public function index()
     {

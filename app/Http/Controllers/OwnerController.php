@@ -9,7 +9,7 @@ use Maatwebsite\Excel\Facades\Excel;
 class OwnerController extends Controller
 {
     public function __construct(){
-        $this->middleware(['auth','permission:owners.view'])->only(['index']);
+        $this->middleware(['auth','permission:configuracion.owners'])->only(['index','export']);
     }
     public function index()
     {

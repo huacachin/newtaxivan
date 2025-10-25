@@ -16,11 +16,15 @@ class CashController extends Controller
 
 
     public function __construct(){
-        $this->middleware(['auth','permission:cash.view'])->only([
-            'open','incomes','expenses'
+        $this->middleware(['auth','permission:cash.incomes'])->only([
+            'incomes','exportIncomes'
         ]);
 
-        $this->middleware(['auth','permission:cash.report'])->only([
+        $this->middleware(['auth','permission:cash.expenses'])->only([
+            'expenses','exportExpenses'
+        ]);
+
+        $this->middleware(['auth','permission:cash.reports'])->only([
             'movementReport','generalReport',
             'reportEstDracoBase','reportEstSalPagCont','reportEstCajaMa'
         ]);

@@ -12,8 +12,8 @@ use Maatwebsite\Excel\Facades\Excel;
 class PaymentController extends Controller
 {
     public function __construct(){
-        $this->middleware(['auth','permission:payments.view'])->only(['index']);
-        $this->middleware(['auth', 'role:admin'])->only(['monthly','daily','stats']);
+        $this->middleware(['auth','permission:payments'])->only(['index','add','edit','export']);
+        $this->middleware(['auth', 'role:admin'])->only(['monthly','daily','stats','exportMonthly','exportDaily','exportStats']);
     }
     public function index()
     {

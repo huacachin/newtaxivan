@@ -11,8 +11,12 @@ use Maatwebsite\Excel\Facades\Excel;
 class DebtController extends Controller
 {
     public function __construct(){
-        $this->middleware(['auth','permission:debts.view'])->only([
-            'debtPerDays','monthly','monthlyDetail'
+        $this->middleware(['auth','permission:debts.days'])->only([
+            'debtPerDays','export'
+        ]);
+
+        $this->middleware(['auth','permission:debts.monthly'])->only([
+            'monthly','exportMonthly','exportDetail'
         ]);
     }
 

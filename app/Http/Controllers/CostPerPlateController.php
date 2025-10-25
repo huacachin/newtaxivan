@@ -8,7 +8,7 @@ class CostPerPlateController extends Controller
 {
 
     public function __construct(){
-        $this->middleware(['auth','permission:cost-per-plate.view'])->only(['index','day','calendar']);
+        $this->middleware(['auth','permission:configuracion.cost-per-plate'])->only(['index','day','calendar']);
     }
 
    public function index(){

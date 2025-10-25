@@ -8,7 +8,7 @@ class DashboardController extends Controller
 {
 
     public function __construct(){
-        $this->middleware(['auth','permission:dashboard.view'])->only([
+        $this->middleware(['auth','permission:dashboard'])->only([
             'index'
         ]);
     }
