@@ -45,7 +45,7 @@
                         <div class="col-md-4 col-6">
                             <div class="mb-3">
                                 <label for="pay_plate" class="form-label">Placa</label>
-                                <input id="pay_plate" type="text" class="form-control" placeholder="ABC-123"
+                                <input id="pay_plate" type="text" class="form-control form-control-sm" placeholder="ABC-123"
                                        wire:model.live.debounce.300ms="plate"
                                        style="text-transform: uppercase;"
                                        autocapitalize="characters"
@@ -57,7 +57,7 @@
                         <div class="col-md-4 col-6">
                             <div class="mb-3">
                                 <label class="form-label">Serie</label>
-                                <input type="text" class="form-control" wire:model.defer="serie">
+                                <input type="text" class="form-control form-control-sm" wire:model.defer="serie">
                                 @error('serie') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
@@ -65,7 +65,7 @@
                         <div class="col-md-4 col-6">
                             <div class="mb-3">
                                 <label class="form-label">Sucursal</label>
-                                <select class="form-select" wire:model.live="headquarter_id_form">
+                                <select class="form-control form-control-sm" wire:model.live="headquarter_id_form">
                                     <option value="">Seleccionar</option>
                                     @foreach($headquarters as $hq)
                                         <option value="{{ $hq->id }}">{{ $hq->name }}</option>
@@ -78,7 +78,7 @@
                         <div class="col-md-4 col-6">
                             <div class="mb-3">
                                 <label class="form-label">Fecha Registro</label>
-                                <input type="date" class="form-control" wire:model.live="date_register" readonly>
+                                <input type="date" class="form-control form-control-sm" wire:model.live="date_register" readonly>
                                 @error('date_register') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
@@ -86,7 +86,7 @@
                         <div class="col-md-4 col-6">
                             <div class="mb-3">
                                 <label class="form-label">Fecha Pago</label>
-                                <input type="date" class="form-control"
+                                <input type="date" class="form-control form-control-sm"
                                        wire:model.live="date_payment"
                                        @if($type_form === 'PAGO')
                                            readonly
@@ -102,7 +102,7 @@
                         <div class="col-md-4 col-6">
                             <div class="mb-3">
                                 <label class="form-label">Hora</label>
-                                <input type="time" class="form-control" wire:model.defer="hour">
+                                <input type="time" class="form-control form-control-sm" wire:model.defer="hour">
                                 @error('hour') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
@@ -110,7 +110,7 @@
                         <div class="col-md-4 col-6">
                             <div class="mb-3">
                                 <label class="form-label">Tipo</label>
-                                <select class="form-select" wire:model.live="type_form">
+                                <select class="form-control form-control-sm" wire:model.live="type_form">
                                     <option value="">Seleccionar</option>
                                     <option value="PAGO">Pago</option>
                                     <option value="DEUDA">Deuda</option>
@@ -123,7 +123,7 @@
                         <div class="col-md-8">
                             <div class="mb-3">
                                 <label class="form-label">Monto (S/)</label>
-                                <input type="number" step="0.01" min="0.01" class="form-control"
+                                <input type="number" step="0.01" min="0.01" class="form-control form-control-sm"
                                        wire:model.defer="amount"
                                        @if($type_form !== 'DEUDA' && !is_null($detected_cost)) readonly @endif
                                        inputmode="decimal">
@@ -153,13 +153,13 @@
                         <div class="col-md-6" style="position:absolute; left:-9999px;">
                             <div class="mb-3">
                                 <label class="form-label visually-hidden">Latitud</label>
-                                <input id="pay_lat_add" type="text" class="form-control" wire:model.defer="latitude" readonly>
+                                <input id="pay_lat_add" type="text" class="form-control form-control-sm" wire:model.defer="latitude" readonly>
                             </div>
                         </div>
                         <div class="col-md-6" style="position:absolute; left:-9999px;">
                             <div class="mb-3">
                                 <label class="form-label visually-hidden">Longitud</label>
-                                <input id="pay_lng_add" type="text" class="form-control" wire:model.defer="longitude" readonly>
+                                <input id="pay_lng_add" type="text" class="form-control form-control-sm" wire:model.defer="longitude" readonly>
                             </div>
                         </div>
                     </div>
