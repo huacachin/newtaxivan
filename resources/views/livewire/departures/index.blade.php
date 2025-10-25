@@ -8,7 +8,7 @@
         }
 
         th,td{
-            padding: 1ßpx !important;
+            padding: 1px !important;
             font-size: 8px !important;
             text-align: center !important;
             vertical-align: middle;   /* <-- clave */
