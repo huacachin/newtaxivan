@@ -63,57 +63,84 @@
             <div class="card">
                 <div class="card-header">
 
-                    <div class="row g-3">
-                        <div class="col-md-4 col-4 ">
+                    <div class="row mt-2">
+                        <div class="col-12">
+                            <div class="row g-2">
+                                <!-- Fila 1: Inputs -->
+                                <div class="col-12">
+                                    <div class="d-flex flex-wrap align-items-end gap-2 py-1">
 
-                            <label class="form-label">Buscar: </label>
+                                        <!-- Buscar -->
+                                        <div class="flex-shrink-0" style="min-width: 220px;">
+                                            <label class="form-label mb-1">Buscar</label>
+                                            <input
+                                                type="search"
+                                                class="form-control form-control-sm"
+                                                placeholder="Buscar..."
+                                                aria-label="Buscar"
+                                                wire:model.live.debounce.400ms="search">
+                                        </div>
 
-                            <input type="search" class="form-control" placeholder="Buscar..." aria-label="Buscar"
-                                   wire:model.live.debounce.400ms="search">
+                                        <!-- Filtro -->
+                                        <div class="flex-shrink-0" style="min-width: 160px;">
+                                            <label class="form-label mb-1">Filtro</label>
+                                            <select class="form-select form-select-sm" aria-label="Filtro" wire:model.live="filterType">
+                                                <option value="1">A</option>
+                                                <option value="2">Motivo</option>
+                                                <option value="3">Usuario</option>
+                                            </select>
+                                        </div>
 
+                                        <!-- Fecha Inicio -->
+                                        <div class="flex-shrink-0" style="min-width: 160px;">
+                                            <label class="form-label mb-1">Fecha Inicio</label>
+                                            <input type="date" class="form-control form-control-sm" wire:model="date_start">
+                                        </div>
 
-                        </div>
+                                        <!-- Fecha Fin -->
+                                        <div class="flex-shrink-0" style="min-width: 160px;">
+                                            <label class="form-label mb-1">Fecha Fin</label>
+                                            <input type="date" class="form-control form-control-sm" wire:model="date_end">
+                                        </div>
 
-                        <div class="col-md-2 col-4">
-                            <label class="form-label">Filtro</label>
-                            <select class="form-select" aria-label="Filtro" wire:model.live="filterType">
-                                <option value="1">A</option>
-                                <option value="2">Motivo</option>
-                                <option value="3">Usuario</option>
-                            </select>
-                        </div>
+                                    </div>
+                                </div>
 
-                        <div class="col-md-3 col-4">
-                            <label class="form-label">Fecha Inicio</label>
-                            <input type="date" class="form-control" wire:model="date_start">
-                        </div>
-                        <div class="col-md-3 col-4">
-                            <label class="form-label">Fecha Fin</label>
-                            <input type="date" class="form-control" wire:model="date_end">
-                        </div>
+                                <!-- Fila 2: Botones -->
+                                <div class="col-12">
+                                    <div class="d-flex flex-wrap gap-2 justify-content-start py-1">
+                                        <!-- Buscar -->
+                                        <button class="btn btn-sm btn-primary flex-shrink-0"
+                                                wire:click="applyDate">
+                                            <i class="ti ti-search f-s-12"></i> Buscar
+                                        </button>
 
+                                        <!-- Exportar -->
+                                        <button class="btn btn-sm btn-primary flex-shrink-0"
+                                                wire:click="export">
+                                            <i class="ti ti-file-analytics f-s-12"></i> Exportar
+                                        </button>
 
-                        <div class="col-md-3 col-4 d-flex align-items-end">
-                            <button class="btn btn-sm btn-primary w-100" wire:click="applyDate">
-                                <i class="ti ti-search f-s-12"></i> Buscar
-                            </button>
-                        </div>
-                        <div class="col-md-3 col-4 d-flex align-items-end">
-                            <button class="btn btn-sm btn-primary w-100" wire:click="export">
-                                <i class="ti ti-file-analytics f-s-12"></i> Exportar
-                            </button>
-                        </div>
-                        <div class="col-md-3 col-6 d-flex align-items-end">
-                            <button class="btn btn-sm btn-primary w-100" wire:click="openAddModal">
-                                <i class="ti ti-square-plus f-s-12"></i> Nuevo
-                            </button>
-                        </div>
-                        <div class="col-md-3 col-6 d-flex align-items-end">
-                            <button id="down" class="btn btn-sm btn-primary w-100" wire:click="downloadLast">
-                                <i class="ti ti-square-chevrons-down f-s-12"></i>
-                            </button>
+                                        <!-- Nuevo -->
+                                        <button class="btn btn-sm btn-primary flex-shrink-0"
+                                                wire:click="openAddModal">
+                                            <i class="ti ti-square-plus f-s-12"></i> Nuevo
+                                        </button>
+
+                                        <!-- Descargar último -->
+                                        <button id="down"
+                                                class="btn btn-sm btn-primary flex-shrink-0"
+                                                wire:click="downloadLast" title="Descargar último">
+                                            <i class="ti ti-square-chevrons-down f-s-12"></i>
+                                        </button>
+
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
+
 
                 </div>
                 <div class="card-body">

@@ -78,49 +78,67 @@
                         <strong>Propietario:</strong> {{ $owners }} ·
                         <strong>Conductor:</strong> {{ $drivers }}
                     </p>
-                    <div class="row g-3 align-items-end mt-2">
-                        <div class="col-md-2 col-4">
-                                    <input type="search" class="form-control" placeholder="Buscar..."
-                                           aria-label="Buscar" wire:model.live="search">
-                        </div>
+                    <div class="row mt-2">
+                        <div class="col-12">
+                            <!-- Una sola fila: no-wrap + scroll horizontal -->
+                            <div class="d-flex flex-wrap align-items-end gap-2 overflow-auto py-1">
 
-                        <div class="col-md-2 col-4">
-                            <select class="form-select" aria-label="Estado del vehiculo" wire:model.live="status">
-                                <option value="active">Activo</option>
-                                <option value="inactive">Cesado</option>
-                            </select>
-                        </div>
+                                <!-- Buscar -->
+                                <div class="flex-shrink-0" style="min-width: 180px;">
+                                    <input type="search"
+                                           class="form-control form-control-sm"
+                                           placeholder="Buscar..."
+                                           aria-label="Buscar"
+                                           wire:model.live="search">
+                                </div>
 
-                        <div class="col-md-2 col-4">
-                            <select class="form-select" aria-label="Filtro" wire:model.live="filter">
-                                <option value="plate">Placa</option>
-                                <option value="brand">Marca</option>
-                                <option value="year">Año</option>
-                                <option value="owner">Propietario</option>
-                                <option value="driver">Conductor</option>
-                                <option value="condition">Condición</option>
-                                <option value="company">Empresa</option>
-                                <option value="category">Categoría</option>
-                                <option value="code">Código</option>
-                            </select>
-                        </div>
+                                <!-- Estado -->
+                                <div class="flex-shrink-0" style="min-width: 160px;">
+                                    <select class="form-select form-select-sm"
+                                            aria-label="Estado del vehiculo"
+                                            wire:model.live="status">
+                                        <option value="active">Activo</option>
+                                        <option value="inactive">Cesado</option>
+                                    </select>
+                                </div>
 
-                        <div class="col-md-2 col-4">
-                            <button class="btn btn-sm btn-primary w-100" wire:click="openAddModal">
-                                <i class="ti ti-square-plus f-s-12"></i> Nuevo
-                            </button>
-                        </div>
-                        <div class="col-md-2 col-4">
-                            <button class="btn btn-sm btn-primary w-100" wire:click="export">
-                                <i class="ti ti-file-analytics f-s-12"></i> Exportar
-                            </button>
-                        </div>
-                        <div class="col-md-2 col-4">
-                            <button id="down" class="btn btn-sm btn-sm btn-primary w-100">
-                                <i class="ti ti-square-chevrons-down f-s-12"></i>
-                            </button>
+                                <!-- Filtro -->
+                                <div class="flex-shrink-0" style="min-width: 180px;">
+                                    <select class="form-select form-select-sm"
+                                            aria-label="Filtro"
+                                            wire:model.live="filter">
+                                        <option value="plate">Placa</option>
+                                        <option value="brand">Marca</option>
+                                        <option value="year">Año</option>
+                                        <option value="owner">Propietario</option>
+                                        <option value="driver">Conductor</option>
+                                        <option value="condition">Condición</option>
+                                        <option value="company">Empresa</option>
+                                        <option value="category">Categoría</option>
+                                        <option value="code">Código</option>
+                                    </select>
+                                </div>
+
+                                <!-- Botones -->
+                                <button class="btn btn-sm btn-primary flex-shrink-0"
+                                        wire:click="openAddModal">
+                                    <i class="ti ti-square-plus f-s-12"></i> Nuevo
+                                </button>
+
+                                <button class="btn btn-sm btn-primary flex-shrink-0"
+                                        wire:click="export">
+                                    <i class="ti ti-file-analytics f-s-12"></i> Exportar
+                                </button>
+
+                                <button id="down"
+                                        class="btn btn-sm btn-primary flex-shrink-0">
+                                    <i class="ti ti-square-chevrons-down f-s-12"></i>
+                                </button>
+
+                            </div>
                         </div>
                     </div>
+
                 </div>
 
                 <div class="card-body">

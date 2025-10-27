@@ -80,6 +80,8 @@ class Index extends Component
      */
     public bool $groupMode = false;
 
+    public bool $byHQ;
+
     /**
      * Estado sincronizado con query string.
      * @var array<string, array<string, mixed>>
@@ -89,7 +91,7 @@ class Index extends Component
         'searchText' => ['except' => null],
         'fromDate'   => ['except' => null],
         'toDate'     => ['except' => null],
-        'groupMode'  => ['except' => false],
+        'groupMode'  => ['except' => false]
     ];
 
     // ==============================
@@ -296,6 +298,17 @@ class Index extends Component
         $now = now(config('app.timezone','America/Lima'));
         $this->date = $this->date ?: $now->toDateString();
         $this->hour = $this->hour ?: $now->format('H:i');
+
+        $this->byHQ = ($this->searchType ?? 1) == 3;
+
+
+    }
+
+
+    public function updatedSearchType($value)
+    {
+        $this->searchType = (int) $value;
+        $this->searchText = ''; // evita quedarse con el valor anterior
     }
 
     // ==============================
@@ -581,30 +594,6 @@ class Index extends Component
      * Calcula totales (conteo y sumas) del dataset filtrado por baseQuery().
      * @return object{records:int,times_total:int,price_total:float,passengers_total:int,passage_total:float,total_pasaje_total:float}
      */
-    private function totals(): object
-    {
-        $base = $this->baseQuery();
-
-        $row = $base->cloneWithout(['orders', 'columns'])
-            ->selectRaw('
-            COUNT(*)                                        as records,
-            COALESCE(SUM(d.times), 0)                       as times_total,
-            COALESCE(SUM(d.price), 0)                       as price_total,
-            COALESCE(SUM(d.passenger), 0)                   as passengers_total,
-            COALESCE(SUM(d.passage), 0)                     as passage_total,
-            COALESCE(SUM(COALESCE(d.passenger,0)*COALESCE(d.passage,0)), 0) as total_pasaje_total
-        ')
-            ->first();
-
-        return $row ?: (object) [
-            'records'             => 0,
-            'times_total'         => 0,
-            'price_total'         => 0,
-            'passengers_total'    => 0,
-            'passage_total'       => 0,
-            'total_pasaje_total'  => 0,
-        ];
-    }
 
     /**
      * Cambia entre modo Detalle y Agrupado.
@@ -729,8 +718,10 @@ class Index extends Component
             'supportRows'    => $supportRows,
             'supportTotals'  => $supportTotals,
             'groupMode'      => $this->groupMode,
-            'grandTotals'    => $grandTotals   // <— NUEVO
+            'grandTotals'    => $grandTotals,
+            'headquarters'   => $this->headquarters, // <-- necesario para el select
         ]);
+
     }
 
     // ==============================

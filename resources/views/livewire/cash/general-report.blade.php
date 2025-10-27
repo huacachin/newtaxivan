@@ -57,34 +57,49 @@
             <div class="card">
                 <div class="card-header">
 
-                    <div class="row g-3">
-                        <div class="col-md-5 col-6">
-                            <label class="form-label">Mes</label>
-                            <select wire:model.live="month" class="form-select">
-                                @for($m=1;$m<=12;$m++)
-                                    <option value="{{ $m }}">{{ \Carbon\Carbon::create(null, $m, 1)->locale('es')->translatedFormat('F') }}</option>
-                                @endfor
-                            </select>
-                        </div>
-                        <div class="col-md-3 col-6">
-                            <label class="form-label">Año</label>
-                            <select wire:model.live="year" class="form-select">
-                                @for($y=now()->year-5;$y<=now()->year+1;$y++)
-                                    <option value="{{ $y }}">{{ $y }}</option>
-                                @endfor
-                            </select>
-                        </div>
-                        <div class="col-md-3 col-6  d-flex align-items-end">
-                            <button class="btn btn-primary btn-primary w-100" wire:click="export">
-                                <i class="ti ti-file-analytics f-s-12"></i> Exportar
-                            </button>
-                        </div>
-                        <div class="col-md-1 col-6  d-flex align-items-end">
-                            <button class="btn btn-primary btn-primary w-100" id="down">
-                                <i class="ti ti-square-chevrons-down f-s-12"></i>
-                            </button>
+                    <div class="row mt-2">
+                        <div class="col-12">
+                            <div class="d-flex flex-wrap align-items-end gap-2 overflow-auto py-1">
+
+                                <!-- Mes -->
+                                <div class="flex-shrink-0" style="min-width: 220px;">
+                                    <label class="form-label mb-1">Mes</label>
+                                    <select wire:model.live="month" class="form-select form-select-sm">
+                                        @for($m=1;$m<=12;$m++)
+                                            <option value="{{ $m }}">
+                                                {{ \Carbon\Carbon::create(null, $m, 1)->locale('es')->translatedFormat('F') }}
+                                            </option>
+                                        @endfor
+                                    </select>
+                                </div>
+
+                                <!-- Año -->
+                                <div class="flex-shrink-0" style="min-width: 160px;">
+                                    <label class="form-label mb-1">Año</label>
+                                    <select wire:model.live="year" class="form-select form-select-sm">
+                                        @for($y=now()->year-5;$y<=now()->year+1;$y++)
+                                            <option value="{{ $y }}">{{ $y }}</option>
+                                        @endfor
+                                    </select>
+                                </div>
+
+                                <!-- Exportar -->
+                                <button class="btn btn-sm btn-primary flex-shrink-0 align-self-end"
+                                        wire:click="export">
+                                    <i class="ti ti-file-analytics f-s-12"></i> Exportar
+                                </button>
+
+                                <!-- Ir al final -->
+                                <button class="btn btn-sm btn-primary flex-shrink-0 align-self-end"
+                                        id="down" type="button" title="Ir al final">
+                                    <i class="ti ti-square-chevrons-down f-s-12"></i>
+                                </button>
+
+                            </div>
                         </div>
                     </div>
+
+
 
                 </div>
                 <div class="card-body">

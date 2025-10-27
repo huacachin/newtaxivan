@@ -58,95 +58,150 @@
         <div class="col-xl-12">
             <div class="card shadow-sm">
                 <div class="card-header">
-                    <div class="row g-3">
-                        <div class="col-4">
-                            <label class="form-label">Buscar</label>
 
+                    {{-- ===== Fila 1: radios de filtro ===== --}}
+                    <div class="row g-2 mb-2">
+                        <div class="col-12">
+                            <div class="d-flex flex-wrap align-items-center gap-3">
+                                <span class="small text-muted">Filtrar por:</span>
 
-                                    <input type="search" class="form-control form-control-sm" placeholder="Buscar..."
-                                           aria-label="Buscar" wire:model.live="search">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input"
+                                           type="radio"
+                                           name="rbFilterPay"
+                                           id="rbPlatePay"
+                                           value="1"
+                                           wire:model="filter">
+                                    <label class="form-check-label" for="rbPlatePay">Placa</label>
+                                </div>
 
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input"
+                                           type="radio"
+                                           name="rbFilterPay"
+                                           id="rbUserPay"
+                                           value="2"
+                                           wire:model="filter">
+                                    <label class="form-check-label" for="rbUserPay">Usuario</label>
+                                </div>
 
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input"
+                                           type="radio"
+                                           name="rbFilterPay"
+                                           id="rbSeriePay"
+                                           value="3"
+                                           wire:model="filter">
+                                    <label class="form-check-label" for="rbSeriePay">Serie</label>
+                                </div>
 
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input"
+                                           type="radio"
+                                           name="rbFilterPay"
+                                           id="rbMixedPay"
+                                           value=""
+                                           wire:model="filter">
+                                    <label class="form-check-label" for="rbMixedPay">Todos</label>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-4">
-                            <label class="form-label">Filtro</label>
-                            <select class="form-control form-control-sm" aria-label="Selecciona item a filtrar" wire:model.live="filter">
-                                <option value="">Seleccione un filtro</option>
-                                <option value="1">Placa</option>
-                                <option value="2">Usuario</option>
-                                <option value="3">Serie</option>
-                            </select>
+                    </div>
+
+                    {{-- ===== Fila 2: Buscar + Fechas + Sucursal + Tipo + Aplicar ===== --}}
+                    <div class="row g-2 align-items-end flex-wrap mb-2">
+
+                        <div class="col-auto">
+                            <label class="form-label mb-1">Buscar</label>
+                            <input type="search"
+                                   class="form-control form-control-sm"
+                                   placeholder="@switch($filter)
+                                    @case('1') Buscar por placa... @break
+                                    @case('2') Buscar por usuario... @break
+                                    @case('3') Buscar por serie... @break
+                                    @default Buscar...
+                                @endswitch"
+                                   aria-label="Buscar"
+                                   wire:model.live="search">
                         </div>
 
-
-                        <div class="col-4">
-                            <label class="form-label">Fecha Inicio</label>
+                        <div class="col-auto">
+                            <label class="form-label mb-1">Fecha Inicio</label>
                             <input type="date" class="form-control form-control-sm" wire:model="date_start">
                         </div>
-                        <div class="col-3">
-                            <label class="form-label">Fecha Fin</label>
+
+                        <div class="col-auto">
+                            <label class="form-label mb-1">Fecha Fin</label>
                             <input type="date" class="form-control form-control-sm" wire:model="date_end">
                         </div>
-                        <div class="col-3">
-                            <label class="form-label">Sucursal</label>
-                            <select class="form-control form-control-sm" wire:model.live="headquarter_id" aria-label="Selecciona sucursal">
+
+                        <div class="col-auto">
+                            <label class="form-label mb-1">Sucursal</label>
+                            <select class="form-control form-control-sm"
+                                    wire:model.live="headquarter_id"
+                                    aria-label="Selecciona sucursal"
+                                    wire:key="hq-select">
                                 <option value="">Todos</option>
                                 @foreach($headquarters as $h)
                                     <option value="{{ $h->id }}">{{ $h->name }}</option>
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-3">
-                            <label class="form-label">Tipo</label>
-                            <select class="form-control form-control-sm" wire:model.live="type" aria-label="Selecciona tipo">
+
+                        <div class="col-auto">
+                            <label class="form-label mb-1">Tipo</label>
+                            <select class="form-control form-control-sm"
+                                    wire:model.live="type"
+                                    aria-label="Selecciona tipo">
                                 <option value="">Todos</option>
                                 <option value="PAGO">Pago</option>
                                 <option value="DEUDA">Deuda</option>
                                 <option value="RETRASO">Retraso</option>
                             </select>
                         </div>
-                        <div class="col-3 d-flex align-items-end">
-                            <button class="btn btn-sm btn-primary w-100" wire:click="applyDate">
+
+                        <div class="col-auto d-flex align-items-end">
+                            <button class="btn btn-sm btn-primary"
+                                    wire:click="applyDate"
+                                    wire:loading.attr="disabled"
+                                    wire:target="applyDate">
                                 <i class="ti ti-search f-s-12"></i>
                             </button>
                         </div>
                     </div>
+
+                    {{-- ===== Acciones (tal cual las tenías) ===== --}}
                     <div class="row g-2 mt-2">
-                        @role('admin')
-                        <div class="col-lg-2 col-4">
-                            <button class="btn btn-sm btn-primary w-100" wire:click="daily">
-                                <i class="ti ti-report-analytics f-s-12"></i> Diario
-                            </button>
-                        </div>
-                        <div class="col-lg-2 col-4">
-                            <button class="btn btn-sm btn-primary w-100" wire:click="monthly">
-                                <i class="ti ti-report-analytics f-s-12"></i> Mensual
-                            </button>
-                        </div>
-                        <div class="col-lg-2 col-4">
-                            <button class="btn btn-sm btn-primary w-100" wire:click="stats">
-                                <i class="ti ti-report-analytics f-s-12"></i> Estadis.
-                            </button>
-                        </div>
-                        <div class="col-lg-2 col-4">
-                            <button class="btn btn-sm btn-primary w-100" wire:click="export">
-                                <i class="ti ti-file-analytics f-s-12"></i> Exportar
-                            </button>
-                        </div>
-                        @endrole
-                        <div class="col-lg-2 col-4">
-                            <button class="btn btn-sm btn-primary w-100" wire:click="openAddWindow">
-                                <i class="ti ti-square-plus f-s-12"></i> Nuevo
-                            </button>
-                        </div>
-                        <div class="col-lg-2 col-4">
-                            <button class="btn btn-sm btn-primary w-100" id="down">
-                                <i class="ti ti-square-chevrons-down f-s-12"></i>
-                            </button>
+                        <div class="col-12">
+                            <div class="d-flex flex-wrap gap-2">
+                                @role('admin')
+                                <button class="btn btn-sm btn-primary" wire:click="daily">
+                                    <i class="ti ti-report-analytics f-s-12"></i> Diario
+                                </button>
+                                <button class="btn btn-sm btn-primary" wire:click="monthly">
+                                    <i class="ti ti-report-analytics f-s-12"></i> Mensual
+                                </button>
+                                <button class="btn btn-sm btn-primary" wire:click="stats">
+                                    <i class="ti ti-report-analytics f-s-12"></i> Estadis.
+                                </button>
+                                <button class="btn btn-sm btn-primary" wire:click="export">
+                                    <i class="ti ti-file-analytics f-s-12"></i> Exportar
+                                </button>
+                                @endrole
+
+                                <button class="btn btn-sm btn-primary" wire:click="openAddWindow">
+                                    <i class="ti ti-square-plus f-s-12"></i> Nuevo
+                                </button>
+                                <button class="btn btn-sm btn-primary" id="down">
+                                    <i class="ti ti-square-chevrons-down f-s-12"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
+
                 </div>
+
+
                 <div class="card-body">
                     <div class="table-responsive tableFixHead">
                         <table class="table table-bordered table-striped table-hover">

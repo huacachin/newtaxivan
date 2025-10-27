@@ -60,65 +60,71 @@
         <div class="card">
             <div class="card-header">
                 <div class="row g-2">
-                    <div class="col-md-4 col-6">
+                    {{-- Fila 1: Inputs --}}
+                    <div class="col-12">
+                        <div class="d-flex flex-wrap align-items-end gap-2 py-1">
 
-                            <label class="form-label">Buscar</label>
-
+                            <!-- Buscar -->
+                            <div class="flex-shrink-0" style="min-width: 240px;">
+                                <label class="form-label mb-1">Buscar</label>
                                 <input
                                     type="search"
-                                    class="form-control"
+                                    class="form-control form-control-sm"
                                     placeholder="Buscar..."
                                     aria-label="Buscar"
-                                    wire:model.live.debounce.400ms="search"
-                                >
+                                    wire:model.live.debounce.400ms="search">
+                            </div>
 
+                            <!-- Filtro -->
+                            <div class="flex-shrink-0" style="min-width: 180px;">
+                                <label class="form-label mb-1">Filtro</label>
+                                <select class="form-select form-select-sm" wire:model.live="filterType">
+                                    <option value="1">A</option>
+                                    <option value="2">Motivo</option>
+                                    <option value="3">Usuario</option>
+                                    <option value="4">Respons.</option>
+                                </select>
+                            </div>
 
+                            <!-- Fecha Inicio -->
+                            <div class="flex-shrink-0" style="min-width: 180px;">
+                                <label class="form-label mb-1">Fecha Inicio</label>
+                                <input type="date" class="form-control form-control-sm" wire:model="date_start">
+                            </div>
 
+                            <!-- Fecha Fin -->
+                            <div class="flex-shrink-0" style="min-width: 180px;">
+                                <label class="form-label mb-1">Fecha Fin</label>
+                                <input type="date" class="form-control form-control-sm" wire:model="date_end">
+                            </div>
+
+                        </div>
                     </div>
 
-                    <div class="col-md-2 col-6">
-                        <label class="form-label">Filtro</label>
-                        <select class="form-select" wire:model.live="filterType">
-                            <option value="1">A</option>
-                            <option value="2">Motivo</option>
-                            <option value="3">Usuario</option>
-                            <option value="4">Respons.</option>
-                        </select>
-                    </div>
+                    {{-- Fila 2: Botones --}}
+                    <div class="col-12">
+                        <div class="d-flex flex-wrap gap-2 justify-content-start py-1">
 
-                    <div class="col-md-3 col-4">
-                        <label class="form-label">Fecha Inicio</label>
-                        <input type="date" class="form-control" wire:model="date_start">
-                    </div>
+                            <button class="btn btn-sm btn-primary flex-shrink-0" wire:click="applyDate">
+                                <i class="ti ti-search f-s-12"></i> Buscar
+                            </button>
 
-                    <div class="col-md-3 col-4">
-                        <label class="form-label">Fecha Fin</label>
-                        <input type="date" class="form-control" wire:model="date_end">
-                    </div>
+                            <button class="btn btn-sm btn-primary flex-shrink-0" wire:click="export">
+                                <i class="ti ti-file-analytics f-s-12"></i> Exportar
+                            </button>
 
+                            <button class="btn btn-sm btn-primary flex-shrink-0" wire:click="openCreateModal">
+                                <i class="ti ti-square-plus f-s-12"></i> Nuevo
+                            </button>
 
+                            <button id="down" type="button" class="btn btn-sm btn-primary flex-shrink-0">
+                                <i class="ti ti-square-chevrons-down f-s-12"></i>
+                            </button>
 
-                    <div class="col-md-3 col-4 d-flex align-items-end">
-                        <button class="btn btn-sm btn-primary w-100" wire:click="applyDate">
-                            <i class="ti ti-search f-s-12"></i> Buscar
-                        </button>
-                    </div>
-                    <div class="col-md-3 col-4 d-flex align-items-end">
-                        <button class="btn btn-sm btn-primary w-100" wire:click="export">
-                            <i class="ti ti-file-analytics f-s-12"></i> Exportar
-                        </button>
-                    </div>
-                    <div class="col-md-3 col-4 d-flex align-items-end">
-                        <button class="btn btn-sm btn-primary w-100" wire:click="openCreateModal">
-                            <i class="ti ti-square-plus f-s-12"></i> Nuevo
-                        </button>
-                    </div>
-                    <div class="col-md-3 col-4 d-flex align-items-end">
-                        <button id="down" class="btn btn-sm btn-primary w-100" type="button">
-                            <i class="ti ti-square-chevrons-down f-s-12"></i>
-                        </button>
+                        </div>
                     </div>
                 </div>
+
             </div>
             <div class="card-body">
                 <div class="table-responsive">

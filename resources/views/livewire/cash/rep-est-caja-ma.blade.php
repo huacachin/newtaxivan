@@ -54,38 +54,51 @@
     <div class="row">
         <div class="card">
             <div class="card-header">
-                <div class="row">
-                    <div class="col-md-4 col-6">
-                        <label>Mes</label>
-                        <select wire:model.live="month" class="form-select">
-                            @for ($m=1; $m<=12; $m++)
-                                <option value="{{ $m }}">{{ \App\Livewire\Cash\RepEstCajaMa::monthName($m) }}</option>
-                            @endfor
-                        </select>
-                    </div>
-                    <div class="col-md-3 col-6">
-                        <label>Año</label>
-                        <select wire:model.live="year" class="form-select">
-                            @for ($y = 2015; $y <= 2030; $y++)
-                                <option value="{{ $y }}">{{ $y }}</option>
-                            @endfor
-                        </select>
-                    </div>
-                    <div class="col-md-3 col-6">
-                        <label>Sede</label>
-                        <select wire:model.live="headquarterId" class="form-select">
-                            <option value="">Todas</option>
-                            @foreach ($headquarters as $hq)
-                                <option value="{{ $hq['id'] }}">{{ $hq['name'] }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-2 col-6 d-flex align-items-end">
-                        <button class="btn btn-sm btn-primary w-100" wire:click="export">
-                            <i class="ti ti-file-analytics f-s-16"></i> Exportar
-                        </button>
+                <div class="row mt-2">
+                    <div class="col-12">
+                        <div class="d-flex flex-wrap align-items-end gap-2 overflow-auto py-1">
+
+                            <!-- Mes -->
+                            <div class="flex-shrink-0" style="min-width: 200px;">
+                                <label class="form-label mb-1">Mes</label>
+                                <select wire:model.live="month" class="form-select form-select-sm">
+                                    @for ($m=1; $m<=12; $m++)
+                                        <option value="{{ $m }}">{{ \App\Livewire\Cash\RepEstCajaMa::monthName($m) }}</option>
+                                    @endfor
+                                </select>
+                            </div>
+
+                            <!-- Año -->
+                            <div class="flex-shrink-0" style="min-width: 140px;">
+                                <label class="form-label mb-1">Año</label>
+                                <select wire:model.live="year" class="form-select form-select-sm">
+                                    @for ($y = 2015; $y <= 2030; $y++)
+                                        <option value="{{ $y }}">{{ $y }}</option>
+                                    @endfor
+                                </select>
+                            </div>
+
+                            <!-- Sede -->
+                            <div class="flex-shrink-0" style="min-width: 220px;">
+                                <label class="form-label mb-1">Sede</label>
+                                <select wire:model.live="headquarterId" class="form-select form-select-sm">
+                                    <option value="">Todas</option>
+                                    @foreach ($headquarters as $hq)
+                                        <option value="{{ $hq['id'] }}">{{ $hq['name'] }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <!-- Exportar -->
+                            <button class="btn btn-sm btn-primary flex-shrink-0 align-self-end"
+                                    wire:click="export">
+                                <i class="ti ti-file-analytics f-s-12"></i> Exportar
+                            </button>
+
+                        </div>
                     </div>
                 </div>
+
 
             </div>
             <div class="card-body">

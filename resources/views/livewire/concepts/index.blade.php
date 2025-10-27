@@ -62,21 +62,29 @@
                 <div class="card-header">
                     <h5>LISTADO DE CONCEPTOS</h5>
 
-                    <div class="row g-3 align-items-end mt-2">
-                        <div class="col-md-10 col-6">
+                    <div class="row mt-2">
+                        <div class="col-12">
+                            <div class="d-flex flex-wrap align-items-end gap-2 overflow-auto py-1">
 
+                                <!-- Input con ancho fijo (ajusta a gusto) -->
+                                <div class="flex-shrink-0" style="width: 260px;">
+                                    <input type="search"
+                                           class="form-control form-control-sm"
+                                           placeholder="Buscar..."
+                                           aria-label="Buscar"
+                                           wire:model.live="search">
+                                </div>
 
-                            <input type="search" class="form-control" placeholder="Buscar..."
-                                   aria-label="Buscar" wire:model.live="search">
+                                <!-- Botón a la derecha (ancho intrínseco) -->
+                                <button class="btn btn-sm btn-primary flex-shrink-0"
+                                        wire:click="openAddModal">
+                                    <i class="ti ti-square-plus f-s-12"></i> Nuevo
+                                </button>
 
-
-                        </div>
-                        <div class="col-md-2 col-6 d-flex justify-content-md-end">
-                            <button class="btn btn-sm btn-primary w-100" wire:click="openAddModal">
-                                <i class="ti ti-square-plus f-s-12"></i> Nuevo
-                            </button>
+                            </div>
                         </div>
                     </div>
+
                 </div>
                 <div class="card-body pb-2">
                     <div class="table-responsive tableFixHead">

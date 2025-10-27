@@ -67,47 +67,58 @@
         <div class="col-xl-12">
             <div class="card">
                 <div class="card-header">
-                    <div class="row g-2 align-items-end">
-                        <div class=" col-md-4 col-4">
-                            <label class="form-label">Mes</label>
-                            <select class="form-select" wire:model.live="month">
-                                @foreach($months as $val => $label)
-                                    <option value="{{ $val }}">{{ $label }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                    <div class="row mt-2">
+                        <div class="col-12">
+                            <div class="d-flex flex-wrap align-items-end gap-2 overflow-auto py-1">
 
-                        <div class=" col-md-2 col-4">
-                            <label class="form-label">Año</label>
-                            <select class="form-select" wire:model.live="year">
-                                @foreach($years as $y)
-                                    <option value="{{ $y }}">{{ $y }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                                <!-- Mes -->
+                                <div class="flex-shrink-0" style="min-width: 180px;">
+                                    <label class="form-label mb-1">Mes</label>
+                                    <select class="form-select form-select-sm" wire:model.live="month">
+                                        @foreach($months as $val => $label)
+                                            <option value="{{ $val }}">{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
 
-                        <div class=" col-md-2 col-4">
-                            <label class="form-label">Condición</label>
-                            <select class="form-select" wire:model.live="condition">
-                                <option value="">Todas</option>
-                                <option value="DT">DT</option>
-                                <option value="GN">GN</option>
-                                <option value="EX">EX</option>
-                                <option value="EX5">EX5</option>
-                            </select>
-                        </div>
+                                <!-- Año -->
+                                <div class="flex-shrink-0" style="min-width: 120px;">
+                                    <label class="form-label mb-1">Año</label>
+                                    <select class="form-select form-select-sm" wire:model.live="year">
+                                        @foreach($years as $y)
+                                            <option value="{{ $y }}">{{ $y }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
 
-                        <div class=" col-md-2 col-6">
-                            <button class="btn btn-sm btn-primary w-100" wire:click="exportSummary">
-                                <i class="ti ti-file-analytics f-s-12"></i> Exportar
-                            </button>
-                        </div>
-                        <div class=" col-md-2 col-6">
-                            <button class="btn btn-sm btn-primary w-100" wire:click="exportDetail">
-                                <i class="ti ti-file-description f-s-12"></i> E. detalle
-                            </button>
+                                <!-- Condición -->
+                                <div class="flex-shrink-0" style="min-width: 140px;">
+                                    <label class="form-label mb-1">Condición</label>
+                                    <select class="form-select form-select-sm" wire:model.live="condition">
+                                        <option value="">Todas</option>
+                                        <option value="DT">DT</option>
+                                        <option value="GN">GN</option>
+                                        <option value="EX">EX</option>
+                                        <option value="EX5">EX5</option>
+                                    </select>
+                                </div>
+
+                                <!-- Exportar resumen -->
+                                <button class="btn btn-sm btn-primary flex-shrink-0 align-self-end"
+                                        wire:click="exportSummary">
+                                    <i class="ti ti-file-analytics f-s-12"></i> Exportar
+                                </button>
+
+                                <!-- Exportar detalle -->
+                                <button class="btn btn-sm btn-primary flex-shrink-0 align-self-end"
+                                        wire:click="exportDetail">
+                                    <i class="ti ti-file-description f-s-12"></i> E. detalle
+                                </button>
+
+                            </div>
                         </div>
                     </div>
+
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">

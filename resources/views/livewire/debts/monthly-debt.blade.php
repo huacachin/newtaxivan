@@ -85,51 +85,70 @@
         <div class="col-xl-12">
             <div class="card shadow-sm">
                 <div class="card-header">
-                    <div class="row g-2 align-items-end">
-                        <div class="col-md-2 col-4">
-                            <label class="form-label">Mes</label>
-                            <select class="form-select" wire:model.live="month">
-                                @foreach($months as $val => $label)
-                                    <option value="{{ $val }}">{{ $label }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-2 col-4">
-                            <label class="form-label">Año</label>
-                            <select class="form-select" wire:model.live="year">
-                                @foreach($years as $y)
-                                    <option value="{{ $y }}">{{ $y }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-3 col-4">
-                            <label class="form-label">Buscar placa</label>
-                            <input type="search" class="form-control" placeholder="ABC-123"
-                                   wire:model.live.debounce.750ms="search">
-                        </div>
-                        <div class="col-md-2 col-4">
-                            <label class="form-label">Condición</label>
-                            <select class="form-select" wire:model.live="condition">
-                                <option value="">Todas</option>
-                                <option value="DT">DT</option>
-                                <option value="GN">GN</option>
-                                <option value="EX">EX</option>
-                                <option value="EX5">EX5</option>
-                                <option value="Exonerado">Exonerado</option>
-                                <option value="Amortizado">Amortizado</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2 col-4">
-                            <button class="btn btn-sm btn-primary w-100" wire:click="export">
-                                <i class="ti ti-file-analytics f-s-12"></i> Exportar
-                            </button>
-                        </div>
-                        <div class="col-md-1 col-4">
-                            <button id="down" class="btn btn-sm btn-primary w-100" title="Ir al final">
-                                <i class="ti ti-square-chevrons-down f-s-12"></i>
-                            </button>
+                    <div class="row mt-2">
+                        <div class="col-12">
+                            <div class="d-flex flex-wrap align-items-end gap-2 overflow-auto py-1">
+
+                                <!-- Mes -->
+                                <div class="flex-shrink-0" style="min-width: 140px;">
+                                    <label class="form-label mb-1">Mes</label>
+                                    <select class="form-select form-select-sm" wire:model.live="month">
+                                        @foreach($months as $val => $label)
+                                            <option value="{{ $val }}">{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <!-- Año -->
+                                <div class="flex-shrink-0" style="min-width: 120px;">
+                                    <label class="form-label mb-1">Año</label>
+                                    <select class="form-select form-select-sm" wire:model.live="year">
+                                        @foreach($years as $y)
+                                            <option value="{{ $y }}">{{ $y }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <!-- Buscar placa -->
+                                <div class="flex-shrink-0" style="min-width: 200px;">
+                                    <label class="form-label mb-1">Buscar placa</label>
+                                    <input type="search"
+                                           class="form-control form-control-sm"
+                                           placeholder="ABC123"
+                                           wire:model.live.debounce.750ms="search">
+                                </div>
+
+                                <!-- Condición -->
+                                <div class="flex-shrink-0" style="min-width: 160px;">
+                                    <label class="form-label mb-1">Condición</label>
+                                    <select class="form-select form-select-sm" wire:model.live="condition">
+                                        <option value="">Todas</option>
+                                        <option value="DT">DT</option>
+                                        <option value="GN">GN</option>
+                                        <option value="EX">EX</option>
+                                        <option value="EX5">EX5</option>
+                                        <option value="Exonerado">Exonerado</option>
+                                        <option value="Amortizado">Amortizado</option>
+                                    </select>
+                                </div>
+
+                                <!-- Exportar -->
+                                <button class="btn btn-sm btn-primary flex-shrink-0 align-self-end"
+                                        wire:click="export">
+                                    <i class="ti ti-file-analytics f-s-12"></i> Exportar
+                                </button>
+
+                                <!-- Ir al final -->
+                                <button id="down"
+                                        class="btn btn-sm btn-primary flex-shrink-0 align-self-end"
+                                        title="Ir al final">
+                                    <i class="ti ti-square-chevrons-down f-s-12"></i>
+                                </button>
+
+                            </div>
                         </div>
                     </div>
+
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">

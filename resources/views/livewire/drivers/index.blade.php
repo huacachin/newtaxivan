@@ -57,41 +57,50 @@
             <div class="card">
                 <div class="card-header">
                     <h5>Total conductores: {{ $drivers->count() }}</h5>
-                    <div class="row g-2 align-items-end mt-2">
-                        <div class="col-md-3 col-6">
+                    <div class="row mt-2">
+                        <div class="col-12">
+                            <div class="d-flex flex-wrap align-items-end gap-2 overflow-auto py-1">
 
+                                <!-- Buscar -->
+                                <div class="flex-shrink-0" style="min-width: 200px;">
+                                    <input type="search"
+                                           class="form-control form-control-sm"
+                                           placeholder="Buscar..."
+                                           aria-label="Buscar"
+                                           wire:model.live="search">
+                                </div>
 
-                                    <input type="search" class="form-control" placeholder="Buscar..." aria-label="Buscar" wire:model.live="search">
+                                <!-- Filtro -->
+                                <div class="flex-shrink-0" style="min-width: 160px;">
+                                    <select class="form-select form-select-sm"
+                                            aria-label="Selecciona item a filtrar"
+                                            wire:model.live="filter">
+                                        <option value="plate">Placa</option>
+                                        <option value="name">Nombre</option>
+                                        <option value="code">Código</option>
+                                    </select>
+                                </div>
 
+                                <!-- Botones -->
+                                <button class="btn btn-sm btn-primary flex-shrink-0"
+                                        wire:click="openAddModal">
+                                    <i class="ti ti-square-plus f-s-12"></i> Nuevo
+                                </button>
 
-                        </div>
+                                <button class="btn btn-sm btn-primary flex-shrink-0"
+                                        wire:click="export">
+                                    <i class="ti ti-file-analytics f-s-12"></i> Exportar
+                                </button>
 
-                        <div class="col-md-3 col-6">
-                            <select class="form-select" aria-label="Selecciona item a filtrar" wire:model.live="filter">
-                                <option value="plate">Placa</option>
-                                <option value="name">Nombre</option>
-                                <option value="code">Código</option>
-                            </select>
-                        </div>
+                                <button id="down"
+                                        class="btn btn-sm btn-primary flex-shrink-0">
+                                    <i class="ti ti-square-chevrons-down f-s-12"></i>
+                                </button>
 
-                        <div class="col-md-2 col-4">
-                            <button class="btn btn-primary w-100" wire:click="openAddModal">
-                                <i class="ti ti-square-plus f-s-12"></i> Nuevo
-                            </button>
-                        </div>
-
-                        <div class="col-md-2 col-4">
-                            <button class="btn btn-primary w-100" wire:click="export">
-                                <i class="ti ti-file-analytics f-s-12"></i> Exportar
-                            </button>
-                        </div>
-
-                        <div class="col-md-2 col-4">
-                            <button id="down" class="btn btn-primary w-100">
-                                <i class="ti ti-square-chevrons-down f-s-12"></i>
-                            </button>
+                            </div>
                         </div>
                     </div>
+
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">

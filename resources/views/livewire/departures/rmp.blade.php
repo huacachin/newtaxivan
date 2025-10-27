@@ -67,34 +67,47 @@
             <div class="card shadow-sm">
                 <div class="card-header">
                     <h5 class="mb-0">Reporte mensual por paradero (V.T.)</h5>
-                    <div class="row g-3 mt-2">
-                        <div class="col-md-3 col-6">
-                            <label class="form-label">Mes</label>
-                            <select class="form-control form-control-sm" wire:model.live="month">
-                                @foreach($months as $mVal => $mName)
-                                    <option value="{{ $mVal }}">{{ $mName }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-3 col-6">
-                            <label class="form-label">Año</label>
-                            <select class="form-control form-control-sm" wire:model.live="year">
-                                @foreach($years as $y)
-                                    <option value="{{ $y }}">{{ $y }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-3 col-6 d-flex align-items-end">
-                            <a wire:click="export" class="btn btn-sm btn-primary w-100">
-                                <i class="ti ti-file-analytics f-s-12"></i> Exportar
-                            </a>
-                        </div>
-                        <div class="col-md-3 col-6 d-flex align-items-end">
-                            <a href="{{ route('departures.index') }}" class="btn btn-sm btn-primary w-100">
-                                <i class="ti ti-rotate-2 f-s-12"></i> Regresar
-                            </a>
+                    <div class="row mt-2">
+                        <div class="col-12">
+                            <div class="d-flex flex-nowrap align-items-end gap-2 overflow-auto py-1">
+
+                                <!-- Mes -->
+                                <div class="flex-shrink-0" style="min-width: 160px;">
+                                    <label class="form-label mb-1">Mes</label>
+                                    <select class="form-control form-control-sm" wire:model.live="month">
+                                        @foreach($months as $mVal => $mName)
+                                            <option value="{{ $mVal }}">{{ $mName }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <!-- Año -->
+                                <div class="flex-shrink-0" style="min-width: 120px;">
+                                    <label class="form-label mb-1">Año</label>
+                                    <select class="form-control form-control-sm" wire:model.live="year">
+                                        @foreach($years as $y)
+                                            <option value="{{ $y }}">{{ $y }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <!-- Exportar -->
+                                <a href="#"
+                                   wire:click.prevent="export"
+                                   class="btn btn-sm btn-primary flex-shrink-0 align-self-end">
+                                    <i class="ti ti-file-analytics f-s-12"></i> Exportar
+                                </a>
+
+                                <!-- Regresar -->
+                                <a href="{{ route('departures.index') }}"
+                                   class="btn btn-sm btn-primary flex-shrink-0 align-self-end">
+                                    <i class="ti ti-rotate-2 f-s-12"></i> Regresar
+                                </a>
+
+                            </div>
                         </div>
                     </div>
+
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">

@@ -1,7 +1,5 @@
 @push('styles')
     <style>
-
-
         table {
             border-collapse: collapse; /* opcional */
             width: 100%;
@@ -59,110 +57,131 @@
         <div class="col-xl-12">
             <div class="card">
                 <div class="card-header">
-                    <div class="row mb-2">
-                        @if($searchType != 3)
-                            {{-- Ajuste a col-4 para dejar espacio al botón Aplicar --}}
-                            <div class="col-md-3 col-6 mb-2 mb-md-0">
-                                <label class="form-label d-none d-lg-block">Buscar</label>
 
+                    {{-- ===== Fila 1: radios ===== --}}
+                    <div class="row g-2 mb-2">
+                        <div class="col-12">
+                            <div class="d-flex flex-wrap align-items-center gap-3">
+                                <span class="small text-muted">Filtrar por:</span>
 
-                                <input type="search" class="form-control form-control-sm " placeholder="Buscar..." aria-label="Buscar" wire:model.live="searchText">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input"
+                                           type="radio"
+                                           name="rbFilter"
+                                           id="rbPlate"
+                                           value="1"
+                                           wire:model.live="searchType">  {{-- sin .live ni wire:click --}}
+                                    <label class="form-check-label" for="rbPlate">Placa</label>
+                                </div>
 
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input"
+                                           type="radio"
+                                           name="rbFilter"
+                                           id="rbUser"
+                                           value="2"
+                                           wire:model.live="searchType">
+                                    <label class="form-check-label" for="rbUser">Usuario</label>
+                                </div>
 
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input"
+                                           type="radio"
+                                           name="rbFilter"
+                                           id="rbHQ"
+                                           value="3"
+                                           wire:model.live="searchType">
+                                    <label class="form-check-label" for="rbHQ">Sucursal</label>
+                                </div>
                             </div>
-                        @else
-                            <div class="col-md-3 col-6 mb-2 mb-md-0">
-                                <label class="form-label d-none d-lg-block">Selecciona una sucursal</label>
-                                <select class="form-control form-control-sm " aria-label="Selecciona item a filtrar"
-                                        wire:model.live="searchText">
+                        </div>
+                    </div>
+
+                    {{-- ===== Fila 2: search/select + fechas + botón ===== --}}
+                    <div class="row g-2 align-items-end mb-2">
+
+                        {{-- Campo dinámico: input o select (forzamos remount con wire:key) --}}
+                        <div class="col-auto" wire:key="search-field-{{ (int) $searchType }}">
+                            @if((int) $searchType !== 3)
+                                <label class="form-label d-none d-lg-block mb-1">Buscar</label>
+                                <input type="search"
+                                       class="form-control form-control-sm"
+                                       placeholder="@if($searchType==1) Buscar por placa... @elseif($searchType==2) Buscar por usuario... @else Buscar... @endif"
+                                       aria-label="Buscar"
+                                       wire:model.live="searchText">
+                            @else
+                                <label class="form-label d-none d-lg-block mb-1">Selecciona una sucursal</label>
+                                <select class="form-control form-control-sm"
+                                        aria-label="Selecciona sucursal"
+                                        wire:model.live="searchText"
+                                        wire:key="hq-select">
                                     <option value="">Todos</option>
                                     @foreach($headquarters as $h)
-                                        <option value="{{$h->id}}">{{$h->name}}</option>
+                                        <option value="{{ $h->id }}">{{ $h->name }}</option>
                                     @endforeach
                                 </select>
-                            </div>
-                        @endif
-
-
-                        <div class="col-md-3 col-6 mb-2 mb-md-0">
-                            <label class="form-label d-none d-lg-block">Filtro</label>
-                            <select class="form-control form-control-sm " aria-label="Selecciona item a filtrar"
-                                    wire:model.live="searchType">
-                                <option value="1">Placa</option>
-                                <option value="2">Usuario</option>
-                                <option value="3">Sucursal</option>
-                            </select>
+                            @endif
                         </div>
 
-
-                        <div class="col-md-2 col-5 mb-2 mb-md-0">
-                            <label class="form-label d-none d-lg-block">Fecha Inicio</label>
-                            {{-- UI sin disparar consulta: uiFromDate --}}
-                            <input type="date" class="form-control form-control-sm " wire:model.defer="uiFromDate">
-                        </div>
-                        <div class="col-md-2 col-5 mb-2 mb-md-0">
-                            <label class="form-label d-none d-lg-block">Fecha Fin</label>
-                            {{-- UI sin disparar consulta: uiToDate --}}
-                            <input type="date" class="form-control form-control-sm " wire:model.defer="uiToDate">
+                        {{-- Fecha Inicio --}}
+                        <div class="col-auto">
+                            <label class="form-label d-none d-lg-block mb-1">Fecha Inicio</label>
+                            <input type="date" class="form-control form-control-sm" wire:model.defer="uiFromDate">
                         </div>
 
-                        <div class="col-2 mb-2 mb-md-0 d-flex align-items-end justify-center">
-                            <button class="btn btn-primary btn-sm w-100"
+                        {{-- Fecha Fin --}}
+                        <div class="col-auto">
+                            <label class="form-label d-none d-lg-block mb-1">Fecha Fin</label>
+                            <input type="date" class="form-control form-control-sm" wire:model.defer="uiToDate">
+                        </div>
+
+                        {{-- Botón aplicar (pegado a los inputs) --}}
+                        <div class="col-auto d-flex align-items-end">
+                            <button class="btn btn-primary btn-sm"
                                     wire:click="applyDateRange"
                                     wire:loading.attr="disabled"
                                     wire:target="applyDateRange">
-                                <i  class="ti ti-search f-s-12"></i>
+                                <i class="ti ti-search f-s-12"></i>
                             </button>
                         </div>
-
                     </div>
-                    <div class="row g-2 mb-2 d-flex justify-content-end">
+
+                    {{-- ===== Acciones (dejas tu bloque actual) ===== --}}
+                    <div class="d-flex flex-wrap gap-2 justify-content-start mb-2">
                         @role('admin')
-                        <div class="col-lg-2 col-4">
-                            <button wire:click="reportMonthly" class="btn btn-sm btn-primary w-100 ">
-                                <i  class="ti ti-report-analytics f-s-12"></i> Mensual
-                            </button>
-                        </div>
-                        <div class="col-lg-2 col-4">
-                            <button wire:click="reportRmp" class="btn btn-sm btn-primary w-100 ">
-                                <i  class="ti ti-report-analytics f-s-12"></i> RMP V.T
-                            </button>
-                        </div>
-                        <div class="col-lg-2 col-4">
-                            <button wire:click="reportStats" class="btn btn-sm btn-primary w-100 ">
-                                <i  class="ti ti-report-analytics f-s-12"></i> Estadis.
-                            </button>
-                        </div>
+                        <button wire:click="reportMonthly" class="btn btn-sm btn-primary">
+                            <i class="ti ti-report-analytics f-s-12"></i> Mensual
+                        </button>
+                        <button wire:click="reportRmp" class="btn btn-sm btn-primary">
+                            <i class="ti ti-report-analytics f-s-12"></i> RMP V.T
+                        </button>
+                        <button wire:click="reportStats" class="btn btn-sm btn-primary">
+                            <i class="ti ti-report-analytics f-s-12"></i> Estadis.
+                        </button>
                         @endrole
-                        <div class="col-lg-2 col-4">
-                            <button class="btn btn-sm btn-primary w-100 " wire:click="export">
-                                <i  class="ti ti-file-analytics f-s-12"></i> Exportar
-                            </button>
-                        </div>
-                        <div class="col-lg-2 col-4">
-                            <button class="btn btn-sm btn-primary w-100 " wire:click="openAddWindow">
-                                <i  class="ti ti-square-plus f-s-12"></i> Nuevo
-                            </button>
-                        </div>
-                        <div class="col-lg-1 col-2">
-                            <button class="btn btn-sm btn-primary w-100" id="down">
-                                <i  class=" ti ti-square-chevrons-down f-s-12"></i>
-                            </button>
-                        </div>
-                        <div class="col-lg-1 col-2">
-                            <button
-                                class="btn btn-sm w-100  {{ $groupMode ? 'btn-success' : 'btn-primary' }}"
-                                wire:click="toggleGroup"
-                                aria-pressed="{{ $groupMode ? 'true' : 'false' }}"
-                                title="{{ $groupMode ? 'Agrupado: ON' : 'Agrupado: OFF' }}"
-                            >
-                                <i  class=" ti ti-a-b-2 f-s-12"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body">
 
+                        <button class="btn btn-sm btn-primary" wire:click="export">
+                            <i class="ti ti-file-analytics f-s-12"></i> Exportar
+                        </button>
+                        <button class="btn btn-sm btn-primary" wire:click="openAddWindow">
+                            <i class="ti ti-square-plus f-s-12"></i> Nuevo
+                        </button>
+                        <button class="btn btn-sm btn-primary" id="down" title="Bajar">
+                            <i class="ti ti-square-chevrons-down f-s-12"></i>
+                        </button>
+                        <button
+                            class="btn btn-sm {{ $groupMode ? 'btn-success' : 'btn-primary' }}"
+                            wire:click="toggleGroup"
+                            aria-pressed="{{ $groupMode ? 'true' : 'false' }}"
+                            title="{{ $groupMode ? 'Agrupado: ON' : 'Agrupado: OFF' }}"
+                        >
+                            <i class="ti ti-a-b-2 f-s-12"></i>
+                        </button>
+                    </div>
+
+                </div>
+
+                <div class="card-body">
 
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped table-hover  p-0"
@@ -331,7 +350,7 @@
                                     @if(!$groupMode)
                                         <td class="text-center ">
                                             <i  class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
-                                               wire:click="openEditWindow({{ $d->id }})"></i>
+                                                wire:click="openEditWindow({{ $d->id }})"></i>
                                         </td>
                                     @endif
 
