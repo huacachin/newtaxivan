@@ -109,13 +109,15 @@
                                 <i class="ti ti-search f-s-12"></i> Buscar
                             </button>
 
-                            <button class="btn btn-sm btn-primary flex-shrink-0" wire:click="export">
-                                <i class="ti ti-file-analytics f-s-12"></i> Exportar
-                            </button>
-
                             <button class="btn btn-sm btn-primary flex-shrink-0" wire:click="openCreateModal">
                                 <i class="ti ti-square-plus f-s-12"></i> Nuevo
                             </button>
+
+                            <button class="btn btn-sm btn-primary flex-shrink-0" wire:click="export">
+                                <i class="ti ti-file-analytics f-s-12"></i> Excel
+                            </button>
+
+
 
                             <button id="down" type="button" class="btn btn-sm btn-primary flex-shrink-0">
                                 <i class="ti ti-square-chevrons-down f-s-12"></i>

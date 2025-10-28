@@ -7,7 +7,7 @@
 
         [
             'id'    => 'dashboard-simple',
-            'title' => 'Dashboard',
+            'title' => 'Panel de control',
             'icon'  => 'ti ti-home',
             'route' => 'dashboard.index',
             'can'   => 'dashboard',

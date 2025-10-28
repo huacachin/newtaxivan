@@ -115,17 +115,19 @@
                                             <i class="ti ti-search f-s-12"></i> Buscar
                                         </button>
 
-                                        <!-- Exportar -->
-                                        <button class="btn btn-sm btn-primary flex-shrink-0"
-                                                wire:click="export">
-                                            <i class="ti ti-file-analytics f-s-12"></i> Exportar
-                                        </button>
-
                                         <!-- Nuevo -->
                                         <button class="btn btn-sm btn-primary flex-shrink-0"
                                                 wire:click="openAddModal">
                                             <i class="ti ti-square-plus f-s-12"></i> Nuevo
                                         </button>
+
+                                        <!-- Exportar -->
+                                        <button class="btn btn-sm btn-primary flex-shrink-0"
+                                                wire:click="export">
+                                            <i class="ti ti-file-analytics f-s-12"></i> Excel
+                                        </button>
+
+
 
                                         <!-- Descargar último -->
                                         <button id="down"

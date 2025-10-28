@@ -60,59 +60,60 @@
                 <div class="card-header">
 
                     {{-- ===== Fila 1: radios de filtro ===== --}}
-                    <div class="row g-2 mb-2">
-                        <div class="col-12">
-                            <div class="d-flex flex-wrap align-items-center gap-3">
-                                <span class="small text-muted">Filtrar por:</span>
 
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input"
-                                           type="radio"
-                                           name="rbFilterPay"
-                                           id="rbPlatePay"
-                                           value="1"
-                                           wire:model="filter">
-                                    <label class="form-check-label" for="rbPlatePay">Placa</label>
-                                </div>
-
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input"
-                                           type="radio"
-                                           name="rbFilterPay"
-                                           id="rbUserPay"
-                                           value="2"
-                                           wire:model="filter">
-                                    <label class="form-check-label" for="rbUserPay">Usuario</label>
-                                </div>
-
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input"
-                                           type="radio"
-                                           name="rbFilterPay"
-                                           id="rbSeriePay"
-                                           value="3"
-                                           wire:model="filter">
-                                    <label class="form-check-label" for="rbSeriePay">Serie</label>
-                                </div>
-
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input"
-                                           type="radio"
-                                           name="rbFilterPay"
-                                           id="rbMixedPay"
-                                           value=""
-                                           wire:model="filter">
-                                    <label class="form-check-label" for="rbMixedPay">Todos</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
                     {{-- ===== Fila 2: Buscar + Fechas + Sucursal + Tipo + Aplicar ===== --}}
                     <div class="row g-2 align-items-end flex-wrap mb-2">
 
                         <div class="col-auto">
-                            <label class="form-label mb-1">Buscar</label>
+                            <div class="row g-2 mb-2">
+                                <div class="col-12">
+                                    <div class="d-flex flex-wrap align-items-center f-s-11">
+                                        <span class="small text-muted">Buscar:</span>
+
+                                        <div class="form-check form-check-inline ">
+                                            <input class="form-check-input"
+                                                   type="radio"
+                                                   name="rbFilterPay"
+                                                   id="rbPlatePay"
+                                                   value="1"
+                                                   wire:model="filter">
+                                            <label class="form-check-label" for="rbPlatePay">Placa</label>
+                                        </div>
+
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input"
+                                                   type="radio"
+                                                   name="rbFilterPay"
+                                                   id="rbUserPay"
+                                                   value="2"
+                                                   wire:model="filter">
+                                            <label class="form-check-label" for="rbUserPay">Usuario</label>
+                                        </div>
+
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input"
+                                                   type="radio"
+                                                   name="rbFilterPay"
+                                                   id="rbSeriePay"
+                                                   value="3"
+                                                   wire:model="filter">
+                                            <label class="form-check-label" for="rbSeriePay">Serie</label>
+                                        </div>
+
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input"
+                                                   type="radio"
+                                                   name="rbFilterPay"
+                                                   id="rbMixedPay"
+                                                   value=""
+                                                   wire:model="filter">
+                                            <label class="form-check-label" for="rbMixedPay">Todos</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <input type="search"
                                    class="form-control form-control-sm"
                                    placeholder="@switch($filter)
@@ -174,6 +175,9 @@
                     <div class="row g-2 mt-2">
                         <div class="col-12">
                             <div class="d-flex flex-wrap gap-2">
+                                <button class="btn btn-sm btn-primary" wire:click="openAddWindow">
+                                    <i class="ti ti-square-plus f-s-12"></i> Nuevo
+                                </button>
                                 @role('admin')
                                 <button class="btn btn-sm btn-primary" wire:click="daily">
                                     <i class="ti ti-report-analytics f-s-12"></i> Diario
@@ -189,9 +193,7 @@
                                 </button>
                                 @endrole
 
-                                <button class="btn btn-sm btn-primary" wire:click="openAddWindow">
-                                    <i class="ti ti-square-plus f-s-12"></i> Nuevo
-                                </button>
+
                                 <button class="btn btn-sm btn-primary" id="down">
                                     <i class="ti ti-square-chevrons-down f-s-12"></i>
                                 </button>

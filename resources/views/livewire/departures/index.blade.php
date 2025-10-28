@@ -59,58 +59,57 @@
                 <div class="card-header">
 
                     {{-- ===== Fila 1: radios ===== --}}
-                    <div class="row g-2 mb-2">
-                        <div class="col-12">
-                            <div class="d-flex flex-wrap align-items-center gap-3">
-                                <span class="small text-muted">Filtrar por:</span>
 
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input"
-                                           type="radio"
-                                           name="rbFilter"
-                                           id="rbPlate"
-                                           value="1"
-                                           wire:model.live="searchType">  {{-- sin .live ni wire:click --}}
-                                    <label class="form-check-label" for="rbPlate">Placa</label>
-                                </div>
-
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input"
-                                           type="radio"
-                                           name="rbFilter"
-                                           id="rbUser"
-                                           value="2"
-                                           wire:model.live="searchType">
-                                    <label class="form-check-label" for="rbUser">Usuario</label>
-                                </div>
-
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input"
-                                           type="radio"
-                                           name="rbFilter"
-                                           id="rbHQ"
-                                           value="3"
-                                           wire:model.live="searchType">
-                                    <label class="form-check-label" for="rbHQ">Sucursal</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
                     {{-- ===== Fila 2: search/select + fechas + botón ===== --}}
                     <div class="row g-2 align-items-end mb-2">
 
                         {{-- Campo dinámico: input o select (forzamos remount con wire:key) --}}
                         <div class="col-auto" wire:key="search-field-{{ (int) $searchType }}">
+                            <div class="row g-2 mb-2">
+                                <div class="col-12 f-s-11">
+                                    <div class="d-flex flex-wrap align-items-center gap-3">
+                                        <span class="small text-muted">Buscar:</span>
+
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input"
+                                                   type="radio"
+                                                   name="rbFilter"
+                                                   id="rbPlate"
+                                                   value="1"
+                                                   wire:model.live="searchType">  {{-- sin .live ni wire:click --}}
+                                            <label class="form-check-label" for="rbPlate">Placa</label>
+                                        </div>
+
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input"
+                                                   type="radio"
+                                                   name="rbFilter"
+                                                   id="rbUser"
+                                                   value="2"
+                                                   wire:model.live="searchType">
+                                            <label class="form-check-label" for="rbUser">Usuario</label>
+                                        </div>
+
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input"
+                                                   type="radio"
+                                                   name="rbFilter"
+                                                   id="rbHQ"
+                                                   value="3"
+                                                   wire:model.live="searchType">
+                                            <label class="form-check-label" for="rbHQ">Sucursal</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             @if((int) $searchType !== 3)
-                                <label class="form-label d-none d-lg-block mb-1">Buscar</label>
                                 <input type="search"
                                        class="form-control form-control-sm"
                                        placeholder="@if($searchType==1) Buscar por placa... @elseif($searchType==2) Buscar por usuario... @else Buscar... @endif"
                                        aria-label="Buscar"
                                        wire:model.live="searchText">
                             @else
-                                <label class="form-label d-none d-lg-block mb-1">Selecciona una sucursal</label>
                                 <select class="form-control form-control-sm"
                                         aria-label="Selecciona sucursal"
                                         wire:model.live="searchText"
@@ -148,6 +147,9 @@
 
                     {{-- ===== Acciones (dejas tu bloque actual) ===== --}}
                     <div class="d-flex flex-wrap gap-2 justify-content-start mb-2">
+                        <button class="btn btn-sm btn-primary" wire:click="openAddWindow">
+                            <i class="ti ti-square-plus f-s-12"></i> Nuevo
+                        </button>
                         @role('admin')
                         <button wire:click="reportMonthly" class="btn btn-sm btn-primary">
                             <i class="ti ti-report-analytics f-s-12"></i> Mensual
@@ -163,9 +165,7 @@
                         <button class="btn btn-sm btn-primary" wire:click="export">
                             <i class="ti ti-file-analytics f-s-12"></i> Exportar
                         </button>
-                        <button class="btn btn-sm btn-primary" wire:click="openAddWindow">
-                            <i class="ti ti-square-plus f-s-12"></i> Nuevo
-                        </button>
+
                         <button class="btn btn-sm btn-primary" id="down" title="Bajar">
                             <i class="ti ti-square-chevrons-down f-s-12"></i>
                         </button>
