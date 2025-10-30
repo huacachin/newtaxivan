@@ -189,7 +189,7 @@
                                     <i class="ti ti-report-analytics f-s-12"></i> Estadis.
                                 </button>
                                 <button class="btn btn-sm btn-primary" wire:click="export">
-                                    <i class="ti ti-file-analytics f-s-12"></i> Exportar
+                                    <i class="ti ti-file-analytics f-s-12"></i>
                                 </button>
                                 @endrole
 

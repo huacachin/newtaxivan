@@ -47,7 +47,7 @@
                                 <input id="dep_plate"
                                        type="text"
                                        class="form-control form-control-sm"
-                                       placeholder="ABC-123"
+                                       placeholder="ABC123"
                                        wire:model.defer="plate"
                                        style="text-transform: uppercase;"
                                        autocapitalize="characters"
@@ -79,7 +79,7 @@
 
                         <div class="col-md-4 col-6">
                             <div class="mb-3">
-                                <label class="form-label">Precio (S/)</label>
+                                <label class="form-label">Salida (S/)</label>
                                 <input type="number" step="0.01" min="1" class="form-control form-control-sm"
                                        wire:model.defer="price" inputmode="decimal">
                                 @error('price') <span class="text-danger">{{ $message }}</span> @enderror

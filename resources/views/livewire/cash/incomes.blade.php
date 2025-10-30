@@ -72,23 +72,49 @@
 
                                         <!-- Buscar -->
                                         <div class="flex-shrink-0" style="min-width: 220px;">
-                                            <label class="form-label mb-1">Buscar</label>
+                                            <div class="row g-2 mb-2">
+                                                <div class="col-12 f-s-11">
+                                                    <div class="d-flex flex-wrap align-items-center gap-3">
+                                                        <span class="small text-muted">Buscar:</span>
+
+                                                        <div class="form-check form-check-inline">
+                                                            <input class="form-check-input"
+                                                                   type="radio"
+                                                                   name="rbFilter"
+                                                                   id="rbPlate"
+                                                                   value="1"
+                                                                   wire:model.live="filterType">  {{-- sin .live ni wire:click --}}
+                                                            <label class="form-check-label" for="rbPlate">A</label>
+                                                        </div>
+
+                                                        <div class="form-check form-check-inline">
+                                                            <input class="form-check-input"
+                                                                   type="radio"
+                                                                   name="rbFilter"
+                                                                   id="rbUser"
+                                                                   value="2"
+                                                                   wire:model.live="filterType">
+                                                            <label class="form-check-label" for="rbUser">Motivo</label>
+                                                        </div>
+
+                                                        <div class="form-check form-check-inline">
+                                                            <input class="form-check-input"
+                                                                   type="radio"
+                                                                   name="rbFilter"
+                                                                   id="rbHQ"
+                                                                   value="3"
+                                                                   wire:model.live="filterType">
+                                                            <label class="form-check-label" for="rbHQ">Usuario</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                             <input
                                                 type="search"
                                                 class="form-control form-control-sm"
                                                 placeholder="Buscar..."
                                                 aria-label="Buscar"
                                                 wire:model.live.debounce.400ms="search">
-                                        </div>
-
-                                        <!-- Filtro -->
-                                        <div class="flex-shrink-0" style="min-width: 160px;">
-                                            <label class="form-label mb-1">Filtro</label>
-                                            <select class="form-select form-select-sm" aria-label="Filtro" wire:model.live="filterType">
-                                                <option value="1">A</option>
-                                                <option value="2">Motivo</option>
-                                                <option value="3">Usuario</option>
-                                            </select>
                                         </div>
 
                                         <!-- Fecha Inicio -->

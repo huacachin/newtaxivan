@@ -63,14 +63,7 @@
                         <div class="col-12">
                             <div class="d-flex flex-wrap align-items-end gap-2 overflow-auto py-1">
 
-                                <!-- Buscar -->
-                                <div class="flex-shrink-0" style="min-width: 200px;">
-                                    <input type="search"
-                                           class="form-control form-control-sm"
-                                           placeholder="Buscar..."
-                                           aria-label="Buscar"
-                                           wire:model.live="search">
-                                </div>
+
 
                                 <!-- Filtro -->
                                 <div class="flex-shrink-0" style="min-width: 160px;">
@@ -83,6 +76,15 @@
                                     </select>
                                 </div>
 
+                                <!-- Buscar -->
+                                <div class="flex-shrink-0" style="min-width: 200px;">
+                                    <input type="search"
+                                           class="form-control form-control-sm"
+                                           placeholder="Buscar..."
+                                           aria-label="Buscar"
+                                           wire:model.live="search">
+                                </div>
+
                                 <!-- Botones -->
                                 <button class="btn btn-sm btn-primary flex-shrink-0"
                                         wire:click="openAddModal">
@@ -91,7 +93,7 @@
 
                                 <button class="btn btn-sm btn-primary flex-shrink-0"
                                         wire:click="export">
-                                    <i class="ti ti-file-analytics f-s-12"></i> Exportar
+                                    <i class="ti ti-file-analytics f-s-12"></i>
                                 </button>
 
                                 <button id="down"

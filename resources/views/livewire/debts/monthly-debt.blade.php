@@ -89,6 +89,15 @@
                         <div class="col-12">
                             <div class="d-flex flex-wrap align-items-end gap-2 overflow-auto py-1">
 
+                                <!-- Buscar placa -->
+                                <div class="flex-shrink-0" style="min-width: 200px;">
+                                    <label class="form-label mb-1">Buscar placa</label>
+                                    <input type="search"
+                                           class="form-control form-control-sm"
+                                           placeholder="ABC123"
+                                           wire:model.live.debounce.750ms="search">
+                                </div>
+
                                 <!-- Mes -->
                                 <div class="flex-shrink-0" style="min-width: 140px;">
                                     <label class="form-label mb-1">Mes</label>
@@ -109,14 +118,7 @@
                                     </select>
                                 </div>
 
-                                <!-- Buscar placa -->
-                                <div class="flex-shrink-0" style="min-width: 200px;">
-                                    <label class="form-label mb-1">Buscar placa</label>
-                                    <input type="search"
-                                           class="form-control form-control-sm"
-                                           placeholder="ABC123"
-                                           wire:model.live.debounce.750ms="search">
-                                </div>
+
 
                                 <!-- Condición -->
                                 <div class="flex-shrink-0" style="min-width: 160px;">
@@ -135,7 +137,7 @@
                                 <!-- Exportar -->
                                 <button class="btn btn-sm btn-primary flex-shrink-0 align-self-end"
                                         wire:click="export">
-                                    <i class="ti ti-file-analytics f-s-12"></i> Exportar
+                                    <i class="ti ti-file-analytics f-s-12"></i>
                                 </button>
 
                                 <!-- Ir al final -->
