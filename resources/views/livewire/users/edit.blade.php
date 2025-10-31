@@ -150,10 +150,10 @@
                     <div class="perm-col-controls">
                         <div class="perm-chips">
                             @forelse($roles as $r)
-                                <label class="chip-radio" title="{{ $r->name }}">
+                                <label class="chip-radio" title="{{ __('roles.'.$r->name) }}">
                                     <input type="radio" class="form-check-input"
                                            name="role_single_edit" value="{{ $r->id }}" wire:model="selectedRoleId">
-                                    <span>{{ $r->name }}</span>
+                                    <span>{{ __('roles.'.$r->name) }}</span>
                                 </label>
                             @empty
                                 <span class="text-warning small">No hay roles definidos.</span>

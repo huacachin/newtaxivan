@@ -40,10 +40,10 @@
                 <div class="perm-col-controls">
                     <div class="perm-chips">
                         @forelse($roles as $r)
-                            <label class="chip-radio" title="{{ $r->name }}">
+                            <label class="chip-radio" title="{{ __('roles.'.$r->name) }}">
                                 <input type="radio" class="form-check-input" name="role_single_perms"
                                        value="{{ $r->id }}" wire:model="selectedRoleId">
-                                <span>{{ $r->name }}</span>
+                                <span>{{ __('roles.'.$r->name) }}</span>
                             </label>
                         @empty
                             <span class="text-warning small">No hay roles definidos.</span>
@@ -77,7 +77,7 @@
                     @else
                         <div class="perm-row">
                             <div class="perm-col-title d-flex align-items-center gap-2">
-                                <span>{{ $group['title'] }}</span>
+                                <span>{{ __('perms.'.$group['title']) }}</span>
                                 <a href="javascript:void(0)" class="action-icon" wire:click="selectGroup('{{ $groupKey }}')" title="Marcar todo">
                                     <i class="ti ti-square-check"></i>
                                 </a>
