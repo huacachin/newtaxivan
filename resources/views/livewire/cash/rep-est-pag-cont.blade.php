@@ -55,8 +55,9 @@
     <div class="row">
         <div class="col-md-12">
            <div class="card">
-               <div class="card-header">
-                   <div class="row d-flex justify-content-end">
+
+               <div class="card-body">
+                   <div class="row my-2 d-flex justify-content-end">
                        <div class="col-12 d-flex justify-content-end">
 
                            <select id="year" class="form-select w-80 mg-e-10" wire:model.live="year">
@@ -76,8 +77,6 @@
 
 
                    </div>
-               </div>
-               <div class="card-body">
                  <div class="table-responsive">
                      <table class="table table-bordered table-striped">
                          <thead class="bg-primary">

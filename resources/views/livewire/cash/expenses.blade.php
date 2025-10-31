@@ -58,8 +58,9 @@
     {{-- Tabla --}}
     <div class="col-xl-12">
         <div class="card">
-            <div class="card-header">
-                <div class="row g-2">
+
+            <div class="card-body">
+                <div class="row my-2 g-2">
                     {{-- Fila 1: Inputs --}}
                     <div class="col-12">
                         <div class="d-flex flex-wrap align-items-end gap-2 py-1">
@@ -72,7 +73,7 @@
                                             <span class="small text-muted">Buscar:</span>
 
                                             <div class="form-check form-check-inline">
-                                                <input class="form-check-input"
+                                                <input class="form-check-input mg-e-4"
                                                        type="radio"
                                                        name="rbFilter"
                                                        id="rbA"
@@ -82,7 +83,7 @@
                                             </div>
 
                                             <div class="form-check form-check-inline">
-                                                <input class="form-check-input"
+                                                <input class="form-check-input mg-e-4"
                                                        type="radio"
                                                        name="rbFilter"
                                                        id="rbMotive"
@@ -92,7 +93,7 @@
                                             </div>
 
                                             <div class="form-check form-check-inline">
-                                                <input class="form-check-input"
+                                                <input class="form-check-input mg-e-4"
                                                        type="radio"
                                                        name="rbFilter"
                                                        id="rbUser"
@@ -102,7 +103,7 @@
                                             </div>
 
                                             <div class="form-check form-check-inline">
-                                                <input class="form-check-input"
+                                                <input class="form-check-input mg-e-4"
                                                        type="radio"
                                                        name="rbFilter"
                                                        id="rbRespons"
@@ -161,9 +162,6 @@
                         </div>
                     </div>
                 </div>
-
-            </div>
-            <div class="card-body">
                 <div class="table-responsive">
 
                     <table class="table table-bordered table-striped table-hover">

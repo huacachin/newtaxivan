@@ -56,7 +56,8 @@
         <!-- Tabla principal -->
         <div class="col-xl-12">
             <div class="card">
-                <div class="card-header">
+
+                <div class="card-body">
 
                     {{-- ===== Fila 1: radios ===== --}}
 
@@ -72,7 +73,7 @@
                                         <span class="small text-muted">Buscar:</span>
 
                                         <div class="form-check form-check-inline">
-                                            <input class="form-check-input"
+                                            <input class="form-check-input mg-e-4"
                                                    type="radio"
                                                    name="rbFilter"
                                                    id="rbPlate"
@@ -82,7 +83,7 @@
                                         </div>
 
                                         <div class="form-check form-check-inline">
-                                            <input class="form-check-input"
+                                            <input class="form-check-input mg-e-4"
                                                    type="radio"
                                                    name="rbFilter"
                                                    id="rbUser"
@@ -92,7 +93,7 @@
                                         </div>
 
                                         <div class="form-check form-check-inline">
-                                            <input class="form-check-input"
+                                            <input class="form-check-input mg-e-4"
                                                    type="radio"
                                                    name="rbFilter"
                                                    id="rbHQ"
@@ -178,10 +179,6 @@
                             <i class="ti ti-a-b-2 f-s-12"></i>
                         </button>
                     </div>
-
-                </div>
-
-                <div class="card-body">
 
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped table-hover  p-0"
@@ -309,10 +306,9 @@
         <!-- Vehículos de apoyo + TOTAL GENERAL dentro del mismo card -->
         <div class="col-xl-12">
             <div class="card">
-                <div class="card-header">
-                    <h5>Vehículos de apoyo</h5>
-                </div>
+
                 <div class="card-body">
+                    <h5 class="my-2">Vehículos de apoyo</h5>
                     <div class="table-responsive mb-3">
                         <table class=" table table-bordered   p-0">
                             <thead class="text-center bg-primary">

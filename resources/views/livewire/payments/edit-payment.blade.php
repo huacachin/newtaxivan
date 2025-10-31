@@ -45,7 +45,7 @@
                         <div class="col-md-4 col-6">
                             <div class="mb-3">
                                 <label for="pay_plate_edit" class="form-label">Placa</label>
-                                <input id="pay_plate_edit" type="text" class="form-control form-control-sm" placeholder="ABC-123"
+                                <input id="pay_plate_edit" type="text" class="form-control form-control-sm" placeholder="ABC123"
                                        wire:model.live.debounce.300ms="plate"
                                        style="text-transform: uppercase;"
                                        autocapitalize="characters"

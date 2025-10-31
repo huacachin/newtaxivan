@@ -44,15 +44,16 @@
         <!-- Tabla -->
         <div class="col-xl-12">
             <div class="card shadow-sm">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0" style="color:#e11d48;">COSTO POR PLACA</h5>
-                    @role('admin')
+
+                <div class="card-body pb-2">
+                    <div class="my-2 d-flex align-items-center justify-content-between">
+                        <h5 class="mb-0" style="color:#e11d48;">COSTO POR PLACA</h5>
+                        @role('admin')
                         <button class="btn btn-sm btn-primary" wire:click="questionGenerate">
                             <i class="ti ti-square-rounded-plus f-s-12"></i> Generar
                         </button>
-                    @endrole
-                </div>
-                <div class="card-body pb-2">
+                        @endrole
+                    </div>
                     <div class="table-responsive tableFixHead">
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">

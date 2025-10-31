@@ -68,82 +68,80 @@
         <!-- Tabla -->
         <div class="col-xl-12">
             <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-1">Total vehículos: {{ $vehicles->count() }}</h5>
-                    <p class="mb-0">
-                        <strong>D2:</strong> {{ $vehicles->where('fuel','D2')->count() }} ·
-                        <strong>Gas:</strong> {{ $vehicles->where('fuel','GAS')->count() }} ·
-                        <strong>V.T:</strong> {{ $vehicles->whereIn('fuel', ['GAS','D2'])->count() }} ·
-                        <strong>V.Q.N.T:</strong> {{ $vehicles->whereNotIn('fuel', ['GAS','D2'])->count() }} ·
-                        <strong>Propietario:</strong> {{ $owners }} ·
-                        <strong>Conductor:</strong> {{ $drivers }}
-                    </p>
-                    <div class="row mt-2">
-                        <div class="col-12">
-                            <!-- Una sola fila: no-wrap + scroll horizontal -->
-                            <div class="d-flex flex-wrap align-items-end gap-2 overflow-auto py-1">
+                <div class="card-body">
+
+                        <h5 class="mb-1">Total vehículos: {{ $vehicles->count() }}</h5>
+                        <p class="mb-0">
+                            <strong>D2:</strong> {{ $vehicles->where('fuel','D2')->count() }} ·
+                            <strong>Gas:</strong> {{ $vehicles->where('fuel','GAS')->count() }} ·
+                            <strong>V.T:</strong> {{ $vehicles->whereIn('fuel', ['GAS','D2'])->count() }} ·
+                            <strong>V.Q.N.T:</strong> {{ $vehicles->whereNotIn('fuel', ['GAS','D2'])->count() }} ·
+                            <strong>Propietario:</strong> {{ $owners }} ·
+                            <strong>Conductor:</strong> {{ $drivers }}
+                        </p>
+                        <div class="row my-2">
+                            <div class="col-12">
+                                <!-- Una sola fila: no-wrap + scroll horizontal -->
+                                <div class="d-flex flex-wrap align-items-end gap-2 overflow-auto py-1">
 
 
 
-                                <!-- Estado -->
-                                <div class="flex-shrink-0" style="min-width: 160px;">
-                                    <select class="form-select form-select-sm"
-                                            aria-label="Estado del vehiculo"
-                                            wire:model.live="status">
-                                        <option value="active">Activo</option>
-                                        <option value="inactive">Cesado</option>
-                                    </select>
+                                    <!-- Estado -->
+                                    <div class="flex-shrink-0" style="min-width: 160px;">
+                                        <select class="form-select form-select-sm"
+                                                aria-label="Estado del vehiculo"
+                                                wire:model.live="status">
+                                            <option value="active">Activo</option>
+                                            <option value="inactive">Cesado</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Filtro -->
+                                    <div class="flex-shrink-0" style="min-width: 180px;">
+                                        <select class="form-select form-select-sm"
+                                                aria-label="Filtro"
+                                                wire:model.live="filter">
+                                            <option value="plate">Placa</option>
+                                            <option value="brand">Marca</option>
+                                            <option value="year">Año</option>
+                                            <option value="owner">Propietario</option>
+                                            <option value="driver">Conductor</option>
+                                            <option value="condition">Condición</option>
+                                            <option value="company">Empresa</option>
+                                            <option value="category">Categoría</option>
+                                            <option value="code">Código</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Buscar -->
+                                    <div class="flex-shrink-0" style="min-width: 180px;">
+                                        <input type="search"
+                                               class="form-control form-control-sm"
+                                               placeholder="Buscar..."
+                                               aria-label="Buscar"
+                                               wire:model.live="search">
+                                    </div>
+
+                                    <!-- Botones -->
+                                    <button class="btn btn-sm btn-primary flex-shrink-0"
+                                            wire:click="openAddModal">
+                                        <i class="ti ti-square-plus f-s-12"></i> Nuevo
+                                    </button>
+
+                                    <button class="btn btn-sm btn-primary flex-shrink-0"
+                                            wire:click="export">
+                                        <i class="ti ti-file-analytics f-s-12"></i>
+                                    </button>
+
+                                    <button id="down"
+                                            class="btn btn-sm btn-primary flex-shrink-0">
+                                        <i class="ti ti-square-chevrons-down f-s-12"></i>
+                                    </button>
+
                                 </div>
-
-                                <!-- Filtro -->
-                                <div class="flex-shrink-0" style="min-width: 180px;">
-                                    <select class="form-select form-select-sm"
-                                            aria-label="Filtro"
-                                            wire:model.live="filter">
-                                        <option value="plate">Placa</option>
-                                        <option value="brand">Marca</option>
-                                        <option value="year">Año</option>
-                                        <option value="owner">Propietario</option>
-                                        <option value="driver">Conductor</option>
-                                        <option value="condition">Condición</option>
-                                        <option value="company">Empresa</option>
-                                        <option value="category">Categoría</option>
-                                        <option value="code">Código</option>
-                                    </select>
-                                </div>
-
-                                <!-- Buscar -->
-                                <div class="flex-shrink-0" style="min-width: 180px;">
-                                    <input type="search"
-                                           class="form-control form-control-sm"
-                                           placeholder="Buscar..."
-                                           aria-label="Buscar"
-                                           wire:model.live="search">
-                                </div>
-
-                                <!-- Botones -->
-                                <button class="btn btn-sm btn-primary flex-shrink-0"
-                                        wire:click="openAddModal">
-                                    <i class="ti ti-square-plus f-s-12"></i> Nuevo
-                                </button>
-
-                                <button class="btn btn-sm btn-primary flex-shrink-0"
-                                        wire:click="export">
-                                    <i class="ti ti-file-analytics f-s-12"></i>
-                                </button>
-
-                                <button id="down"
-                                        class="btn btn-sm btn-primary flex-shrink-0">
-                                    <i class="ti ti-square-chevrons-down f-s-12"></i>
-                                </button>
-
                             </div>
                         </div>
-                    </div>
 
-                </div>
-
-                <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">

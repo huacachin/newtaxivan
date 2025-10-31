@@ -17,4 +17,16 @@ class UserController extends Controller
     {
         return view('users.index');
     }
+
+    public function create(){
+        return view('users.create');
+    }
+
+    public function edit($id){
+        return view('users.edit',compact('id'));
+    }
+
+    public function perms($id){
+        return view('users.perms',compact('id'));
+    }
 }

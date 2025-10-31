@@ -43,7 +43,10 @@ Route::middleware('auth')->group(function () {
     //Route::get('debts-departures-payments', [DspController::class,'index'])->name('settings.dsp.index');
 
     // Usuarios
-    Route::resource('users', UserController::class)->names('settings.users');
+    Route::get('users', [UserController::class,'index'])->name('settings.users.index');
+    Route::get('users/create', [UserController::class,'create'])->name('settings.users.create');
+    Route::get('users/{user}/edit', [UserController::class,'edit'])->name('settings.users.edit');
+    Route::get('users/{user}/perms', [UserController::class,'perms'])->name('settings.users.perms');
 
     // Conceptos
     Route::resource('concepts', ConceptController::class)->names('settings.concepts');

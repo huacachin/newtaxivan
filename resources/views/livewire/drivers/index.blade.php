@@ -55,9 +55,9 @@
         <!-- Tabla principal: Conductores -->
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
+                <div class="card-body">
                     <h5>Total conductores: {{ $drivers->count() }}</h5>
-                    <div class="row mt-2">
+                    <div class="row my-2">
                         <div class="col-12">
                             <div class="d-flex flex-wrap align-items-end gap-2 overflow-auto py-1">
 
@@ -102,9 +102,6 @@
                             </div>
                         </div>
                     </div>
-
-                </div>
-                <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">

@@ -83,9 +83,10 @@
 
         {{-- Tabla (estilo Payments) --}}
         <div class="col-xl-12">
-            <div class="card shadow-sm">
-                <div class="card-header">
-                    <div class="row mt-2">
+            <div class="card">
+
+                <div class="card-body">
+                    <div class="row my-2">
                         <div class="col-12">
                             <div class="d-flex flex-wrap align-items-end gap-2 overflow-auto py-1">
 
@@ -150,9 +151,6 @@
                             </div>
                         </div>
                     </div>
-
-                </div>
-                <div class="card-body">
                     <div class="table-responsive">
                         <div class="screen-overlay-local"
                              wire:loading.flex

@@ -341,37 +341,26 @@ class Index extends Component
         $this->dispatch('successAlert', ["message" => "Usuario actualizado correctamente"]);
     }
 
-    public function openAddModal()
+    public function openAddWindow(): void
     {
-        $this->resetValidation();
-        $this->resetForm();
-        $this->dispatch('open-modal', ["name" => "modalAddUser", "focus" => "name"]);
+
+        $route = route('settings.users.create');
+
+        $this->dispatch('url-open',["url" => $route]);
     }
 
-    public function openEditModal($id)
+    public function openEditWindow(int $id): void
     {
-        $this->resetValidation();
+        $route = route('settings.users.edit',["user" => $id]);
 
-        $user = User::with(['headquarters','roles','permissions'])->findOrFail($id);
+        $this->dispatch('url-open',["url" => $route]);
+    }
 
-        $this->userId          = $id;
-        $this->name            = $user->name;
-        $this->username        = $user->username;
-        $this->email           = $user->email;
-        $this->document_type   = $user->document_type;
-        $this->document_number = $user->document_number;
-        $this->phone           = $user->phone;
+    public function openPermsWindow(int $id): void
+    {
+        $route = route('settings.users.perms',["user" => $id]);
 
-        $this->selectedHeadquarters = $user->headquarters->pluck('id')->map(fn($v)=>(int)$v)->toArray();
-        $this->defaultHeadquarter   = optional($user->headquarters->firstWhere('pivot.is_default', true))->id
-            ?? $user->headquarter_id;
-
-        $this->selectedRoleId = $user->roles()->value('id');
-
-        // OJO: aquí NO llenamos selectedPermissionNames (eso es en el modal nuevo)
-        // y mantenemos intacto tu flujo original.
-
-        $this->dispatch('open-modal', ['name' => 'modalEditUser', 'focus' => 'name']);
+        $this->dispatch('url-open',["url" => $route]);
     }
 
     private function resetForm(): void

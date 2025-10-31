@@ -59,8 +59,9 @@
         {{-- Tabla principal --}}
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
-                    <div class="row g-2">
+
+                <div class="card-body lw-holder">
+                    <div class="row my-2">
                         <div class="col-6 d-flex align-items-end ">
                             <h5>REPORTE ESTADÍSTICO DRACO {{ $year }}</h5>
                         </div>
@@ -75,9 +76,6 @@
                             </button>
                         </div>
                     </div>
-                </div>
-                <div class="card-body lw-holder">
-
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped">
                             <thead class="bg-primary">
@@ -159,11 +157,9 @@
         {{-- Resumen por Sucursal (DRACO) + BASE + Total --}}
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
-                    <h6>Resumen por Sucursal</h6>
-                </div>
-                <div class="card-body">
 
+                <div class="card-body">
+                    <h6 class="my-2">Resumen por Sucursal</h6>
                     <div class="row table-responsive">
 
                            <div class="col-md-4 col-12">

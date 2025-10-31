@@ -34,7 +34,7 @@
                 Placa: {{ $plate }} —
                 {{ \Carbon\Carbon::create($year, $month, 1)->locale('es')->isoFormat('MMMM YYYY') }}
             </h4>
-            <small class="text-muted">Calendario de montos por día</small>
+
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -49,52 +49,36 @@
     </div>
 
     <div class="row table-section">
-        <!-- Acciones -->
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body pt-3">
-                    <div class="row g-3 align-items-end">
-                        <div class="col-md-7 col-6">
-                            <label class="form-label">Aplicar monto a todos los días</label>
 
-                                <input type="number" class="form-control" placeholder="0.00"
-                                       aria-label="Apply" step="0.01" min="0"
-                                       wire:model.live="bulk">
-                        </div>
-                        <div class="col-md-2 d-grid col-6">
-                            <button class="btn btn-sm btn-primary"
+
+        <!-- Calendario -->
+        <div class="col-xl-12">
+            <div class="card">
+
+                <div class="card-body pb-2">
+                    <div class="d-flex g-3 justify-content-between align-items-center my-2">
+                        <h5>Calendario</h5>
+                        <div class="d-flex">
+                            <input type="number" class="form-control form-control-sm mg-e-10" placeholder="0.00"
+                                   aria-label="Apply" step="0.01" min="0"
+                                   wire:model.live="bulk">
+                            <button class="btn btn-sm btn-primary w-100 mg-e-10"
                                     wire:click="fillAll"
                                     wire:loading.attr="disabled"
                                     wire:target="fillAll,saveAll">
-                                <i class="ti ti-circle-check-filled f-s-12"></i> Aplicar a todos
+                                <i class="ti ti-circle-check-filled f-s-12"></i> Aplicar
                             </button>
-                        </div>
-                        <div class="col-md-2 d-grid col-6">
-                            <button class="btn btn-sm btn-primary"
+                            <button class="btn btn-sm btn-primary w-100 mg-e-10"
                                     wire:click="saveAll"
                                     wire:loading.attr="disabled"
                                     wire:target="fillAll,saveAll">
                                 <i class="ti ti-device-floppy f-s-12"></i> Guardar
                             </button>
-                        </div>
-                        <div class="col-md-1 d-grid col-6">
                             <button class="btn btn-sm btn-primary" wire:click="goBack">
                                 <i class="ti ti-arrow-back-up f-s-12"></i>
                             </button>
                         </div>
                     </div>
-
-                </div>
-            </div>
-        </div>
-
-        <!-- Calendario -->
-        <div class="col-xl-12">
-            <div class="card shadow-sm">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5>Calendario</h5>
-                </div>
-                <div class="card-body pb-2">
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">

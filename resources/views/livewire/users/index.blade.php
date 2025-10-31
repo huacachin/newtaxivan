@@ -120,34 +120,34 @@
         <!-- Tabla -->
         <div class="col-xl-12">
             <div class="card shadow-sm">
-                <div class="card-header">
-                    <h5>LISTADO DE USUARIOS</h5>
-                    <div class="row mt-2">
-                        <div class="col-12">
-                            <div class="d-flex flex-nowrap align-items-end gap-2 overflow-auto py-1">
-
-                                <!-- Input con ancho controlado (no full width) -->
-                                <div class="flex-shrink-0" style="width: 260px;">
-                                    <input type="search"
-                                           class="form-control form-control-sm"
-                                           placeholder="Buscar..."
-                                           aria-label="Buscar"
-                                           wire:model.live="search">
-                                </div>
-
-                                <!-- Botón a la derecha -->
-                                <button class="btn btn-sm btn-primary flex-shrink-0"
-                                        wire:click="openAddModal">
-                                    <i class="ti ti-square-plus f-s-12"></i> Nuevo
-                                </button>
-
-                            </div>
-                        </div>
-                    </div>
 
 
-                </div>
                 <div class="card-body pb-2">
+
+                       <h5>LISTADO DE USUARIOS</h5>
+                       <div class="row my-2">
+                           <div class="col-12">
+                               <div class="d-flex flex-nowrap align-items-end gap-2 overflow-auto py-1">
+
+                                   <!-- Input con ancho controlado (no full width) -->
+                                   <div class="flex-shrink-0" style="width: 260px;">
+                                       <input type="search"
+                                              class="form-control form-control-sm"
+                                              placeholder="Buscar..."
+                                              aria-label="Buscar"
+                                              wire:model.live="search">
+                                   </div>
+
+                                   <!-- Botón a la derecha -->
+                                   <button class="btn btn-sm btn-primary flex-shrink-0"
+                                           wire:click="openAddWindow">
+                                       <i class="ti ti-square-plus f-s-12"></i> Nuevo
+                                   </button>
+
+                               </div>
+                           </div>
+                       </div>
+
                     <div class="table-responsive tableFixHead">
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">
@@ -187,14 +187,14 @@
                                             {{-- Editar datos --}}
                                             <button class="btn btn-sm btn-outline-success me-1"
                                                     title="Editar datos"
-                                                    wire:click="openEditModal({{ $user->id }})">
+                                                    wire:click="openEditWindow({{ $user->id }})">
                                                 <i class="ti ti-edit"></i>
                                             </button>
 
                                             {{-- Rol & Permisos (modal nuevo) --}}
                                             <button class="btn btn-sm btn-outline-dark"
                                                     title="Rol & Permisos"
-                                                    wire:click="openPermsModal({{ $user->id }})">
+                                                    wire:click="openPermsWindow({{ $user->id }})">
                                                 <i class="ti ti-shield-lock"></i>
                                             </button>
                                         </td>
@@ -223,379 +223,9 @@
         </div>
     </div>
 
-    {{-- MODAL: AGREGAR (FULLSCREEN, ULTRA-COMPACT + 2 columnas móvil) --}}
-    <div class="modal fade" id="modalAddUser" aria-hidden="true" tabindex="-1" data-bs-backdrop="static" wire:ignore.self>
-        <div class="modal-dialog modal-fullscreen">
-            <div class="modal-content">
-                <div class="modal-header py-2">
-                    <h6 class="modal-title mb-0">Agregar Usuario</h6>
-                    <button type="button" class="btn-close m-0" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-
-                <div class="modal-body p-2">
-                    <div class="perm-grid form-two-cols">
-                        {{-- Nombre --}}
-                        <div class="perm-row">
-                            <div class="perm-col-title">Nombre</div>
-                            <div class="perm-col-controls">
-                                <input id="name" type="text" class="form-control" placeholder="Ingresar nombre" wire:model.live="name">
-                                @error('name') <span class="text-danger small">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
-
-                        {{-- Usuario --}}
-                        <div class="perm-row">
-                            <div class="perm-col-title">Usuario</div>
-                            <div class="perm-col-controls">
-                                <input id="username" type="text" class="form-control" placeholder="Ingresar usuario" wire:model="username">
-                                @error('username') <span class="text-danger small">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
-
-                        {{-- Contraseña --}}
-                        <div class="perm-row">
-                            <div class="perm-col-title">Contraseña</div>
-                            <div class="perm-col-controls">
-                                <input id="pwd" type="text" class="form-control" placeholder="Ingresar contraseña" wire:model.live="pwd">
-                                @error('pwd') <span class="text-danger small">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
-
-                        {{-- Email --}}
-                        <div class="perm-row">
-                            <div class="perm-col-title">Email</div>
-                            <div class="perm-col-controls">
-                                <input id="email" type="email" class="form-control" placeholder="Ingresar email" wire:model="email">
-                                @error('email') <span class="text-danger small">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
-
-                        {{-- Tipo Documento --}}
-                        <div class="perm-row">
-                            <div class="perm-col-title">Tipo Documento</div>
-                            <div class="perm-col-controls">
-                                <select id="document_type" class="form-select" wire:model="document_type">
-                                    <option value="dni">DNI</option>
-                                    <option value="ruc">RUC</option>
-                                    <option value="ce">CE</option>
-                                </select>
-                                @error('document_type') <span class="text-danger small">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
-
-                        {{-- N° Documento --}}
-                        <div class="perm-row">
-                            <div class="perm-col-title">N° Documento</div>
-                            <div class="perm-col-controls">
-                                <input id="document_number" type="text" class="form-control" placeholder="Ingresar número" wire:model="document_number">
-                                @error('document_number') <span class="text-danger small">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
-
-                        {{-- Teléfono --}}
-                        <div class="perm-row">
-                            <div class="perm-col-title">Teléfono</div>
-                            <div class="perm-col-controls">
-                                <input id="phone" type="text" class="form-control" placeholder="Ingresar teléfono" wire:model="phone">
-                                @error('phone') <span class="text-danger small">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
-
-                        {{-- Sucursales (chips + primaria integrada) --}}
-                        <div class="perm-row span-2">
-                            <div class="perm-col-title">Sucursales</div>
-                            <div class="perm-col-controls">
-                                <div class="perm-chips">
-                                    @foreach($headquartes as $h)
-                                        @php
-                                            $isSelected = in_array($h->id, (array)$selectedHeadquarters, true);
-                                            $isDefault  = (int)$defaultHeadquarter === (int)$h->id;
-                                        @endphp
-                                        <label class="chip-hq {{ $isSelected ? 'is-selected' : '' }} {{ $isDefault ? 'is-default' : '' }}">
-                                            <input class="form-check-input" type="checkbox"
-                                                   value="{{ $h->id }}" wire:model="selectedHeadquarters">
-                                            <span>{{ $h->name }}</span>
-                                            <span class="hq-primary" title="Marcar como sede primaria">
-                                                <input class="form-check-input" type="radio"
-                                                       name="default_hq_add"
-                                                       value="{{ $h->id }}" wire:model="defaultHeadquarter">
-                                                <small>Primaria</small>
-                                            </span>
-                                        </label>
-                                    @endforeach
-                                </div>
-                                @error('selectedHeadquarters') <span class="text-danger d-block small mt-1">{{ $message }}</span> @enderror
-                                @error('defaultHeadquarter')  <span class="text-danger d-block small mt-1">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
-
-                        {{-- Rol (chips) --}}
-                        <div class="perm-row span-2">
-                            <div class="perm-col-title">Rol</div>
-                            <div class="perm-col-controls">
-                                <div class="perm-chips">
-                                    @forelse($roles as $r)
-                                        <label class="chip-radio" title="{{ $r->name }}">
-                                            <input type="radio" class="form-check-input"
-                                                   name="role_single_add" value="{{ $r->id }}" wire:model="selectedRoleId">
-                                            <span>{{ $r->name }}</span>
-                                        </label>
-                                    @empty
-                                        <span class="text-warning small">No hay roles definidos.</span>
-                                    @endforelse
-                                </div>
-                                @error('selectedRoleId') <span class="text-danger small">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
-
-                    </div> {{-- /perm-grid form-two-cols --}}
-                </div>
-
-                <div class="modal-footer py-2">
-                    <button type="button" class="btn btn-primary btn-sm" wire:click="save">Agregar</button>
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- MODAL: EDITAR (FULLSCREEN, ULTRA-COMPACT + 2 columnas móvil) --}}
-    <div class="modal fade" id="modalEditUser" aria-hidden="true" tabindex="-1" data-bs-backdrop="static" wire:ignore.self>
-        <div class="modal-dialog modal-fullscreen">
-            <div class="modal-content">
-                <div class="modal-header py-2">
-                    <h6 class="modal-title mb-0">Editar Usuario</h6>
-                    <button type="button" class="btn-close m-0" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-
-                <div class="modal-body p-2">
-                    <div class="perm-grid form-two-cols">
-                        {{-- Nombre --}}
-                        <div class="perm-row">
-                            <div class="perm-col-title">Nombre</div>
-                            <div class="perm-col-controls">
-                                <input id="name_e" type="text" class="form-control" placeholder="Ingresar nombre" wire:model.live="name">
-                                @error('name') <span class="text-danger small">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
-
-                        {{-- Usuario --}}
-                        <div class="perm-row">
-                            <div class="perm-col-title">Usuario</div>
-                            <div class="perm-col-controls">
-                                <input id="username_e" type="text" class="form-control" placeholder="Ingresar usuario" wire:model="username">
-                                @error('username') <span class="text-danger small">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
-
-                        {{-- Contraseña (opcional) --}}
-                        <div class="perm-row">
-                            <div class="perm-col-title">Contraseña</div>
-                            <div class="perm-col-controls">
-                                <input id="pwd_e" type="text" class="form-control" placeholder="Nueva contraseña (opcional)" wire:model.live="pwd">
-                                @error('pwd') <span class="text-danger small">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
-
-                        {{-- Email --}}
-                        <div class="perm-row">
-                            <div class="perm-col-title">Email</div>
-                            <div class="perm-col-controls">
-                                <input id="email_e" type="email" class="form-control" placeholder="Ingresar email" wire:model="email">
-                                @error('email') <span class="text-danger small">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
-
-                        {{-- Tipo Documento --}}
-                        <div class="perm-row">
-                            <div class="perm-col-title">Tipo Documento</div>
-                            <div class="perm-col-controls">
-                                <select id="document_type_e" class="form-select" wire:model="document_type">
-                                    <option value="dni">DNI</option>
-                                    <option value="ruc">RUC</option>
-                                    <option value="ce">CE</option>
-                                </select>
-                                @error('document_type') <span class="text-danger small">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
-
-                        {{-- N° Documento --}}
-                        <div class="perm-row">
-                            <div class="perm-col-title">N° Documento</div>
-                            <div class="perm-col-controls">
-                                <input id="document_number_e" type="text" class="form-control" placeholder="Ingresar número" wire:model="document_number">
-                                @error('document_number') <span class="text-danger small">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
-
-                        {{-- Teléfono --}}
-                        <div class="perm-row">
-                            <div class="perm-col-title">Teléfono</div>
-                            <div class="perm-col-controls">
-                                <input id="phone_e" type="text" class="form-control" placeholder="Ingresar teléfono" wire:model="phone">
-                                @error('phone') <span class="text-danger small">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
-
-                        {{-- Sucursales (chips + primaria integrada) --}}
-                        <div class="perm-row span-2">
-                            <div class="perm-col-title">Sucursales</div>
-                            <div class="perm-col-controls">
-                                <div class="perm-chips">
-                                    @foreach($headquartes as $h)
-                                        @php
-                                            $isSelected = in_array($h->id, (array)$selectedHeadquarters, true);
-                                            $isDefault  = (int)$defaultHeadquarter === (int)$h->id;
-                                        @endphp
-                                        <label class="chip-hq {{ $isSelected ? 'is-selected' : '' }} {{ $isDefault ? 'is-default' : '' }}">
-                                            <input class="form-check-input" type="checkbox"
-                                                   value="{{ $h->id }}" wire:model="selectedHeadquarters">
-                                            <span>{{ $h->name }}</span>
-                                            <span class="hq-primary" title="Marcar como sede primaria">
-                                                <input class="form-check-input" type="radio"
-                                                       name="default_hq_edit"
-                                                       value="{{ $h->id }}" wire:model="defaultHeadquarter">
-                                                <small>Primaria</small>
-                                            </span>
-                                        </label>
-                                    @endforeach
-                                </div>
-                                @error('selectedHeadquarters') <span class="text-danger d-block small mt-1">{{ $message }}</span> @enderror
-                                @error('defaultHeadquarter')  <span class="text-danger d-block small mt-1">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
-
-                        {{-- Rol (chips) --}}
-                        <div class="perm-row span-2">
-                            <div class="perm-col-title">Rol</div>
-                            <div class="perm-col-controls">
-                                <div class="perm-chips">
-                                    @forelse($roles as $r)
-                                        <label class="chip-radio" title="{{ $r->name }}">
-                                            <input type="radio" class="form-check-input"
-                                                   name="role_single_edit" value="{{ $r->id }}" wire:model="selectedRoleId">
-                                            <span>{{ $r->name }}</span>
-                                        </label>
-                                    @empty
-                                        <span class="text-warning small">No hay roles definidos.</span>
-                                    @endforelse
-                                </div>
-                                @error('selectedRoleId') <span class="text-danger small">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
-
-                    </div> {{-- /perm-grid form-two-cols --}}
-                </div>
-
-                <div class="modal-footer py-2">
-                    <button type="button" class="btn btn-light-primary btn-sm" wire:click="update">Actualizar</button>
-                    <button type="button" class="btn btn-light-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- === MODAL: Rol & Permisos (FULLSCREEN, ULTRA-COMPACT) === --}}
-    <div class="modal fade" id="modalPerms" aria-hidden="true" tabindex="-1" data-bs-backdrop="static" wire:ignore.self>
-        {{-- Fullscreen para evitar scroll --}}
-        <div class="modal-dialog modal-fullscreen">
-            <div class="modal-content">
-                <div class="modal-header py-2">
-                    <h6 class="modal-title mb-0">
-                        Rol & Permisos
-                        @if($permsUserName)
-                            <small class="text-muted d-block fw-normal">Usuario: {{ $permsUserName }}</small>
-                        @endif
-                    </h6>
-                    <button type="button" class="btn-close m-0" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-
-                <div class="modal-body p-2">
-                    {{-- Rol (línea compacta) --}}
-                    <div class="perm-row border rounded px-2 py-2 mb-2">
-                        <div class="perm-col-title">Rol</div>
-                        <div class="perm-col-controls">
-                            <div class="perm-chips">
-                                @forelse($roles as $r)
-                                    <label class="chip-radio" title="{{ $r->name }}">
-                                        <input type="radio" class="form-check-input" name="role_single_perms"
-                                               value="{{ $r->id }}" wire:model="selectedRoleId">
-                                        <span>{{ $r->name }}</span>
-                                    </label>
-                                @empty
-                                    <span class="text-warning small">No hay roles definidos.</span>
-                                @endforelse
-                            </div>
-                            @error('selectedRoleId') <span class="text-danger small">{{ $message }}</span> @enderror
-                        </div>
-                    </div>
-
-                    {{-- Permisos (grid sin tarjetas; compacto si solo hay 1 permiso en el grupo) --}}
-                    <div class="perm-grid">
-                        @foreach($aclGroups as $groupKey => $group)
-                            @php
-                                $count   = count($group['items'] ?? []);
-                                $compact = ($group['type'] === 'single') || ($count === 1);
-                                $only    = $group['items'][0] ?? null;
-                            @endphp
-
-                            {{-- Grupo con un solo permiso: título + checkbox a la derecha --}}
-                            @if($compact && $only)
-                                <div class="perm-row">
-                                    <div class="perm-col-title">{{ $group['title'] }}</div>
-                                    <div class="perm-col-controls">
-                                        <label class="chip-check" title="{{ $only['key'] }}">
-                                            <input class="form-check-input" type="checkbox"
-                                                   value="{{ $only['key'] }}"
-                                                   wire:model="selectedPermissionNames">
-                                            <span>{{ $group['title'] }}</span>
-                                        </label>
-                                    </div>
-                                </div>
-                            @else
-                                {{-- Grupo con varios permisos --}}
-                                <div class="perm-row">
-                                    <div class="perm-col-title d-flex align-items-center gap-2">
-                                        <span>{{ $group['title'] }}</span>
-                                        <a href="javascript:void(0)" class="action-icon" title="Marcar todo"
-                                           wire:click="selectGroup('{{ $groupKey }}')">
-                                            <i class="ti ti-square-check"></i>
-                                        </a>
-                                        <a href="javascript:void(0)" class="action-icon" title="Desmarcar"
-                                           wire:click="deselectGroup('{{ $groupKey }}')">
-                                            <i class="ti ti-square-x"></i>
-                                        </a>
-                                    </div>
-                                    <div class="perm-col-controls">
-                                        <div class="perm-chips">
-                                            @foreach($group['items'] as $it)
-                                                <label class="chip-check" title="{{ $it['key'] }}">
-                                                    <input class="form-check-input" type="checkbox"
-                                                           value="{{ $it['key'] }}"
-                                                           wire:model="selectedPermissionNames">
-                                                    <span>{{ $it['label'] }}</span>
-                                                </label>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                </div>
-                            @endif
-                        @endforeach
-                    </div>
-
-                </div>
-
-                <div class="modal-footer py-2">
-                    <button type="button" class="btn btn-primary btn-sm" wire:click="savePerms">Guardar</button>
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <div class="screen-overlay"
          wire:loading.delay.flex
-         wire:target="openAddModal,openEditModal,openPermsModal,selectGroup,deselectGroup,save,update,savePerms">
+         wire:target="save,update">
         <div class="text-center">
             <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
             <div class="mt-2 text-white fw-semibold">Cargando…</div>

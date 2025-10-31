@@ -67,122 +67,119 @@
 
     {{-- Card: Tabla de detalles --}}
     <div class="card">
-        <div class="card-header">
-            <form wire:submit.prevent="save">
-                {{-- Chips (totales) a la derecha, con wrap si no entran --}}
-                <div class="row g-2">
-                    <div class="col-12">
-                        <div class="d-flex justify-content-end flex-wrap gap-2 py-1">
-                            <span class="chip">Exonerado: S/ {{ number_format($sumExonerated,2) }}</span>
-                            <span class="chip">Amortizado: S/ {{ number_format($sumAmortized,2) }}</span>
-                            <span class="chip">Pendiente: S/ {{ number_format($pending,2) }}</span>
-                        </div>
-                    </div>
-                </div>
+      <div class="card-body">
+          <form wire:submit.prevent="save">
+              {{-- Chips (totales) a la derecha, con wrap si no entran --}}
+              <div class="row g-2">
+                  <div class="col-12">
+                      <div class="d-flex justify-content-end flex-wrap gap-2 py-1">
+                          <span class="chip">Exonerado: S/ {{ number_format($sumExonerated,2) }}</span>
+                          <span class="chip">Amortizado: S/ {{ number_format($sumAmortized,2) }}</span>
+                          <span class="chip">Pendiente: S/ {{ number_format($pending,2) }}</span>
+                      </div>
+                  </div>
+              </div>
 
-                {{-- Form con WRAP (rompe a 2da/3ra fila según espacio) --}}
-                <div class="row mt-2">
-                    <div class="col-12">
-                        <div class="d-flex flex-wrap align-items-end gap-2 py-1">
+              {{-- Form con WRAP (rompe a 2da/3ra fila según espacio) --}}
+              <div class="row mt-2">
+                  <div class="col-12">
+                      <div class="d-flex flex-wrap align-items-end gap-2 py-1">
 
-                            {{-- Placa --}}
-                            <div class="flex-item" style="flex:1 1 180px; min-width:160px;">
-                                <label class="form-label mb-1">Placa</label>
-                                <input type="text" class="form-control form-control-sm"
-                                       value="{{ $plate }}" readonly style="background:#eee;">
-                            </div>
+                          {{-- Placa --}}
+                          <div class="flex-item" style="flex:1 1 180px; min-width:160px;">
+                              <label class="form-label mb-1">Placa</label>
+                              <input type="text" class="form-control form-control-sm"
+                                     value="{{ $plate }}" readonly style="background:#eee;">
+                          </div>
 
-                            {{-- Fecha --}}
-                            <div class="flex-item" style="flex:1 1 160px; min-width:140px;">
-                                <label class="form-label mb-1">Fecha</label>
-                                <input type="text" class="form-control form-control-sm"
-                                       value="{{ $date }}" readonly>
-                            </div>
+                          {{-- Fecha --}}
+                          <div class="flex-item" style="flex:1 1 160px; min-width:140px;">
+                              <label class="form-label mb-1">Fecha</label>
+                              <input type="text" class="form-control form-control-sm"
+                                     value="{{ $date }}" readonly>
+                          </div>
 
-                            {{-- Días (no trabajados) --}}
-                            <div class="flex-item" style="flex:1 1 180px; min-width:160px;">
-                                <label class="form-label mb-1">Días (no trabajados)</label>
-                                <input type="text" class="form-control form-control-sm"
-                                       value="{{ $days }}" readonly style="background:#eee;">
-                            </div>
+                          {{-- Días (no trabajados) --}}
+                          <div class="flex-item" style="flex:1 1 180px; min-width:160px;">
+                              <label class="form-label mb-1">Días (no trabajados)</label>
+                              <input type="text" class="form-control form-control-sm"
+                                     value="{{ $days }}" readonly style="background:#eee;">
+                          </div>
 
-                            {{-- Días no trabajados — detalle (más ancho, puede ir a otra fila) --}}
-                            <div class="flex-item" style="flex:2 1 420px; min-width:320px; max-width:100%;">
-                                <label class="form-label mb-1">
-                                    <b class="text-danger">Días no trabajados — detalle</b>
-                                </label>
-                                <input class="form-control form-control-sm" rows="2" value="{!! $this->daysString !!}" readonly/>
-                            </div>
+                          {{-- Días no trabajados — detalle (más ancho, puede ir a otra fila) --}}
+                          <div class="flex-item" style="flex:2 1 420px; min-width:320px; max-width:100%;">
+                              <label class="form-label mb-1">
+                                  <b class="text-danger">Días no trabajados — detalle</b>
+                              </label>
+                              <input class="form-control form-control-sm" rows="2" value="{!! $this->daysString !!}" readonly/>
+                          </div>
 
-                            {{-- Deuda Total --}}
-                            <div class="flex-item" style="flex:1 1 180px; min-width:160px;">
-                                <label class="form-label mb-1">Deuda Total (S/)</label>
-                                <input type="text" class="form-control form-control-sm text-end"
-                                       value="{{ number_format($total,2) }}" readonly style="background:#eee;">
-                            </div>
+                          {{-- Deuda Total --}}
+                          <div class="flex-item" style="flex:1 1 180px; min-width:160px;">
+                              <label class="form-label mb-1">Deuda Total (S/)</label>
+                              <input type="text" class="form-control form-control-sm text-end"
+                                     value="{{ number_format($total,2) }}" readonly style="background:#eee;">
+                          </div>
 
-                            {{-- Exonerado (input) --}}
-                            <div class="flex-item" style="flex:1 1 180px; min-width:160px;">
-                                <label class="form-label mb-1">Exonerado (S/)</label>
-                                <input type="number" step="0.01"
-                                       class="form-control form-control-sm text-end @error('exonerateInput') is-invalid @enderror"
-                                       wire:model.live.debounce.400ms="exonerateInput">
-                                @error('exonerateInput')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                                @enderror
-                            </div>
+                          {{-- Exonerado (input) --}}
+                          <div class="flex-item" style="flex:1 1 180px; min-width:160px;">
+                              <label class="form-label mb-1">Exonerado (S/)</label>
+                              <input type="number" step="0.01"
+                                     class="form-control form-control-sm text-end @error('exonerateInput') is-invalid @enderror"
+                                     wire:model.live.debounce.400ms="exonerateInput">
+                              @error('exonerateInput')
+                              <div class="invalid-feedback d-block">{{ $message }}</div>
+                              @enderror
+                          </div>
 
-                            {{-- Amortización (oculto legacy) --}}
-                            <div class="d-none">
-                                <label class="form-label mb-1">Amortización (S/)</label>
-                                <input type="number" step="0.01"
-                                       class="form-control form-control-sm text-end @error('amortizeInput') is-invalid @enderror"
-                                       wire:model.live.debounce.400ms="amortizeInput">
-                                @error('amortizeInput')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                                @enderror
-                            </div>
+                          {{-- Amortización (oculto legacy) --}}
+                          <div class="d-none">
+                              <label class="form-label mb-1">Amortización (S/)</label>
+                              <input type="number" step="0.01"
+                                     class="form-control form-control-sm text-end @error('amortizeInput') is-invalid @enderror"
+                                     wire:model.live.debounce.400ms="amortizeInput">
+                              @error('amortizeInput')
+                              <div class="invalid-feedback d-block">{{ $message }}</div>
+                              @enderror
+                          </div>
 
-                            {{-- Detalle exoneración --}}
-                            <div class="flex-item" style="flex:2 1 300px; min-width:240px;">
-                                <label class="form-label mb-1">Detalle exoneración</label>
-                                <input type="text"
-                                       class="form-control form-control-sm @error('detailInput') is-invalid @enderror"
-                                       wire:model.live.defer="detailInput"
-                                       placeholder="Motivo / detalle">
-                                @error('detailInput')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                                @enderror
-                            </div>
+                          {{-- Detalle exoneración --}}
+                          <div class="flex-item" style="flex:2 1 300px; min-width:240px;">
+                              <label class="form-label mb-1">Detalle exoneración</label>
+                              <input type="text"
+                                     class="form-control form-control-sm @error('detailInput') is-invalid @enderror"
+                                     wire:model.live.defer="detailInput"
+                                     placeholder="Motivo / detalle">
+                              @error('detailInput')
+                              <div class="invalid-feedback d-block">{{ $message }}</div>
+                              @enderror
+                          </div>
 
-                        </div>
-                    </div>
-                </div>
+                      </div>
+                  </div>
+              </div>
 
-            </form>
-            <div class="row mt-2">
-                <div class="col-12">
-                    <div class="d-flex flex-nowrap justify-content-end align-items-end gap-2 overflow-auto py-1">
+          </form>
+          <div class="row my-2">
+              <div class="col-12">
+                  <div class="d-flex flex-nowrap justify-content-end align-items-end gap-2 overflow-auto py-1">
 
-                        <!-- Guardar -->
-                        <button class="btn btn-sm btn-primary flex-shrink-0"
-                                wire:click="save"
-                                wire:loading.attr="disabled">
-                            <i class="ti ti-device-floppy f-s-12"></i> Guardar
-                        </button>
+                      <!-- Guardar -->
+                      <button class="btn btn-sm btn-primary flex-shrink-0"
+                              wire:click="save"
+                              wire:loading.attr="disabled">
+                          <i class="ti ti-device-floppy f-s-12"></i> Guardar
+                      </button>
 
-                        <!-- Regresar -->
-                        <a class="btn btn-sm btn-primary flex-shrink-0"
-                           href="{{ route('debts.monthly') }}">
-                            <i class="ti ti-arrow-left f-s-12"></i> Regresar
-                        </a>
+                      <!-- Regresar -->
+                      <a class="btn btn-sm btn-primary flex-shrink-0"
+                         href="{{ route('debts.monthly') }}">
+                          <i class="ti ti-arrow-left f-s-12"></i> Regresar
+                      </a>
 
-                    </div>
-                </div>
-            </div>
-
-        </div><div class="card-body">
-            <h6 class="mb-2">Detalles</h6>
+                  </div>
+              </div>
+          </div>
 
             <div class="table-responsive">
                 <table class="table table-bordered table-striped table-hover">

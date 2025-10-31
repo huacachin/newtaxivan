@@ -96,8 +96,9 @@
         {{-- Tabla --}}
         <div class="col-12">
             <div class="card shadow-sm">
-                <div class="card-header">
-                    <div class="row mt-2">
+
+                <div class="card-body">
+                    <div class="row my-2">
                         <div class="col-12">
                             <div class="d-flex flex-nowrap align-items-end gap-2 overflow-auto py-1">
 
@@ -146,10 +147,6 @@
                             </div>
                         </div>
                     </div>
-
-                </div>
-                <div class="card-body">
-
                     @php
                         $days = range(1, $daysInMonth);
                         $baseCols  = 3 /* item+placa+cond */ + $daysInMonth + 1 /* Total (S/) */;

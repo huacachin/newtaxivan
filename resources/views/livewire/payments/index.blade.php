@@ -57,8 +57,10 @@
         <!-- Tabla -->
         <div class="col-xl-12">
             <div class="card shadow-sm">
-                <div class="card-header">
 
+
+
+                <div class="card-body">
                     {{-- ===== Fila 1: radios de filtro ===== --}}
 
 
@@ -71,18 +73,18 @@
                                     <div class="d-flex flex-wrap align-items-center f-s-11">
                                         <span class="small text-muted">Buscar:</span>
 
-                                        <div class="form-check form-check-inline ">
-                                            <input class="form-check-input"
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input mg-e-4"
                                                    type="radio"
                                                    name="rbFilterPay"
                                                    id="rbPlatePay"
                                                    value="1"
                                                    wire:model="filter">
-                                            <label class="form-check-label" for="rbPlatePay">Placa</label>
+                                            <label class="form-check-label " for="rbPlatePay">Placa</label>
                                         </div>
 
                                         <div class="form-check form-check-inline">
-                                            <input class="form-check-input"
+                                            <input class="form-check-input mg-e-4"
                                                    type="radio"
                                                    name="rbFilterPay"
                                                    id="rbUserPay"
@@ -92,7 +94,7 @@
                                         </div>
 
                                         <div class="form-check form-check-inline">
-                                            <input class="form-check-input"
+                                            <input class="form-check-input  mg-e-4"
                                                    type="radio"
                                                    name="rbFilterPay"
                                                    id="rbSeriePay"
@@ -102,7 +104,7 @@
                                         </div>
 
                                         <div class="form-check form-check-inline">
-                                            <input class="form-check-input"
+                                            <input class="form-check-input mg-e-4"
                                                    type="radio"
                                                    name="rbFilterPay"
                                                    id="rbMixedPay"
@@ -172,7 +174,7 @@
                     </div>
 
                     {{-- ===== Acciones (tal cual las tenías) ===== --}}
-                    <div class="row g-2 mt-2">
+                    <div class="row g-2 my-2">
                         <div class="col-12">
                             <div class="d-flex flex-wrap gap-2">
                                 <button class="btn btn-sm btn-primary" wire:click="openAddWindow">
@@ -200,11 +202,6 @@
                             </div>
                         </div>
                     </div>
-
-                </div>
-
-
-                <div class="card-body">
                     <div class="table-responsive tableFixHead">
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="text-center bg-primary">

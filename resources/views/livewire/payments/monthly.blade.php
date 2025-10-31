@@ -65,16 +65,18 @@
         <!-- Tabla -->
         <div class="col-12">
             <div class="card shadow-sm">
-                <div class="card-header">
+
+                <div class="card-body pb-2">
+
                     @php
                         $monthName = \Illuminate\Support\Str::upper(\Carbon\Carbon::create($year, $month, 1)->translatedFormat('F'));
                     @endphp
                     <h5 class="mb-3" style="color:#e11d48;">
                         REPORTE MENSUAL DE PAGO – {{ $monthName }} {{ $year }}
                     </h5>
-                    <div class="row mt-2">
+                    <div class="row my-2">
                         <div class="col-12">
-                            <div class="d-flex flex-nowrap align-items-end gap-2 overflow-auto py-1">
+                            <div class="d-flex flex-wrap align-items-end gap-2 overflow-auto py-1">
 
                                 <!-- Mes -->
                                 <div class="flex-shrink-0" style="min-width: 160px;">
@@ -124,9 +126,6 @@
                             </div>
                         </div>
                     </div>
-
-                </div>
-                <div class="card-body pb-2">
 
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped table-hover">
