@@ -2,5 +2,8 @@
 return [
     'Cash'     => 'Caja',
     'Debts'=> 'Deudas',
-    'Configuracion' => 'Configuración'
+    'Configuracion' => 'Configuración',
+    'Dashboard' => 'Panel de Control',
+    'Salidas' => 'Salidas',
+    'Pagos' => 'Pagos',
 ];

@@ -64,13 +64,13 @@
 
                     @if($compact && $only)
                         <div class="perm-row">
-                            <div class="perm-col-title">{{ $group['title'] }}</div>
+                            <div class="perm-col-title">{{ __('perms.'.$group['title']) }}</div>
                             <div class="perm-col-controls">
                                 <label class="chip-check" title="{{ $only['key'] }}">
                                     <input class="form-check-input" type="checkbox"
                                            value="{{ $only['key'] }}"
                                            wire:model="selectedPermissionNames">
-                                    <span>{{ $group['title'] }}</span>
+                                    <span>{{ __('perms.'.$group['title']) }}</span>
                                 </label>
                             </div>
                         </div>
