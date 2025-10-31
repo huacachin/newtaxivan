@@ -61,19 +61,17 @@
             <div class="card">
                 <div class="card-header">
                     <div class="row g-2">
-                        <div class="col-md-6 col-12">
+                        <div class="col-6 d-flex align-items-end ">
                             <h5>REPORTE ESTADÍSTICO DRACO {{ $year }}</h5>
                         </div>
-                        <div class="col-md-3 col-6">
-                            <select class="form-select" wire:model.live="year">
+                        <div class="col-6 d-flex align-items-end justify-content-end">
+                            <select class="form-control form-control-sm w-80 mg-e-10" wire:model.live="year">
                                 @for($y = now()->year + 1; $y >= 2015; $y--)
                                     <option value="{{ $y }}">{{ $y }}</option>
                                 @endfor
                             </select>
-                        </div>
-                        <div class="col-md-3 col-6 d-flex align-items-end">
-                            <button class="btn btn-sm btn-primary w-100" wire:click="export">
-                                <i class="ti ti-file-analytics f-s-12"></i> Exportar
+                            <button class="btn btn-sm btn-primary" wire:click="export">
+                                <i class="ti ti-file-analytics f-s-12"></i>
                             </button>
                         </div>
                     </div>

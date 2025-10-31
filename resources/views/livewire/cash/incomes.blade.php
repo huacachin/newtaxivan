@@ -81,10 +81,20 @@
                                                             <input class="form-check-input"
                                                                    type="radio"
                                                                    name="rbFilter"
-                                                                   id="rbPlate"
+                                                                   id="rbA"
                                                                    value="1"
                                                                    wire:model.live="filterType">  {{-- sin .live ni wire:click --}}
-                                                            <label class="form-check-label" for="rbPlate">A</label>
+                                                            <label class="form-check-label" for="rbA">A</label>
+                                                        </div>
+
+                                                        <div class="form-check form-check-inline">
+                                                            <input class="form-check-input"
+                                                                   type="radio"
+                                                                   name="rbFilter"
+                                                                   id="rbMotive"
+                                                                   value="2"
+                                                                   wire:model.live="filterType">
+                                                            <label class="form-check-label" for="rbMotive">Motivo</label>
                                                         </div>
 
                                                         <div class="form-check form-check-inline">
@@ -92,19 +102,9 @@
                                                                    type="radio"
                                                                    name="rbFilter"
                                                                    id="rbUser"
-                                                                   value="2"
-                                                                   wire:model.live="filterType">
-                                                            <label class="form-check-label" for="rbUser">Motivo</label>
-                                                        </div>
-
-                                                        <div class="form-check form-check-inline">
-                                                            <input class="form-check-input"
-                                                                   type="radio"
-                                                                   name="rbFilter"
-                                                                   id="rbHQ"
                                                                    value="3"
                                                                    wire:model.live="filterType">
-                                                            <label class="form-check-label" for="rbHQ">Usuario</label>
+                                                            <label class="form-check-label" for="rbUser">Usuario</label>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -416,7 +416,7 @@
     </div>
     <div class="screen-overlay"
          wire:loading.delay.flex
-         wire:target="export,applyDate">
+         wire:target="export,applyDate,filterType">
         <div class="text-center">
             <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
             <div class="mt-2 text-white fw-semibold">Cargando…</div>

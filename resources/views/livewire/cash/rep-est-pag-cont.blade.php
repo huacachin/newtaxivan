@@ -57,21 +57,23 @@
            <div class="card">
                <div class="card-header">
                    <div class="row d-flex justify-content-end">
-                       <div class="col-md-4 col-6">
-                           <label for="year" class="text-sm">Año</label>
-                           <select id="year" class="form-select" wire:model.live="year">
+                       <div class="col-12 d-flex justify-content-end">
+
+                           <select id="year" class="form-select w-80 mg-e-10" wire:model.live="year">
                                @for ($y = 2015; $y <= 2030; $y++)
                                    <option value="{{ $y }}">{{ $y }}</option>
                                @endfor
                            </select>
+                           <button class="btn btn-sm btn-primary mg-e-10" wire:click="export">
+                               <i class="ti ti-file-analytics f-s-12"></i>
+                           </button>
+
+                           <button class="btn btn-sm btn-primary" id="down">
+                               <i class="ti ti-square-chevrons-down f-s-12"></i>
+                           </button>
                        </div>
 
 
-                      <div class="col-md-2 col-6 d-flex align-items-end">
-                          <button class="btn btn-sm btn-primary w-100" wire:click="export">
-                              Exportar
-                          </button>
-                      </div>
 
                    </div>
                </div>

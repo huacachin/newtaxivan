@@ -66,24 +66,59 @@
 
                             <!-- Buscar -->
                             <div class="flex-shrink-0" style="min-width: 240px;">
-                                <label class="form-label mb-1">Buscar</label>
+                                <div class="row g-2 mb-2">
+                                    <div class="col-12 f-s-11">
+                                        <div class="d-flex flex-wrap align-items-center gap-3">
+                                            <span class="small text-muted">Buscar:</span>
+
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input"
+                                                       type="radio"
+                                                       name="rbFilter"
+                                                       id="rbA"
+                                                       value="1"
+                                                       wire:model.live="filterType">  {{-- sin .live ni wire:click --}}
+                                                <label class="form-check-label" for="rbA">A</label>
+                                            </div>
+
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input"
+                                                       type="radio"
+                                                       name="rbFilter"
+                                                       id="rbMotive"
+                                                       value="2"
+                                                       wire:model.live="filterType">
+                                                <label class="form-check-label" for="rbMotive">Motivo</label>
+                                            </div>
+
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input"
+                                                       type="radio"
+                                                       name="rbFilter"
+                                                       id="rbUser"
+                                                       value="3"
+                                                       wire:model.live="filterType">
+                                                <label class="form-check-label" for="rbUser">Usuario</label>
+                                            </div>
+
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input"
+                                                       type="radio"
+                                                       name="rbFilter"
+                                                       id="rbRespons"
+                                                       value="4"
+                                                       wire:model.live="filterType">
+                                                <label class="form-check-label" for="rbRespons">Respons.</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                                 <input
                                     type="search"
                                     class="form-control form-control-sm"
                                     placeholder="Buscar..."
                                     aria-label="Buscar"
                                     wire:model.live.debounce.400ms="search">
-                            </div>
-
-                            <!-- Filtro -->
-                            <div class="flex-shrink-0" style="min-width: 180px;">
-                                <label class="form-label mb-1">Filtro</label>
-                                <select class="form-select form-select-sm" wire:model.live="filterType">
-                                    <option value="1">A</option>
-                                    <option value="2">Motivo</option>
-                                    <option value="3">Usuario</option>
-                                    <option value="4">Respons.</option>
-                                </select>
                             </div>
 
                             <!-- Fecha Inicio -->
@@ -309,7 +344,7 @@
 
     <div class="screen-overlay"
          wire:loading.delay.flex
-         wire:target="export,applyDate">
+         wire:target="export,applyDate,filterType">
         <div class="text-center">
             <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
             <div class="mt-2 text-white fw-semibold">Cargando…</div>

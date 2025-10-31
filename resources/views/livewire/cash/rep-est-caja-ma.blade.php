@@ -92,7 +92,12 @@
                             <!-- Exportar -->
                             <button class="btn btn-sm btn-primary flex-shrink-0 align-self-end"
                                     wire:click="export">
-                                <i class="ti ti-file-analytics f-s-12"></i> Exportar
+                                <i class="ti ti-file-analytics f-s-12"></i>
+                            </button>
+
+                            <!-- Exportar -->
+                            <button class="btn btn-sm btn-primary flex-shrink-0 align-self-end" id ="down">
+                                <i class="ti ti-square-chevrons-down f-s-12"></i>
                             </button>
 
                         </div>
