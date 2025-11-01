@@ -84,27 +84,6 @@ class Index extends Component
             ->get();
     }
 
-    public function openAddModal()
-    {
-        $this->reset(['name', 'document_type', 'document_number', 'document_expiration_date', 'birthdate', 'address', 'district', 'email', 'phone']);
-        $this->dispatch('open-modal', ['name' => 'modalAddOwner', 'focus' => 'name']);
-    }
-
-    public function openEditModal($id){
-        $owner = Owner::find($id);
-        $this->ownerId = $id;
-        $this->name = $owner->name;
-        $this->document_type = $owner->document_type;
-        $this->document_number = $owner->document_number;
-        $this->document_expiration_date = optional($owner->document_expiration_date)->format('Y-m-d');
-        $this->birthdate = optional($owner->birthdate)->format('Y-m-d');
-        $this->address = $owner->address;
-        $this->district = $owner->district;
-        $this->email = $owner->email;
-        $this->phone = $owner->phone;
-        $this->dispatch('open-modal', ['name' => 'modalEditOwner', 'focus' => 'name']);
-    }
-
     public function updatedFilter()
     {
         $this->mount();
@@ -170,6 +149,18 @@ class Index extends Component
     public function render()
     {
         return view('livewire.owners.index');
+    }
+
+    public function openAddWindow(): void
+    {
+        $route = route('settings.owners.create');;;
+        $this->dispatch('url-open',["url" => $route]);
+    }
+
+    public function openEditWindow(int $id): void
+    {
+        $route = route('settings.owners.edit',["id" => $id]);
+        $this->dispatch('url-open',["url" => $route]);
     }
 
     public function export(){

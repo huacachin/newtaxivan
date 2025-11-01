@@ -16,6 +16,16 @@ class DriverController extends Controller
         return view('drivers.index');
     }
 
+    public function create()
+    {
+        return view('drivers.create');
+    }
+
+    public function edit(int $id)
+    {
+        return view('drivers.edit',compact('id'));
+    }
+
     public function export(Request $request){
         $search = $request->query('search');
         $filter = $request->query('filter', 'plate');

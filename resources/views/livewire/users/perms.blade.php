@@ -31,8 +31,8 @@
         </div>
     </div>
 
-    <div class="card shadow-sm">
-        <div class="card-body p-2">
+    <div class="card">
+        <div class="card-body">
 
             {{-- Rol --}}
             <div class="perm-row">
@@ -103,8 +103,8 @@
             </div>
 
             <div class="mt-2 d-flex gap-2">
-                <button class="btn btn-primary btn-sm" wire:click="savePerms">Guardar</button>
-                <a class="btn btn-secondary btn-sm" href="{{ route('settings.users.index') }}">Volver</a>
+                <button class="btn btn-sm btn-primary" wire:click="savePerms">Guardar</button>
+                <a class="btn btn-sm btn-secondary" href="{{ route('settings.users.index') }}">Volver</a>
             </div>
         </div>
     </div>

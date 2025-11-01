@@ -16,6 +16,16 @@ class VehicleController extends Controller
         return view('vehicles.index');
     }
 
+    public function create()
+    {
+        return view('vehicles.create');
+    }
+
+    public function edit(int $id)
+    {
+        return view('vehicles.edit',compact('id'));
+    }
+
     public function export(Request $request){
         $status = $request->query('status', 'active');
         $search = $request->query('search');

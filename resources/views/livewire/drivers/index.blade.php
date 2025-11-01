@@ -85,7 +85,7 @@
 
                                 <!-- Botones -->
                                 <button class="btn btn-sm btn-primary flex-shrink-0"
-                                        wire:click="openAddModal">
+                                        wire:click="openAddWindow">
                                     <i class="ti ti-square-plus f-s-12"></i> Nuevo
                                 </button>
 
@@ -137,7 +137,7 @@
                                         <td>{{ $driver->condition }}</td>
                                         <td width="10">
                                             <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
-                                               wire:click="openEditModal({{ $driver->id }})"></i>
+                                               wire:click="openEditWindow({{ $driver->id }})"></i>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -193,7 +193,7 @@
                                     <td>{{ $driver->condition }}</td>
                                     <td width="10">
                                         <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
-                                           wire:click="openEditModal({{ $driver->id }})"></i>
+                                           wire:click="openEditWindow({{ $driver->id }})"></i>
                                     </td>
                                 </tr>
                             @empty

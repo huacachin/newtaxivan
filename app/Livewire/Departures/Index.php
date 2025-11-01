@@ -322,9 +322,7 @@ class Index extends Component
      */
     public function openAddWindow(): void
     {
-
         $route = route('departures.add');
-
         $this->dispatch('url-open',["url" => $route]);
     }
 

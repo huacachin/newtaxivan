@@ -30,9 +30,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
 
     // Configuraciones
-    Route::resource('vehicles', VehicleController::class)->names('settings.vehicles');
-    Route::resource('owners', OwnerController::class)->names('settings.owners');
-    Route::resource('drivers', DriverController::class)->names('settings.drivers');
+    Route::get('vehicles', [VehicleController::class,'index'])->name('settings.vehicles.index');
+    Route::get('vehicles/create', [VehicleController::class,'create'])->name('settings.vehicles.create');
+    Route::get('vehicles/{id}/edit', [VehicleController::class,'edit'])->name('settings.vehicles.edit');
+    Route::get('owners', [OwnerController::class,'index'])->name('settings.owners.index');
+    Route::get('owners/create', [OwnerController::class,'create'])->name('settings.owners.create');
+    Route::get('owners/{id}/edit', [OwnerController::class,'edit'])->name('settings.owners.edit');
+    Route::get('drivers', [DriverController::class,'index'])->name('settings.drivers.index');
+    Route::get('drivers/create', [DriverController::class,'create'])->name('settings.drivers.create');
+    Route::get('drivers/{id}/edit', [DriverController::class,'edit'])->name('settings.drivers.edit');
 
     // Costo por placa
     Route::get('cost-per-plate', [CostPerPlateController::class,'index'])->name('settings.cost-per-plate.index');

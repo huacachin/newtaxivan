@@ -16,6 +16,16 @@ class OwnerController extends Controller
         return view('owners.index');
     }
 
+    public function create()
+    {
+        return view('owners.create');
+    }
+
+    public function edit(int $id)
+    {
+        return view('owners.edit',compact('id'));
+    }
+
     public function export(Request $request){
         $search = $request->query('search');
         $filter = $request->query('filter', 'plate');

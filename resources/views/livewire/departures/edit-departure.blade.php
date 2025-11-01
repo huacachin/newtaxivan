@@ -122,10 +122,10 @@
                     </div>
 
                     <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-primary" wire:click="update" wire:loading.attr="disabled">
-                            Guardar cambios
+                        <button type="button" class="btn btn-sm btn-primary" wire:click="update" wire:loading.attr="disabled">
+                            Guardar
                         </button>
-                        <a href="{{ route('departures.index') }}" class="btn btn-primary">Volver</a>
+                        <a href="{{ route('departures.index') }}" class="btn btn-sm btn-primary">Volver</a>
                     </div>
                 </div>
             </div>

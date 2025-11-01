@@ -47,13 +47,13 @@
     </div>
 
     <div class="card shadow-sm">
-        <div class="card-body p-2">
+        <div class="card-body">
             <div class="perm-grid form-two-cols">
                 {{-- Nombre --}}
                 <div class="perm-row">
                     <div class="perm-col-title">Nombre</div>
                     <div class="perm-col-controls">
-                        <input type="text" class="form-control" placeholder="Ingresar nombre" wire:model.live="name">
+                        <input type="text" class="form-control form-control-sm" placeholder="Ingresar nombre" wire:model.live="name">
                         @error('name') <span class="text-danger small">{{ $message }}</span> @enderror
                     </div>
                 </div>
@@ -62,7 +62,7 @@
                 <div class="perm-row">
                     <div class="perm-col-title">Usuario</div>
                     <div class="perm-col-controls">
-                        <input type="text" class="form-control" placeholder="Ingresar usuario" wire:model="username">
+                        <input type="text" class="form-control form-control-sm" placeholder="Ingresar usuario" wire:model="username">
                         @error('username') <span class="text-danger small">{{ $message }}</span> @enderror
                     </div>
                 </div>
@@ -71,7 +71,7 @@
                 <div class="perm-row">
                     <div class="perm-col-title">Contraseña</div>
                     <div class="perm-col-controls">
-                        <input type="text" class="form-control" placeholder="Ingresar contraseña" wire:model.live="pwd">
+                        <input type="text" class="form-control form-control-sm" placeholder="Ingresar contraseña" wire:model.live="pwd">
                         @error('pwd') <span class="text-danger small">{{ $message }}</span> @enderror
                     </div>
                 </div>
@@ -80,7 +80,7 @@
                 <div class="perm-row">
                     <div class="perm-col-title">Email</div>
                     <div class="perm-col-controls">
-                        <input type="email" class="form-control" placeholder="Ingresar email" wire:model="email">
+                        <input type="email" class="form-control form-control-sm" placeholder="Ingresar email" wire:model="email">
                         @error('email') <span class="text-danger small">{{ $message }}</span> @enderror
                     </div>
                 </div>
@@ -89,7 +89,7 @@
                 <div class="perm-row">
                     <div class="perm-col-title">Tipo Documento</div>
                     <div class="perm-col-controls">
-                        <select class="form-select" wire:model="document_type">
+                        <select class="form-control form-control-sm" wire:model="document_type">
                             <option value="dni">DNI</option>
                             <option value="ruc">RUC</option>
                             <option value="ce">CE</option>
@@ -102,7 +102,7 @@
                 <div class="perm-row">
                     <div class="perm-col-title">N° Documento</div>
                     <div class="perm-col-controls">
-                        <input type="text" class="form-control" placeholder="Ingresar número" wire:model="document_number">
+                        <input type="text" class="form-control form-control-sm" placeholder="Ingresar número" wire:model="document_number">
                         @error('document_number') <span class="text-danger small">{{ $message }}</span> @enderror
                     </div>
                 </div>
@@ -111,7 +111,7 @@
                 <div class="perm-row">
                     <div class="perm-col-title">Teléfono</div>
                     <div class="perm-col-controls">
-                        <input type="text" class="form-control" placeholder="Ingresar teléfono" wire:model="phone">
+                        <input type="text" class="form-control form-control-sm" placeholder="Ingresar teléfono" wire:model="phone">
                         @error('phone') <span class="text-danger small">{{ $message }}</span> @enderror
                     </div>
                 </div>
