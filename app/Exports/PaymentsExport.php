@@ -308,7 +308,7 @@ class PaymentsExport implements
 
                     // En moneda (J) dejo un pelín más de aire para miles/decimales
                     if ($c === 'J') {
-                        $tight = max(1.0, $w - 0.4);
+                        $tight = max(0.5, $w - 0.4);
                     }
 
                     $dim->setAutoSize(false);
