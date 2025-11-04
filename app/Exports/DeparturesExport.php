@@ -59,142 +59,27 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
             AfterSheet::class => function (AfterSheet $e) {
                 $s = $e->sheet->getDelegate();
 
-                // Paleta
-                $blueDark   = 'FF2874A6'; // encabezados
-                $footerFill = 'FFCEE7FF'; // totales
-                $white      = 'FFFFFFFF';
-                $fontBlack  = 'FF000000';
-                $red        = 'FFCC0000';
-                $borderSoft = 'FFCFD8DC';
-
-                // ===== Encabezado compacto (A1:M1) =====
-                $s->mergeCells('A1:M1');
-                $s->setCellValue('A1', 'LISTADO GENERAL DE SALIDA');
-                $s->getStyle('A1:M1')->applyFromArray([
-                    'fill' => ['fillType'=>\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor'=>['argb'=>$white]],
-                    'alignment' => [
-                        'horizontal'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
-                        'vertical'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
-                    ],
-                    'font' => ['bold'=>true, 'color'=>['argb'=>$red], 'size'=>10],
-                ]);
-                $s->getRowDimension(1)->setRowHeight(18);
-
-                // ===== Reindex sin títulos de sección visibles =====
-                $rSec1Title = 2;      // (oculto)
-                $rSec1Hdr1  = 3;
-                $rSec1Hdr2  = 4;
+                // ===== Cálculo de rangos mínimos para cuerpo y totales =====
+                // Tomamos los mismos contadores que setea view()
                 $rSec1Body1 = 5;
                 $rSec1BodyN = $rSec1Body1 + max(1, $this->countExisting) - 1;
                 $rSec1Total = $rSec1BodyN + 1;
-                $rBlank2    = $rSec1Total + 1;
 
-                $rSec2Title = $rBlank2 + 1; // (oculto)
-                $rSec2Hdr1  = $rSec2Title + 1;
-                $rSec2Hdr2  = $rSec2Title + 2;
-                $rSec2Body1 = $rSec2Hdr2 + 1;
+                $rSec2Body1 = $rSec1Total + 3; // fila en blanco + (título oculto si existiera) + cabeceras
                 $rSec2BodyN = $rSec2Body1 + max(1, $this->countSupport) - 1;
                 $rSec2Total = $rSec2BodyN + 1;
-                $rBlank3    = $rSec2Total + 1;
 
-                $rGrand     = $rBlank3 + 1;
+                $rGrand     = $rSec2Total + 2; // fila en blanco y total general
                 $lastRow    = $rGrand;
-
-                // Ocultar títulos de sección
-                foreach ([$rSec1Title, $rSec2Title] as $r) {
-                    $s->mergeCells("A{$r}:M{$r}");
-                    $s->setCellValue("A{$r}", '');
-                    $s->getRowDimension($r)->setRowHeight(0);
-                }
-
-                // Cabeceras de 2 niveles
-                $this->mergeHeader($s, $rSec1Hdr1, $rSec1Hdr2);
-                $this->mergeHeader($s, $rSec2Hdr1, $rSec2Hdr2);
-
-                // THEADs en azul, 10pt, compacto (wrap solo en cabeceras)
-                foreach ([[$rSec1Hdr1,$rSec1Hdr2], [$rSec2Hdr1,$rSec2Hdr2]] as [$h1,$h2]) {
-                    $s->getStyle("A{$h1}:M{$h2}")->applyFromArray([
-                        'fill' => ['fillType'=>\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
-                        'font' => ['bold'=>true, 'color'=>['argb'=>$white], 'size'=>10],
-                        'alignment' => [
-                            'horizontal'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
-                            'vertical'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
-                            'wrapText'=>true
-                        ],
-                    ]);
-                    $s->getRowDimension($h1)->setRowHeight(18);
-                    $s->getRowDimension($h2)->setRowHeight(16);
-                }
-
-                // Cuerpo “Apoyo” en rojo
-                if ($this->countSupport > 0) {
-                    $s->getStyle("A{$rSec2Body1}:M{$rSec2BodyN}")
-                        ->getFont()->getColor()->setARGB($red);
-                }
-
-                // Totales por bloque
-                foreach ([$rSec1Total, $rSec2Total] as $ft) {
-                    $s->getStyle("A{$ft}:M{$ft}")->applyFromArray([
-                        'fill' => ['fillType'=>\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor'=>['argb'=>$footerFill]],
-                        'font' => ['bold'=>true, 'color'=>['argb'=>$fontBlack], 'size'=>10],
-                        'alignment' => [
-                            'horizontal'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
-                            'vertical'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
-                        ],
-                        'borders' => [
-                            'outline' => [
-                                'borderStyle'=>\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                                'color'=>['argb'=>$blueDark]
-                            ]
-                        ]
-                    ]);
-                    $s->getRowDimension($ft)->setRowHeight(18);
-                }
-
-                // TOTAL GENERAL
-                $s->getStyle("A{$rGrand}:M{$rGrand}")->applyFromArray([
-                    'fill' => ['fillType'=>\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor'=>['argb'=>$footerFill]],
-                    'font' => ['bold'=>true, 'color'=>['argb'=>$fontBlack], 'size'=>10],
-                    'borders' => [
-                        'outline' => [
-                            'borderStyle'=>\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM,
-                            'color'=>['argb'=>$blueDark]
-                        ]
-                    ],
-                ]);
-                $s->getRowDimension($rGrand)->setRowHeight(18);
-
-                // Bordes finos a toda la grilla
-                $s->getStyle("A1:M{$lastRow}")->applyFromArray([
-                    'borders' => [
-                        'allBorders' => [
-                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                            'color' => ['argb' => $borderSoft]
-                        ]
-                    ]
-                ]);
-
-                // Números a la derecha (H..M)
-                foreach (['H','I','J','K','L','M'] as $col) {
-                    $s->getStyle("{$col}{$rSec1Body1}:{$col}{$rSec1Total}")
-                        ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
-                    $s->getStyle("{$col}{$rSec2Body1}:{$col}{$rSec2Total}")
-                        ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
-                    $s->getStyle("{$col}{$rGrand}")
-                        ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
-                }
-
-                // Congelar al inicio del cuerpo
-                $s->freezePane("A{$rSec1Body1}");
 
                 /* =========================
                  *  Ajuste Fino “Muy Pegado”
                  * ========================= */
 
-                // Altura por defecto compacta para TODO (10pt)
+                // 1) Altura por defecto compacta (ideal para font 10pt)
                 $s->getDefaultRowDimension()->setRowHeight(14);
 
-                // Sin wrap en CUERPO para no inflar alturas
+                // 2) Sin wrap en CUERPO para no inflar alturas
                 if ($this->countExisting > 0) {
                     $s->getStyle("A{$rSec1Body1}:M{$rSec1BodyN}")
                         ->getAlignment()->setWrapText(false);
@@ -204,41 +89,47 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
                         ->getAlignment()->setWrapText(false);
                 }
 
-                // Autosize base + quitar sangría
+                // 3) Quitar indentaciones (sangría) en todo el rango útil
+                $s->getStyle("A1:M{$lastRow}")
+                    ->getAlignment()->setIndent(0);
+
+                // 4) Autosize base
                 foreach (range('A','M') as $col) {
                     $s->getColumnDimension($col)->setAutoSize(true);
-                    $s->getStyle("{$col}1:{$col}{$lastRow}")
-                        ->getAlignment()->setIndent(0);
                 }
 
-                // Forzamos cálculo antes de leer anchos (best-effort)
+                // Forzar cálculo antes de leer anchos (best-effort)
                 \PhpOffice\PhpSpreadsheet\Calculation\Calculation::getInstance(
                     $s->getParent()
                 )->clearCalculationCache();
 
-                // Recorte fino de holgura para dejarlo “al ras”
-                $trim = 0.8; // ajusta entre 0.6 y 1.0 según tu gusto
+                // 5) Recorte fino del ancho para eliminar la “holgura” del autosize
+                $trim = 0.8; // ajusta entre 0.6 y 1.0 si lo quieres aún más al ras
                 foreach (range('A','M') as $col) {
                     $dim = $s->getColumnDimension($col);
-
-                    // Si autosize está activo, fijamos ancho basándonos en el ancho calculado
                     $current = $dim->getWidth();
                     if ($current === null || $current <= 0 || $current === -1) {
-                        // Fallback razonable si el writer aún no calculó autosize
-                        $current = 8.0;
+                        $current = 8.0; // fallback razonable
                     }
-
                     $dim->setAutoSize(false);
-                    $newWidth = max(1.0, $current - $trim);
-                    $dim->setWidth($newWidth);
+                    $dim->setWidth(max(1.0, $current - $trim));
                 }
 
-                // (Opcional) Si alguna columna específica suele tener textos larguísimos,
-                // puedes reducir menos ahí, por ejemplo:
-                // $s->getColumnDimension('B')->setWidth(max(1.0, $s->getColumnDimension('B')->getWidth() - 0.6));
+                // (Opcional) Alinear números a la derecha si lo necesitas:
+                // foreach (['H','I','J','K','L','M'] as $col) {
+                //     $s->getStyle("{$col}{$rSec1Body1}:{$col}{$rSec1Total}")
+                //       ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
+                //     $s->getStyle("{$col}{$rSec2Body1}:{$col}{$rSec2Total}")
+                //       ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
+                //     $s->getStyle("{$col}{$rGrand}")
+                //       ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
+                // }
+
+                // Importante: No congelamos pane (sin freezePane) y no tocamos header.
             },
         ];
     }
+
 
 
 
