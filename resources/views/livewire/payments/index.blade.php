@@ -35,7 +35,7 @@
     <!-- Header -->
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title">Pagos</h4>
+            <h4 class="main-title text-danger">LISTADO GENERAL DE PAGOS</h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -270,7 +270,7 @@
     </div>
     <div class="screen-overlay"
          wire:loading.delay.flex
-         wire:target="applyDate,export,save,update,daily,monthly,stats,filter">
+         wire:target="openAddWindow,openEditWindow,applyDate,export,save,update,daily,monthly,stats,filter">
         <div class="text-center">
             <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
             <div class="mt-2 text-white fw-semibold">Cargando…</div>
