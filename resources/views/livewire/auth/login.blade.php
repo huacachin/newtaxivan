@@ -14,7 +14,7 @@
                                     </a>
                                     <h4 class="slogan" >IN GOD WE TRUST</h4>
                                 </div>
-                                <div class="form_container app-form rounded-control">
+                                <div class="form_container">
                                     <form wire:submit.prevent="authenticate" class="app-form">
                                         @csrf
                                         <div class="mb-3">
