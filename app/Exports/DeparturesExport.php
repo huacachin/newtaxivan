@@ -123,8 +123,8 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
                             'wrapText'=>true
                         ],
                     ]);
-                    $s->getRowDimension($h1)->setRowHeight(18);
-                    $s->getRowDimension($h2)->setRowHeight(16);
+                    $s->getRowDimension($h1)->setRowHeight(10);
+                    $s->getRowDimension($h2)->setRowHeight(10);
                 }
 
                 // Cuerpo “Apoyo” con texto rojo
@@ -149,7 +149,7 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
                             ]
                         ]
                     ]);
-                    $s->getRowDimension($ft)->setRowHeight(18);
+                    $s->getRowDimension($ft)->setRowHeight(10);
                 }
 
                 // TOTAL GENERAL en #CEE7FF destacado (10pt)
@@ -163,7 +163,7 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
                         ]
                     ],
                 ]);
-                $s->getRowDimension($rGrand)->setRowHeight(18);
+                $s->getRowDimension($rGrand)->setRowHeight(10);
 
                 // Bordes finos a toda la grilla
                 $s->getStyle("A1:M{$lastRow}")->applyFromArray([
