@@ -300,10 +300,10 @@ class PaymentsExport implements
                     }
 
                     // Resta fina para quedar “pegado” al texto
-                    $tight = max(1.0, $w - 0.7);
+                    $tight = max(1.0, $w - 0.4);
 
                     if ($c === 'D') {
-                        $tight = max(1.0, $w - 0.2);
+                        $tight = max(1.0, $w - 0.6);
                     }
 
                     // En moneda (J) dejo un pelín más de aire para miles/decimales
