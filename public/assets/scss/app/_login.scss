@@ -37,8 +37,8 @@
   flex-direction: column;
 
   .form_container {
-    width: 320px;
-    padding: 0.2rem 1.5rem;
+    width: 350px;
+    padding: 0rem 1.5rem;
     /*background-color: var(--white);
     box-shadow: var(--box-shadow);*/
     border-radius: var(--bs-border-radius);
@@ -52,10 +52,13 @@
       font-weight: 500;
       font-size: calc(12px + (16 - 12) * ((100vw - 300px) / (1920 - 300)));
     }
-      label {
-          color: var(--white);
-          font-weight: 500;
-          font-size: calc(12px + (16 - 12) * ((100vw - 300px) / (1920 - 300)));
+  label {
+      color: var(--white);
+      font-weight: 500;
+      font-size: calc(12px + (16 - 12) * ((100vw - 300px) / (1920 - 300)));
+  }
+      input{
+          height: 46px !important;
       }
   }
 }

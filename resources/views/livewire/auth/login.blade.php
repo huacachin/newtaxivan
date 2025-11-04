@@ -14,7 +14,7 @@
                                     </a>
                                     <h4 class="slogan" >IN GOD WE TRUST</h4>
                                 </div>
-                                <div class="form_container">
+                                <div class="form_container app-form rounded-control">
                                     <form wire:submit.prevent="authenticate" class="app-form">
                                         @csrf
                                         <div class="mb-3">
@@ -31,7 +31,7 @@
                                         @error('username') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
 
                                         <div>
-                                            <button type="submit" role="button" class="btn btn-danger w-100">Ingresar</button>
+                                            <button type="submit" role="button" class="btn btn-danger w-100 b-r-22">Ingresar</button>
                                         </div>
                                     </form>
                                 </div>
