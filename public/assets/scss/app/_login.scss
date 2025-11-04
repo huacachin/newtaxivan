@@ -39,19 +39,24 @@
   .form_container {
     width: 320px;
     padding: 1.5rem;
-    background-color: var(--white);
-    /*box-shadow: var(--box-shadow);*/
+    /*background-color: var(--white);
+    box-shadow: var(--box-shadow);*/
     border-radius: var(--bs-border-radius);
     h3 {
       font-size: calc(20px + (28 - 20) * ((100vw - 300px) / (1920 - 300)));
-      color: rgb(var(--dark), 0.75);
+      color: var(--white);
       font-weight: 600;
     }
     p {
-      color: rgb(var(--dark), 1);
+      color: var(--white);
       font-weight: 500;
       font-size: calc(12px + (16 - 12) * ((100vw - 300px) / (1920 - 300)));
     }
+      label {
+          color: var(--white);
+          font-weight: 500;
+          font-size: calc(12px + (16 - 12) * ((100vw - 300px) / (1920 - 300)));
+      }
   }
 }
 

@@ -17,15 +17,10 @@
                                 <div class="form_container">
                                     <form wire:submit.prevent="authenticate" class="app-form">
                                         @csrf
-                                        <div class="mb-3 text-center">
-                                            <h3>Iniciar sesión</h3>
-                                        </div>
                                         <div class="mb-3">
-                                            <label for="username" class="form-label">Usuario</label>
                                             <input  wire:model.defer="username" id="username"  type="text" class="form-control">
                                         </div>
                                         <div class="mb-3">
-                                            <label for="password"  class="form-label">Contraseña</label>
                                             <input wire:model.defer="password" id="password" type="password" class="form-control">
                                         </div>
                                         <div class="mb-3 form-check">
