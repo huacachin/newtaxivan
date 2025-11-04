@@ -173,18 +173,17 @@ class PaymentsExport implements
 
                 $blueDark   = 'FF2874A6';
                 $footerFill = 'FFCEE7FF';
-                $white  = 'FFFFFFFF';
-                $red        = 'FFCC0000';
+                $fontWhite  = 'FFFFFFFF';
                 $fontBlack  = 'FF000000';
                 $borderSoft = 'FFCFD8DC';
 
-                // 1) Título
+                // 1) Título (fila 1)
                 $ws->insertNewRowBefore(1, 1);
                 $ws->mergeCells('A1:J1');
-                $ws->setCellValue('A1', 'PAGOS');
+                $ws->setCellValue('A1', 'REPORTE DE PAGOS');
                 $ws->getStyle('A1:J1')->applyFromArray([
-                    'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$white]],
-                    'font' => ['bold'=>true, 'color'=>['argb'=>$red], 'size'=>10],
+                    'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
+                    'font' => ['bold'=>true, 'color'=>['argb'=>$fontWhite], 'size'=>10],
                     'alignment' => [
                         'horizontal'=>Alignment::HORIZONTAL_CENTER,
                         'vertical'  =>Alignment::VERTICAL_CENTER,
@@ -199,7 +198,7 @@ class PaymentsExport implements
 
                 $ws->getStyle("A{$headerRow}:J{$headerRow}")->applyFromArray([
                     'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
-                    'font' => ['bold'=>true, 'color'=>['argb'=>$white], 'size'=>10],
+                    'font' => ['bold'=>true, 'color'=>['argb'=>$fontWhite], 'size'=>10],
                     'alignment' => [
                         'horizontal'=>Alignment::HORIZONTAL_CENTER,
                         'vertical'  =>Alignment::VERTICAL_CENTER,
@@ -207,11 +206,12 @@ class PaymentsExport implements
                 ]);
                 $ws->getRowDimension($headerRow)->setRowHeight(18);
 
-                // Congelar encabezado
+                // Congelar encabezado (sin autofiltros)
                 $ws->freezePane("A{$dataStartRow}");
 
                 if ($last < $dataStartRow) {
-                    return; // sin datos, sin autofiltros
+                    // No hay datos: nada más que dejar el header
+                    return;
                 }
 
                 // 3) Bordes + zebra (sin AutoFilter)
@@ -231,7 +231,7 @@ class PaymentsExport implements
                 $styles[] = $cond;
                 $ws->getStyle($rangeData)->setConditionalStyles($styles);
 
-                // Alineaciones
+                // Alineaciones específicas
                 $ws->getStyle("A{$dataStartRow}:A{$last}")
                     ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // Item
                 $ws->getStyle("D{$dataStartRow}:D{$last}")
@@ -247,19 +247,7 @@ class PaymentsExport implements
                 $ws->getStyle("J{$dataStartRow}:J{$last}")
                     ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
 
-                // 4) Anchos
-                $ws->getColumnDimension('A')->setWidth(6);   // Item
-                $ws->getColumnDimension('B')->setWidth(12);  // Placa
-                $ws->getColumnDimension('C')->setWidth(14);  // Serie
-                $ws->getColumnDimension('D')->setWidth(14);  // Fecha Registro
-                $ws->getColumnDimension('E')->setWidth(18);  // Fecha Pago
-                $ws->getColumnDimension('F')->setWidth(10);  // Hora
-                $ws->getColumnDimension('G')->setWidth(12);  // Tipo
-                $ws->getColumnDimension('H')->setWidth(22);  // Sucursal
-                $ws->getColumnDimension('I')->setWidth(22);  // Usuario
-                $ws->getColumnDimension('J')->setWidth(14);  // S/
-
-                // 5) TOTAL
+                // 4) TOTAL (fila final + 1) con #CEE7FF
                 $totalRow = $last + 1;
                 $ws->mergeCells("A{$totalRow}:I{$totalRow}");
                 $ws->setCellValue("A{$totalRow}", 'TOTAL');
@@ -281,7 +269,53 @@ class PaymentsExport implements
                 $ws->getStyle("J{$totalRow}")
                     ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
                 $ws->getRowDimension($totalRow)->setRowHeight(18);
+
+                // === Auto-ajuste de anchos: al ras del contenido (incluye header y TOTAL) ===
+                $columns = range('A','J');
+                $start   = $headerRow;   // desde encabezado
+                $end     = $totalRow;    // hasta TOTAL
+
+                // Evita saltos y sangrías que agreguen espacio visual
+                $ws->getStyle("A{$start}:J{$end}")
+                    ->getAlignment()->setWrapText(false)->setIndent(0);
+
+                // Medición de longitud "visible"
+                $measure = function($val) {
+                    if ($val === null) return 0;
+                    if (is_float($val) || is_int($val)) {
+                        return strlen((string)$val);
+                    }
+                    $s = trim((string)$val);
+                    $s = str_replace(["\r\n","\n","\r"], ' ', $s);
+                    return mb_strlen($s, 'UTF-8');
+                };
+
+                foreach ($columns as $col) {
+                    $maxLen = 0;
+
+                    for ($row = $start; $row <= $end; $row++) {
+                        $cell = $ws->getCell("{$col}{$row}");
+                        // Preferir el valor formateado si existe
+                        $disp = $cell->getFormattedValue();
+                        if ($disp === null || $disp === '') {
+                            $disp = $cell->getValue();
+                        }
+                        $maxLen = max($maxLen, $measure($disp));
+                    }
+
+                    // Colchón mínimo para no cortar caracteres anchos
+                    $tightWidth = max(1, $maxLen + 0.4);
+                    // Límite de seguridad por si hay textos larguísimos
+                    $tightWidth = min($tightWidth, 80);
+
+                    $ws->getColumnDimension($col)->setAutoSize(false);
+                    $ws->getColumnDimension($col)->setWidth($tightWidth);
+                }
+
+                // (Opcional) Deja un poco más de aire en J (S/):
+                // $ws->getColumnDimension('J')->setWidth($ws->getColumnDimension('J')->getWidth() + 0.6);
             },
         ];
     }
+
 }
