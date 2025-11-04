@@ -100,17 +100,18 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
                 $rGrand     = $rBlank3 + 1;
                 $lastRow    = $rGrand;
 
+                // Ocultar títulos de sección
                 foreach ([$rSec1Title, $rSec2Title] as $r) {
                     $s->mergeCells("A{$r}:M{$r}");
                     $s->setCellValue("A{$r}", '');
-                    $s->getRowDimension($r)->setRowHeight(0); // oculto
+                    $s->getRowDimension($r)->setRowHeight(0);
                 }
 
                 // Cabeceras de 2 niveles
                 $this->mergeHeader($s, $rSec1Hdr1, $rSec1Hdr2);
                 $this->mergeHeader($s, $rSec2Hdr1, $rSec2Hdr2);
 
-                // THEADs en azul, 10pt, compacto
+                // THEADs en azul, 10pt, compacto (wrap solo en cabeceras)
                 foreach ([[$rSec1Hdr1,$rSec1Hdr2], [$rSec2Hdr1,$rSec2Hdr2]] as [$h1,$h2]) {
                     $s->getStyle("A{$h1}:M{$h2}")->applyFromArray([
                         'fill' => ['fillType'=>\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
@@ -125,13 +126,13 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
                     $s->getRowDimension($h2)->setRowHeight(16);
                 }
 
-                // Cuerpo “Apoyo” con texto rojo
+                // Cuerpo “Apoyo” en rojo
                 if ($this->countSupport > 0) {
                     $s->getStyle("A{$rSec2Body1}:M{$rSec2BodyN}")
                         ->getFont()->getColor()->setARGB($red);
                 }
 
-                // Totales de cada bloque
+                // Totales por bloque
                 foreach ([$rSec1Total, $rSec2Total] as $ft) {
                     $s->getStyle("A{$ft}:M{$ft}")->applyFromArray([
                         'fill' => ['fillType'=>\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor'=>['argb'=>$footerFill]],
@@ -173,7 +174,7 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
                     ]
                 ]);
 
-                // Alinear números a la derecha (H..M)
+                // Números a la derecha (H..M)
                 foreach (['H','I','J','K','L','M'] as $col) {
                     $s->getStyle("{$col}{$rSec1Body1}:{$col}{$rSec1Total}")
                         ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
@@ -190,11 +191,10 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
                  *  Ajuste Fino “Muy Pegado”
                  * ========================= */
 
-                // 1) Altura por defecto compacta para TODAS las filas (ideal con font 10pt)
-                //    Luego re-aplicamos alturas específicas ya definidas arriba (headers/totales).
-                $s->getDefaultRowDimension()->setRowHeight(14); // ~10pt bien pegado
+                // Altura por defecto compacta para TODO (10pt)
+                $s->getDefaultRowDimension()->setRowHeight(14);
 
-                // 2) Asegurar que el cuerpo NO tenga wrapText (evita que crezca la altura)
+                // Sin wrap en CUERPO para no inflar alturas
                 if ($this->countExisting > 0) {
                     $s->getStyle("A{$rSec1Body1}:M{$rSec1BodyN}")
                         ->getAlignment()->setWrapText(false);
@@ -204,23 +204,42 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
                         ->getAlignment()->setWrapText(false);
                 }
 
-                // 3) AutoSize real para TODAS las columnas (A..M).
-                //    Esto hace que cada columna tome el ancho mínimo para caber el texto en una sola línea.
-                foreach (range('A', 'M') as $col) {
+                // Autosize base + quitar sangría
+                foreach (range('A','M') as $col) {
                     $s->getColumnDimension($col)->setAutoSize(true);
-                    // Quitar indentaciones por si acaso
                     $s->getStyle("{$col}1:{$col}{$lastRow}")
                         ->getAlignment()->setIndent(0);
                 }
 
-                // Nota: No usamos shrinkToFit para mantener exactamente 10pt.
-                // Si algún texto es extremadamente largo y prefieres forzar una sola línea,
-                // puedes descomentar lo siguiente bajo tu propio criterio:
-                // $s->getStyle("A{$rSec1Body1}:M{$rSec1BodyN}")->getAlignment()->setShrinkToFit(true);
-                // $s->getStyle("A{$rSec2Body1}:M{$rSec2BodyN}")->getAlignment()->setShrinkToFit(true);
+                // Forzamos cálculo antes de leer anchos (best-effort)
+                \PhpOffice\PhpSpreadsheet\Calculation\Calculation::getInstance(
+                    $s->getParent()
+                )->clearCalculationCache();
+
+                // Recorte fino de holgura para dejarlo “al ras”
+                $trim = 0.8; // ajusta entre 0.6 y 1.0 según tu gusto
+                foreach (range('A','M') as $col) {
+                    $dim = $s->getColumnDimension($col);
+
+                    // Si autosize está activo, fijamos ancho basándonos en el ancho calculado
+                    $current = $dim->getWidth();
+                    if ($current === null || $current <= 0 || $current === -1) {
+                        // Fallback razonable si el writer aún no calculó autosize
+                        $current = 8.0;
+                    }
+
+                    $dim->setAutoSize(false);
+                    $newWidth = max(1.0, $current - $trim);
+                    $dim->setWidth($newWidth);
+                }
+
+                // (Opcional) Si alguna columna específica suele tener textos larguísimos,
+                // puedes reducir menos ahí, por ejemplo:
+                // $s->getColumnDimension('B')->setWidth(max(1.0, $s->getColumnDimension('B')->getWidth() - 0.6));
             },
         ];
     }
+
 
 
 
