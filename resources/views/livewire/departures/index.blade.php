@@ -34,7 +34,7 @@
     <!-- Header -->
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title">Salidas</h4>
+            <h4 class="main-title text-danger">LISTADO GENERAL DE SALIDAS</h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -453,7 +453,7 @@
     {{-- Overlay de carga scopeado (ya no targetea fromDate/toDate) --}}
     <div class="screen-overlay"
          wire:loading.delay.flex
-         wire:target="searchType,applyDateRange,groupMode,export,toggleGroup,save,update,reportMonthly,reportRmp,reportStats">
+         wire:target="openAddWindow,openEditWindow,searchType,applyDateRange,groupMode,export,toggleGroup,save,update,reportMonthly,reportRmp,reportStats">
         <div class="text-center">
             <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
             <div class="mt-2 text-white fw-semibold">Cargando…</div>
