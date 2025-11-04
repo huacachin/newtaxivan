@@ -59,6 +59,11 @@
         font-size: 12px;
     }
 
+    .logo-footer{
+        font-family: 'brush','sans-serif';
+        font-size: 22px;
+    }
+
     .active-menu {
         color: rgba(var(--dark), 1);
         background: rgba(var(--dark), .08);
