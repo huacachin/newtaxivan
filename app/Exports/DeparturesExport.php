@@ -62,21 +62,21 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
                 // Paleta
                 $blueDark   = 'FF2874A6'; // encabezados
                 $footerFill = 'FFCEE7FF'; // totales
-                $fontWhite  = 'FFFFFFFF';
+                $white  = 'FFFFFFFF';
                 $fontBlack  = 'FF000000';
-                $fontRed    = 'FFCC0000';
+                $red    = 'FFCC0000';
                 $borderSoft = 'FFCFD8DC';
 
                 // ===== Encabezado compacto (A1:M1) =====
                 $s->mergeCells('A1:M1');
                 $s->setCellValue('A1', 'LISTADO GENERAL DE SALIDA');
                 $s->getStyle('A1:M1')->applyFromArray([
-                    'fill' => ['fillType'=>\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
+                    'fill' => ['fillType'=>\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor'=>['argb'=>$white]],
                     'alignment' => [
                         'horizontal'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
                         'vertical'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
                     ],
-                    'font' => ['bold'=>true, 'color'=>['argb'=>$fontWhite], 'size'=>10],
+                    'font' => ['bold'=>true, 'color'=>['argb'=>$red], 'size'=>10],
                 ]);
                 $s->getRowDimension(1)->setRowHeight(18); // más compacto
 
@@ -116,7 +116,7 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
                 foreach ([[$rSec1Hdr1,$rSec1Hdr2], [$rSec2Hdr1,$rSec2Hdr2]] as [$h1,$h2]) {
                     $s->getStyle("A{$h1}:M{$h2}")->applyFromArray([
                         'fill' => ['fillType'=>\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
-                        'font' => ['bold'=>true, 'color'=>['argb'=>$fontWhite], 'size'=>10],
+                        'font' => ['bold'=>true, 'color'=>['argb'=>$white], 'size'=>10],
                         'alignment' => [
                             'horizontal'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
                             'vertical'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
@@ -130,7 +130,7 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
                 // Cuerpo “Apoyo” con texto rojo
                 if ($this->countSupport > 0) {
                     $s->getStyle("A{$rSec2Body1}:M{$rSec2BodyN}")
-                        ->getFont()->getColor()->setARGB($fontRed);
+                        ->getFont()->getColor()->setARGB($red);
                 }
 
                 // Totales de cada bloque con #CEE7FF (10pt)
