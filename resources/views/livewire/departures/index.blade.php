@@ -298,19 +298,10 @@
                             </tfoot>
                         </table>
                     </div>
-                </div>
 
-            </div>
-        </div>
-
-        <!-- Vehículos de apoyo + TOTAL GENERAL dentro del mismo card -->
-        <div class="col-xl-12">
-            <div class="card">
-
-                <div class="card-body">
                     <h5 class="my-2">Vehículos de apoyo</h5>
                     <div class="table-responsive mb-3">
-                        <table class=" table table-bordered   p-0">
+                        <table class=" table table-bordered table-striped   p-0">
                             <thead class="text-center bg-primary">
                             <tr>
                                 @if(!$groupMode)
@@ -342,29 +333,29 @@
 
                             <tbody wire:key="dep-support-tbody-{{ $groupMode ? 'g' : 'd' }}">
                             @forelse($supportRows as $d)
-                                <tr class="text-center  bg-danger">
+                                <tr class="text-center ">
                                     @if(!$groupMode)
-                                        <td class="text-center ">
+                                        <td class="text-center text-danger">
                                             <i  class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
                                                 wire:click="openEditWindow({{ $d->id }})"></i>
                                         </td>
                                     @endif
 
                                     {{-- Nº --}}
-                                    <td>@if($groupMode) {{ $d->ordinal }} @else {{ $loop->iteration }} @endif</td>
+                                    <td class="text-danger">@if($groupMode) {{ $d->ordinal }} @else {{ $loop->iteration }} @endif</td>
 
-                                    <td>{{ $d->plate }}</td>
-                                    <td>{{ \Illuminate\Support\Carbon::parse($d->date)->format('d/m/Y') }}</td>
+                                    <td class="text-danger">{{ $d->plate }}</td>
+                                    <td class="text-danger">{{ \Illuminate\Support\Carbon::parse($d->date)->format('d/m/Y') }}</td>
 
                                     {{-- Hora: Salida --}}
                                     @if(!$groupMode)
-                                        <td>{{ $d->hour }}</td>
+                                        <td class="text-danger">{{ $d->hour }}</td>
                                     @else
-                                        <td>-</td>
+                                        <td class="text-danger">-</td>
                                     @endif
 
                                     {{-- Hora: Frec. (fix para agrupar) --}}
-                                    <td>
+                                    <td class="text-danger">
                                         @if($groupMode)
                                             -
                                         @else
@@ -372,22 +363,22 @@
                                         @endif
                                     </td>
 
-                                    <td class="p-2" >{{ $d->headquarter_name ?? '-' }}</td>
-                                    <td class="p-2" >{{ $d->user_name ?? '-' }}</td>
+                                    <td class="p-2 text-danger" >{{ $d->headquarter_name ?? '-' }}</td>
+                                    <td class="p-2 text-danger" >{{ $d->user_name ?? '-' }}</td>
 
                                     {{-- Empresa --}}
-                                    <td class="p-2" >{{ number_format($groupMode ? ($d->k1 ?? 0) : ($d->times ?? 0)) }}</td>
-                                    <td class="p-2" >{{ number_format($groupMode ? ($d->k1 ?? 0) : ($d->times ?? 0)) }}</td>
-                                    <td class="p-2" >{{ number_format($groupMode ? ($d->p1 ?? 0) : ($d->price ?? 0), 2) }}</td>
+                                    <td class="p-2 text-danger" >{{ number_format($groupMode ? ($d->k1 ?? 0) : ($d->times ?? 0)) }}</td>
+                                    <td class="p-2 text-danger" >{{ number_format($groupMode ? ($d->k1 ?? 0) : ($d->times ?? 0)) }}</td>
+                                    <td class="p-2 text-danger" >{{ number_format($groupMode ? ($d->p1 ?? 0) : ($d->price ?? 0), 2) }}</td>
 
                                     {{-- Vehículo --}}
-                                    <td class="p-2" >{{ number_format($groupMode ? ($d->pasajeros ?? 0) : ($d->passenger ?? 0)) }}</td>
-                                    <td class="p-2" >{{ number_format($groupMode ? ($d->pasaje ?? 0) : ($d->passage ?? 0), 2) }}</td>
-                                    <td class="p-2" >{{ number_format($d->total_pasaje ?? 0, 2) }}</td>
+                                    <td class="p-2 text-danger" >{{ number_format($groupMode ? ($d->pasajeros ?? 0) : ($d->passenger ?? 0)) }}</td>
+                                    <td class="p-2 text-danger" >{{ number_format($groupMode ? ($d->pasaje ?? 0) : ($d->passage ?? 0), 2) }}</td>
+                                    <td class="p-2 text-danger" >{{ number_format($d->total_pasaje ?? 0, 2) }}</td>
 
                                     {{-- Map solo en detalle --}}
                                     @if(!$groupMode)
-                                        <td >
+                                        <td class="text-danger">
                                             @if(!empty($d->latitude) && !empty($d->longitude))
                                                 <a href="https://maps.google.com/?q={{ $d->latitude }},{{ $d->longitude }}" target="_blank">🌍</a>
                                             @else
@@ -395,12 +386,12 @@
                                             @endif
                                         </td>
                                     @else
-                                        <td >-</td>
+                                        <td class="text-danger">-</td>
                                     @endif
                                 </tr>
                             @empty
                                 <tr>
-                                    <td  colspan="15">No se encontraron resultados</td>
+                                    <td  colspan="15 text-danger">No se encontraron resultados</td>
                                 </tr>
                             @endforelse
                             </tbody>
@@ -451,8 +442,11 @@
                         </table>
                     </div>
                 </div>
+
             </div>
         </div>
+
+
 
     </div>
 
