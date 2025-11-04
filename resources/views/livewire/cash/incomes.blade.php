@@ -1,3 +1,8 @@
+@push('datepicker_css')
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.14.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script src="https://code.jquery.com/ui/1.14.1/jquery-ui.js"></script>
+@endpush
 @push('styles')
     <style>
 
@@ -120,13 +125,13 @@
                                         <!-- Fecha Inicio -->
                                         <div class="flex-shrink-0" style="min-width: 160px;">
                                             <label class="form-label mb-1">Fecha Inicio</label>
-                                            <input type="date" class="form-control form-control-sm" wire:model="date_start">
+                                            <input type="text" id="date_start" class="form-control form-control-sm" wire:model="date_start">
                                         </div>
 
                                         <!-- Fecha Fin -->
                                         <div class="flex-shrink-0" style="min-width: 160px;">
                                             <label class="form-label mb-1">Fecha Fin</label>
-                                            <input type="date" class="form-control form-control-sm" wire:model="date_end">
+                                            <input type="text" id="date_end" class="form-control form-control-sm" wire:model="date_end">
                                         </div>
 
                                     </div>
@@ -420,5 +425,29 @@
     </div>
 
 </div>
+
+@push('datepicker_js')
+    <script>
+        $( function() {
+            $( "#date_start" ).datepicker({
+                changeMonth: true,
+                changeYear: true,
+                dateFormat: 'yy-mm-dd',
+                onSelect: function (dateText, inst) {
+                    @this.set('date_start', dateText);
+                }
+            });
+
+            $( "#date_end" ).datepicker({
+                changeMonth: true,
+                changeYear: true,
+                dateFormat: 'yy-mm-dd',
+                onSelect: function (dateText, inst) {
+                    @this.set('date_end', dateText);
+                }
+            });
+        } );
+    </script>
+@endpush
 
 

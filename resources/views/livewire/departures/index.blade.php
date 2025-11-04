@@ -1,3 +1,8 @@
+@push('datepicker_css')
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.14.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script src="https://code.jquery.com/ui/1.14.1/jquery-ui.js"></script>
+@endpush
 @push('styles')
     <style>
         table {
@@ -126,13 +131,13 @@
                         {{-- Fecha Inicio --}}
                         <div class="col-auto">
                             <label class="form-label d-none d-lg-block mb-1">Fecha Inicio</label>
-                            <input type="date" class="form-control form-control-sm" wire:model.defer="uiFromDate">
+                            <input type="text" id="uiFromDate" class="form-control form-control-sm" wire:model.defer="uiFromDate">
                         </div>
 
                         {{-- Fecha Fin --}}
                         <div class="col-auto">
                             <label class="form-label d-none d-lg-block mb-1">Fecha Fin</label>
-                            <input type="date" class="form-control form-control-sm" wire:model.defer="uiToDate">
+                            <input type="text" id="uiToDate" class="form-control form-control-sm" wire:model.defer="uiToDate">
                         </div>
 
                         {{-- Botón aplicar (pegado a los inputs) --}}
@@ -460,3 +465,27 @@
         </div>
     </div>
 </div>
+
+@push('datepicker_js')
+    <script>
+        $( function() {
+            $( "#uiFromDate" ).datepicker({
+                changeMonth: true,
+                changeYear: true,
+                dateFormat: 'yy-mm-dd',
+                onSelect: function (dateText, inst) {
+                    @this.set('uiFromDate', dateText);
+                }
+            });
+
+            $( "#uiToDate" ).datepicker({
+                changeMonth: true,
+                changeYear: true,
+                dateFormat: 'yy-mm-dd',
+                onSelect: function (dateText, inst) {
+                    @this.set('uiToDate', dateText);
+                }
+            });
+        } );
+    </script>
+@endpush

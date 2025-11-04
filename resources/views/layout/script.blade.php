@@ -1,5 +1,14 @@
+
 <!-- latest jquery-->
-<script src="{{asset('assets/js/jquery-3.6.3.min.js')}}"></script>
+<!-- TODO: optimizar esto, datepicker no debería ir con jquery -->
+@if (! request()->routeIs([
+    'departures.index',
+    'payments.index',
+    'cash.incomes',
+    'cash.expenses'
+]))
+    <script src="{{ asset('assets/js/jquery-3.6.3.min.js') }}"></script>
+@endif
 
 <!-- Bootstrap js-->
 <script src="{{asset('assets/vendor/bootstrap/bootstrap.bundle.min.js')}}"></script>

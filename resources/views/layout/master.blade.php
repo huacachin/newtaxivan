@@ -55,6 +55,8 @@
      @include('layout.footer')
     <!-- Footer Section end -->
 </div>
+
+@stack('datepicker_js')
 </body>
 
 <!--customizer-->

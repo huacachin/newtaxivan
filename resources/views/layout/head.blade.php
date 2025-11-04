@@ -10,4 +10,10 @@
 <link rel="shortcut icon" href="{{('../assets/images/logo/logo.png')}}" type="image/x-icon">
 <title>@yield('title') | Taxivan | Huacachin</title>
 
+<!-- TODO: Cambiar de datepicker y dejar de usar jquery -->
+@stack('datepicker_css')
+
 @stack('styles')
+
+
+
