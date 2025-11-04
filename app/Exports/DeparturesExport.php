@@ -235,7 +235,8 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
 
                 // (Opcional) Si alguna columna específica suele tener textos larguísimos,
                 // puedes reducir menos ahí, por ejemplo:
-                // $s->getColumnDimension('B')->setWidth(max(1.0, $s->getColumnDimension('B')->getWidth() - 0.6));
+                 $s->getColumnDimension('F')->setWidth(max(9.0, $s->getColumnDimension('F')->getWidth() - 0.6));
+                $s->getColumnDimension('C')->setWidth(max(10.0, $s->getColumnDimension('C')->getWidth() - 0.6));
             },
         ];
     }
