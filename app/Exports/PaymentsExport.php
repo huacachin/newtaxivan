@@ -210,8 +210,7 @@ class PaymentsExport implements
                 $ws->freezePane("A{$dataStartRow}");
 
                 if ($last < $dataStartRow) {
-                    // No hay datos: nada más que dejar el header
-                    return;
+                    return; // sin datos
                 }
 
                 // 3) Bordes + zebra (sin AutoFilter)
@@ -247,7 +246,7 @@ class PaymentsExport implements
                 $ws->getStyle("J{$dataStartRow}:J{$last}")
                     ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
 
-                // 4) TOTAL (fila final + 1) con #CEE7FF
+                // 4) TOTAL (fila final + 1)
                 $totalRow = $last + 1;
                 $ws->mergeCells("A{$totalRow}:I{$totalRow}");
                 $ws->setCellValue("A{$totalRow}", 'TOTAL');
@@ -270,50 +269,47 @@ class PaymentsExport implements
                     ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
                 $ws->getRowDimension($totalRow)->setRowHeight(18);
 
-                // === Auto-ajuste de anchos: al ras del contenido (incluye header y TOTAL) ===
-                $columns = range('A','J');
-                $start   = $headerRow;   // desde encabezado
-                $end     = $totalRow;    // hasta TOTAL
-
-                // Evita saltos y sangrías que agreguen espacio visual
-                $ws->getStyle("A{$start}:J{$end}")
+                // === 5) Anchos REALMENTE al ras ===
+                //    a) quitamos todo lo que pueda agregar aire
+                $ws->getStyle("A{$headerRow}:J{$totalRow}")
                     ->getAlignment()->setWrapText(false)->setIndent(0);
 
-                // Medición de longitud "visible"
-                $measure = function($val) {
-                    if ($val === null) return 0;
-                    if (is_float($val) || is_int($val)) {
-                        return strlen((string)$val);
-                    }
-                    $s = trim((string)$val);
-                    $s = str_replace(["\r\n","\n","\r"], ' ', $s);
-                    return mb_strlen($s, 'UTF-8');
-                };
+                //    b) usar autosize EXACT (mide con glyphs reales)
+                \PhpOffice\PhpSpreadsheet\Shared\Font::setAutoSizeMethod(
+                    \PhpOffice\PhpSpreadsheet\Shared\Font::AUTOSIZE_METHOD_EXACT
+                );
 
-                foreach ($columns as $col) {
-                    $maxLen = 0;
+                $cols = range('A','J');
 
-                    for ($row = $start; $row <= $end; $row++) {
-                        $cell = $ws->getCell("{$col}{$row}");
-                        // Preferir el valor formateado si existe
-                        $disp = $cell->getFormattedValue();
-                        if ($disp === null || $disp === '') {
-                            $disp = $cell->getValue();
-                        }
-                        $maxLen = max($maxLen, $measure($disp));
-                    }
-
-                    // Colchón mínimo para no cortar caracteres anchos
-                    $tightWidth = max(1, $maxLen + 0.4);
-                    // Límite de seguridad por si hay textos larguísimos
-                    $tightWidth = min($tightWidth, 80);
-
-                    $ws->getColumnDimension($col)->setAutoSize(false);
-                    $ws->getColumnDimension($col)->setWidth($tightWidth);
+                // primero: autosize exact
+                foreach ($cols as $c) {
+                    $ws->getColumnDimension($c)->setAutoSize(true);
                 }
 
-                // (Opcional) Deja un poco más de aire en J (S/):
-                // $ws->getColumnDimension('J')->setWidth($ws->getColumnDimension('J')->getWidth() + 0.6);
+                // forzar el cálculo (algunas versiones lo requieren)
+                $e->sheet->calculateColumnWidths();
+
+                //    c) apretar un poco cada columna (restar ~0.7 caracteres)
+                foreach ($cols as $c) {
+                    $dim = $ws->getColumnDimension($c);
+                    $w   = (float) $dim->getWidth();
+
+                    // Si por alguna razón viene 0, dejamos un mínimo
+                    if ($w <= 0.0) {
+                        $w = 1.0;
+                    }
+
+                    // Resta fina para quedar “pegado” al texto
+                    $tight = max(1.0, $w - 0.7);
+
+                    // En moneda (J) dejo un pelín más de aire para miles/decimales
+                    if ($c === 'J') {
+                        $tight = max(1.0, $w - 0.4);
+                    }
+
+                    $dim->setAutoSize(false);
+                    $dim->setWidth($tight);
+                }
             },
         ];
     }
