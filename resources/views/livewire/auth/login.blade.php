@@ -30,8 +30,8 @@
 
                                         @error('username') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
 
-                                        <div>
-                                            <button type="submit" role="button" class="btn btn-danger w-100 b-r-22">Ingresar</button>
+                                        <div class="text-center">
+                                            <button type="submit" role="button" class="btn btn-danger w-64">Ingresar</button>
                                         </div>
                                     </form>
                                 </div>
