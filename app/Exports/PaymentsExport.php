@@ -173,17 +173,18 @@ class PaymentsExport implements
 
                 $blueDark   = 'FF2874A6';
                 $footerFill = 'FFCEE7FF';
-                $fontWhite  = 'FFFFFFFF';
+                $white  = 'FFFFFFFF';
+                $red        = 'FFCC0000';
                 $fontBlack  = 'FF000000';
                 $borderSoft = 'FFCFD8DC';
 
                 // 1) Título
                 $ws->insertNewRowBefore(1, 1);
                 $ws->mergeCells('A1:J1');
-                $ws->setCellValue('A1', 'REPORTE DE PAGOS');
+                $ws->setCellValue('A1', 'PAGOS');
                 $ws->getStyle('A1:J1')->applyFromArray([
-                    'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
-                    'font' => ['bold'=>true, 'color'=>['argb'=>$fontWhite], 'size'=>10],
+                    'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$white]],
+                    'font' => ['bold'=>true, 'color'=>['argb'=>$red], 'size'=>10],
                     'alignment' => [
                         'horizontal'=>Alignment::HORIZONTAL_CENTER,
                         'vertical'  =>Alignment::VERTICAL_CENTER,
@@ -198,7 +199,7 @@ class PaymentsExport implements
 
                 $ws->getStyle("A{$headerRow}:J{$headerRow}")->applyFromArray([
                     'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
-                    'font' => ['bold'=>true, 'color'=>['argb'=>$fontWhite], 'size'=>10],
+                    'font' => ['bold'=>true, 'color'=>['argb'=>$white], 'size'=>10],
                     'alignment' => [
                         'horizontal'=>Alignment::HORIZONTAL_CENTER,
                         'vertical'  =>Alignment::VERTICAL_CENTER,
