@@ -46,17 +46,17 @@
     }
 
     .logo-home{
-        width: 250px;        /* ajusta a tu tamaño */
+        width: 200px;        /* ajusta a tu tamaño */
         height: 80px;
-        background: #2874A6; /* el color nuevo del “texto” */
+        background: #FFFFFF; /* el color nuevo del “texto” */
         -webkit-mask: url({{ asset('assets/images/logo/logo1.png') }}) no-repeat center / contain;
         mask: url({{ asset('assets/images/logo/logo1.png') }}) no-repeat center / contain;
     }
 
     .slogan{
-        color: #2874A6;
+        color: #FFF;
         font-family: 'cooper','sans-serif';
-        font-size: 14px;
+        font-size: 12px;
     }
 
     .active-menu {

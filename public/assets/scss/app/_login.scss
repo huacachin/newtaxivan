@@ -30,20 +30,17 @@
 .login-form-container {
   width: 100%;
   min-height: 100vh;
-  background-image: url("../images/background/06.png");
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: center;
+  background-color: #2d2f39;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
 
   .form_container {
-    width: 350px;
+    width: 320px;
     padding: 1.5rem;
     background-color: var(--white);
-    box-shadow: var(--box-shadow);
+    /*box-shadow: var(--box-shadow);*/
     border-radius: var(--bs-border-radius);
     h3 {
       font-size: calc(20px + (28 - 20) * ((100vw - 300px) / (1920 - 300)));

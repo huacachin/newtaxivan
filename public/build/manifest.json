@@ -11,10 +11,6 @@
     "file": "assets/02-xla4SRez.png",
     "src": "public/assets/images/background/02.png"
   },
-  "public/assets/images/background/06.png": {
-    "file": "assets/06-M65XE3uf.png",
-    "src": "public/assets/images/background/06.png"
-  },
   "public/assets/images/background/box-bg.jpg": {
     "file": "assets/box-bg-Bbt7pWnn.jpg",
     "src": "public/assets/images/background/box-bg.jpg"
@@ -80,7 +76,7 @@
     "src": "public/assets/images/slick/8.jpg"
   },
   "public/assets/scss/style.scss": {
-    "file": "assets/style-DLxZQXvx.css",
+    "file": "assets/style-agBE6LnT.css",
     "src": "public/assets/scss/style.scss",
     "isEntry": true
   },
