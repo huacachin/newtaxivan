@@ -23,10 +23,10 @@
                                         <div class="mb-3">
                                             <input wire:model.defer="password" placeholder="Contraseña" id="password" type="password" class="form-control">
                                         </div>
-                                        <div class="mb-3 form-check">
+                                        <!--div class="mb-3 form-check">
                                             <input wire:model="remember" type="checkbox" class="form-check-input" >
                                             <label class="form-check-label" for="formCheck1">Mantener sesión</label>
-                                        </div>
+                                        </div-->
 
                                         @error('username') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
 
