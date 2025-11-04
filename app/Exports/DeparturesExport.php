@@ -62,9 +62,9 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
                 // Paleta
                 $blueDark   = 'FF2874A6'; // encabezados
                 $footerFill = 'FFCEE7FF'; // totales
-                $white  = 'FFFFFFFF';
+                $white      = 'FFFFFFFF';
                 $fontBlack  = 'FF000000';
-                $red    = 'FFCC0000';
+                $red        = 'FFCC0000';
                 $borderSoft = 'FFCFD8DC';
 
                 // ===== Encabezado compacto (A1:M1) =====
@@ -78,10 +78,9 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
                     ],
                     'font' => ['bold'=>true, 'color'=>['argb'=>$red], 'size'=>10],
                 ]);
-                $s->getRowDimension(1)->setRowHeight(18); // más compacto
+                $s->getRowDimension(1)->setRowHeight(18);
 
                 // ===== Reindex sin títulos de sección visibles =====
-                // Antes había una fila de título para cada sección; ahora la ocultamos.
                 $rSec1Title = 2;      // (oculto)
                 $rSec1Hdr1  = 3;
                 $rSec1Hdr2  = 4;
@@ -101,11 +100,10 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
                 $rGrand     = $rBlank3 + 1;
                 $lastRow    = $rGrand;
 
-                // Ocultar filas de “título de sección”
                 foreach ([$rSec1Title, $rSec2Title] as $r) {
                     $s->mergeCells("A{$r}:M{$r}");
-                    $s->setCellValue("A{$r}", '');           // sin texto
-                    $s->getRowDimension($r)->setRowHeight(0); // oculto/compacto
+                    $s->setCellValue("A{$r}", '');
+                    $s->getRowDimension($r)->setRowHeight(0); // oculto
                 }
 
                 // Cabeceras de 2 niveles
@@ -123,8 +121,8 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
                             'wrapText'=>true
                         ],
                     ]);
-                    $s->getRowDimension($h1)->setRowHeight(10);
-                    $s->getRowDimension($h2)->setRowHeight(10);
+                    $s->getRowDimension($h1)->setRowHeight(18);
+                    $s->getRowDimension($h2)->setRowHeight(16);
                 }
 
                 // Cuerpo “Apoyo” con texto rojo
@@ -133,7 +131,7 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
                         ->getFont()->getColor()->setARGB($red);
                 }
 
-                // Totales de cada bloque con #CEE7FF (10pt)
+                // Totales de cada bloque
                 foreach ([$rSec1Total, $rSec2Total] as $ft) {
                     $s->getStyle("A{$ft}:M{$ft}")->applyFromArray([
                         'fill' => ['fillType'=>\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor'=>['argb'=>$footerFill]],
@@ -149,10 +147,10 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
                             ]
                         ]
                     ]);
-                    $s->getRowDimension($ft)->setRowHeight(10);
+                    $s->getRowDimension($ft)->setRowHeight(18);
                 }
 
-                // TOTAL GENERAL en #CEE7FF destacado (10pt)
+                // TOTAL GENERAL
                 $s->getStyle("A{$rGrand}:M{$rGrand}")->applyFromArray([
                     'fill' => ['fillType'=>\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor'=>['argb'=>$footerFill]],
                     'font' => ['bold'=>true, 'color'=>['argb'=>$fontBlack], 'size'=>10],
@@ -163,7 +161,7 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
                         ]
                     ],
                 ]);
-                $s->getRowDimension($rGrand)->setRowHeight(10);
+                $s->getRowDimension($rGrand)->setRowHeight(18);
 
                 // Bordes finos a toda la grilla
                 $s->getStyle("A1:M{$lastRow}")->applyFromArray([
@@ -187,9 +185,43 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
 
                 // Congelar al inicio del cuerpo
                 $s->freezePane("A{$rSec1Body1}");
+
+                /* =========================
+                 *  Ajuste Fino “Muy Pegado”
+                 * ========================= */
+
+                // 1) Altura por defecto compacta para TODAS las filas (ideal con font 10pt)
+                //    Luego re-aplicamos alturas específicas ya definidas arriba (headers/totales).
+                $s->getDefaultRowDimension()->setRowHeight(14); // ~10pt bien pegado
+
+                // 2) Asegurar que el cuerpo NO tenga wrapText (evita que crezca la altura)
+                if ($this->countExisting > 0) {
+                    $s->getStyle("A{$rSec1Body1}:M{$rSec1BodyN}")
+                        ->getAlignment()->setWrapText(false);
+                }
+                if ($this->countSupport > 0) {
+                    $s->getStyle("A{$rSec2Body1}:M{$rSec2BodyN}")
+                        ->getAlignment()->setWrapText(false);
+                }
+
+                // 3) AutoSize real para TODAS las columnas (A..M).
+                //    Esto hace que cada columna tome el ancho mínimo para caber el texto en una sola línea.
+                foreach (range('A', 'M') as $col) {
+                    $s->getColumnDimension($col)->setAutoSize(true);
+                    // Quitar indentaciones por si acaso
+                    $s->getStyle("{$col}1:{$col}{$lastRow}")
+                        ->getAlignment()->setIndent(0);
+                }
+
+                // Nota: No usamos shrinkToFit para mantener exactamente 10pt.
+                // Si algún texto es extremadamente largo y prefieres forzar una sola línea,
+                // puedes descomentar lo siguiente bajo tu propio criterio:
+                // $s->getStyle("A{$rSec1Body1}:M{$rSec1BodyN}")->getAlignment()->setShrinkToFit(true);
+                // $s->getStyle("A{$rSec2Body1}:M{$rSec2BodyN}")->getAlignment()->setShrinkToFit(true);
             },
         ];
     }
+
 
 
 
