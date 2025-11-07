@@ -225,7 +225,7 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents, WithColu
                 $s->getColumnDimension('E')->setWidth(7.0);
                 $s->getColumnDimension('F')->setWidth(9.0);
                 $s->getColumnDimension('G')->setWidth(9.0);
-                $s->getColumnDimension('H')->setWidth(5.0);
+                $s->getColumnDimension('H')->setWidth(5.5);
                 $s->getColumnDimension('I')->setWidth(4.0);
                 $s->getColumnDimension('J')->setWidth(4.0);
                 $s->getColumnDimension('K')->setWidth(4.0);
