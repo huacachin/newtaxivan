@@ -156,10 +156,10 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
                     $s->getColumnDimensionByColumn($c)->setAutoSize(false);
                 }
                 $s->getColumnDimension('A')->setWidth(14); // CONTROLADOR
-                $s->getColumnDimension('B')->setWidth(14);   // PARADERO
+                $s->getColumnDimension('B')->setWidth(13);   // PARADERO
                 $s->getColumnDimension('C')->setWidth(6.5);  // TIPO
                 for ($c=$firstDayColIdx; $c < $lastColIdx; $c++) {
-                    $s->getColumnDimensionByColumn($c)->setWidth(3.5); // Días
+                    $s->getColumnDimensionByColumn($c)->setWidth(3.7); // Días
                 }
                 $s->getColumnDimensionByColumn($lastColIdx)->setWidth(6.5); // V.T
 
