@@ -152,7 +152,7 @@ class PaymentsExport implements
     public function columnFormats(): array
     {
         return [
-            'D' => NumberFormat::FORMAT_DATE_DATETIME,, // Fecha Registro
+            'D' => NumberFormat::FORMAT_DATE_DATETIME, // Fecha Registro
             'E' => NumberFormat::FORMAT_DATE_DATETIME,  // Fecha Pago
             'F' => NumberFormat::FORMAT_DATE_TIME3,     // Hora
         ];
