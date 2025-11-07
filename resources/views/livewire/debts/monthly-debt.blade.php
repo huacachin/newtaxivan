@@ -94,7 +94,7 @@
                             <div class="d-flex flex-wrap align-items-end gap-2 overflow-auto py-1">
 
                                 <!-- Buscar placa -->
-                                <div class="flex-shrink-0" style="min-width: 200px;">
+                                <div class="flex-shrink-0" >
                                     <label class="form-label mb-1">Buscar placa</label>
                                     <input type="search"
                                            class="form-control form-control-sm"
@@ -103,7 +103,7 @@
                                 </div>
 
                                 <!-- Mes -->
-                                <div class="flex-shrink-0" style="min-width: 140px;">
+                                <div class="flex-shrink-0" >
                                     <label class="form-label mb-1">Mes</label>
                                     <select class="form-select form-select-sm" wire:model.live="month">
                                         @foreach($months as $val => $label)
@@ -113,7 +113,7 @@
                                 </div>
 
                                 <!-- Año -->
-                                <div class="flex-shrink-0" style="min-width: 120px;">
+                                <div class="flex-shrink-0">
                                     <label class="form-label mb-1">Año</label>
                                     <select class="form-select form-select-sm" wire:model.live="year">
                                         @foreach($years as $y)
@@ -125,7 +125,7 @@
 
 
                                 <!-- Condición -->
-                                <div class="flex-shrink-0" style="min-width: 160px;">
+                                <div class="flex-shrink-0">
                                     <label class="form-label mb-1">Condición</label>
                                     <select class="form-select form-select-sm" wire:model.live="condition">
                                         <option value="">Todas</option>
