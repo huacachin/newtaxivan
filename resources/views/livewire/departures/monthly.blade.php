@@ -11,6 +11,9 @@
             font-size: 10px !important;
             text-align: center !important;
             vertical-align: middle;   /* <-- clave */
+            white-space: normal !important;
+            word-break: break-word;
+            overflow-wrap: anywhere;
         }
 
         .btn, input,select {
@@ -43,7 +46,7 @@
     <!-- Header -->
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title">Reporte mensual por placa – V.T</h4>
+            <h4 class="main-title text-danger">REPORTE MENSUAL POR PLACA - V.T {{$monthName}} DEL {{$year}}</h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -67,11 +70,8 @@
             <div class="card shadow-sm">
 
                 <div class="card-body">
-                    <h5 class="mb-0" style="color:#e11d48;">
-                        REPORTE MENSUAL POR PLACA – V.T {{ $monthName }} {{ $year }}
-                    </h5>
 
-                    <div class="row my-2">
+                    <div class="row mb-2">
                         <div class="col-12">
                             <div class="d-flex flex-nowrap align-items-end gap-2 overflow-auto py-1">
 

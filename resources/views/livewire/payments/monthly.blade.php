@@ -10,6 +10,9 @@
             font-size: 10px !important;
             text-align: center !important;
             vertical-align: middle;   /* <-- clave */
+            white-space: normal !important;
+            word-break: break-word;
+            overflow-wrap: anywhere;
         }
 
         .btn, input,select {
@@ -38,12 +41,14 @@
         }
     </style>
 @endpush
-
+@php
+    $monthName = \Illuminate\Support\Str::upper(\Carbon\Carbon::create($year, $month, 1)->translatedFormat('F'));
+@endphp
 <div class="container-fluid">
     <!-- Header -->
     <div class="row align-items-center mb-3">
         <div class="col-sm-6">
-            <h4 class="main-title mb-0">Pagos</h4>
+            <h4 class="main-title mb-0 text-danger">REPORTE MENSUAL DE PAGO – {{$monthName}} DEL {{$year}}</h4>
         </div>
         <div class="col-sm-6 mt-sm-0 mt-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end mb-0">
@@ -68,13 +73,7 @@
 
                 <div class="card-body pb-2">
 
-                    @php
-                        $monthName = \Illuminate\Support\Str::upper(\Carbon\Carbon::create($year, $month, 1)->translatedFormat('F'));
-                    @endphp
-                    <h5 class="mb-3" style="color:#e11d48;">
-                        REPORTE MENSUAL DE PAGO – {{ $monthName }} {{ $year }}
-                    </h5>
-                    <div class="row my-2">
+                    <div class="row mb-2">
                         <div class="col-12">
                             <div class="d-flex flex-wrap align-items-end gap-2 overflow-auto py-1">
 

@@ -12,6 +12,9 @@
             font-size: 10px !important;
             text-align: center !important;
             vertical-align: middle;   /* <-- clave */
+            white-space: normal !important;
+            word-break: break-word;
+            overflow-wrap: anywhere;
         }
 
         .btn, input,select {
@@ -38,7 +41,7 @@
     {{-- Header --}}
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title">Pagos</h4>
+            <h4 class="main-title">REPORTE ESTADÍSTICO DE PAGO – {{$this->monthName()}} {{$year}}</h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -57,10 +60,8 @@
         <div class="col-12">
             <div class="card shadow-sm">
                 <div class="card-header">
-                    <h5>
-                        REPORTE ESTADÍSTICO DE PAGO – {{ $this->monthName() }} {{ $year }}
-                    </h5>
-                    <div class="row mt-2">
+
+                    <div class="row">
                         <div class="col-12">
                             <div class="d-flex flex-nowrap align-items-end gap-2 overflow-auto py-1">
 

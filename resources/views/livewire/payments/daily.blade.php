@@ -11,6 +11,9 @@
             font-size: 10px !important;
             text-align: center !important;
             vertical-align: middle;   /* <-- clave */
+            white-space: normal !important;
+            word-break: break-word;
+            overflow-wrap: anywhere;
         }
 
         .btn, input,select {
@@ -36,8 +39,7 @@
     {{-- Encabezado --}}
     <div class="row align-items-center mb-3">
         <div class="col-sm-6">
-            <h4 class="main-title mb-0">Pagos diarios</h4>
-            <small class="text-muted">Mes de {{ \Carbon\Carbon::create($year,$month,1)->translatedFormat('F Y') }}</small>
+            <h4 class="main-title mb-0 text-danger">REPORTE DIARIO DE PAGO {{ mb_strtoupper(\Carbon\Carbon::create($year,$month,1)->translatedFormat('F Y'), 'UTF-8') }} DEL {{$year}}</h4>
         </div>
         <div class="col-sm-6 mt-2 mt-sm-0">
             <ul class="breadcrumb breadcrumb-start float-sm-end mb-0">
@@ -98,7 +100,7 @@
             <div class="card shadow-sm">
 
                 <div class="card-body">
-                    <div class="row my-2">
+                    <div class="row mb-2">
                         <div class="col-12">
                             <div class="d-flex flex-nowrap align-items-end gap-2 overflow-auto py-1">
 
