@@ -130,7 +130,7 @@ class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, With
                 ]);
 
                 // Congelar (primera fila de datos)
-                $s->freezePane("A{$dataRow1}");
+                //$s->freezePane("A{$dataRow1}");
 
                 // Bordes finos para toda la tabla (incl. pies)
                 $lastRow = (int)$s->getHighestRow();

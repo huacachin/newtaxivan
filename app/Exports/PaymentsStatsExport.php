@@ -68,32 +68,34 @@ class PaymentsStatsExport implements FromArray, WithHeadings, WithEvents, WithTi
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
 
-                // ======= Paleta =======
-                $blueDark  = 'FF2874A6';  // header/título
-                $footerBg  = 'FFCEE7FF';  // pie
+                // ===== Paleta / fuente =====
+                $blueDark  = 'FF2874A6';
+                $footerBg  = 'FFCEE7FF';
                 $white     = 'FFFFFFFF';
                 $black     = 'FF000000';
                 $borderC   = 'FFCFD8DC';
                 $sundayRed = 'FFEF4444';
 
-                // Rango final (letra)
-                $lastRow     = (int) $sheet->getHighestRow();     // incluye TOTAL GENERAL (antes de insertar título)
-                $lastColStr  =        $sheet->getHighestColumn(); // ej. "AI"
-                $lastColIdx  = Coordinate::columnIndexFromString($lastColStr);
-                $endCol      = Coordinate::stringFromColumnIndex($lastColIdx);
+                $sheet->getParent()->getDefaultStyle()->getFont()->setSize(10);
 
-                // ======= Insertar título en fila 1 =======
+                // ===== Rangos base (antes de insertar título hay footer ya colocado) =====
+                $lastRow    = (int) $sheet->getHighestRow();
+                $lastColStr =        $sheet->getHighestColumn();
+                $lastColIdx = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($lastColStr);
+                $endCol     = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($lastColIdx);
+
+                // ===== Título (fila 1) =====
                 $sheet->insertNewRowBefore(1, 1);
                 $sheet->mergeCells("A1:{$endCol}1");
                 $sheet->setCellValue('A1', "REPORTE ESTADÍSTICO DE PAGO – {$this->mesTexto($this->month)} {$this->year}");
                 $sheet->getStyle("A1:{$endCol}1")->applyFromArray([
-                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blueDark]],
-                    'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$white]],
+                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$white]],
+                    'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$sundayRed]],
                     'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
                 ]);
                 $sheet->getRowDimension(1)->setRowHeight(18);
 
-                // ======= THEAD (fila 2) =======
+                // ===== Header (fila 2) =====
                 $sheet->getStyle("A2:{$endCol}2")->applyFromArray([
                     'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blueDark]],
                     'font' => ['bold'=>true,'color'=>['argb'=>$white]],
@@ -103,9 +105,10 @@ class PaymentsStatsExport implements FromArray, WithHeadings, WithEvents, WithTi
 
                 // Domingos en rojo (solo header)
                 $monthStart = CarbonImmutable::create($this->year, $this->month, 1);
+                // A=1,B=2,C=3 => día 1 inicia en D=4 => header fila 2
                 for ($d = 1; $d <= $this->daysInMonth; $d++) {
                     if ($monthStart->day($d)->isSunday()) {
-                        $col = Coordinate::stringFromColumnIndex(3 + $d); // D es día 1
+                        $col = Coordinate::stringFromColumnIndex(3 + $d); // D = 4
                         $sheet->getStyle("{$col}2")->applyFromArray([
                             'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$sundayRed]],
                             'font' => ['bold'=>true,'color'=>['argb'=>$white]],
@@ -113,11 +116,11 @@ class PaymentsStatsExport implements FromArray, WithHeadings, WithEvents, WithTi
                     }
                 }
 
-                // Congelar encabezado + 3 primeras columnas (A..C)
+                // Freeze encabezado + 3 primeras columnas
                 $sheet->freezePane('D3');
 
-                // ======= Bordes finos a toda la tabla (desde fila 2) =======
-                $footerExcelRow = $lastRow + 1; // por la fila de título
+                // ===== Bordes finos (desde fila 2 hasta el final) =====
+                $footerExcelRow = $lastRow + 1; // se desplazó 1 por el título
                 $tableRange = "A2:{$endCol}{$footerExcelRow}";
                 $sheet->getStyle($tableRange)->applyFromArray([
                     'borders' => [
@@ -128,44 +131,54 @@ class PaymentsStatsExport implements FromArray, WithHeadings, WithEvents, WithTi
                     ],
                 ]);
 
-                // ======= Pie (TOTAL GENERAL) en #CEE7FF =======
-                $sheet->getStyle("A{$footerExcelRow}:{$endCol}{$footerExcelRow}")->applyFromArray([
-                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$footerBg]],
-                    'font' => ['bold'=>true,'color'=>['argb'=>$black]],
-                    'borders' => ['outline'=>['borderStyle'=>Border::BORDER_MEDIUM,'color'=>['argb'=>$blueDark]]],
-                ]);
+                // ===== Formatos =====
+                $firstDataRow = 3;                         // primera fila de datos
+                $firstDayColI = 4;                         // D
+                $totalColI    = $lastColIdx;               // última columna = TOTAL
+                $firstDayColL = Coordinate::stringFromColumnIndex($firstDayColI);
+                $totalColL    = Coordinate::stringFromColumnIndex($totalColI);
 
-                // ======= Formatos =======
-                $firstDataRow = 3;
-                $firstDayColL = Coordinate::stringFromColumnIndex(4); // D
-                // Días: enteros 0
-                $sheet->getStyle("{$firstDayColL}{$firstDataRow}:{$endCol}{$footerExcelRow}")
-                    ->getNumberFormat()->setFormatCode('0');
-                // TOTAL (última col): moneda 0.00
-                $sheet->getStyle("{$endCol}{$firstDataRow}:{$endCol}{$footerExcelRow}")
+                // Días y TOTAL son montos → #,##0.00
+                $sheet->getStyle("{$firstDayColL}{$firstDataRow}:{$totalColL}{$footerExcelRow}")
                     ->getNumberFormat()->setFormatCode('#,##0.00');
 
-                // ======= Alineaciones =======
-                // A y B a la izquierda, C centrado, resto a la derecha
-                $sheet->getStyle("A{$firstDataRow}:A{$footerExcelRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-                $sheet->getStyle("B{$firstDataRow}:B{$footerExcelRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-                $sheet->getStyle("C{$firstDataRow}:C{$footerExcelRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                $sheet->getStyle("{$firstDayColL}{$firstDataRow}:{$endCol}{$footerExcelRow}")
+                // Alineaciones: A,B a la izquierda; C centrado; resto a la derecha
+                $sheet->getStyle("A{$firstDataRow}:A{$footerExcelRow}")
+                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+                $sheet->getStyle("B{$firstDataRow}:B{$footerExcelRow}")
+                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+                $sheet->getStyle("C{$firstDataRow}:C{$footerExcelRow}")
+                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle("{$firstDayColL}{$firstDataRow}:{$totalColL}{$footerExcelRow}")
                     ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
 
-                // ======= Anchos compactos =======
-                // A: Controlador, B: Paradero, C: Tipo, D..: días, última: Total
-                $sheet->getColumnDimension('A')->setWidth(18);
-                $sheet->getColumnDimension('B')->setWidth(18);
-                $sheet->getColumnDimension('C')->setWidth(10);
-                for ($i = 4; $i <= $lastColIdx - 1; $i++) {
+                // ===== Anchos compactos =====
+                // Desactivar autosize para que los widths manuales respeten
+                for ($c = 1; $c <= $lastColIdx; $c++) {
+                    $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($c))->setAutoSize(false);
+                }
+                // A: Controlador, B: Paradero, C: Tipo
+                $sheet->getColumnDimension('A')->setWidth(10);
+                $sheet->getColumnDimension('B')->setWidth(10);
+                $sheet->getColumnDimension('C')->setWidth(8);
+                // D..penúltima (días)
+                for ($i = $firstDayColI; $i <= $lastColIdx - 1; $i++) {
                     $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($i))->setWidth(4.2);
                 }
-                $sheet->getColumnDimension($endCol)->setWidth(12);
+                // TOTAL
+                $sheet->getColumnDimension($totalColL)->setWidth(12);
 
-                // ======= Rellenar vacíos numéricos con 0 (días + TOTAL) =======
+                // ===== Pie (TOTAL GENERAL) en #CEE7FF =====
+                $sheet->getStyle("A{$footerExcelRow}:{$totalColL}{$footerExcelRow}")->applyFromArray([
+                    'fill'   => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$footerBg]],
+                    'font'   => ['bold'=>true,'color'=>['argb'=>$black]],
+                    'borders'=> ['outline'=>['borderStyle'=>Border::BORDER_MEDIUM,'color'=>['argb'=>$blueDark]]],
+                    'alignment' => ['vertical'=>Alignment::VERTICAL_CENTER],
+                ]);
+
+                // ===== Rellenar vacíos con 0 (días + TOTAL) =====
                 for ($r = $firstDataRow; $r <= $footerExcelRow; $r++) {
-                    for ($c = 4; $c <= $lastColIdx; $c++) {
+                    for ($c = $firstDayColI; $c <= $lastColIdx; $c++) {
                         $cell = $sheet->getCellByColumnAndRow($c, $r);
                         $v    = $cell->getValue();
                         if ($v === null || $v === '') {
@@ -176,6 +189,7 @@ class PaymentsStatsExport implements FromArray, WithHeadings, WithEvents, WithTi
             },
         ];
     }
+
 
     /* ================== BUILD ================== */
 
