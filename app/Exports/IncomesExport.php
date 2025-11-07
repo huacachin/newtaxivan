@@ -85,7 +85,7 @@ class IncomesExport implements
     public function columnFormats(): array
     {
         return [
-            'B' => NumberFormat::FORMAT_DATE_DDMMYYYY, // dd/mm/aaaa
+            'B' => NumberFormat::FORMAT_DATE_YYYYMMDD2, // dd/mm/aaaa
         ];
     }
 
