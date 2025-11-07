@@ -15,6 +15,7 @@ use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
+use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 
 class IncomesExport implements
     FromQuery, ShouldAutoSize, WithHeadings, WithMapping,
@@ -74,7 +75,9 @@ class IncomesExport implements
 
         return [
             $this->i,                                                    // Item
-            $row->date ? Carbon::parse($row->date) : null,               // Fecha Excel
+            $row->date
+                ? ExcelDate::dateTimeToExcel(Carbon::parse($row->date)->startOfDay())
+                : null,
             optional($row->user)->name,                                  // Respons.
             $colA,                                                       // A
             trim($row->detail ?: $row->reason),                          // Motivo
@@ -85,7 +88,7 @@ class IncomesExport implements
     public function columnFormats(): array
     {
         return [
-            'B' => NumberFormat::FORMAT_DATE_YYYYMMDD2, // dd/mm/aaaa
+            'B' => NumberFormat::FORMAT_DATE_DDMMYYYY, // dd/mm/aaaa
         ];
     }
 
