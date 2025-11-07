@@ -47,7 +47,7 @@ class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, With
     {
         return [
             'Item','Cod','Placa',
-            'Deuda ant.','Exonerado','P.Deuda',
+            'Deuda','Exo.','P.Deuda',
             sprintf('%02d/%d', $this->month, $this->year),
             'Lab.','DT','DNT','Condición','T.Deuda',
         ];
@@ -144,7 +144,7 @@ class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, With
                 $s->getColumnDimension('A')->setWidth(5.5);   // Item
                 $s->getColumnDimension('B')->setWidth(5.5);   // Cod
                 $s->getColumnDimension('C')->setWidth(12);    // Placa
-                foreach (['D','E','F'] as $c) $s->getColumnDimension($c)->setWidth(9);   // Deuda ant./Exonerado/P.Deuda
+                foreach (['D','E','F'] as $c) $s->getColumnDimension($c)->setWidth(7);   // Deuda ant./Exonerado/P.Deuda
                 $s->getColumnDimension('G')->setWidth(12);    // Mes actual
                 foreach (['H','I','J'] as $c) $s->getColumnDimension($c)->setWidth(5);  // Lab./DT/DNT
                 $s->getColumnDimension('K')->setWidth(9);    // Condición
