@@ -158,12 +158,12 @@ class PaymentsStatsExport implements FromArray, WithHeadings, WithEvents, WithTi
                     $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($c))->setAutoSize(false);
                 }
                 // A: Controlador, B: Paradero, C: Tipo
-                $sheet->getColumnDimension('A')->setWidth(11);
-                $sheet->getColumnDimension('B')->setWidth(9);
-                $sheet->getColumnDimension('C')->setWidth(7);
+                $sheet->getColumnDimension('A')->setWidth(11.0);
+                $sheet->getColumnDimension('B')->setWidth(9.0);
+                $sheet->getColumnDimension('C')->setWidth(7.0);
                 // D..penúltima (días)
                 for ($i = $firstDayColI; $i <= $lastColIdx - 1; $i++) {
-                    $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($i))->setWidth(4.5);
+                    $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($i))->setWidth(5.0);
                 }
                 // TOTAL
                 $sheet->getColumnDimension($totalColL)->setWidth(12);
