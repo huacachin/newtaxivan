@@ -89,7 +89,7 @@ class DeparturesMonthly implements FromArray, WithHeadings, WithStyles, WithEven
                 // Paleta
                 $blueDark   = 'FF2874A6'; // encabezado/título
                 $footerFill = 'FFCEE7FF'; // pies
-                $fontWhite  = 'FFFFFFFF';
+                $white  = 'FFFFFFFF';
                 $fontBlack  = 'FF000000';
                 $borderSoft = 'FFCFD8DC';
                 $fontRed    = 'FFCC0000'; // domingos
@@ -106,8 +106,8 @@ class DeparturesMonthly implements FromArray, WithHeadings, WithStyles, WithEven
                 $sheet->mergeCells("A1:{$lastCol}1");
                 $sheet->setCellValue('A1', $title);
                 $sheet->getStyle("A1:{$lastCol}1")->applyFromArray([
-                    'fill' => ['fillType'=>\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
-                    'font' => ['bold'=>true, 'color'=>['argb'=>$fontWhite], 'size'=>10],
+                    'fill' => ['fillType'=>\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor'=>['argb'=>$white]],
+                    'font' => ['bold'=>true, 'color'=>['argb'=>$fontRed], 'size'=>10],
                     'alignment' => ['horizontal'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER, 'vertical'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER],
                 ]);
                 $sheet->getRowDimension(1)->setRowHeight(18);
@@ -117,7 +117,7 @@ class DeparturesMonthly implements FromArray, WithHeadings, WithStyles, WithEven
                 $dataStartRow = 3; // datos
                 $sheet->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->applyFromArray([
                     'fill' => ['fillType'=>\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
-                    'font' => ['bold'=>true, 'color'=>['argb'=>$fontWhite], 'size'=>10],
+                    'font' => ['bold'=>true, 'color'=>['argb'=>$white], 'size'=>10],
                     'alignment' => ['horizontal'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER, 'vertical'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER],
                 ]);
                 $sheet->getRowDimension($headerRow)->setRowHeight(18);
