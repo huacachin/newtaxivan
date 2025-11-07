@@ -119,8 +119,8 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
 
     public function styles(Worksheet $sheet)
     {
-        // El header real está en la fila 2 (título en la 1)
-        return [2 => ['font' => ['bold' => true]]];
+        // Ahora el header real está en la fila 1 (sin título arriba)
+        return [1 => ['font' => ['bold' => true]]];
     }
 
     /* ================= ESTILOS / FORMATEO ================= */
@@ -134,26 +134,13 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
                 $ws->getParent()->getDefaultStyle()->getFont()->setSize(9);
                 $ws->getDefaultRowDimension()->setRowHeight(12.5);
 
-                // Insertar 1 fila para TÍTULO
-                $ws->insertNewRowBefore(1, 1);
-
-                $headerRow    = 2;
-                $dataStartRow = 3;
+                // === Sin fila de título ===
+                $headerRow    = 1;                           // encabezados en fila 1
+                $dataStartRow = 2;                           // datos desde fila 2
                 $lastRow      = $dataStartRow + max(0, $this->rowCount) - 1;
-                $lastCol      = 'J'; // A..J
+                $lastCol      = 'J';                         // A..J
 
-                // ===== TÍTULO (azul #2874A6) =====
-                $monthL = \Carbon\Carbon::parse($this->monthDate)->startOfMonth()->locale('es')->translatedFormat('F Y');
-                $ws->setCellValue('A1', 'REPORTE DE DEUDA MENSUAL' . ($monthL ? " – {$monthL}" : ''));
-                $ws->mergeCells("A1:{$lastCol}1");
-                $ws->getRowDimension(1)->setRowHeight(16);
-                $ws->getStyle('A1')->applyFromArray([
-                    'font'      => ['bold' => true, 'size' => 9, 'color' => ['rgb' => 'FFFFFF']],
-                    'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER, 'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER],
-                    'fill'      => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => '2874A6']],
-                ]);
-
-                // ===== THEAD (azul) =====
+                // THEAD (azul)
                 $ws->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->applyFromArray([
                     'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
                     'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER, 'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER],
@@ -161,10 +148,9 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
                 ]);
                 $ws->getRowDimension($headerRow)->setRowHeight(13.5);
 
-                // ===== SIN STICKY HEAD (no congelar encabezado) =====
-                // (No usar freezePane para que no quede fijo)
+                // SIN sticky head (no freezePane)
 
-                // ===== Bordes + zebra =====
+                // Bordes + zebra
                 $ws->getStyle("A{$headerRow}:{$lastCol}" . max($headerRow, $lastRow))
                     ->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN)
                     ->getColor()->setRGB('CFD8DC');
@@ -180,7 +166,7 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
                     $ws->getStyle($range)->setConditionalStyles($styles);
                 }
 
-                // ===== Anchos (D más ancho) =====
+                // Anchos (D más ancho)
                 $set = fn($col,$w)=>$ws->getColumnDimension($col)->setWidth($w);
                 $set('A', 4.2);   // Item
                 $set('B', 10.0);  // Placa
@@ -198,12 +184,12 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
                     $ws->getStyle("D{$dataStartRow}:D{$lastRow}")->getAlignment()->setWrapText(true);
                 }
 
-                // ===== Todo CENTRADO =====
+                // Todo CENTRADO
                 $ws->getStyle("A{$headerRow}:{$lastCol}" . max($headerRow, $lastRow))
                     ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
                     ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
 
-                /* ===== RELLENAR VACÍOS EN MONTOS CON 0 (F..J) ===== */
+                /* RELLENAR VACÍOS EN MONTOS CON 0 (F..J) */
                 if ($lastRow >= $dataStartRow) {
                     foreach (range('F','J') as $col) {
                         for ($r = $dataStartRow; $r <= $lastRow; $r++) {
@@ -216,7 +202,7 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
                     }
                 }
 
-                // ===== Formato moneda compacta =====
+                // Formato moneda compacta
                 if ($lastRow >= $dataStartRow) {
                     foreach (['F','G','H','I','J'] as $c) {
                         $ws->getStyle("{$c}{$dataStartRow}:{$c}{$lastRow}")
@@ -224,7 +210,7 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
                     }
                 }
 
-                // ===== Pintado RichText en D (X1 en azul #2874A6) =====
+                // Pintado RichText en D (X1 en azul #2874A6)
                 if ($lastRow >= $dataStartRow) {
                     $blue = '2874A6';
                     for ($r = $dataStartRow; $r <= $lastRow; $r++) {
@@ -247,7 +233,7 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
                     }
                 }
 
-                // ===== Footer celeste + totales =====
+                // Footer celeste + totales
                 $totalRow = ($lastRow >= $dataStartRow) ? $lastRow + 1 : $headerRow + 1;
                 $ws->mergeCells("A{$totalRow}:E{$totalRow}");
                 $ws->setCellValue("A{$totalRow}", 'Total');
