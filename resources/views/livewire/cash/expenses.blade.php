@@ -17,9 +17,6 @@
             font-size: 10px !important;
             text-align: center !important;
             vertical-align: middle; /* <-- clave */
-            white-space: normal !important;
-            word-break: break-word;
-            overflow-wrap: anywhere;
         }
 
         .btn, input, select {
@@ -181,9 +178,10 @@
                             <th>Usuario</th>
                             <th>A</th>
                             <th>Motivo</th>
+                            <th class="text-end">Monto</th>
                             <th>T.Comp.</th>
                             <th>Respons.</th>
-                            <th class="text-end">Monto</th>
+
                         </tr>
                         </thead>
 
@@ -202,9 +200,10 @@
                                 <td>{{ $e->user->name ?? '-' }}</td>
                                 <td>{{ $e->reason }}</td>
                                 <td>{{ $e->detail }}</td>
+                                <td class="text-end">{{ number_format($e->total, 2) }}</td>
                                 <td>{{ $e->document_type }}</td>
                                 <td>{{ $e->in_charge }}</td>
-                                <td class="text-end">{{ number_format($e->total, 2) }}</td>
+
                             </tr>
                         @empty
                             <tr  wire:key="exp-1">
