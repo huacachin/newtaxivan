@@ -152,7 +152,7 @@ class PaymentsExport implements
     public function columnFormats(): array
     {
         return [
-            'D' => NumberFormat::FORMAT_DATE_YYYYMMDD2, // Fecha Registro
+            'D' => NumberFormat::FORMAT_DATE_DATETIME,, // Fecha Registro
             'E' => NumberFormat::FORMAT_DATE_DATETIME,  // Fecha Pago
             'F' => NumberFormat::FORMAT_DATE_TIME3,     // Hora
         ];
@@ -295,9 +295,9 @@ class PaymentsExport implements
                 // Overrides por columna (ligeramente más amplios)
                 $ws->getColumnDimension('A')->setWidth(2.2);  // Item
                 $ws->getColumnDimension('B')->setWidth(9.5);  // Placa
-                $ws->getColumnDimension('C')->setWidth(9.5);  // Serie
+                $ws->getColumnDimension('C')->setWidth(8);  // Serie
                 $ws->getColumnDimension('D')->setWidth(11.0); // Fecha Registro
-                $ws->getColumnDimension('E')->setWidth(12.5); // Fecha Pago
+                $ws->getColumnDimension('E')->setWidth(11.0); // Fecha Pago
                 $ws->getColumnDimension('F')->setWidth(7.5);  // Hora
                 $ws->getColumnDimension('G')->setWidth(8.5);  // Tipo
                 $ws->getColumnDimension('H')->setWidth(12.0); // Sucursal
