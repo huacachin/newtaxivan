@@ -113,7 +113,7 @@
                     </div>
                     <div class="table-responsive">
 
-                        <table class="table table-bordered table-hover">
+                        <table class="table table-bordered table-hover table-striped">
                             <thead class="text-center bg-primary">
                             <tr>
                                 <th>CONTROLADOR</th>
@@ -130,9 +130,9 @@
                             <tbody>
                             @forelse($rows as $r)
                                 <tr>
-                                    <td class="bg-primary">{{ $r['controller'] }}</td>
-                                    <td class="bg-primary">{{ $r['stop'] }}</td>
-                                    <td class="bg-primary">{{ $r['type'] === 'Emp' ? 'Emp.' : 'Apoyo.' }}</td>
+                                    <td class="bg-primary text-white">{{ $r['controller'] }}</td>
+                                    <td class="bg-primary text-white">{{ $r['stop'] }}</td>
+                                    <td class="bg-primary text-white">{{ $r['type'] === 'Emp' ? 'Emp.' : 'Apoyo.' }}</td>
 
                                     @for($d=1; $d<=$daysInMonth; $d++)
                                         <td>{{ $r['days'][$d] ?? 0 }}</td>
