@@ -33,9 +33,9 @@
     <!-- Header -->
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title">
-                Placa: {{ $plate }} —
-                {{ \Carbon\Carbon::create($year, $month, 1)->locale('es')->isoFormat('MMMM YYYY') }}
+            <h4 class="main-title text-danger">
+                PLACA: {{ $plate }} — {{mb_strtoupper( \Carbon\Carbon::create($year, $month, 1)->locale('es')->isoFormat('MMMM YYYY') , 'UTF-8')}}
+
             </h4>
 
         </div>
