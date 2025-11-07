@@ -146,9 +146,9 @@ class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, With
                 $s->getColumnDimension('C')->setWidth(12);    // Placa
                 foreach (['D','E','F'] as $c) $s->getColumnDimension($c)->setWidth(9);   // Deuda ant./Exonerado/P.Deuda
                 $s->getColumnDimension('G')->setWidth(12);    // Mes actual
-                foreach (['H','I','J'] as $c) $s->getColumnDimension($c)->setWidth(6.5);  // Lab./DT/DNT
-                $s->getColumnDimension('K')->setWidth(10);    // Condición
-                $s->getColumnDimension('L')->setWidth(12);    // T.Deuda
+                foreach (['H','I','J'] as $c) $s->getColumnDimension($c)->setWidth(5);  // Lab./DT/DNT
+                $s->getColumnDimension('K')->setWidth(9);    // Condición
+                $s->getColumnDimension('L')->setWidth(11);    // T.Deuda
 
                 // ===== Alineaciones (texto a la izq en B,C,K) =====
                 $dataEnd = $lastRow - 2;  // antes de footers (2 filas)
