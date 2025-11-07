@@ -11,9 +11,6 @@
             font-size: 10px !important;
             text-align: center !important;
             vertical-align: middle;   /* <-- clave */
-            white-space: normal !important;
-            word-break: break-word;
-            overflow-wrap: anywhere;
         }
 
         .btn, input,select {
@@ -175,7 +172,7 @@
                                 <th>Total (S/)</th>
 
                                 {{-- Columnas extra según modo --}}
-                                <th>Días Pag.</th>
+                                <!--th>Días Pag.</th-->
                                 @if($mode === 'Pago')
                                     <th>Deuda (días)</th>
                                     <th>Deuda (S/)</th>
@@ -209,7 +206,7 @@
                                     <td>{{ number_format($r['total'], 2) }}</td>
 
                                     {{-- Extra según modo --}}
-                                    <td>{{ number_format($r['days_paid']) }}</td>
+                                    <!--td>{{ number_format($r['days_paid']) }} </td-->
 
                                     @if($mode === 'Pago')
                                         <td>{{ number_format($r['debt_days']) }}</td>
@@ -237,7 +234,7 @@
                                 <td>{{ number_format($grandTotal, 2) }}</td>
 
                                 {{-- Footer de columnas extra --}}
-                                <td>{{ number_format($sumDaysPaid) }}</td>
+                                {{--<td>{{ number_format($sumDaysPaid) }}</td>--}}
 
                                 @if($mode === 'Pago')
                                     <td>{{ number_format($sumDebtDays) }}</td>
@@ -246,7 +243,7 @@
                                 @endif
                             </tr>
 
-                            <tr>
+                            {{--<tr>
                                 <td colspan="{{ 3 + $daysInMonth + 1 }}" class="text-end pe-3"></td>
                                 @if($mode === 'Pago')
                                     <td colspan="4">
@@ -259,7 +256,7 @@
                                         <strong>{{ number_format($sumDaysPaid) }}</strong>
                                     </td>
                                 @endif
-                            </tr>
+                            </tr>--}}
                             </tfoot>
                         </table>
                     </div>
