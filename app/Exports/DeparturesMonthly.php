@@ -94,9 +94,8 @@ class DeparturesMonthly implements FromArray, WithHeadings, WithStyles, WithEven
                 $borderSoft = 'FFCFD8DC';
                 $fontRed    = 'FFCC0000'; // domingos
 
-                // Fuente compacta y sin wrap global
+                // Fuente compacta
                 $sheet->getParent()->getDefaultStyle()->getFont()->setSize(10);
-                $sheet->getParent()->getDefaultStyle()->getAlignment()->setWrapText(false);
 
                 // Título (fila 1)
                 $sheet->insertNewRowBefore(1, 1);
@@ -139,7 +138,7 @@ class DeparturesMonthly implements FromArray, WithHeadings, WithStyles, WithEven
                 // AutoFilter SOLO Item/Placa
                 $sheet->setAutoFilter("A{$headerRow}:B{$headerRow}");
 
-                // Grilla / límites
+                // Grilla
                 $lastColIdx   = Coordinate::columnIndexFromString($lastCol);
                 $totalColIdx  = $lastColIdx; // última = T. Salida
                 $dataRows     = count($this->rows);
@@ -151,40 +150,23 @@ class DeparturesMonthly implements FromArray, WithHeadings, WithStyles, WithEven
                 $sheet->getStyle("A{$headerRow}:{$lastCol}{$lastRow}")
                     ->getBorders()->getAllBorders()->getColor()->setARGB($borderSoft);
 
-                /* ====== ANCHOS POR DEFECTO + ESPECÍFICOS (al ras) ====== */
-                // 1) Desactivar autosize en TODAS y fijar ancho por defecto muy angosto
-                for ($c = 1; $c <= $lastColIdx; $c++) {
-                    $col = Coordinate::stringFromColumnIndex($c);
-                    $sheet->getColumnDimension($col)->setAutoSize(false);
-                    $sheet->getColumnDimension($col)->setWidth(3.0); // default global
+                // ---- ANCHOS compactos (y desactivar autosize para que respeten) ----
+                foreach (['A','B'] as $colLetter) {
+                    $sheet->getColumnDimension($colLetter)->setAutoSize(false);
                 }
+                $sheet->getColumnDimension('A')->setWidth(6);     // Item
+                $sheet->getColumnDimension('B')->setWidth(9.5);   // Placa
 
-                // 2) Específicas
-                // A (Item) muy compacta
-                // Usa el número de filas para estimar dígitos y dejarlo casi sin aire
-                $digits    = max(1, strlen((string) $dataRows));
-                $colAWidth = max(2.2, ($digits * 1.05) + 0.6); // ajustable si quieres aún menos aire
-                $sheet->getColumnDimension('A')->setWidth($colAWidth);
-
-                // B (Placa)
-                $sheet->getColumnDimension('A')->setWidth(1.0);
-                $sheet->getColumnDimension('B')->setWidth(1.0);
-
-                // Días (C ... penúltima)
                 for ($c = $firstDayColIdx; $c < $totalColIdx; $c++) {
                     $col = Coordinate::stringFromColumnIndex($c);
-                    $sheet->getColumnDimension($col)->setWidth(3.0); // cambia a 2.8 si quieres más compacto
+                    $sheet->getColumnDimension($col)->setAutoSize(false);
+                    $sheet->getColumnDimension($col)->setWidth(3.0); // días
                 }
-
-                // Total (última)
                 $totalColLetter = Coordinate::stringFromColumnIndex($totalColIdx);
-                $sheet->getColumnDimension($totalColLetter)->setWidth(6.2);
+                $sheet->getColumnDimension($totalColLetter)->setAutoSize(false);
+                $sheet->getColumnDimension($totalColLetter)->setWidth(6.5); // T. Salida
 
-                // Evitar sangría y “aire” visual
-                $sheet->getStyle("A{$headerRow}:{$lastCol}{$sheet->getHighestRow()}")
-                    ->getAlignment()->setIndent(0)->setShrinkToFit(true);
-
-                /* ====== Forzar 0 en celdas vacías + formato entero ====== */
+                // ---- Forzar 0 en celdas vacías (días y total) + formato entero ----
                 if ($dataRows > 0) {
                     for ($r = $dataStartRow; $r <= $dataEndRow; $r++) {
                         for ($c = $firstDayColIdx; $c <= $totalColIdx; $c++) {
@@ -195,11 +177,12 @@ class DeparturesMonthly implements FromArray, WithHeadings, WithStyles, WithEven
                             }
                         }
                     }
+                    // Formato "0" para todo el rango numérico
                     $sheet->getStyle("C{$dataStartRow}:{$totalColLetter}{$dataEndRow}")
                         ->getNumberFormat()->setFormatCode('0');
                 }
 
-                // Alineaciones para datos
+                // Alineaciones
                 if ($dataRows > 0) {
                     $sheet->getStyle("B{$dataStartRow}:B{$dataEndRow}")
                         ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
@@ -239,7 +222,7 @@ class DeparturesMonthly implements FromArray, WithHeadings, WithStyles, WithEven
                     $sheet->getStyle("C{$fr}:{$lastCol}{$fr}")
                         ->getNumberFormat()->setFormatCode('0');
 
-                    // Rellenar 0 si algo quedó vacío en pies
+                    // También rellenar 0 si algo quedó vacío en pies
                     for ($c = $firstDayColIdx; $c <= $totalColIdx; $c++) {
                         $cell = $sheet->getCellByColumnAndRow($c, $fr);
                         $val  = $cell->getValue();
@@ -252,9 +235,6 @@ class DeparturesMonthly implements FromArray, WithHeadings, WithStyles, WithEven
             }
         ];
     }
-
-
-
 
     /* ----------------- Datos & Helpers ----------------- */
 

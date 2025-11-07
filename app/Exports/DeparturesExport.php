@@ -7,13 +7,14 @@ use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromView;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\RichText\RichText;
 
-class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
+class DeparturesExport implements FromView, ShouldAutoSize, WithEvents, WithColumnWidths
 {
     public function __construct(
         public readonly int     $searchType = 1,
@@ -53,6 +54,17 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
         return view('exports.departures', compact('rows','totals','supportRows','supTotals','grand','filters'));
     }
 
+    /* ========= Compactación base: fija A y B desde el inicio ========= */
+    public function columnWidths(): array
+    {
+        // Estas se reafirman en AfterSheet; aquí ya dejas la base “al ras”.
+        return [
+            'A' => 2.2, // Id/Ítem muy angosto
+            'B' => 9.0, // Placa o texto corto legible
+            // C..M se rematan en AfterSheet
+        ];
+    }
+
     public function registerEvents(): array
     {
         return [
@@ -71,10 +83,10 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
                 $s->mergeCells('A1:M1');
                 $s->setCellValue('A1', 'LISTADO GENERAL DE SALIDA');
                 $s->getStyle('A1:M1')->applyFromArray([
-                    'fill' => ['fillType'=>\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor'=>['argb'=>$white]],
+                    'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$white]],
                     'alignment' => [
-                        'horizontal'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
-                        'vertical'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                        'horizontal'=>Alignment::HORIZONTAL_CENTER,
+                        'vertical'=>Alignment::VERTICAL_CENTER,
                     ],
                     'font' => ['bold'=>true, 'color'=>['argb'=>$red], 'size'=>10],
                 ]);
@@ -114,11 +126,11 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
                 // THEADs en azul, 10pt, compacto (wrap solo en cabeceras)
                 foreach ([[$rSec1Hdr1,$rSec1Hdr2], [$rSec2Hdr1,$rSec2Hdr2]] as [$h1,$h2]) {
                     $s->getStyle("A{$h1}:M{$h2}")->applyFromArray([
-                        'fill' => ['fillType'=>\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
+                        'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
                         'font' => ['bold'=>true, 'color'=>['argb'=>$white], 'size'=>10],
                         'alignment' => [
-                            'horizontal'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
-                            'vertical'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                            'horizontal'=>Alignment::HORIZONTAL_CENTER,
+                            'vertical'=>Alignment::VERTICAL_CENTER,
                             'wrapText'=>true
                         ],
                     ]);
@@ -135,15 +147,15 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
                 // Totales por bloque
                 foreach ([$rSec1Total, $rSec2Total] as $ft) {
                     $s->getStyle("A{$ft}:M{$ft}")->applyFromArray([
-                        'fill' => ['fillType'=>\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor'=>['argb'=>$footerFill]],
+                        'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$footerFill]],
                         'font' => ['bold'=>true, 'color'=>['argb'=>$fontBlack], 'size'=>10],
                         'alignment' => [
-                            'horizontal'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
-                            'vertical'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                            'horizontal'=>Alignment::HORIZONTAL_CENTER,
+                            'vertical'=>Alignment::VERTICAL_CENTER,
                         ],
                         'borders' => [
                             'outline' => [
-                                'borderStyle'=>\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                                'borderStyle'=>Border::BORDER_THIN,
                                 'color'=>['argb'=>$blueDark]
                             ]
                         ]
@@ -153,11 +165,11 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
 
                 // TOTAL GENERAL
                 $s->getStyle("A{$rGrand}:M{$rGrand}")->applyFromArray([
-                    'fill' => ['fillType'=>\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor'=>['argb'=>$footerFill]],
+                    'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$footerFill]],
                     'font' => ['bold'=>true, 'color'=>['argb'=>$fontBlack], 'size'=>10],
                     'borders' => [
                         'outline' => [
-                            'borderStyle'=>\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM,
+                            'borderStyle'=>Border::BORDER_MEDIUM,
                             'color'=>['argb'=>$blueDark]
                         ]
                     ],
@@ -168,7 +180,7 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
                 $s->getStyle("A1:M{$lastRow}")->applyFromArray([
                     'borders' => [
                         'allBorders' => [
-                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                            'borderStyle' => Border::BORDER_THIN,
                             'color' => ['argb' => $borderSoft]
                         ]
                     ]
@@ -177,24 +189,16 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
                 // Números a la derecha (H..M)
                 foreach (['H','I','J','K','L','M'] as $col) {
                     $s->getStyle("{$col}{$rSec1Body1}:{$col}{$rSec1Total}")
-                        ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
                     $s->getStyle("{$col}{$rSec2Body1}:{$col}{$rSec2Total}")
-                        ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
                     $s->getStyle("{$col}{$rGrand}")
-                        ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
                 }
 
-                // Congelar al inicio del cuerpo
-                //$s->freezePane("A{$rSec1Body1}");
-
-                /* =========================
-                 *  Ajuste Fino “Muy Pegado”
-                 * ========================= */
-
-                // Altura por defecto compacta para TODO (10pt)
+                // ====== COMPACTACIÓN (reemplaza autosize por anchos fijos) ======
+                // Altura por defecto compacta y sin wrap en cuerpo
                 $s->getDefaultRowDimension()->setRowHeight(14);
-
-                // Sin wrap en CUERPO para no inflar alturas
                 if ($this->countExisting > 0) {
                     $s->getStyle("A{$rSec1Body1}:M{$rSec1BodyN}")
                         ->getAlignment()->setWrapText(false);
@@ -204,46 +208,35 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents
                         ->getAlignment()->setWrapText(false);
                 }
 
-                // Autosize base + quitar sangría
+                // 1) Desactivar autosize y poner un default MUY angosto a todas
                 foreach (range('A','M') as $col) {
-                    $s->getColumnDimension($col)->setAutoSize(true);
+                    $s->getColumnDimension($col)->setAutoSize(false);
+                    $s->getColumnDimension($col)->setWidth(3.0); // default global súper compacto
                     $s->getStyle("{$col}1:{$col}{$lastRow}")
-                        ->getAlignment()->setIndent(0);
+                        ->getAlignment()->setIndent(0)->setShrinkToFit(true);
                 }
 
-                // Forzamos cálculo antes de leer anchos (best-effort)
-                \PhpOffice\PhpSpreadsheet\Calculation\Calculation::getInstance(
-                    $s->getParent()
-                )->clearCalculationCache();
+                // 2) Overrides columna por columna (ajusta a tu gusto)
+                //    A “al ras” para correlativo / id; B y C más legibles; D-E horas; H..M numéricos compactos.
+                $s->getColumnDimension('A')->setWidth(2.2);
+                $s->getColumnDimension('B')->setWidth(9.0);
+                $s->getColumnDimension('C')->setWidth(10.0);
+                $s->getColumnDimension('D')->setWidth(7.0);
+                $s->getColumnDimension('E')->setWidth(7.0);
+                $s->getColumnDimension('F')->setWidth(9.0);
+                $s->getColumnDimension('G')->setWidth(9.0);
+                $s->getColumnDimension('H')->setWidth(5.0);
+                $s->getColumnDimension('I')->setWidth(4.0);
+                $s->getColumnDimension('J')->setWidth(4.0);
+                $s->getColumnDimension('K')->setWidth(4.0);
+                $s->getColumnDimension('L')->setWidth(4.0);
+                $s->getColumnDimension('M')->setWidth(4.0);
 
-                // Recorte fino de holgura para dejarlo “al ras”
-                $trim = 0.8; // ajusta entre 0.6 y 1.0 según tu gusto
-                foreach (range('A','M') as $col) {
-                    $dim = $s->getColumnDimension($col);
-
-                    // Si autosize está activo, fijamos ancho basándonos en el ancho calculado
-                    $current = $dim->getWidth();
-                    if ($current === null || $current <= 0 || $current === -1) {
-                        // Fallback razonable si el writer aún no calculó autosize
-                        $current = 8.0;
-                    }
-
-                    $dim->setAutoSize(false);
-                    $newWidth = max(1.0, $current - $trim);
-                    $dim->setWidth($newWidth);
-                }
-
-                // (Opcional) Si alguna columna específica suele tener textos larguísimos,
-                // puedes reducir menos ahí, por ejemplo:
-                 $s->getColumnDimension('F')->setWidth(max(9.0, $s->getColumnDimension('F')->getWidth() - 0.6));
-                $s->getColumnDimension('C')->setWidth(max(10.0, $s->getColumnDimension('C')->getWidth() - 0.6));
+                // Si quieres aún más “al ras”, prueba:
+                // A->2.0, D/E->6.5, H..M->7.5, etc.
             },
         ];
     }
-
-
-
-
 
     private function mergeHeader($sheet, int $r1, int $r2): void
     {
