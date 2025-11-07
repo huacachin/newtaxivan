@@ -13,9 +13,6 @@
             font-size: 10px !important;
             text-align: center !important;
             vertical-align: middle;   /* <-- clave */
-            white-space: normal !important;
-            word-break: break-word;
-            overflow-wrap: anywhere;
         }
 
         .btn, input,select {
