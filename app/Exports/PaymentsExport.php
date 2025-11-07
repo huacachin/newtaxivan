@@ -161,10 +161,12 @@ class PaymentsExport implements
 
     public function styles(Worksheet $sheet)
     {
+        // Todo a tamaño 10; encabezado en negrita
+        $sheet->getParent()->getDefaultStyle()->getFont()->setSize(10);
         return [1 => ['font' => ['bold' => true]]];
     }
 
-    /** === Estilos homologados (sin AutoFilter) === */
+    /** === Estilos homologados + anchos al ras === */
     public function registerEvents(): array
     {
         return [
@@ -173,17 +175,18 @@ class PaymentsExport implements
 
                 $blueDark   = 'FF2874A6';
                 $footerFill = 'FFCEE7FF';
-                $fontWhite  = 'FFFFFFFF';
+                $white  = 'FFFFFFFF';
                 $fontBlack  = 'FF000000';
                 $borderSoft = 'FFCFD8DC';
+                $black = "000000";
 
                 // 1) Título (fila 1)
                 $ws->insertNewRowBefore(1, 1);
                 $ws->mergeCells('A1:J1');
                 $ws->setCellValue('A1', 'REPORTE DE PAGOS');
                 $ws->getStyle('A1:J1')->applyFromArray([
-                    'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
-                    'font' => ['bold'=>true, 'color'=>['argb'=>$fontWhite], 'size'=>10],
+                    'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$white]],
+                    'font' => ['bold'=>true, 'color'=>['argb'=>$black], 'size'=>10],
                     'alignment' => [
                         'horizontal'=>Alignment::HORIZONTAL_CENTER,
                         'vertical'  =>Alignment::VERTICAL_CENTER,
@@ -198,7 +201,7 @@ class PaymentsExport implements
 
                 $ws->getStyle("A{$headerRow}:J{$headerRow}")->applyFromArray([
                     'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
-                    'font' => ['bold'=>true, 'color'=>['argb'=>$fontWhite], 'size'=>10],
+                    'font' => ['bold'=>true, 'color'=>['argb'=>$white], 'size'=>10],
                     'alignment' => [
                         'horizontal'=>Alignment::HORIZONTAL_CENTER,
                         'vertical'  =>Alignment::VERTICAL_CENTER,
@@ -213,7 +216,7 @@ class PaymentsExport implements
                     return; // sin datos
                 }
 
-                // 3) Bordes + zebra (sin AutoFilter)
+                // 3) Bordes + zebra
                 $ws->getStyle("A{$headerRow}:J{$last}")
                     ->getBorders()->getAllBorders()
                     ->setBorderStyle(Border::BORDER_THIN);
@@ -240,7 +243,7 @@ class PaymentsExport implements
                 $ws->getStyle("F{$dataStartRow}:F{$last}")
                     ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // Hora
                 $ws->getStyle("J{$dataStartRow}:J{$last}")
-                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);  // S/
+                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);  // S/
 
                 // Formato moneda "S/ "
                 $ws->getStyle("J{$dataStartRow}:J{$last}")
@@ -269,50 +272,44 @@ class PaymentsExport implements
                     ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
                 $ws->getRowDimension($totalRow)->setRowHeight(18);
 
-                // === 5) Anchos REALMENTE al ras ===
-                //    a) quitamos todo lo que pueda agregar aire
+                // === 5) Anchos REALMENTE al ras (sin reducir la fuente) ===
+                // a) sin wraps/indent para no agregar aire
                 $ws->getStyle("A{$headerRow}:J{$totalRow}")
                     ->getAlignment()->setWrapText(false)->setIndent(0);
 
-                //    b) usar autosize EXACT (mide con glyphs reales)
+                // b) AutoSize EXACT (medición precisa)
                 \PhpOffice\PhpSpreadsheet\Shared\Font::setAutoSizeMethod(
                     \PhpOffice\PhpSpreadsheet\Shared\Font::AUTOSIZE_METHOD_EXACT
                 );
 
                 $cols = range('A','J');
-
-                // primero: autosize exact
                 foreach ($cols as $c) {
                     $ws->getColumnDimension($c)->setAutoSize(true);
                 }
-
-                // forzar el cálculo (algunas versiones lo requieren)
+                // fuerza el cálculo (algunas versiones lo requieren)
                 $e->sheet->calculateColumnWidths();
 
-                //    c) apretar un poco cada columna (restar ~0.7 caracteres)
+                // c) Ajuste fino por columna para que quede “pegado”
                 foreach ($cols as $c) {
                     $dim = $ws->getColumnDimension($c);
                     $w   = (float) $dim->getWidth();
+                    if ($w <= 0.0) { $w = 1.0; }
 
-                    // Si por alguna razón viene 0, dejamos un mínimo
-                    if ($w <= 0.0) {
-                        $w = 1.0;
-                    }
-
-                    // Resta fina para quedar “pegado” al texto
-                    $tight = max(1.0, $w - 0.7);
-
-                    // En moneda (J) dejo un pelín más de aire para miles/decimales
-                    if ($c === 'J') {
-                        $tight = max(1.0, $w - 0.4);
-                    }
+                    // Por tipo de dato, restamos distinto:
+                    $delta = match ($c) {
+                        'A'       => 0.8, // Item corto
+                        'B', 'C'  => 0.6, // Placa, Serie
+                        'D', 'E'  => 0.2, // Fechas
+                        'F'       => 0.5, // Hora
+                        'G', 'H', 'I' => 0.6, // Tipo, Sucursal, Usuario
+                        'J'       => 0.1, // Moneda (un poco más de aire)
+                        default   => 0.6,
+                    };
 
                     $dim->setAutoSize(false);
-                    $dim->setWidth($tight);
+                    $dim->setWidth(max(1.0, $w - $delta));
                 }
             },
         ];
     }
-
-
 }

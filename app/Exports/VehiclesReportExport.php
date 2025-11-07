@@ -29,7 +29,8 @@ class VehiclesReportExport implements
     /** contador para la columna Item */
     private int $rowNum = 0;
 
-    public function query(): Builder
+    /** Query base para reutilizar en datos y en los totales */
+    private function baseQuery(): Builder
     {
         $status = strtolower(trim((string) $this->status));
         $search = trim((string) $this->search);
@@ -51,7 +52,12 @@ class VehiclesReportExport implements
                     'plate'     => $q->where('plate','like',"%{$search}%"),
                     default     => $q,
                 };
-            })
+            });
+    }
+
+    public function query(): Builder
+    {
+        return $this->baseQuery()
             ->with(['owner:id,name','driver:id,name'])
             // ⬇️ Orden principal por sort_order (no nulos primero), luego id
             ->orderByRaw('sort_order IS NULL, sort_order ASC')
@@ -108,7 +114,7 @@ class VehiclesReportExport implements
             'C' => 9.2,  // Placa
             'D' => 10.0, // Marca
             'E' => 5.8,  // Año
-            'F' => 6.6,  // Categoría
+            'F' => 10.6, // Categoría
             'G' => 22.0, // Propietario
             'H' => 22.0, // Conductor
             'I' => 12.5, // Modalidad
@@ -123,6 +129,28 @@ class VehiclesReportExport implements
         return [3 => ['font' => ['bold' => true, 'size' => 10]]];
     }
 
+    /** Totales para el resumen (igual que el Blade) */
+    private function stats(): array
+    {
+        $q = $this->baseQuery();
+
+        $total = (clone $q)->count();
+        $d2    = (clone $q)->where('fuel', 'D2')->count();
+        $gas   = (clone $q)->where('fuel', 'GAS')->count();
+
+        $vt    = (clone $q)->whereIn('fuel', ['GAS','D2'])->count();
+        $vqnt  = (clone $q)->whereNotIn('fuel', ['GAS','D2'])->count();
+
+        // Propietario: V.T y owner_id == driver_id (como tu componente)
+        $prop  = (clone $q)->whereIn('fuel', ['GAS','D2'])
+            ->whereColumn('owner_id', 'driver_id')->count();
+
+        // Conductor: owner_id != driver_id (sin filtro fuel, como tu componente)
+        $cond  = (clone $q)->whereColumn('owner_id', '!=', 'driver_id')->count();
+
+        return compact('total','d2','gas','vt','vqnt','prop','cond');
+    }
+
     public function registerEvents(): array
     {
         return [
@@ -133,39 +161,39 @@ class VehiclesReportExport implements
                 $footerBg = 'FFCEE7FF';
                 $white    = 'FFFFFFFF';
                 $borderC  = 'FFCFD8DC';
+                $black    = '000000';
 
                 // Base 10 pt
                 $ws->getParent()->getDefaultStyle()->getFont()->setSize(10);
                 $ws->getDefaultRowDimension()->setRowHeight(15);
 
-                // Título y subtítulo
+                // ===== Fila 1: Título (igual al Blade) =====
                 $ws->insertNewRowBefore(1, 2);
                 $ws->mergeCells('A1:L1');
-                $ws->setCellValue('A1', 'REPORTE DE VEHÍCULOS');
+                $ws->setCellValue('A1', 'VEHÍCULOS');
                 $ws->getStyle('A1:L1')->applyFromArray([
-                    'font'      => ['bold'=>true,'size'=>10,'color'=>['argb'=>$white]],
+                    'font'      => ['bold'=>true,'size'=>10,'color'=>['argb'=>$black]],
                     'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
-                    'fill'      => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blue]],
+                    'fill'      => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$white]],
                 ]);
                 $ws->getRowDimension(1)->setRowHeight(18);
 
-                $sub = sprintf(
-                    'Generado: %s | Estado: %s%s%s',
-                    now()->format('Y-m-d H:i'),
-                    $this->status ?? '—',
-                    $this->filter ? " | Filtro: {$this->filter}" : '',
-                    ($this->search ?? '') !== '' ? " = '{$this->search}'" : ''
+                // ===== Fila 2: Resumen (Total, D2, Gas, V.T, V.Q.N.T, Propietario, Conductor) =====
+                $s = $this->stats();
+                $resume = sprintf(
+                    'Total vehículos: %d · D2: %d · Gas: %d · V.T: %d · V.Q.N.T: %d · Propietario: %d · Conductor: %d',
+                    $s['total'], $s['d2'], $s['gas'], $s['vt'], $s['vqnt'], $s['prop'], $s['cond']
                 );
                 $ws->mergeCells('A2:L2');
-                $ws->setCellValue('A2', $sub);
+                $ws->setCellValue('A2', $resume);
                 $ws->getStyle('A2:L2')->applyFromArray([
-                    'font'      => ['italic'=>true,'size'=>10,'color'=>['argb'=>$white]],
+                    'font'      => ['italic'=>true,'size'=>10,'color'=>['argb'=>$black]],
                     'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER,'wrapText'=>true],
-                    'fill'      => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blue]],
+                    'fill'      => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$white]],
                 ]);
                 $ws->getRowDimension(2)->setRowHeight(16);
 
-                // Encabezado
+                // ===== Encabezado de tabla =====
                 $headerRow    = 3;
                 $dataStartRow = 4;
                 $lastCol      = 'L';
@@ -178,7 +206,7 @@ class VehiclesReportExport implements
                 $ws->getRowDimension($headerRow)->setRowHeight(17);
 
                 // Congelar encabezado
-                $ws->freezePane("A{$dataStartRow}");
+                //$ws->freezePane("A{$dataStartRow}");
 
                 // Bordes
                 $last = (int)$ws->getHighestRow();
