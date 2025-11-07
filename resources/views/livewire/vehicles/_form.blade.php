@@ -1,14 +1,14 @@
 {{-- resources/views/livewire/vehicles/_form.blade.php --}}
 <div class="row g-3">
     {{-- Placa --}}
-    <div class="col-6 col-md-4">
+    <div class="col-6 col-md-3">
         <label for="plate" class="form-label">Placa</label>
         <input id="plate" type="text" class="form-control form-control-sm" placeholder="Ingresar placa" wire:model="plate" autocomplete="off">
         @error('plate') <span class="text-danger">{{ $message }}</span> @enderror
     </div>
 
     {{-- Sede --}}
-    <div class="col-6 col-md-4">
+    <div class="col-6 col-md-3">
         <label for="headquarter" class="form-label">Sede</label>
         <select id="headquarter" class="form-control form-control-sm" wire:model="headquarter">
             <option value="">Seleccione</option>
@@ -20,21 +20,21 @@
     </div>
 
     {{-- F. Ingreso --}}
-    <div class="col-6 col-md-4">
+    <div class="col-6 col-md-3">
         <label for="entry_date" class="form-label">F. Ingreso</label>
         <input id="entry_date" type="date" class="form-control form-control-sm" wire:model="entry_date">
         @error('entry_date') <span class="text-danger">{{ $message }}</span> @enderror
     </div>
 
     {{-- Fecha Cese --}}
-    <div class="col-6 col-md-4">
+    <div class="col-6 col-md-3">
         <label for="termination_date" class="form-label">Fecha Cese</label>
         <input id="termination_date" type="date" class="form-control form-control-sm" wire:model="termination_date">
         @error('termination_date') <span class="text-danger">{{ $message }}</span> @enderror
     </div>
 
     {{-- Categoría --}}
-    <div class="col-6 col-md-4">
+    <div class="col-6 col-md-3">
         <label for="class" class="form-label">Categoría</label>
         <select id="class" class="form-control form-control-sm" wire:model="class">
             <option value="">Seleccione</option>
@@ -94,7 +94,7 @@
     </div>
 
     {{-- Color --}}
-    <div class="col-6 col-md-4">
+    <div class="col-6 col-md-2">
         <label for="color" class="form-label">Color</label>
         <select id="color" class="form-control form-control-sm" wire:model="color">
             <option value="">Seleccionar</option>
@@ -134,15 +134,8 @@
         @error('type') <span class="text-danger">{{ $message }}</span> @enderror
     </div>
 
-    {{-- Empresa Afiliada --}}
-    <div class="col-6 col-md-4">
-        <label for="affiliated_company" class="form-label">Empresa Afiliada</label>
-        <input id="affiliated_company" type="text" class="form-control form-control-sm" placeholder="Ingresar empresa afiliada" wire:model="affiliated_company">
-        @error('affiliated_company') <span class="text-danger">{{ $message }}</span> @enderror
-    </div>
-
     {{-- Condición --}}
-    <div class="col-6 col-md-4">
+    <div class="col-6 col-md-3">
         <label for="condition" class="form-label">Condición</label>
         <select id="condition" class="form-control form-control-sm" wire:model="condition">
             <option value="">Seleccione</option>
@@ -153,6 +146,15 @@
         </select>
         @error('condition') <span class="text-danger">{{ $message }}</span> @enderror
     </div>
+
+    {{-- Empresa Afiliada --}}
+    <div class="col-6 col-md-4">
+        <label for="affiliated_company" class="form-label">Empresa Afiliada</label>
+        <input id="affiliated_company" type="text" class="form-control form-control-sm" placeholder="Ingresar empresa afiliada" wire:model="affiliated_company">
+        @error('affiliated_company') <span class="text-danger">{{ $message }}</span> @enderror
+    </div>
+
+
 
     {{-- Propietario --}}
     <div class="col-6 col-md-4">
