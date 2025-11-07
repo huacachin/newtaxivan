@@ -160,14 +160,14 @@
                             <tr>
                                 <td  colspan="3">T.A</td>
                                 @for($d=1; $d<=$daysInMonth; $d++)
-                                    <td class="p-2 day-col">{{ $totalsTA[$d] }}</td>
+                                    <td class="day-col">{{ $totalsTA[$d] }}</td>
                                 @endfor
                                 <td>{{ $grandTA }}</td>
                             </tr>
                             <tr>
                                 <td  colspan="3">V.T</td>
                                 @for($d=1; $d<=$daysInMonth; $d++)
-                                    <td class="p-2 day-col">{{ $totalsVT[$d] }}</td>
+                                    <td class="day-col">{{ $totalsVT[$d] }}</td>
                                 @endfor
                                 <td>{{ $grandVT }}</td>
                             </tr>
