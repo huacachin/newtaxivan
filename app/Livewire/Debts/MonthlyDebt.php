@@ -172,6 +172,7 @@ class MonthlyDebt extends Component
         $vehicleIds = $rows->pluck('vehicle_id')->filter()->unique()->values();
         $vehicles = Vehicle::query()
             ->whereIn('id', $vehicleIds)
+            ->orderBy('sort_order','asc')
             ->get(['id','sort_order','plate','condition'])
             ->keyBy('id');
 
