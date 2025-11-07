@@ -136,9 +136,9 @@ class PaymentsDailyExport implements FromArray, WithHeadings, WithEvents, WithTi
                 $sheet->mergeCells("A1:{$lastCol}1");
                 $sheet->setCellValue('A1', $this->titleText());
                 $sheet->getStyle("A1:{$lastCol}1")->applyFromArray([
-                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['argb' => $fontWhite]],
+                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['argb' => $sundayRed]],
                     'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
-                    'fill'      => ['fillType' => 'solid', 'startColor' => ['argb' => $blueDark]],
+                    'fill'      => ['fillType' => 'solid', 'startColor' => ['argb' => $fontWhite]],
                 ]);
                 $sheet->getRowDimension(1)->setRowHeight(18);
 
@@ -233,7 +233,7 @@ class PaymentsDailyExport implements FromArray, WithHeadings, WithEvents, WithTi
                     $sheet->getColumnDimension($this->col($idx))->setWidth($w);
                 };
                 $setW(1, 5.5);  // Item
-                $setW(2, 11);   // Placa
+                $setW(2, 9);   // Placa
                 $setW(3, 7);    // Cond.
                 for ($i = $dayStart; $i <= $dayEnd; $i++) $setW($i, 2.7); // días (holgados)
                 $setW($dayEnd + 1, 11); // Total (S/)
