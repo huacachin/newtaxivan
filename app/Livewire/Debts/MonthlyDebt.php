@@ -147,7 +147,6 @@ class MonthlyDebt extends Component
         if ($this->condition === 'Exonerado') {
             $q->where('exonerated', '>', 0);
         } elseif ($this->condition === 'Amortizado') {
-            // Más simple y consistente con tu modelo: usa la columna amortized
             $q->where('amortized', '>', 0);
         } elseif (!empty($this->condition)) {
             $q->where('condition', $this->condition);
@@ -157,11 +156,11 @@ class MonthlyDebt extends Component
         if (!empty($this->search)) {
             $needle = mb_strtolower(trim($this->search));
             $q->where(function ($w) use ($needle) {
-                $w->whereRaw('LOWER(legacy_plate) LIKE ?', ['%'.$needle.'%'])
+                $w->whereRaw('LOWER(legacy_plate) LIKE ?', ['%' . $needle . '%'])
                     ->orWhereExists(function ($sub) use ($needle) {
                         $sub->from('vehicles as v')
                             ->whereColumn('v.id', 'debt_days.vehicle_id')
-                            ->whereRaw('LOWER(v.plate) LIKE ?', ['%'.$needle.'%']);
+                            ->whereRaw('LOWER(v.plate) LIKE ?', ['%' . $needle . '%']);
                     });
             });
         }
@@ -170,13 +169,18 @@ class MonthlyDebt extends Component
 
         // Map vehículos para COD/PLACA/COND
         $vehicleIds = $rows->pluck('vehicle_id')->filter()->unique()->values();
+
+        // Puedes dejarlo sin orderBy aquí; el orden real lo haremos en $out.
+        // Lo dejo con COALESCE por si lo quieres mantener.
         $vehicles = Vehicle::query()
             ->whereIn('id', $vehicleIds)
-            ->orderBy('sort_order','asc')
+            ->orderByRaw('COALESCE(sort_order, 999999) ASC')
             ->get(['id','sort_order','plate','condition'])
             ->keyBy('id');
 
         $out = [];
+
+        // reinicia acumuladores en cada loadData()
         $tt_total = 0.0;
         $tt_ex    = 0.0;
         $tt_toPay = 0.0;
@@ -192,7 +196,7 @@ class MonthlyDebt extends Component
             $plateStr = $veh ? $veh->plate : ($row->legacy_plate ?? '');
             $cond     = $row->condition ?: ($veh->condition ?? '');
 
-            $daysText = $this->buildDaysLabel($row, $from);
+            $daysText   = $this->buildDaysLabel($row, $from);
 
             $daysLate   = (int) $row->days_late;    // DÍAS
             $total      = (float) $row->total;      // S/
@@ -203,8 +207,8 @@ class MonthlyDebt extends Component
 
             $out[] = [
                 'id'          => $row->id,
-                'item'        => $item,
-                'cod'         => $cod,
+                'item'        => $item,      // será reenumerado luego
+                'cod'         => $cod,       // sort_order
                 'plate'       => $plateStr,
                 'condition'   => $cond,
                 'days_text'   => $daysText,
@@ -216,6 +220,7 @@ class MonthlyDebt extends Component
                 'pending'     => $pending,
             ];
 
+            // Acumuladores
             $tt_total += $total;
             $tt_ex    += $exonerated;
             $tt_toPay += $toPay;
@@ -223,7 +228,21 @@ class MonthlyDebt extends Component
             $tt_pend  += $pending;
         }
 
-        $this->rows = $out;
+        // === Ordena la salida por 'cod' (sort_order), nulos al final, y reenumera 'item' ===
+        $sorted = collect($out)
+            ->sortBy(function ($r) {
+                if ($r['cod'] === '' || $r['cod'] === null) {
+                    return PHP_INT_MAX; // manda nulos/vacíos al final
+                }
+                return (int) $r['cod']; // orden numérico
+            })
+            ->values()
+            ->map(function ($r, $i) {
+                $r['item'] = $i + 1; // reenumerar correlativo según orden final
+                return $r;
+            });
+
+        $this->rows = $sorted->all();
         $this->totals = [
             'total'      => $tt_total,
             'exonerated' => $tt_ex,
@@ -232,6 +251,7 @@ class MonthlyDebt extends Component
             'pending'    => $tt_pend,
         ];
     }
+
 
     /** Construye texto de días “X / X1” (azul en X1) */
     private function buildDaysLabel(DebtDay $row, string $fromDate): string
