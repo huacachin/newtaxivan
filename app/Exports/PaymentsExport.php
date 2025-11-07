@@ -183,6 +183,8 @@ class PaymentsExport implements
             AfterSheet::class => function (AfterSheet $e) {
                 $ws = $e->sheet->getDelegate();
 
+                $ws->getParent()->getDefaultStyle()->getFont()->setSize(10);
+
                 $blueDark   = 'FF2874A6';
                 $footerFill = 'FFCEE7FF';
                 $white      = 'FFFFFFFF';
