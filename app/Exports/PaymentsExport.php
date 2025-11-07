@@ -222,7 +222,7 @@ class PaymentsExport implements
                 $ws->getRowDimension($headerRow)->setRowHeight(18);
 
                 // Congelar encabezado
-                $ws->freezePane("A{$dataStartRow}");
+                //$ws->freezePane("A{$dataStartRow}");
 
                 if ($last < $dataStartRow) {
                     return; // sin datos
@@ -293,7 +293,7 @@ class PaymentsExport implements
                     $ws->getColumnDimension($col)->setWidth(3.0); // default base
                 }
                 // Overrides por columna (ligeramente más amplios)
-                $ws->getColumnDimension('A')->setWidth(3);  // Item
+                $ws->getColumnDimension('A')->setWidth(5);  // Item
                 $ws->getColumnDimension('B')->setWidth(9.5);  // Placa
                 $ws->getColumnDimension('C')->setWidth(8);  // Serie
                 $ws->getColumnDimension('D')->setWidth(11.0); // Fecha Registro
