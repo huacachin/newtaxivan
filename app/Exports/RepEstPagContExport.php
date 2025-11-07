@@ -71,41 +71,40 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
             AfterSheet::class => function (AfterSheet $e) {
 
                 $s = $e->sheet->getDelegate();
-                $s->getParent()->getDefaultStyle()->getFont()->setName('Tahoma')->setSize(9);
+                // Fuente global: Calibri 10 + sin grillas
+                $s->getParent()->getDefaultStyle()->getFont()->setName('Calibri')->setSize(10);
                 $s->setShowGridlines(false);
 
                 $row = 1;
                 $lastMainCol = 'P'; // A..P
 
                 // Colores
-                $blueHeader  = '2874A6'; // encabezados
-                $indigo      = '1F4E79'; // barra CONTROL. y etiquetas pedidas
+                $blueHeader  = 'FF2874A6'; // encabezados
                 $red         = 'C0392B'; // diferencias/ceros
-                $celeste     = 'CEE7FF'; // saldo a favor / total comparativo
 
                 // Estilos helper
-                $thin = ['borders'=>['allBorders'=>['borderStyle'=>Border::BORDER_THIN,'color'=>['rgb'=>'C9CDD1']]]];
+                $thin = ['borders'=>['allBorders'=>['borderStyle'=>Border::BORDER_THIN,'color'=>['rgb'=>$red]]]];
                 $center = ['alignment'=>[
                     'horizontal'=>Alignment::HORIZONTAL_CENTER,
                     'vertical'=>Alignment::VERTICAL_CENTER
                 ]];
 
-                // Helper para pintar fondo indigo con texto blanco y negrita (centrado)
-                $paintIndigo = function(string $range) use ($s, $center, $indigo) {
+                // Helper: fondo índigo, texto blanco y negrita (centrado)
+                $paintIndigo = function(string $range) use ($s, $center, $blueHeader) {
                     $s->getStyle($range)->applyFromArray($center)
                         ->getFont()->setBold(true)->getColor()->setRGB('FFFFFF');
                     $s->getStyle($range)->getFill()
-                        ->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB($indigo);
+                        ->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB($blueHeader);
                 };
 
-                // ===================== CUADRO 1 =====================
-                // Título (rojo)
+                /* ===================== CUADRO 1 ===================== */
+                // Título (fondo rojo, tamaño 10)
                 $s->mergeCells("A{$row}:{$lastMainCol}{$row}");
                 $s->setCellValue("A{$row}", "REPORTE ESTADISTICO DE SALIDAS-PAGOS DE CONTROLADOR {$this->year}");
                 $s->getStyle("A{$row}:{$lastMainCol}{$row}")
-                    ->applyFromArray($center)->getFont()->setBold(true)->setSize(12)->getColor()->setRGB('FFFFFF');
+                    ->applyFromArray($center)->getFont()->setBold(true)->setSize(10)->getColor()->setRGB('D32F2F');
                 $s->getStyle("A{$row}:{$lastMainCol}{$row}")->getFill()
-                    ->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('D32F2F'); // rojo más vivo
+                    ->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('FFFFFF');
                 $row++;
 
                 // Encabezado: CONTROL., PARADERO (B:C), meses (D..O), TOTAL (P)
@@ -133,7 +132,7 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
 
                     // Paraderos
                     foreach ($block['paraderos'] as $p) {
-                        // B: HQ name  |  C: "Ingr. Sal."  -> fondo indigo + blanco (como barra del usuario)
+                        // B: HQ name  |  C: "Ingr. Sal."  -> fondo indigo
                         $s->setCellValue("B{$row}", $p['sucursal']);
                         $s->setCellValue("C{$row}", 'Ingr. Sal.');
                         $paintIndigo("B{$row}");
@@ -147,7 +146,7 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
                         $row++;
                     }
 
-                    // Egreso Pago (B:C merged con fondo indigo)
+                    // Egreso Pago
                     $s->mergeCells("B{$row}:C{$row}");
                     $s->setCellValue("B{$row}", 'Egreso Pago');
                     $paintIndigo("B{$row}:C{$row}");
@@ -155,11 +154,10 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
                         $s->setCellValueByColumnAndRow(3+$m, $row, (float)($block['egreso_pago'][$m] ?? 0));
                     }
                     $s->setCellValue("P{$row}", (float)$block['tot_egr_pago']);
-                    // valores en rojo
                     $s->getStyle("D{$row}:P{$row}")->getFont()->getColor()->setRGB($red);
                     $row++;
 
-                    // Egreso Draco (B:C merged con fondo indigo)
+                    // Egreso Draco
                     $s->mergeCells("B{$row}:C{$row}");
                     $s->setCellValue("B{$row}", 'Egreso Draco');
                     $paintIndigo("B{$row}:C{$row}");
@@ -170,17 +168,17 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
                     $s->getStyle("D{$row}:P{$row}")->getFont()->getColor()->setRGB($red);
                     $row++;
 
+                    // Saldo
                     $s->mergeCells("B{$row}:C{$row}");
                     $s->setCellValue("B{$row}", 'Saldo');
-                    $paintIndigo("B{$row}:C{$row}");   // <<=== AÑADIDO
-
+                    $paintIndigo("B{$row}:C{$row}");
                     for ($m=1; $m<=12; $m++) {
                         $s->setCellValueByColumnAndRow(3+$m, $row, (float)($block['saldos'][$m] ?? 0));
                     }
                     $s->setCellValue("P{$row}", (float)$block['tot_saldo']);
                     $row++;
 
-                    // Merged de CONTROL. (columna A) con fondo indigo
+                    // Merge columna A (CONTROL.)
                     $blockEnd = $row - 1;
                     $s->mergeCells("A{$blockStart}:A{$blockEnd}");
                     $s->setCellValue("A{$blockStart}", $block['controlador']);
@@ -195,7 +193,7 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
                 }
                 $s->setCellValue("P{$row}", (float)$this->totalSaldoFavor);
                 $s->getStyle("A{$row}:P{$row}")->getFill()
-                    ->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB($celeste);
+                    ->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB($blueHeader);
                 $endTable = $row;
                 $row += 2;
 
@@ -215,23 +213,23 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
                     }
                 }
 
-                // ===================== CUADRO 2 – COMPARATIVO =====================
-                // Título (azul)
+                /* ===================== CUADRO 2 – COMPARATIVO ===================== */
+                // Título (azul, tamaño 10)
                 $s->mergeCells("A{$row}:P{$row}");
                 $s->setCellValue("A{$row}", 'REPORTE COMPARATIVO');
                 $s->getStyle("A{$row}:P{$row}")
-                    ->applyFromArray($center)->getFont()->setBold(true)->setSize(11)->getColor()->setRGB('FFFFFF');
+                    ->applyFromArray($center)->getFont()->setBold(true)->setSize(10)->getColor()->setRGB('FFFFFF');
                 $s->getStyle("A{$row}:P{$row}")->getFill()
                     ->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB($blueHeader);
                 $row++;
 
-                /** ========= ENCABEZADO CON ROWSPAN 4 y MISMO COLOR EN TODAS LAS FILAS ========= **/
-                $hdr1 = $row;              // fila 1 del header
+                // ENCABEZADO 4 filas con mismo color
+                $hdr1 = $row;              // fila 1
                 $hdr2 = $hdr1 + 1;         // sedes
                 $hdr3 = $hdr1 + 2;         // Ingreso
                 $hdr4 = $hdr1 + 3;         // Salida
 
-                // Fila 1 (cabecera principal, con merges verticales)
+                // Fila 1
                 $s->mergeCells("A{$hdr1}:A{$hdr4}"); $s->setCellValue("A{$hdr1}", 'Item');
                 $s->mergeCells("B{$hdr1}:B{$hdr4}"); $s->setCellValue("B{$hdr1}", 'Mes');
 
@@ -246,7 +244,6 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
                 $s->mergeCells("O{$hdr1}:P{$hdr4}");
                 $s->setCellValue("O{$hdr1}", "Diferencia Huaycan / Gamarra");
 
-                // Mismo fondo para las 4 filas del header
                 foreach ([$hdr1,$hdr2,$hdr3,$hdr4] as $hr) {
                     $s->getStyle("A{$hr}:P{$hr}")
                         ->applyFromArray($center)->getFont()->setBold(true)->getColor()->setRGB('FFFFFF');
@@ -255,7 +252,7 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
                 }
                 $s->getStyle("O{$hdr1}:P{$hdr1}")->getAlignment()->setWrapText(true);
 
-                // Fila 2 (sedes)
+                // Fila 2 – sedes
                 $s->mergeCells("C{$hdr2}:D{$hdr2}"); $s->setCellValue("C{$hdr2}", '01 Huaycan');
                 $s->mergeCells("E{$hdr2}:F{$hdr2}"); $s->setCellValue("E{$hdr2}", '01 Huaycan');
                 $s->mergeCells("I{$hdr2}:J{$hdr2}"); $s->setCellValue("I{$hdr2}", '04 La victoria');
@@ -270,24 +267,23 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
                     $s->setCellValue("{$colLet}{$hdr4}", 'Salida');
                 }
 
-                // Avanzamos a datos
+                // Datos
                 $row = $hdr4 + 1;
                 $startComp = $row;
 
-                // Filas de datos
                 foreach ($this->comparativo as $r) {
                     $s->setCellValue("A{$row}", $r['item']);
                     $s->setCellValue("B{$row}", $r['mes']);
 
-                    $s->mergeCells("C{$row}:D{$row}"); $s->setCellValue("C{$row}", (float)$r['a_h']);   // Luis Huaycan
-                    $s->mergeCells("E{$row}:F{$row}"); $s->setCellValue("E{$row}", (float)$r['b_h']);   // Elmer Huaycan
-                    $s->mergeCells("G{$row}:H{$row}"); $s->setCellValue("G{$row}", (float)$r['dif_h']); // Dif Huaycan
+                    $s->mergeCells("C{$row}:D{$row}"); $s->setCellValue("C{$row}", (float)$r['a_h']);
+                    $s->mergeCells("E{$row}:F{$row}"); $s->setCellValue("E{$row}", (float)$r['b_h']);
+                    $s->mergeCells("G{$row}:H{$row}"); $s->setCellValue("G{$row}", (float)$r['dif_h']);
 
-                    $s->mergeCells("I{$row}:J{$row}"); $s->setCellValue("I{$row}", (float)$r['a_v']);   // Luis LV
-                    $s->mergeCells("K{$row}:L{$row}"); $s->setCellValue("K{$row}", (float)$r['b_v']);   // Elmer LV
-                    $s->mergeCells("M{$row}:N{$row}"); $s->setCellValue("M{$row}", (float)$r['dif_v']); // Dif LV
+                    $s->mergeCells("I{$row}:J{$row}"); $s->setCellValue("I{$row}", (float)$r['a_v']);
+                    $s->mergeCells("K{$row}:L{$row}"); $s->setCellValue("K{$row}", (float)$r['b_v']);
+                    $s->mergeCells("M{$row}:N{$row}"); $s->setCellValue("M{$row}", (float)$r['dif_v']);
 
-                    $s->mergeCells("O{$row}:P{$row}"); $s->setCellValue("O{$row}", (float)$r['dif_h_vs_v']); // Dif HV/Gamarra
+                    $s->mergeCells("O{$row}:P{$row}"); $s->setCellValue("O{$row}", (float)$r['dif_h_vs_v']);
                     $row++;
                 }
 
@@ -301,9 +297,9 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
                 $s->mergeCells("M{$row}:N{$row}"); $s->setCellValue("M{$row}", (float)$this->comparativoTotales['dif_v']);
                 $s->mergeCells("O{$row}:P{$row}"); $s->setCellValue("O{$row}", (float)$this->comparativoTotales['dif_h_vs_v']);
                 $s->getStyle("A{$row}:P{$row}")
-                    ->applyFromArray($center)->getFont()->setBold(true);
+                    ->applyFromArray($center)->getFont()->setBold(true)->setSize(10);
                 $s->getStyle("A{$row}:P{$row}")->getFill()
-                    ->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB($celeste);
+                    ->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB($blueHeader);
                 $endComp = $row;
 
                 // Bordes / centrado / diferencias en rojo
@@ -312,7 +308,7 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
                 $s->getStyle("G{$startComp}:H{$endComp}")->getFont()->getColor()->setRGB($red);
                 $s->getStyle("M{$startComp}:N{$endComp}")->getFont()->getColor()->setRGB($red);
 
-                // ===================== ANCHOS COMPACTOS =====================
+                /* ===================== ANCHOS “AL RAS” ===================== */
                 foreach (range('A','P') as $colLet) {
                     $s->getColumnDimension($colLet)->setAutoSize(false);
                 }
@@ -322,7 +318,24 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
                 $s->getColumnDimension('C')->setWidth(10);  // "Ingr. Sal." / etiquetas
                 foreach (range('D','O') as $c) { $s->getColumnDimension($c)->setWidth(9); } // meses
                 $s->getColumnDimension('P')->setWidth(11);  // TOTAL
+
+                // Formatos numéricos (2 decimales) en D..P del cuadro principal y todo el comparativo
+                // Principal (filas de datos, desde $startTable hasta $endTable, columnas D..P)
+                for ($r=$startTable; $r<=$endTable; $r++) {
+                    for ($c=4; $c<=16; $c++) {
+                        $coord = Coordinate::stringFromColumnIndex($c).$r;
+                        $s->getStyle($coord)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
+                    }
+                }
+                // Comparativo (desde $startComp hasta $endComp, columnas C..P)
+                for ($r=$startComp; $r<=$endComp; $r++) {
+                    foreach (range('C','P') as $colLet) {
+                        $s->getStyle("{$colLet}{$r}")->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
+                    }
+                }
             },
         ];
     }
+
+
 }
