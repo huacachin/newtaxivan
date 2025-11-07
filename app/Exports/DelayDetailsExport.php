@@ -151,13 +151,13 @@ class DelayDetailsExport implements FromArray, ShouldAutoSize, WithHeadings, Wit
                 // ===== TÍTULO =====
                 $seed      = Carbon::parse($this->monthDate);
                 $monthText = $seed->locale('es')->translatedFormat('F Y');
-                $ws->setCellValue('A1', 'REPORTE DE RETRASOS – DETALLE' . ($monthText ? " – {$monthText}" : ''));
+                $ws->setCellValue('A1', 'REPORTE DE RETRASO ' . ($monthText ? " – {$monthText}" : ''));
                 $ws->mergeCells("A1:{$lastColLetter}1");
                 $ws->getRowDimension(1)->setRowHeight(22);
                 $ws->getStyle('A1')->applyFromArray([
-                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['rgb' => 'FFFFFF']],
+                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['rgb' => 'FFCC0000']],
                     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
-                    'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '2874A6']],
+                    'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFFFFF']],
                 ]);
 
                 // ===== THEAD (azul #2874A6) =====
