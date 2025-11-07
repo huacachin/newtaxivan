@@ -103,7 +103,7 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
                 $borderC    = 'FFCFD8DC';
                 $sunRed     = 'FFEF4444'; // domingos (header de días)
 
-                // Tipografía compacta
+                // Tipografía compacta (10pt para toda la hoja)
                 $s->getParent()->getDefaultStyle()->getFont()->setSize(10);
 
                 // ===== Título (fila 1)
@@ -155,12 +155,16 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
                     $s->getColumnDimensionByColumn($c)->setAutoSize(false);
                 }
                 $s->getColumnDimension('A')->setWidth(14.5); // CONTROLADOR
-                $s->getColumnDimension('B')->setWidth(16);   // PARADERO
+                $s->getColumnDimension('B')->setWidth(16.0); // PARADERO
                 $s->getColumnDimension('C')->setWidth(6.5);  // TIPO
                 for ($c=$firstDayColIdx; $c < $lastColIdx; $c++) {
                     $s->getColumnDimensionByColumn($c)->setWidth(3.0); // Días
                 }
                 $s->getColumnDimensionByColumn($lastColIdx)->setWidth(6.5); // V.T
+
+                // Evitar aire extra global
+                $s->getStyle("A1:{$lastCol}{$lastRow}")
+                    ->getAlignment()->setWrapText(false)->setIndent(0);
 
                 // ===== Alineaciones / formatos
                 $dataRows   = count($this->rows);
@@ -300,6 +304,8 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
                     ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
                 $s->getStyle("C{$footerTE}:C{$footerVT}")
                     ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+                // ✅ Sin AutoFilter (no se llama setAutoFilter en ningún rango)
             }
         ];
     }
