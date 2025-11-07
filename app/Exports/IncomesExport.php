@@ -15,10 +15,6 @@ use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Style\Border;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use PhpOffice\PhpSpreadsheet\Style\Conditional;
 
 class IncomesExport implements
     FromQuery, ShouldAutoSize, WithHeadings, WithMapping,
@@ -68,15 +64,12 @@ class IncomesExport implements
     /* ========================= LAYOUT ========================= */
     public function headings(): array
     {
-        // Item, Fecha, Respons., A, Motivo, S/.
         return ['Item', 'Fecha', 'Respons.', 'A', 'Motivo', 'S/.'];
     }
 
     public function map($row): array
     {
         $this->i++;
-
-        // Ajusta el contenido de la col. "A" si lo necesitas
         $colA = $row->reason === 'DEUDA' ? 'DEUDA' : 'Taxi Van';
 
         return [
@@ -91,16 +84,14 @@ class IncomesExport implements
 
     public function columnFormats(): array
     {
-        // A B C D E F
         return [
-            'B' => NumberFormat::FORMAT_DATE_DDMMYYYY, // Fecha dd/mm/aaaa
-            // F (S/.) se formatea en AfterSheet
+            'B' => NumberFormat::FORMAT_DATE_DDMMYYYY, // dd/mm/aaaa
         ];
     }
 
     public function styles(Worksheet $sheet)
     {
-        // El header (que quedará en la fila 2) en negrita (reforzado en AfterSheet)
+        // Header en negrita (fila que quedará en 2 tras insertar el título)
         return [1 => ['font' => ['bold' => true]]];
     }
 
@@ -112,23 +103,21 @@ class IncomesExport implements
                 $ws = $e->sheet->getDelegate();
 
                 // Paleta
-                $BLUE   = 'FF2874A6'; // header
-                $FOOT   = 'FFCEE7FF'; // footer Total
-                $WHITE  = 'FFFFFFFF';
+                $BLUE   = 'FF2874A6';
+                $FOOT   = 'FFCEE7FF';
                 $BORDER = 'FFCFD8DC';
 
-                // Fuente base 10
+                // Fuente base y altura compacta (sin reducción automática del texto)
                 $ws->getParent()->getDefaultStyle()->getFont()->setSize(10);
+                $ws->getDefaultRowDimension()->setRowHeight(13);
 
-                // Insertar 1 fila para TÍTULO
+                // ===== Título (fila 1)
                 $ws->insertNewRowBefore(1, 1);
-
-                // Título (texto azul, fondo blanco)
                 $ws->setCellValue('A1', 'LISTADO GENERAL DE INGRESOS');
                 $ws->mergeCells('A1:F1');
-                $ws->getRowDimension(1)->setRowHeight(18);
+                $ws->getRowDimension(1)->setRowHeight(16);
                 $ws->getStyle('A1')->applyFromArray([
-                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['rgb' => '2874A6']],
+                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['rgb' => 'FFEF4444']],
                     'alignment' => [
                         'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
                         'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
@@ -136,11 +125,11 @@ class IncomesExport implements
                 ]);
 
                 // Filas clave
-                $headerRow    = 2;     // encabezados
-                $dataStartRow = 3;     // primera fila de datos
-                $last         = (int)$ws->getHighestRow();
+                $headerRow    = 2;
+                $dataStartRow = 3;
+                $last         = (int) $ws->getHighestRow();
 
-                // THEAD (azul)
+                // ===== THEAD
                 $ws->getStyle("A{$headerRow}:F{$headerRow}")->applyFromArray([
                     'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
                     'alignment' => [
@@ -152,34 +141,28 @@ class IncomesExport implements
                         'startColor' => ['rgb' => '2874A6'],
                     ],
                 ]);
-                $ws->getRowDimension($headerRow)->setRowHeight(18);
+                $ws->getRowDimension($headerRow)->setRowHeight(16);
 
-                // Anchos compactos
-                $ws->getColumnDimension('A')->setWidth(6.0);  // Item
-                $ws->getColumnDimension('B')->setWidth(11.0); // Fecha
-                $ws->getColumnDimension('C')->setWidth(14.0); // Respons.
-                $ws->getColumnDimension('D')->setWidth(10.0); // A
-                $ws->getColumnDimension('E')->setWidth(52.0); // Motivo
-                $ws->getColumnDimension('F')->setWidth(9.0);  // S/.
-
-                // Wrap sólo en Motivo
-                if ($last >= $dataStartRow) {
-                    $ws->getStyle("E{$dataStartRow}:E{$last}")
-                        ->getAlignment()->setWrapText(true);
+                // ===== Anchos “al ras” (desactivar autosize y fijar anchos)
+                foreach (range('A', 'F') as $c) {
+                    $ws->getColumnDimension($c)->setAutoSize(false);
                 }
+                $ws->getColumnDimension('A')->setWidth(5.0);   // Item
+                $ws->getColumnDimension('B')->setWidth(10.0);  // Fecha dd/mm/aa
+                $ws->getColumnDimension('C')->setWidth(14.0);  // Respons.
+                $ws->getColumnDimension('D')->setWidth(8.5);   // A
+                $ws->getColumnDimension('E')->setWidth(32.0);  // Motivo (sin shrink; con wrap)
+                $ws->getColumnDimension('F')->setWidth(9.5);   // S/.
 
-                // Congelar bajo el encabezado
-                $ws->freezePane("A{$dataStartRow}");
-
-                // SIN filtros (para que no aparezcan los desplegables)
-                // (No llamar a setAutoFilter)
-
-                // Alineaciones de datos
+                // ===== Alineaciones de datos (sin shrink; E con wrap)
                 if ($last >= $dataStartRow) {
                     $ws->getStyle("A{$dataStartRow}:D{$last}")
                         ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
                     $ws->getStyle("E{$dataStartRow}:E{$last}")
-                        ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+                        ->getAlignment()
+                        ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT)
+                        ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER)
+                        ->setWrapText(true); // ← evita reducir letra
                     $ws->getStyle("F{$dataStartRow}:F{$last}")
                         ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
 
@@ -187,32 +170,35 @@ class IncomesExport implements
                     $ws->getStyle("B{$dataStartRow}:B{$last}")
                         ->getNumberFormat()->setFormatCode('d/m/yy');
                     $ws->getStyle("F{$dataStartRow}:F{$last}")
-                        ->getNumberFormat()->setFormatCode('"S/ " #,##0');
+                        ->getNumberFormat()->setFormatCode('"S/ " #,##0'); // sin decimales
                 }
 
-                // Bordes finos (header + datos)
+                // ===== Congelar bajo encabezado
+                $ws->freezePane("A{$dataStartRow}");
+
+                // ===== Bordes finos (header + datos)
                 $ws->getStyle("A{$headerRow}:F" . max($headerRow, $last))
-                    ->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN)
+                    ->getBorders()->getAllBorders()
+                    ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN)
                     ->getColor()->setARGB($BORDER);
 
                 // Línea punteada entre filas de datos
                 if ($last >= $dataStartRow) {
                     $ws->getStyle("A{$dataStartRow}:F{$last}")
-                        ->getBorders()->getHorizontal()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_DOTTED)
+                        ->getBorders()->getHorizontal()
+                        ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_DOTTED)
                         ->getColor()->setARGB($BORDER);
                 }
 
-                // TOTAL (footer claro)
+                // ===== TOTAL (footer)
                 $totalRow = max($last, $dataStartRow - 1) + 1;
                 $ws->mergeCells("A{$totalRow}:E{$totalRow}");
                 $ws->setCellValue("A{$totalRow}", 'Total');
-                if ($last >= $dataStartRow) {
-                    $ws->setCellValue("F{$totalRow}", "=SUM(F{$dataStartRow}:F{$last})");
-                } else {
-                    $ws->setCellValue("F{$totalRow}", 0);
-                }
+                $ws->setCellValue("F{$totalRow}", $last >= $dataStartRow
+                    ? "=SUM(F{$dataStartRow}:F{$last})"
+                    : 0
+                );
 
-                // Estilo footer: #CEE7FF
                 $ws->getStyle("A{$totalRow}:F{$totalRow}")->applyFromArray([
                     'font'      => ['bold' => true, 'color' => ['rgb' => '000000']],
                     'alignment' => [
@@ -221,7 +207,7 @@ class IncomesExport implements
                     ],
                     'fill'      => [
                         'fillType'   => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                        'startColor' => ['rgb' => 'CEE7FF'],
+                        'startColor' => ['rgb' => $FOOT],
                     ],
                 ]);
                 $ws->getStyle("F{$totalRow}")
@@ -231,9 +217,11 @@ class IncomesExport implements
 
                 // Borde exterior del bloque completo
                 $ws->getStyle("A{$headerRow}:F{$totalRow}")
-                    ->getBorders()->getOutline()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN)
+                    ->getBorders()->getOutline()
+                    ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN)
                     ->getColor()->setARGB($BORDER);
             },
         ];
     }
+
 }
