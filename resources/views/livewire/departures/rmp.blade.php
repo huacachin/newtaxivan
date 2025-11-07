@@ -11,6 +11,7 @@
             font-size: 10px !important;
             text-align: center !important;
             vertical-align: middle;   /* <-- clave */
+            overflow-wrap: anywhere;
         }
 
         .btn, input,select {
@@ -129,9 +130,9 @@
                             <tbody>
                             @forelse($rows as $r)
                                 <tr>
-                                    <td>{{ $r['controller'] }}</td>
-                                    <td>{{ $r['stop'] }}</td>
-                                    <td>{{ $r['type'] === 'Emp' ? 'Emp.' : 'Apoyo.' }}</td>
+                                    <td class="bg-primary">{{ $r['controller'] }}</td>
+                                    <td class="bg-primary">{{ $r['stop'] }}</td>
+                                    <td class="bg-primary">{{ $r['type'] === 'Emp' ? 'Emp.' : 'Apoyo.' }}</td>
 
                                     @for($d=1; $d<=$daysInMonth; $d++)
                                         <td>{{ $r['days'][$d] ?? 0 }}</td>
