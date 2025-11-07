@@ -61,19 +61,19 @@ class OwnersReportExport implements
 
     public function headings(): array
     {
-        // 5 columnas (A..E)
-        return ['ID','Nombre','Placa','N° Documento','Teléfono'];
+        // Orden nuevo: A..E
+        return ['ID','Placa','Nombre','N° Documento','Teléfono'];
     }
 
     public function map($r): array
     {
-        // ID correlativo (no el real)
+        // Orden nuevo: ID, Placa, Nombre, Documento, Teléfono
         return [
-            ++$this->rowNum,
-            (string)$r->name,
-            strtoupper((string)$r->plate),
-            (string)$r->document_number, // texto
-            (string)$r->phone,           // texto
+            ++$this->rowNum,                       // ID correlativo
+            strtoupper((string)$r->plate),         // Placa (B)
+            (string)$r->name,                      // Nombre (C)
+            (string)$r->document_number,           // N° Documento (D) - texto
+            (string)$r->phone,                     // Teléfono (E) - texto
         ];
     }
 
@@ -88,7 +88,6 @@ class OwnersReportExport implements
 
     public function styles(Worksheet $sheet)
     {
-        // El header de la primera tabla se renderiza por la vista base; reforzamos en AfterSheet.
         return [1 => ['font' => ['bold' => true]]];
     }
 
@@ -99,7 +98,7 @@ class OwnersReportExport implements
             AfterSheet::class => function (AfterSheet $e) {
                 $ws = $e->sheet->getDelegate();
 
-                // === Fuente global 10pt para TODO ===
+                // Fuente global 10pt
                 $ws->getParent()->getDefaultStyle()->getFont()->setSize(10);
 
                 // Paleta
@@ -107,32 +106,30 @@ class OwnersReportExport implements
                 $footerBg = 'FFCEE7FF'; // #CEE7FF
                 $white    = 'FFFFFFFF';
                 $borderC  = 'FFCFD8DC';
+                $black    = '000000';
 
                 /* ---------- Título (sin subtítulo) ---------- */
-                // Insertamos 2 filas por compatibilidad con índices previos, pero NO agregamos subtítulo.
                 $ws->insertNewRowBefore(1, 2);
 
-                // Contaremos activos y libres para el título:
-                // Activos: los que vienen del query principal (primera tabla).
-                // Calculamos filas activas tras pintar encabezado.
-                $head1  = 3;           // THEAD
-                $start1 = 4;           // datos
-                $last   = (int)$ws->getHighestRow(); // aún sin datos de "libres"
+                // Índices de tabla 1
+                $head1  = 3;  // THEAD
+                $start1 = 4;  // datos
+                $last   = (int)$ws->getHighestRow();
 
-                // Pintamos título ya con placeholder; luego lo actualizamos con el total real al final.
+                // Título con placeholder (actualizamos al final)
                 $ws->setCellValue('A1','LISTADO GENERAL DE PROPIETARIO ( 0 )');
                 $ws->mergeCells('A1:E1');
                 $ws->getStyle('A1:E1')->applyFromArray([
-                    'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$white]],
+                    'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$black]],
                     'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
-                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blue]],
+                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$white]],
                 ]);
                 $ws->getRowDimension(1)->setRowHeight(18);
 
-                // Fila 2: la dejamos vacía y sin estilos (subtítulo eliminado)
+                // Fila 2 vacía (subtítulo retirado)
                 $ws->mergeCells('A2:E2');
                 $ws->setCellValue('A2', '');
-                $ws->getRowDimension(2)->setRowHeight(4); // una separación mínima
+                $ws->getRowDimension(2)->setRowHeight(4);
 
                 /* ---------- Encabezado + cuerpo del PRIMER cuadro (ACTIVOS) ---------- */
                 // THEAD azul
@@ -150,7 +147,7 @@ class OwnersReportExport implements
                 $hasData1 = $last >= $start1;
                 $end1     = $hasData1 ? $last : ($start1 - 1);
 
-                // ❌ Sin AutoFilter (pedido: quitar filtros automáticos SOLO en este export)
+                // Sin AutoFilter (pediste quitar filtros automáticos SOLO aquí)
                 if ($hasData1) {
                     $ws->getStyle("A{$head1}:E{$end1}")
                         ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)
@@ -166,15 +163,15 @@ class OwnersReportExport implements
                     $styles1[] = $z1;
                     $ws->getStyle($range1)->setConditionalStyles($styles1);
 
-                    // Alineaciones de datos (sin shrinkToFit para no reducir tipografía)
+                    // Alineaciones con nuevo orden
                     $ws->getStyle("A{$start1}:A{$end1}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // ID correlativo
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // ID
                     $ws->getStyle("B{$start1}:B{$end1}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT)->setWrapText(false);
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setWrapText(false); // Placa
                     $ws->getStyle("C{$start1}:C{$end1}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT)->setWrapText(false);   // Nombre
                     $ws->getStyle("D{$start1}:E{$end1}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT)->setWrapText(false);
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT)->setWrapText(false);   // Doc / Tel
                 }
 
                 // Pie (TOTAL ACTIVOS)
@@ -212,9 +209,9 @@ class OwnersReportExport implements
                 ]);
                 $ws->getRowDimension($head2)->setRowHeight(16);
 
-                // Data libres (correlativo propio del segundo cuadro)
+                // Data libres
                 $start2 = $head2 + 1;
-                $freeRows = $this->fetchFreeOwners(); // array ya mapeado a 5 columnas
+                $freeRows = $this->fetchFreeOwners(); // ya con nuevo orden
                 $countFree = count($freeRows);
 
                 if ($countFree > 0) {
@@ -229,10 +226,10 @@ class OwnersReportExport implements
                         ->getFill()->setFillType(Fill::FILL_SOLID)
                         ->getStartColor()->setARGB('FFE5E7EB');
 
-                    // Alineaciones
-                    $ws->getStyle("A{$start2}:A{$end2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // ID correlativo
-                    $ws->getStyle("B{$start2}:B{$end2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT)->setWrapText(false); // Nombre
-                    $ws->getStyle("C{$start2}:C{$end2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // Placa
+                    // Alineaciones (nuevo orden)
+                    $ws->getStyle("A{$start2}:A{$end2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // ID
+                    $ws->getStyle("B{$start2}:B{$end2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setWrapText(false); // Placa (—)
+                    $ws->getStyle("C{$start2}:C{$end2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT)->setWrapText(false); // Nombre
                     $ws->getStyle("D{$start2}:E{$end2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT)->setWrapText(false); // Doc/Tel
 
                     // Totales 2
@@ -262,10 +259,10 @@ class OwnersReportExport implements
                 foreach (['A','B','C','D','E'] as $col) {
                     $ws->getColumnDimension($col)->setAutoSize(false);
                 }
-                // A:ID  B:Nombre  C:Placa  D:N° Documento  E:Teléfono
+                // A:ID  B:Placa  C:Nombre  D:N° Documento  E:Teléfono
                 $ws->getColumnDimension('A')->setWidth(4.2);
-                $ws->getColumnDimension('B')->setWidth(20.0);
-                $ws->getColumnDimension('C')->setWidth(9.5);
+                $ws->getColumnDimension('B')->setWidth(9.5);
+                $ws->getColumnDimension('C')->setWidth(20.0);
                 $ws->getColumnDimension('D')->setWidth(12.0);
                 $ws->getColumnDimension('E')->setWidth(11.0);
 
@@ -299,11 +296,11 @@ class OwnersReportExport implements
         $i = 1; // correlativo del segundo cuadro
         foreach ($rows as $r) {
             $out[] = [
-                $i++,                         // ID correlativo
-                (string)$r->name,             // Nombre
-                '—',                          // Placa (libre)
-                (string)$r->document_number,  // N° Documento
-                (string)$r->phone,            // Teléfono
+                $i++,                        // A: ID correlativo
+                '—',                         // B: Placa (libre)
+                (string)$r->name,            // C: Nombre
+                (string)$r->document_number, // D: N° Documento
+                (string)$r->phone,           // E: Teléfono
             ];
         }
         return $out;
