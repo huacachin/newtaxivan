@@ -238,7 +238,7 @@ class DeparturesStatsMonthlyExport implements FromArray, WithHeadings, WithStyle
                         $type = (string)$s->getCell("C{$r}")->getValue();
                         if ($type === 'S/') {
                             $s->getStyle("A{$r}:{$lastColL}{$r}")
-                                ->getFont()->getColor()->setARGB($white);
+                                ->getFont()->getColor()->setARGB($fontW);
                         }
                     }
                 }
