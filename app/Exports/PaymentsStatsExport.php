@@ -159,7 +159,7 @@ class PaymentsStatsExport implements FromArray, WithHeadings, WithEvents, WithTi
                 // ======= Anchos compactos =======
                 // A: Controlador, B: Paradero, C: Tipo, D..: días, última: Total
                 $sheet->getColumnDimension('A')->setWidth(11);
-                $sheet->getColumnDimension('B')->setWidth(9);
+                $sheet->getColumnDimension('B')->setWidth(8);
                 $sheet->getColumnDimension('C')->setWidth(7);
                 for ($i = 4; $i <= $lastColIdx - 1; $i++) {
                     $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($i))->setWidth(4.2);
