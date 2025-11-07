@@ -76,7 +76,7 @@
                             <div class="d-flex flex-nowrap align-items-end gap-2 overflow-auto py-1">
 
                                 <!-- Mes -->
-                                <div class="flex-shrink-0" style="min-width: 160px;">
+                                <div class="flex-shrink-0">
                                     <label class="form-label mb-1">Mes</label>
                                     <select class="form-select form-select-sm" wire:model.live="month">
                                         @foreach($months as $mVal => $mName)
@@ -86,7 +86,7 @@
                                 </div>
 
                                 <!-- Año -->
-                                <div class="flex-shrink-0" style="min-width: 120px;">
+                                <div class="flex-shrink-0">
                                     <label class="form-label mb-1">Año</label>
                                     <select class="form-select form-select-sm" wire:model.live="year">
                                         @foreach($years as $y)
@@ -125,7 +125,7 @@
                                 <th>Placa</th>
                                 @foreach($days as $d)
                                     @php $isSun = \Carbon\Carbon::create($year, $month, $d)->isSunday(); @endphp
-                                    <th class="{{ $isSun ? 'sunday' : '' }}">{{ $d }}</th>
+                                    <th class="{{ $isSun ? 'bg-danger' : '' }}">{{ $d }}</th>
                                 @endforeach
                                 <th>T. Salida</th>
                             </tr>
