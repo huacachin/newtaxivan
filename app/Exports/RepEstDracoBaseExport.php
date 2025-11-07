@@ -297,7 +297,7 @@ class RepEstDracoBaseExport implements FromArray, ShouldAutoSize, WithHeadings, 
 
                 // ===== Formatos moneda para meses + total
                 $ws->getStyle("C{$dataStartRow}:O{$lastRow}")
-                    ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
+                    ->getNumberFormat()->setFormatCode('#,##0.00');
 
                 // ===== Forzar vacíos -> 0 en la tabla principal (C..O)
                 $mainLastRow = $dataStartRow + $this->mainRowCount - 1;
@@ -359,7 +359,7 @@ class RepEstDracoBaseExport implements FromArray, ShouldAutoSize, WithHeadings, 
                             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $FOOT]],
                         ]);
                         $ws->getStyle("B{$r}")
-                            ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
+                            ->getNumberFormat()->setFormatCode('#,##0.00');
                         $ws->getStyle("B{$r}")
                             ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
                         if ($ws->getCell("B{$r}")->getValue()==='' || $ws->getCell("B{$r}")->getValue()===null){
