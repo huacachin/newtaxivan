@@ -95,7 +95,7 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
             AfterSheet::class => function(AfterSheet $e) {
                 $s = $e->sheet->getDelegate();
 
-                // Paleta exacta
+                // Paleta
                 $blueDark   = 'FF2874A6'; // encabezados / títulos
                 $footerFill = 'FFCEE7FF'; // pies (totales)
                 $fontW      = 'FFFFFFFF';
@@ -103,7 +103,7 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
                 $borderC    = 'FFCFD8DC';
                 $sunRed     = 'FFEF4444'; // domingos (header de días)
 
-                // Tipografía compacta (10pt para toda la hoja)
+                // Tipografía global 10pt
                 $s->getParent()->getDefaultStyle()->getFont()->setSize(10);
 
                 // ===== Título (fila 1)
@@ -132,7 +132,7 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
                 // Domingos en rojo (solo header de días)
                 $firstDayColIdx = 4; // días desde D
                 foreach ($this->sundayCols as $colIdx) {
-                    $col = Coordinate::stringFromColumnIndex($colIdx);
+                    $col = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIdx);
                     $s->getStyle("{$col}{$headerRow}")->applyFromArray([
                         'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$sunRed]],
                         'font' => ['bold'=>true, 'color'=>['argb'=>$fontW]],
@@ -150,7 +150,7 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
                     ->getBorders()->getAllBorders()->getColor()->setARGB($borderC);
 
                 // ===== Anchos compactos (desactiva autosize y fija)
-                $lastColIdx = Coordinate::columnIndexFromString($lastCol);
+                $lastColIdx = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($lastCol);
                 for ($c=1; $c <= $lastColIdx; $c++) {
                     $s->getColumnDimensionByColumn($c)->setAutoSize(false);
                 }
@@ -169,7 +169,7 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
                 // ===== Alineaciones / formatos
                 $dataRows   = count($this->rows);
                 $dataEndRow = $dataRows > 0 ? ($dataStartRow + $dataRows - 1) : ($dataStartRow - 1);
-                $lastColLetter = Coordinate::stringFromColumnIndex($lastColIdx);
+                $lastColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($lastColIdx);
 
                 if ($dataRows > 0) {
                     // A y B a la izquierda; resto centrado
@@ -180,7 +180,7 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
                     $s->getStyle("C{$dataStartRow}:{$lastCol}{$dataEndRow}")
                         ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-                    // ---- Rellenar celdas vacías con 0 en días + V.T (datos)
+                    // Rellenar celdas vacías con 0 en días + V.T (datos)
                     for ($r = $dataStartRow; $r <= $dataEndRow; $r++) {
                         for ($c = $firstDayColIdx; $c <= $lastColIdx; $c++) {
                             $cell = $s->getCellByColumnAndRow($c, $r);
@@ -199,7 +199,7 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
                 if ($dataRows > 0) {
                     for ($c = $firstDayColIdx; $c < $lastColIdx; $c++) {
                         if ((($c - $firstDayColIdx) % 2) === 1) {
-                            $col = Coordinate::stringFromColumnIndex($c);
+                            $col = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($c);
                             $s->getStyle("{$col}{$dataStartRow}:{$col}{$dataEndRow}")
                                 ->getFill()->setFillType(Fill::FILL_SOLID)
                                 ->getStartColor()->setARGB('FFF8FAFC');
@@ -305,10 +305,17 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
                 $s->getStyle("C{$footerTE}:C{$footerVT}")
                     ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-                // ✅ Sin AutoFilter (no se llama setAutoFilter en ningún rango)
+                // ===== Remover cualquier AutoFilter residual (A/B o cualquiera)
+                if (method_exists($s, 'setAutoFilter')) {
+                    $s->setAutoFilter(null);
+                }
+                if (method_exists($s, 'getAutoFilter')) {
+                    try { $s->getAutoFilter()->setRange(''); } catch (\Throwable $ex) {}
+                }
             }
         ];
     }
+
 
     /* ====================== Helpers / Datos ====================== */
 
