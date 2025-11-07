@@ -173,20 +173,18 @@
                             </select>
                         </div>
 
-                        <div class="col-auto d-flex align-items-end">
-                            <button class="btn btn-sm btn-primary"
-                                    wire:click="applyDate"
-                                    wire:loading.attr="disabled"
-                                    wire:target="applyDate">
-                                <i class="ti ti-search f-s-12"></i>
-                            </button>
-                        </div>
                     </div>
 
                     {{-- ===== Acciones (tal cual las tenías) ===== --}}
                     <div class="row g-2 my-2">
                         <div class="col-12">
                             <div class="d-flex flex-wrap gap-2">
+                                <button class="btn btn-sm btn-primary"
+                                        wire:click="applyDate"
+                                        wire:loading.attr="disabled"
+                                        wire:target="applyDate">
+                                    <i class="ti ti-search f-s-12"></i>
+                                </button>
                                 <button class="btn btn-sm btn-primary" wire:click="openAddWindow">
                                     <i class="ti ti-square-plus f-s-12"></i> Nuevo
                                 </button>
