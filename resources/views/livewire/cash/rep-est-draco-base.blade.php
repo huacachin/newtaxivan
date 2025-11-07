@@ -37,7 +37,7 @@
     {{-- Header / migas --}}
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title">Reporte Estadístico DRACO</h4>
+            <h4 class="main-title text-danger">REPORTE ESTADÍSTICO DRACO {{$year}}</h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -62,10 +62,8 @@
 
                 <div class="card-body lw-holder">
                     <div class="row my-2">
-                        <div class="col-6 d-flex align-items-end ">
-                            <h5>REPORTE ESTADÍSTICO DRACO {{ $year }}</h5>
-                        </div>
-                        <div class="col-6 d-flex align-items-end justify-content-end">
+
+                        <div class="col-12 d-flex align-items-end justify-content-end">
                             <select class="form-control form-control-sm w-80 mg-e-10" wire:model.live="year">
                                 @for($y = now()->year + 1; $y >= 2015; $y--)
                                     <option value="{{ $y }}">{{ $y }}</option>
@@ -150,50 +148,41 @@
                         </table>
                     </div>
 
-                </div>
-            </div>
-        </div>
-
-        {{-- Resumen por Sucursal (DRACO) + BASE + Total --}}
-        <div class="col-12">
-            <div class="card">
-
-                <div class="card-body">
-                    <h6 class="my-2">Resumen por Sucursal</h6>
                     <div class="row table-responsive">
 
-                           <div class="col-md-4 col-12">
-                               <table class="table table-bordered" >
-                                   <thead class="bg-primary">
-                                   <tr><th>SUCURSAL</th><th class="text-end">TOTAL</th></tr>
-                                   </thead>
-                                   <tbody>
-                                   @php $sumHQ = 0; @endphp
-                                   @foreach($byHeadquarter as $h)
-                                       @php $sumHQ += $h['total']; @endphp
-                                       <tr>
-                                           <td>{{ $h['hq'] }}</td>
-                                           <td class="text-end">{{ number_format($h['total'], 2) }}</td>
-                                       </tr>
-                                   @endforeach
-                                   <tr>
-                                       <td>BASE</td>
-                                       <td class="text-end">{{ number_format($grandTotalBase, 2) }}</td>
-                                   </tr>
-                                   </tbody>
-                                   <tfoot class="table-primary">
-                                   <tr>
-                                       <th>TOTAL</th>
-                                       <th class="text-end">{{ number_format($sumHQ + $grandTotalBase, 2) }}</th>
-                                   </tr>
-                                   </tfoot>
-                               </table>
-                           </div>
-                       </div>
+                        <div class="col-md-4 col-12">
+                            <table class="table table-bordered" >
+                                <thead class="bg-primary">
+                                <tr><th>SUCURSAL</th><th class="text-end">TOTAL</th></tr>
+                                </thead>
+                                <tbody>
+                                @php $sumHQ = 0; @endphp
+                                @foreach($byHeadquarter as $h)
+                                    @php $sumHQ += $h['total']; @endphp
+                                    <tr>
+                                        <td>{{ $h['hq'] }}</td>
+                                        <td class="text-end">{{ number_format($h['total'], 2) }}</td>
+                                    </tr>
+                                @endforeach
+                                <tr>
+                                    <td>BASE</td>
+                                    <td class="text-end">{{ number_format($grandTotalBase, 2) }}</td>
+                                </tr>
+                                </tbody>
+                                <tfoot class="table-primary">
+                                <tr>
+                                    <th>TOTAL</th>
+                                    <th class="text-end">{{ number_format($sumHQ + $grandTotalBase, 2) }}</th>
+                                </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
 
                 </div>
             </div>
         </div>
+
 
     </div>
     <div class="screen-overlay"

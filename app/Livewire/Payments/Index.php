@@ -18,6 +18,8 @@ class Index extends Component
     public string $filter = '';          // 1=Placa, 2=Usuario, 3=Serie
     public string $date_start = '';
     public string $date_end   = '';
+    public ?string $ui_date_start = null;
+    public ?string $ui_date_end   = null;
     public string $headquarter_id = '';  // '' = todos (FILTRO)
     public string $type = '';            // '' = todos (FILTRO)
 
@@ -143,8 +145,24 @@ class Index extends Component
         return $this->userHasRole('controller');
     }
 
-    public function applyDate(){
-        $this->render();
+    public function applyDate(): void
+    {
+        $this->validate([
+            'ui_date_start' => ['required','date'],
+            'ui_date_end'   => ['required','date'],
+        ], [], [
+            'ui_date_start' => 'fecha inicio',
+            'ui_date_end'   => 'fecha fin',
+        ]);
+
+        $from = $this->ui_date_start;
+        $to   = $this->ui_date_end;
+        if ($from && $to && $from > $to) {
+            [$from, $to] = [$to, $from];
+        }
+
+        $this->date_start = $from;
+        $this->date_end   = $to;
     }
 
     /** Carga ids de sedes asignadas al usuario (N:N + primaria en users.headquarter_id) */
@@ -175,6 +193,9 @@ class Index extends Component
         // 🔹 Inicializa formulario en hoy
         $this->date_register = $today;
         $this->date_payment  = $today;
+
+        $this->ui_date_start = $this->date_start;
+        $this->ui_date_end   = $this->date_end;
 
         $this->hour          = $now->format('H:i');
 
@@ -432,14 +453,6 @@ class Index extends Component
                 $this->amount = $det;
             }
         }
-    }
-    public function updatedDateStart($v): void
-    {
-        if (empty($this->date_end)) $this->date_end = $v ?: now()->toDateString();
-    }
-    public function updatedDateEnd($v): void
-    {
-        if (empty($this->date_start)) $this->date_start = $v ?: now()->toDateString();
     }
 
     // ===== Modales =====

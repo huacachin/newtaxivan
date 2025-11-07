@@ -42,13 +42,21 @@
     </style>
 @endpush
 
+@php
+    $monthName = \Illuminate\Support\Str::upper(
+        \Carbon\Carbon::create($year, $month, 1)->translatedFormat('F')
+    );
+
+    $years  = range(now()->year-10, now()->year+1);
+@endphp
+
 
 <div class="container-fluid">
 
     {{-- Header --}}
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title">Deuda por días</h4>
+            <h4 class="main-title text-danger">REPORTE DE RETRASOS DEL MES DE {{$monthName}} DEL {{$year}}</h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">

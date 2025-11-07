@@ -33,7 +33,7 @@
 
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title">Reporte General</h4>
+            <h4 class="main-title text-danger">REPORTE GENERAL</h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -98,7 +98,7 @@
                             </div>
                         </div>
                     </div>
-                    <table class="table table-bordered table-hover">
+                    <table class="table table-bordered table-hover table-striped">
                         <thead class="bg-primary">
                         <tr>
                             <th>ITEM</th>
@@ -138,17 +138,17 @@
 
                             @if($hayMov)
                                 {{-- FOOT del día: SALDO FINAL–INICIAL + Saldos en la misma fila --}}
-                                <tr class="bg-primary">
+                                <tr class="bg-white">
 
                                     {{-- Columna "DATOS CLIENTE" --}}
                                     <td colspan="4">
-                                        SALDO FINAL–INICIAL
-                                        <span>
+                                        <strong class="text-dark f-w-bold">SALDO </strong><strong class="text-danger">FINAL-INICIAL</strong>
+                                        <strong class="f-w-bold text-danger f-w-bold">
                     Saldo del día:
-                    <span>{{ number_format($saldoD, 2) }}</span>
-                </span>
-                                        <span>Saldo acumulado:</span>
-                                        <span>{{ number_format($saldoA, 2) }}</span>
+                    <span class="text-primary">{{ number_format($saldoD, 2) }}</span>
+                </strong>
+                                        <strong class="f-w-bold text-danger f-w-bold">Saldo acumulado:</strong>
+                                        <strong class="text-primary">{{ number_format($saldoA, 2) }}</strong>
                                     </td>
 
                                     {{-- Totales del día --}}

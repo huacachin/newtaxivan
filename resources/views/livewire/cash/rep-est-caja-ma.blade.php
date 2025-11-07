@@ -34,7 +34,7 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title">Reporte Estadístico Caja M.A</h4>
+            <h4 class="main-title text-danger">REPORTE ESTADÍSTICO CAJA M.A</h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -182,18 +182,7 @@
                         @endif
                         </tbody>
                     </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="card">
-            <div class="card-header text-center">
-                <h4>ESTADÍSTICA DE CAJA ANUAL – {{ $year }}</h4>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
+                    <h5 class="mb-2 text-danger" >ESTADÍSTICA DE CAJA ANUAL – {{ $year }}</h5>
                     <table class="table table-striped table-bordered">
                         <thead class="bg-primary">
                         <tr>
@@ -286,6 +275,8 @@
             </div>
         </div>
     </div>
+
+
     <div class="screen-overlay"
          wire:loading.delay.flex
          wire:target="month,year,headquarterId,export">

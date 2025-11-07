@@ -1,4 +1,9 @@
 {{-- resources/views/livewire/cash/expenses.blade.php --}}
+@push('datepicker_css')
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.14.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script src="https://code.jquery.com/ui/1.14.1/jquery-ui.js"></script>
+@endpush
 @push('styles')
     <style>
 
@@ -38,7 +43,7 @@
     {{-- Header --}}
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title">Egresos</h4>
+            <h4 class="main-title text-danger">EGRESOS</h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -125,13 +130,13 @@
                             <!-- Fecha Inicio -->
                             <div class="flex-shrink-0" style="min-width: 180px;">
                                 <label class="form-label mb-1">Fecha Inicio</label>
-                                <input type="date" class="form-control form-control-sm" wire:model="date_start">
+                                <input type="text" id="date_start" class="form-control form-control-sm" wire:ignore wire:model="ui_date_start">
                             </div>
 
                             <!-- Fecha Fin -->
                             <div class="flex-shrink-0" style="min-width: 180px;">
                                 <label class="form-label mb-1">Fecha Fin</label>
-                                <input type="date" class="form-control form-control-sm" wire:model="date_end">
+                                <input type="text" id="date_end"  class="form-control form-control-sm" wire:ignore wire:model="ui_date_end">
                             </div>
 
                         </div>
@@ -183,7 +188,7 @@
 
 
                         @forelse($expenses as $e)
-                            <tr wire:loading.remove>
+                            <tr  wire:key="exp-{{ $e->id }}">
                                 <td data-label="Opciones">
                                     <i class="ti ti-edit f-s-18 text-success"
                                        style="cursor:pointer"
@@ -199,7 +204,7 @@
                                 <td class="text-end">{{ number_format($e->total, 2) }}</td>
                             </tr>
                         @empty
-                            <tr wire:loading.remove>
+                            <tr  wire:key="exp-1">
                                 <td colspan="9">Sin resultados para los filtros seleccionados.</td>
                             </tr>
                         @endforelse
@@ -358,17 +363,26 @@
     </style>
 @endpush
 
-@push('scripts')
+@push('datepicker_js')
     <script>
-        // Botón "ir abajo"
-        document.addEventListener('livewire:load', () => {
-            const btn = document.getElementById('down');
-            if (btn) {
-                btn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-                });
-            }
+        $( function() {
+            $( "#date_start" ).datepicker({
+                changeMonth: true,
+                changeYear: true,
+                dateFormat: 'yy-mm-dd',
+                onSelect: function (dateText, inst) {
+                    @this.set('ui_date_start', dateText);
+                }
+            });
+
+            $( "#date_end" ).datepicker({
+                changeMonth: true,
+                changeYear: true,
+                dateFormat: 'yy-mm-dd',
+                onSelect: function (dateText, inst) {
+                    @this.set('ui_date_end', dateText);
+                }
+            });
         });
     </script>
 @endpush

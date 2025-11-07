@@ -33,7 +33,7 @@
     <div class="flex items-center gap-3">
         <div class="row">
             <div class="col-sm-6">
-                <h4 class="main-title">REPORTE ESTADÍSTICO DE SALIDAS–PAGOS DE CONTROLADOR {{ $year }}</h4>
+                <h4 class="main-title text-danger">REPORTE ESTADÍSTICO DE SALIDAS–PAGOS DE CONTROLADOR {{ $year }}</h4>
             </div>
             <div class="col-sm-6 mt-sm-2">
                 <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -177,92 +177,79 @@
                          @endif
                          </tfoot>
                      </table>
+                     <table class="table table-bordered table-striped">
+                         <thead class="bg-primary">
+                         <tr>
+                             <th rowspan="4">Item</th>
+                             <th rowspan="4">Mes</th>
+                             <th>Luis</th>
+                             <th>Elmer</th>
+                             <th rowspan="4">Diferencia</th>
+                             <th>Luis</th>
+                             <th>Elmer</th>
+                             <th rowspan="4">Diferencia</th>
+                             <th rowspan="4">Diferencia Huaycan / La victoria</th>
+                         </tr>
+                         <tr>
+                             <th>Huaycan</th>
+                             <th>Huaycan</th>
+                             <th>La victoria</th>
+                             <th>La victoria</th>
+                         </tr>
+                         <tr>
+                             <th>Ingreso</th>
+                             <th>Ingreso</th>
+                             <th>Ingreso</th>
+                             <th>Ingreso</th>
+                         </tr>
+                         <tr>
+                             <th>Salida</th>
+                             <th>Salida</th>
+                             <th>Salida</th>
+                             <th>Salida</th>
+                         </tr>
+                         </thead>
+                         <tbody>
+                         @foreach ($this->comparativo as $r)
+                             <tr>
+                                 <td><b>{{ $r['item'] }}</b></td>
+                                 <td><b>{{ $r['mes'] }}</b></td>
+
+                                 <td>{{ number_format($r['a_h'], 2, '.', ',') }}</td>
+                                 <td>{{ number_format($r['b_h'], 2, '.', ',') }}</td>
+                                 <td>{{ number_format($r['dif_h'], 2, '.', ',') }}</td>
+
+                                 <td>{{ number_format($r['a_v'], 2, '.', ',') }}</td>
+                                 <td>{{ number_format($r['b_v'], 2, '.', ',') }}</td>
+                                 <td>{{ number_format($r['dif_v'], 2, '.', ',') }}</td>
+
+                                 <td>{{ number_format($r['dif_h_vs_v'], 2, '.', ',') }}</td>
+                             </tr>
+                         @endforeach
+
+                         </tbody>
+                         <tfoot>
+                         @if (!empty($this->comparativo))
+                             <tr class="bg-primary">
+                                 <td colspan="2">Total</td>
+                                 <td>{{ number_format($this->comparativoTotales['a_h'], 2, '.', ',') }}</td>
+                                 <td>{{ number_format($this->comparativoTotales['b_h'], 2, '.', ',') }}</td>
+                                 <td>{{ number_format($this->comparativoTotales['dif_h'], 2, '.', ',') }}</td>
+
+                                 <td>{{ number_format($this->comparativoTotales['a_v'], 2, '.', ',') }}</td>
+                                 <td>{{ number_format($this->comparativoTotales['b_v'], 2, '.', ',') }}</td>
+                                 <td>{{ number_format($this->comparativoTotales['dif_v'], 2, '.', ',') }}</td>
+
+                                 <td>{{ number_format($this->comparativoTotales['dif_h_vs_v'], 2, '.', ',') }}</td>
+                             </tr>
+                         @endif
+                         </tfoot>
+                     </table>
                  </div>
                </div>
            </div>
         </div>
     </div>
-
-    {{-- Comparativo Luis vs Elmer --}}
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-striped">
-                            <thead class="bg-primary">
-                            <tr>
-                                <th rowspan="4">Item</th>
-                                <th rowspan="4">Mes</th>
-                                <th>Luis</th>
-                                <th>Elmer</th>
-                                <th rowspan="4">Diferencia</th>
-                                <th>Luis</th>
-                                <th>Elmer</th>
-                                <th rowspan="4">Diferencia</th>
-                                <th rowspan="4">Diferencia Huaycan / La victoria</th>
-                            </tr>
-                            <tr>
-                                <th>Huaycan</th>
-                                <th>Huaycan</th>
-                                <th>La victoria</th>
-                                <th>La victoria</th>
-                            </tr>
-                            <tr>
-                                <th>Ingreso</th>
-                                <th>Ingreso</th>
-                                <th>Ingreso</th>
-                                <th>Ingreso</th>
-                            </tr>
-                            <tr>
-                                <th>Salida</th>
-                                <th>Salida</th>
-                                <th>Salida</th>
-                                <th>Salida</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            @foreach ($this->comparativo as $r)
-                                <tr>
-                                    <td><b>{{ $r['item'] }}</b></td>
-                                    <td><b>{{ $r['mes'] }}</b></td>
-
-                                    <td>{{ number_format($r['a_h'], 2, '.', ',') }}</td>
-                                    <td>{{ number_format($r['b_h'], 2, '.', ',') }}</td>
-                                    <td>{{ number_format($r['dif_h'], 2, '.', ',') }}</td>
-
-                                    <td>{{ number_format($r['a_v'], 2, '.', ',') }}</td>
-                                    <td>{{ number_format($r['b_v'], 2, '.', ',') }}</td>
-                                    <td>{{ number_format($r['dif_v'], 2, '.', ',') }}</td>
-
-                                    <td>{{ number_format($r['dif_h_vs_v'], 2, '.', ',') }}</td>
-                                </tr>
-                            @endforeach
-
-                            </tbody>
-                            <tfoot>
-                            @if (!empty($this->comparativo))
-                                <tr class="bg-primary">
-                                    <td colspan="2">Total</td>
-                                    <td>{{ number_format($this->comparativoTotales['a_h'], 2, '.', ',') }}</td>
-                                    <td>{{ number_format($this->comparativoTotales['b_h'], 2, '.', ',') }}</td>
-                                    <td>{{ number_format($this->comparativoTotales['dif_h'], 2, '.', ',') }}</td>
-
-                                    <td>{{ number_format($this->comparativoTotales['a_v'], 2, '.', ',') }}</td>
-                                    <td>{{ number_format($this->comparativoTotales['b_v'], 2, '.', ',') }}</td>
-                                    <td>{{ number_format($this->comparativoTotales['dif_v'], 2, '.', ',') }}</td>
-
-                                    <td>{{ number_format($this->comparativoTotales['dif_h_vs_v'], 2, '.', ',') }}</td>
-                                </tr>
-                            @endif
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
         <div class="screen-overlay"
              wire:loading.delay.flex
              wire:target="year,export">

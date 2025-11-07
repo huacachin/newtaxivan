@@ -34,7 +34,7 @@
     <!-- Header -->
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title">Conductores</h4>
+            <h4 class="main-title text-danger">LISTADO GENERAL DE CONDUCTORES ({{ $drivers->count() }})</h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -56,7 +56,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
-                    <h5>Total conductores: {{ $drivers->count() }}</h5>
+
                     <div class="row my-2">
                         <div class="col-12">
                             <div class="d-flex flex-wrap align-items-end gap-2 overflow-auto py-1">
@@ -151,61 +151,54 @@
                             </tr>
                             </tfoot>
                         </table>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Segundo cuadro: Conductores Libres (gris más fuerte) -->
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header"><h5>Conductores Libres: {{ $driversFree->count() }}</h5></div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-striped table-hover">
-                            <thead class="bg-primary">
-                            <tr>
-                                <th>Id</th>
-                                <th>Nombre</th>
-                                <th>DNI</th>
-                                <th>I.Contrato</th>
-                                <th>F.Contrato</th>
-                                <th>Celular</th>
-                                <th>Estado</th>
-                                <th>Acción</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            @forelse($driversFree as $driver)
+                        <h5 class="mb-2">Conductores Libres: {{ $driversFree->count() }}</h5>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped table-hover">
+                                <thead class="bg-primary">
                                 <tr>
-                                    <td>{{ $loop->iteration }}</td>
-                                    <td>{{ $driver->name }}</td>
-                                    <td>{{ $driver->document_number }}</td>
-                                    <td>
-                                        {{ ($driver->contract_start && $driver->contract_start !== '0000-00-00')
-                                            ? \Illuminate\Support\Carbon::parse($driver->contract_start)->format('d/m/Y') : '—' }}
-                                    </td>
-                                    <td>
-                                        {{ ($driver->contract_end && $driver->contract_end !== '0000-00-00')
-                                            ? \Illuminate\Support\Carbon::parse($driver->contract_end)->format('d/m/Y') : '—' }}
-                                    </td>
-                                    <td>{{ $driver->phone }}</td>
-                                    <td>{{ $driver->condition }}</td>
-                                    <td width="10">
-                                        <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
-                                           wire:click="openEditWindow({{ $driver->id }})"></i>
-                                    </td>
+                                    <th>Id</th>
+                                    <th>Nombre</th>
+                                    <th>DNI</th>
+                                    <th>I.Contrato</th>
+                                    <th>F.Contrato</th>
+                                    <th>Celular</th>
+                                    <th>Estado</th>
+                                    <th>Acción</th>
                                 </tr>
-                            @empty
-                                <tr><td colspan="8">No se encontrarón resultados</td></tr>
-                            @endforelse
-                            </tbody>
-                            <tfoot class="bg-primary">
-                            <tr>
-                                <td colspan="8" class="text-end f-w-600">TOTAL: {{ $driversFree->count() }}</td>
-                            </tr>
-                            </tfoot>
-                        </table>
+                                </thead>
+                                <tbody>
+                                @forelse($driversFree as $driver)
+                                    <tr>
+                                        <td>{{ $loop->iteration }}</td>
+                                        <td>{{ $driver->name }}</td>
+                                        <td>{{ $driver->document_number }}</td>
+                                        <td>
+                                            {{ ($driver->contract_start && $driver->contract_start !== '0000-00-00')
+                                                ? \Illuminate\Support\Carbon::parse($driver->contract_start)->format('d/m/Y') : '—' }}
+                                        </td>
+                                        <td>
+                                            {{ ($driver->contract_end && $driver->contract_end !== '0000-00-00')
+                                                ? \Illuminate\Support\Carbon::parse($driver->contract_end)->format('d/m/Y') : '—' }}
+                                        </td>
+                                        <td>{{ $driver->phone }}</td>
+                                        <td>{{ $driver->condition }}</td>
+                                        <td width="10">
+                                            <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
+                                               wire:click="openEditWindow({{ $driver->id }})"></i>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr><td colspan="8">No se encontrarón resultados</td></tr>
+                                @endforelse
+                                </tbody>
+                                <tfoot class="bg-primary">
+                                <tr>
+                                    <td colspan="8" class="text-end f-w-600">TOTAL: {{ $driversFree->count() }}</td>
+                                </tr>
+                                </tfoot>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>

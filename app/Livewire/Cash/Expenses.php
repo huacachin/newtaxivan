@@ -24,6 +24,9 @@ class Expenses extends Component
     public ?string $date_start = null;
     public ?string $date_end   = null;
 
+    public ?string $ui_date_start = null;
+    public ?string $ui_date_end   = null;
+
     public int $page = 1;
 
     protected $queryString = [
@@ -63,6 +66,10 @@ class Expenses extends Component
         $today             = Carbon::today()->toDateString();
         $this->date_start  = $this->date_start ?: $today;
         $this->date_end    = $this->date_end   ?: $today;
+
+        $this->ui_date_start = $this->date_start;
+        $this->ui_date_end   = $this->date_end;
+
         $this->users       = DB::table('users')->pluck('name', 'id');
         $this->refreshConcepts();
     }
@@ -93,8 +100,25 @@ class Expenses extends Component
         ])->all();
     }
 
-    public function applyDate(): void{
-        $this->render();
+    public function applyDate(): void
+    {
+        $this->validate([
+            'ui_date_start' => ['required','date'],
+            'ui_date_end'   => ['required','date'],
+        ], [], [
+            'ui_date_start' => 'fecha inicio',
+            'ui_date_end'   => 'fecha fin',
+        ]);
+
+        $from = $this->ui_date_start;
+        $to   = $this->ui_date_end;
+
+        if ($from && $to && $from > $to) {
+            [$from, $to] = [$to, $from];
+        }
+
+        $this->date_start = $from;
+        $this->date_end   = $to;
     }
 
     public function render()

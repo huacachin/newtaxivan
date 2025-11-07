@@ -44,7 +44,7 @@
     {{-- ===== Header & Breadcrumb ===== --}}
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title">Ingresos</h4>
+            <h4 class="main-title text-danger">LISTA GENERAL DE INGRESO</h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -125,13 +125,13 @@
                                         <!-- Fecha Inicio -->
                                         <div class="flex-shrink-0" style="min-width: 160px;">
                                             <label class="form-label mb-1">Fecha Inicio</label>
-                                            <input type="text" id="date_start" class="form-control form-control-sm" wire:model="date_start">
+                                            <input type="text" wire:ignore id="date_start" class="form-control form-control-sm" wire:model="ui_date_start">
                                         </div>
 
                                         <!-- Fecha Fin -->
                                         <div class="flex-shrink-0" style="min-width: 160px;">
                                             <label class="form-label mb-1">Fecha Fin</label>
-                                            <input type="text" id="date_end" class="form-control form-control-sm" wire:model="date_end">
+                                            <input type="text" wire:ignore id="date_end" class="form-control form-control-sm" wire:model="ui_date_end">
                                         </div>
 
                                     </div>
@@ -189,7 +189,7 @@
                             <tbody>
 
                             @forelse($incomes as $i)
-                                <tr>
+                                <tr wire:key="exp-{{ $i->id }}">
                                     <td data-label="Opciones">
                                         <i wire:ignore class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
                                            wire:click="openEditModal({{ $i->id }})"></i>
@@ -202,7 +202,7 @@
                                     <td class="text-end" data-label="S/">{{ number_format($i->total, 2) }}</td>
                                 </tr>
                             @empty
-                                <tr wire:loading.remove>
+                                <tr wire:key="inc-1">
                                     <td colspan="7">Sin resultados para los filtros seleccionados.</td>
                                 </tr>
                             @endforelse
@@ -434,7 +434,7 @@
                 changeYear: true,
                 dateFormat: 'yy-mm-dd',
                 onSelect: function (dateText, inst) {
-                    @this.set('date_start', dateText);
+                    @this.set('ui_date_start', dateText);
                 }
             });
 
@@ -443,10 +443,10 @@
                 changeYear: true,
                 dateFormat: 'yy-mm-dd',
                 onSelect: function (dateText, inst) {
-                    @this.set('date_end', dateText);
+                    @this.set('ui_date_end', dateText);
                 }
             });
-        } );
+        });
     </script>
 @endpush
 

@@ -41,7 +41,7 @@
     <!-- Header -->
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title">Vehículos</h4>
+            <h4 class="main-title text-danger">VEHÍCULOS</h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -123,15 +123,17 @@
                                         <i class="ti ti-square-plus f-s-12"></i> Nuevo
                                     </button>
 
+                                    <button id="down"
+                                            class="btn btn-sm btn-primary flex-shrink-0">
+                                        <i class="ti ti-square-chevrons-down f-s-12"></i>
+                                    </button>
+
                                     <button class="btn btn-sm btn-primary flex-shrink-0"
                                             wire:click="export">
                                         <i class="ti ti-file-analytics f-s-12"></i>
                                     </button>
 
-                                    <button id="down"
-                                            class="btn btn-sm btn-primary flex-shrink-0">
-                                        <i class="ti ti-square-chevrons-down f-s-12"></i>
-                                    </button>
+
 
                                 </div>
                             </div>

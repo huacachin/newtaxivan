@@ -137,12 +137,12 @@
 
                         <div class="col-auto">
                             <label class="form-label mb-1">Fecha Inicio</label>
-                            <input type="text" id="date_start" class="form-control form-control-sm" wire:model="date_start">
+                            <input type="text" id="date_start" class="form-control form-control-sm" wire:model.defer="ui_date_start">
                         </div>
 
                         <div class="col-auto">
                             <label class="form-label mb-1">Fecha Fin</label>
-                            <input type="text" id="date_end" class="form-control form-control-sm" wire:model="date_end">
+                            <input type="text" id="date_end" class="form-control form-control-sm" wire:model.defer="ui_date_end">
                         </div>
 
                         <div class="col-auto">
@@ -293,7 +293,7 @@
                 changeYear: true,
                 dateFormat: 'yy-mm-dd',
                 onSelect: function (dateText, inst) {
-                    @this.set('date_start', dateText);
+                    @this.set('ui_date_start', dateText);
                 }
             });
 
@@ -302,7 +302,7 @@
                 changeYear: true,
                 dateFormat: 'yy-mm-dd',
                 onSelect: function (dateText, inst) {
-                    @this.set('date_end', dateText);
+                    @this.set('ui_date_end', dateText);
                 }
             });
         } );

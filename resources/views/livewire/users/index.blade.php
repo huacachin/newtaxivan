@@ -24,7 +24,7 @@
     <!-- Header -->
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title">Usuarios</h4>
+            <h4 class="main-title text-danger">LISTADO GENERAL DE USUARIOS</h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -45,7 +45,7 @@
 
                 <div class="card-body pb-2">
 
-                       <h5>LISTADO DE USUARIOS</h5>
+
                        <div class="row my-2">
                            <div class="col-12">
                                <div class="d-flex flex-nowrap align-items-end gap-2 overflow-auto py-1">

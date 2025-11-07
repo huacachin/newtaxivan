@@ -23,7 +23,7 @@
     <!-- Header -->
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title">Costo por placa por Días</h4>
+            <h4 class="main-title text-danger">INGRESO</h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -45,7 +45,7 @@
                 <div class="card-body pb-2">
 
                     <div class="my-2 g-3 d-flex align-items-center justify-content-between">
-                        <h5> DÍAS — Monto al {{ $now->format('d/m/Y') }} </h5>
+                        <h5> Fecha: {{ $now->format('d/m/Y') }} </h5>
                             <div class="d-flex">
                                 <input type="text" class="form-control form-control-sm w-120 mg-e-10" placeholder="Buscar por placa"
                                        wire:model.live="plate" aria-label="Buscar por placa">

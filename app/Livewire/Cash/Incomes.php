@@ -24,6 +24,9 @@ class Incomes extends Component
     public $date_start;
     public $date_end;
 
+    public ?string $ui_date_start = null;
+    public ?string $ui_date_end   = null;
+
     // ===== Formulario =====
     public ?int $incomeId = null;   // null = crear, id = editar
     public string $date = '';
@@ -82,10 +85,30 @@ class Incomes extends Component
         $today = Carbon::today()->toDateString();
         $this->date_start = $this->date_start ?: $today;
         $this->date_end   = $this->date_end   ?: $today;
+
+        $this->ui_date_start = $this->date_start;
+        $this->ui_date_end   = $this->date_end;
     }
 
-    public function applyDate():void {
-        $this->render();
+    public function applyDate(): void
+    {
+        $this->validate([
+            'ui_date_start' => ['required','date'],
+            'ui_date_end'   => ['required','date'],
+        ], [], [
+            'ui_date_start' => 'fecha inicio',
+            'ui_date_end'   => 'fecha fin',
+        ]);
+
+        $from = $this->ui_date_start;
+        $to   = $this->ui_date_end;
+
+        if ($from && $to && $from > $to) {
+            [$from, $to] = [$to, $from];
+        }
+
+        $this->date_start = $from;
+        $this->date_end   = $to;
     }
 
     // ===== Listado =====
@@ -286,4 +309,5 @@ class Incomes extends Component
 
         $this->dispatch('url-open', ["url" => $route]);
     }
+
 }

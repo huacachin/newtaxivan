@@ -23,7 +23,7 @@
     <!-- Header -->
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title">Costo por placa - Lista General</h4>
+            <h4 class="main-title text-danger">LISTADO GENERAL DE COSTO POR PLACA</h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -46,8 +46,8 @@
             <div class="card shadow-sm">
 
                 <div class="card-body pb-2">
-                    <div class="my-2 d-flex align-items-center justify-content-between">
-                        <h5 class="mb-0" style="color:#e11d48;">COSTO POR PLACA</h5>
+                    <div class="my-2 d-flex align-items-center justify-content-end">
+
                         @role('admin')
                         <button class="btn btn-sm btn-primary" wire:click="questionGenerate">
                             <i class="ti ti-square-rounded-plus f-s-12"></i> Generar

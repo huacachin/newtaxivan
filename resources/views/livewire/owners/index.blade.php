@@ -36,7 +36,7 @@
     <!-- Header -->
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title">Propietarios</h4>
+            <h4 class="main-title text-danger">LISTADO GENERAL DE PROPIETARIOS ({{ $owners->count() }})</h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -58,13 +58,10 @@
         <div class="col-xl-12">
             <div class="card">
                 <div class="card-body">
-                    <h5>Total propietarios: {{ $owners->count() }}</h5>
+
                     <div class="row my-2">
                         <div class="col-12">
                             <div class="d-flex flex-wrap align-items-end gap-2 overflow-auto py-1">
-
-
-
                                 <!-- Filtro -->
                                 <div class="flex-shrink-0" style="min-width: 160px;">
                                     <select class="form-select form-select-sm"
@@ -144,17 +141,7 @@
                             </tfoot>
                         </table>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tabla secundaria: Propietarios libres (gris más fuerte) -->
-        <div class="col-xl-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5>Propietarios Libres: {{ $ownersFree->count() }}</h5>
-                </div>
-                <div class="card-body">
+                    <h5 class="mb-2">Propietarios Libres: {{ $ownersFree->count() }}</h5>
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">
