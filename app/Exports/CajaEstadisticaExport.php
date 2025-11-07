@@ -66,58 +66,66 @@ class CajaEstadisticaExport implements WithEvents
             AfterSheet::class => function (AfterSheet $e) {
                 $sheet = $e->sheet->getDelegate();
 
-                // Título 1 (diario)
-                $row = 1;
-                $titulo1 = 'ESTADÍSTICA DE CAJA ' . mb_strtoupper($this->monthName($this->month)) . ' DEL ' . $this->year;
-                $sheet->setCellValue("B{$row}", $titulo1);
-                $sheet->mergeCells("B{$row}:M{$row}");
-                $sheet->getStyle("B{$row}:M{$row}")->applyFromArray([
-                    'font' => ['bold' => true, 'color' => ['rgb' => self::RED_TITLE]],
-                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
-                ]);
+                // Fuente global Calibri 10 y sin gridlines
+                $sheet->getParent()->getDefaultStyle()->getFont()->setName('Calibri')->setSize(10);
+                $sheet->setShowGridlines(false);
 
-                // Tabla diaria
-                $row += 1;
+                $row = 1;
+                $lastMainCol = 'L'; // A..L (todo inicia desde A)
+
+                // ===== Título 1 (diario) =====
+                $titulo1 = 'ESTADÍSTICA DE CAJA ' . mb_strtoupper($this->monthName($this->month)) . ' DEL ' . $this->year;
+                $sheet->setCellValue("A{$row}", $titulo1);
+                $sheet->mergeCells("A{$row}:{$lastMainCol}{$row}");
+                $sheet->getStyle("A{$row}:{$lastMainCol}{$row}")->applyFromArray([
+                    'font' => ['bold' => true, 'color' => ['rgb' => self::RED_TITLE], 'size' => 12],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                ]);
+                $row++;
+
+                // ===== Tabla diaria =====
                 $row = $this->drawDailyTable($sheet, $row);
 
                 // Separador
                 $row += 2;
 
-                // Título 2 (anual)
+                // ===== Título 2 (anual) =====
                 $titulo2 = 'ESTADÍSTICA DE CAJA ANUAL ' . $this->year;
-                $sheet->setCellValue("B{$row}", $titulo2);
-                $sheet->mergeCells("B{$row}:M{$row}");
-                $sheet->getStyle("B{$row}:M{$row}")->applyFromArray([
-                    'font' => ['bold' => true, 'color' => ['rgb' => self::RED_TITLE]],
-                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+                $sheet->setCellValue("A{$row}", $titulo2);
+                $sheet->mergeCells("A{$row}:{$lastMainCol}{$row}");
+                $sheet->getStyle("A{$row}:{$lastMainCol}{$row}")->applyFromArray([
+                    'font' => ['bold' => true, 'color' => ['rgb' => self::RED_TITLE], 'size' => 12],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
                 ]);
+                $row++;
 
-                // Tabla anual
-                $row += 1;
+                // ===== Tabla anual =====
                 $row = $this->drawAnnualTable($sheet, $row);
 
-                // Bordes externos suaves
+                // ===== Bordes externos suaves (bloque completo) =====
                 $highest = $sheet->getHighestRow();
-                $sheet->getStyle("B1:M{$highest}")->applyFromArray([
+                $sheet->getStyle("A1:{$lastMainCol}{$highest}")->applyFromArray([
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => Border::BORDER_THIN,
-                            'color' => ['rgb' => 'BBBBBB']
-                        ]
-                    ]
+                            'color' => ['rgb' => 'BBBBBB'],
+                        ],
+                    ],
                 ]);
 
-                // Anchos compactos (pero legibles)
+                // ===== Anchos compactos (al ras) =====
+                // Diaria y anual comparten layout de columnas: A..L
                 $widths = [
-                    'B'=>10, // Fecha / Mes
-                    'C'=>10, 'D'=>10, 'E'=>10, 'F'=>10, // Pago
-                    'G'=>10, 'H'=>10, 'I'=>10,          // Salida
-                    'J'=>9,                              // Otros
-                    'K'=>10,                             // Total ingreso
-                    'L'=>10,                             // Egreso
-                    'M'=>10,                             // Utilidad
+                    'A'=>10, // Fecha / Mes
+                    'B'=>10, 'C'=>10, 'D'=>10, 'E'=>10, // Pago
+                    'F'=>10, 'G'=>10, 'H'=>10,          // Salida
+                    'I'=>9,                              // Otros
+                    'J'=>10,                             // Total ingreso
+                    'K'=>10,                             // Egreso
+                    'L'=>10,                             // Utilidad
                 ];
                 foreach ($widths as $col => $w) {
+                    $sheet->getColumnDimension($col)->setAutoSize(false);
                     $sheet->getColumnDimension($col)->setWidth($w);
                 }
             },
@@ -131,73 +139,91 @@ class CajaEstadisticaExport implements WithEvents
     {
         $r = $startRow;
 
-        // Encabezados multinivel
-        $sheet->setCellValue("B{$r}", 'Fecha');
-        $sheet->mergeCells("B{$r}:B".($r+2));
-        $sheet->setCellValue("C{$r}", 'Ingreso');
-        $sheet->mergeCells("C{$r}:K{$r}");
-        $sheet->setCellValue("L{$r}", 'Egreso');
+        // -------- Encabezados multinivel (todo desde A) --------
+        // Fila 1
+        $sheet->setCellValue("A{$r}", 'Fecha');
+        $sheet->mergeCells("A{$r}:A".($r+2));
+        $sheet->setCellValue("B{$r}", 'Ingreso');
+        $sheet->mergeCells("B{$r}:J{$r}"); // B..J (Pago+Salida+Otros+Total)
+        $sheet->setCellValue("K{$r}", 'Egreso');
+        $sheet->mergeCells("K{$r}:K".($r+2));
+        $sheet->setCellValue("L{$r}", 'Utilidad');
         $sheet->mergeCells("L{$r}:L".($r+2));
-        $sheet->setCellValue("M{$r}", 'Utilidad');
-        $sheet->mergeCells("M{$r}:M".($r+2));
-        $this->paintHeader($sheet, "B{$r}:M{$r}");
+        $this->paintHeader($sheet, "A{$r}:L{$r}");
 
+        // Fila 2
         $r2 = $r + 1;
-        $sheet->setCellValue("C{$r2}", 'Pago');
-        $sheet->mergeCells("C{$r2}:F{$r2}");
-        $sheet->setCellValue("G{$r2}", 'Salida');
-        $sheet->mergeCells("G{$r2}:I{$r2}");
-        $sheet->setCellValue("J{$r2}", 'Otros');
+        $sheet->setCellValue("B{$r2}", 'Pago');
+        $sheet->mergeCells("B{$r2}:E{$r2}");   // B..E
+        $sheet->setCellValue("F{$r2}", 'Salida');
+        $sheet->mergeCells("F{$r2}:H{$r2}");   // F..H
+        $sheet->setCellValue("I{$r2}", 'Otros');
+        $sheet->mergeCells("I{$r2}:I{$r2}");
+        $sheet->setCellValue("J{$r2}", 'Total');
         $sheet->mergeCells("J{$r2}:J{$r2}");
-        $sheet->setCellValue("K{$r2}", 'Total');
-        $sheet->mergeCells("K{$r2}:K{$r2}");
-        $this->paintHeader($sheet, "C{$r2}:K{$r2}");
+        $this->paintHeader($sheet, "B{$r2}:J{$r2}");
 
+        // Fila 3
         $r3 = $r + 2;
-        $sheet->fromArray(['Cotización','Retraso','Deuda','Total','Empresa','Apoyo','Total'], null, "C{$r3}");
-        $this->paintHeader($sheet, "C{$r3}:I{$r3}");
+        $sheet->fromArray(['Cotización','Retraso','Deuda','Total','Empresa','Apoyo','Total'], null, "B{$r3}");
+        $this->paintHeader($sheet, "B{$r3}:H{$r3}");
+        $this->paintHeader($sheet, "I{$r3}:I{$r3}");
         $this->paintHeader($sheet, "J{$r3}:J{$r3}");
-        $this->paintHeader($sheet, "K{$r3}:K{$r3}");
-        $this->headerBaseStyle($sheet, "B{$r}:M{$r3}");
+        $this->headerBaseStyle($sheet, "A{$r}:L{$r3}");
 
-        // Datos
+        // -------- Datos --------
         $data  = $this->buildDailyData($this->year, $this->month, $this->headquarterId);
         $row   = $r3 + 1;
         $numFmt = self::NUM_FMT;
 
         foreach ($data['rows'] as $d) {
-            $sheet->setCellValue("B{$row}", $d['fecha']);
-            $this->num($sheet, "C{$row}", $d['cotizacion'],    $numFmt);
-            $this->num($sheet, "D{$row}", $d['retraso'],       $numFmt);
-            $this->num($sheet, "E{$row}", $d['deuda'],         $numFmt);
-            $this->num($sheet, "F{$row}", $d['pago_total'],    $numFmt);
-            $this->num($sheet, "G{$row}", $d['empresa'],       $numFmt);
-            $this->num($sheet, "H{$row}", $d['apoyo'],         $numFmt);
-            $this->num($sheet, "I{$row}", $d['salidas_total'], $numFmt);
-            $this->num($sheet, "J{$row}", $d['otros'],         $numFmt);
-            $this->num($sheet, "K{$row}", $d['ingresos_total'],$numFmt);
-            $this->num($sheet, "L{$row}", $d['egreso'],        $numFmt);
-            $this->num($sheet, "M{$row}", $d['utilidad'],      $numFmt);
+            // Fecha (texto d/m/y)
+            $sheet->setCellValue("A{$row}", $d['fecha']);
+
+            // Domingo: fondo rojo sólo en la fecha (A) y texto blanco/bold
+            if (!empty($d['is_sunday'])) {
+                $sheet->getStyle("A{$row}")->applyFromArray([
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => self::RED_TITLE]],
+                    'font' => ['color' => ['rgb' => 'FFFFFF'], 'bold' => true],
+                ]);
+            }
+
+            // Pago
+            $this->num($sheet, "B{$row}", $d['cotizacion'],    $numFmt);
+            $this->num($sheet, "C{$row}", $d['retraso'],       $numFmt);
+            $this->num($sheet, "D{$row}", $d['deuda'],         $numFmt);
+            $this->num($sheet, "E{$row}", $d['pago_total'],    $numFmt);
+
+            // Salida
+            $this->num($sheet, "F{$row}", $d['empresa'],       $numFmt);
+            $this->num($sheet, "G{$row}", $d['apoyo'],         $numFmt);
+            $this->num($sheet, "H{$row}", $d['salidas_total'], $numFmt);
+
+            // Otros / Total ingreso / Egreso / Utilidad
+            $this->num($sheet, "I{$row}", $d['otros'],         $numFmt);
+            $this->num($sheet, "J{$row}", $d['ingresos_total'],$numFmt);
+            $this->num($sheet, "K{$row}", $d['egreso'],        $numFmt);
+            $this->num($sheet, "L{$row}", $d['utilidad'],      $numFmt);
             $row++;
         }
 
         // Fila Total
-        $this->paintLightTotal($sheet, "B{$row}:M{$row}");
-        $sheet->setCellValue("B{$row}", 'Total');
+        $this->paintLightTotal($sheet, "A{$row}:L{$row}");
+        $sheet->setCellValue("A{$row}", 'Total');
         $t = $data['totales'];
-        $this->num($sheet, "C{$row}", $t['pago'],           $numFmt);
-        $this->num($sheet, "D{$row}", $t['retraso'],        $numFmt);
-        $this->num($sheet, "E{$row}", $t['deuda'],          $numFmt);
-        $this->num($sheet, "F{$row}", $t['pago_total'],     $numFmt);
-        $this->num($sheet, "G{$row}", $t['empresa'],        $numFmt);
-        $this->num($sheet, "H{$row}", $t['apoyo'],          $numFmt);
-        $this->num($sheet, "I{$row}", $t['salidas_total'],  $numFmt);
-        $this->num($sheet, "J{$row}", $t['otros'],          $numFmt);
-        $this->num($sheet, "K{$row}", $t['ingresos_total'], $numFmt);
-        $this->num($sheet, "L{$row}", $t['egreso'],         $numFmt);
-        $this->num($sheet, "M{$row}", $t['utilidad'],       $numFmt);
+        $this->num($sheet, "B{$row}", $t['pago'],           $numFmt);
+        $this->num($sheet, "C{$row}", $t['retraso'],        $numFmt);
+        $this->num($sheet, "D{$row}", $t['deuda'],          $numFmt);
+        $this->num($sheet, "E{$row}", $t['pago_total'],     $numFmt);
+        $this->num($sheet, "F{$row}", $t['empresa'],        $numFmt);
+        $this->num($sheet, "G{$row}", $t['apoyo'],          $numFmt);
+        $this->num($sheet, "H{$row}", $t['salidas_total'],  $numFmt);
+        $this->num($sheet, "I{$row}", $t['otros'],          $numFmt);
+        $this->num($sheet, "J{$row}", $t['ingresos_total'], $numFmt);
+        $this->num($sheet, "K{$row}", $t['egreso'],         $numFmt);
+        $this->num($sheet, "L{$row}", $t['utilidad'],       $numFmt);
 
-        // Colorear de rojo toda la columna de Utilidad (datos + total)
+        // Resalta columna Utilidad completa (datos + total)
         $firstDataRow = $r3 + 1;
         $this->paintUtilidadRed($sheet, $firstDataRow, $row);
 
@@ -212,97 +238,92 @@ class CajaEstadisticaExport implements WithEvents
     {
         $r = $startRow;
 
-        // Encabezados multinivel
+        // -------- Encabezados multinivel --------
         // Fila 1
-        $sheet->setCellValue("B{$r}", 'Mes');
-        $sheet->mergeCells("B{$r}:B".($r+2));
-        $sheet->setCellValue("C{$r}", 'Ingreso');
-        $sheet->mergeCells("C{$r}:K{$r}");
-        $sheet->setCellValue("L{$r}", 'Egreso');
+        $sheet->setCellValue("A{$r}", 'Mes');
+        $sheet->mergeCells("A{$r}:A".($r+2));
+        $sheet->setCellValue("B{$r}", 'Ingreso');
+        $sheet->mergeCells("B{$r}:J{$r}");
+        $sheet->setCellValue("K{$r}", 'Egreso');
+        $sheet->mergeCells("K{$r}:K".($r+2));
+        $sheet->setCellValue("L{$r}", 'Utilidad');
         $sheet->mergeCells("L{$r}:L".($r+2));
-        $sheet->setCellValue("M{$r}", 'Utilidad');
-        $sheet->mergeCells("M{$r}:M".($r+2));
-        $this->paintHeader($sheet, "B{$r}:M{$r}");
+        $this->paintHeader($sheet, "A{$r}:L{$r}");
 
         // Fila 2
         $r2 = $r + 1;
-        $sheet->setCellValue("C{$r2}", 'Pago');
-        $sheet->mergeCells("C{$r2}:F{$r2}");
-        $sheet->setCellValue("G{$r2}", 'Salida');
-        $sheet->mergeCells("G{$r2}:I{$r2}");
-        $sheet->setCellValue("J{$r2}", 'Otros');
+        $sheet->setCellValue("B{$r2}", 'Pago');
+        $sheet->mergeCells("B{$r2}:E{$r2}");
+        $sheet->setCellValue("F{$r2}", 'Salida');
+        $sheet->mergeCells("F{$r2}:H{$r2}");
+        $sheet->setCellValue("I{$r2}", 'Otros');
+        $sheet->mergeCells("I{$r2}:I{$r2}");
+        $sheet->setCellValue("J{$r2}", 'Total');
         $sheet->mergeCells("J{$r2}:J{$r2}");
-        $sheet->setCellValue("K{$r2}", 'Total');
-        $sheet->mergeCells("K{$r2}:K{$r2}");
-        $this->paintHeader($sheet, "C{$r2}:K{$r2}");
+        $this->paintHeader($sheet, "B{$r2}:J{$r2}");
 
         // Fila 3
         $r3 = $r + 2;
-        $sheet->fromArray(
-            ['Cotización', 'Retraso', 'Deuda', 'Total', 'Empresa', 'Apoyo', 'Total'],
-            null,
-            "C{$r3}"
-        );
-        $this->paintHeader($sheet, "C{$r3}:I{$r3}");
+        $sheet->fromArray(['Cotización', 'Retraso', 'Deuda', 'Total', 'Empresa', 'Apoyo', 'Total'], null, "B{$r3}");
+        $this->paintHeader($sheet, "B{$r3}:H{$r3}");
+        $this->paintHeader($sheet, "I{$r3}:I{$r3}");
         $this->paintHeader($sheet, "J{$r3}:J{$r3}");
-        $this->paintHeader($sheet, "K{$r3}:K{$r3}");
+        $this->headerBaseStyle($sheet, "A{$r}:L{$r3}");
 
-        $this->headerBaseStyle($sheet, "B{$r}:M{$r3}");
-
-        // Datos
+        // -------- Datos --------
         [$rows, $totales, $promedios] = $this->buildAnnualData($this->year, $this->month, $this->headquarterId);
 
         $row = $r3 + 1;
         $numFmt = self::NUM_FMT;
 
         foreach ($rows as $d) {
-            $sheet->setCellValueExplicit("B{$row}", $d['mes'], DataType::TYPE_STRING);
-            $this->num($sheet, "C{$row}", $d['pago'],           $numFmt);
-            $this->num($sheet, "D{$row}", $d['retraso'],        $numFmt);
-            $this->num($sheet, "E{$row}", $d['deuda'],          $numFmt);
-            $this->num($sheet, "F{$row}", $d['pago_total'],     $numFmt);
-            $this->num($sheet, "G{$row}", $d['empresa'],        $numFmt);
-            $this->num($sheet, "H{$row}", $d['apoyo'],          $numFmt);
-            $this->num($sheet, "I{$row}", $d['salidas_total'],  $numFmt);
-            $this->num($sheet, "J{$row}", $d['otros'],          $numFmt);
-            $this->num($sheet, "K{$row}", $d['ingresos_total'], $numFmt);
-            $this->num($sheet, "L{$row}", $d['egreso'],         $numFmt);
-            $this->num($sheet, "M{$row}", $d['utilidad'],       $numFmt);
+            $sheet->setCellValueExplicit("A{$row}", $d['mes'], DataType::TYPE_STRING);
+            $this->num($sheet, "B{$row}", $d['pago'],           $numFmt);
+            $this->num($sheet, "C{$row}", $d['retraso'],        $numFmt);
+            $this->num($sheet, "D{$row}", $d['deuda'],          $numFmt);
+            $this->num($sheet, "E{$row}", $d['pago_total'],     $numFmt);
+            $this->num($sheet, "F{$row}", $d['empresa'],        $numFmt);
+            $this->num($sheet, "G{$row}", $d['apoyo'],          $numFmt);
+            $this->num($sheet, "H{$row}", $d['salidas_total'],  $numFmt);
+            $this->num($sheet, "I{$row}", $d['otros'],          $numFmt);
+            $this->num($sheet, "J{$row}", $d['ingresos_total'], $numFmt);
+            $this->num($sheet, "K{$row}", $d['egreso'],         $numFmt);
+            $this->num($sheet, "L{$row}", $d['utilidad'],       $numFmt);
             $row++;
         }
 
         // Totales
-        $this->paintLightTotal($sheet, "B{$row}:M{$row}");
-        $sheet->setCellValue("B{$row}", 'Total');
-        $this->num($sheet, "C{$row}", $totales['pago'],           $numFmt);
-        $this->num($sheet, "D{$row}", $totales['retraso'],        $numFmt);
-        $this->num($sheet, "E{$row}", $totales['deuda'],          $numFmt);
-        $this->num($sheet, "F{$row}", $totales['pago_total'],     $numFmt);
-        $this->num($sheet, "G{$row}", $totales['empresa'],        $numFmt);
-        $this->num($sheet, "H{$row}", $totales['apoyo'],          $numFmt);
-        $this->num($sheet, "I{$row}", $totales['salidas_total'],  $numFmt);
-        $this->num($sheet, "J{$row}", $totales['otros'],          $numFmt);
-        $this->num($sheet, "K{$row}", $totales['ingresos_total'], $numFmt);
-        $this->num($sheet, "L{$row}", $totales['egreso'],         $numFmt);
-        $this->num($sheet, "M{$row}", $totales['utilidad'],       $numFmt);
+        $this->paintLightTotal($sheet, "A{$row}:L{$row}");
+        $sheet->setCellValue("A{$row}", 'Total');
+        $this->num($sheet, "B{$row}", $totales['pago'],           $numFmt);
+        $this->num($sheet, "C{$row}", $totales['retraso'],        $numFmt);
+        $this->num($sheet, "D{$row}", $totales['deuda'],          $numFmt);
+        $this->num($sheet, "E{$row}", $totales['pago_total'],     $numFmt);
+        $this->num($sheet, "F{$row}", $totales['empresa'],        $numFmt);
+        $this->num($sheet, "G{$row}", $totales['apoyo'],          $numFmt);
+        $this->num($sheet, "H{$row}", $totales['salidas_total'],  $numFmt);
+        $this->num($sheet, "I{$row}", $totales['otros'],          $numFmt);
+        $this->num($sheet, "J{$row}", $totales['ingresos_total'], $numFmt);
+        $this->num($sheet, "K{$row}", $totales['egreso'],         $numFmt);
+        $this->num($sheet, "L{$row}", $totales['utilidad'],       $numFmt);
 
         // Promedio
         $row++;
-        $this->paintLightTotal($sheet, "B{$row}:M{$row}");
-        $sheet->setCellValue("B{$row}", 'Promedio');
-        $this->num($sheet, "C{$row}", $promedios['pago'],           $numFmt);
-        $this->num($sheet, "D{$row}", $promedios['retraso'],        $numFmt);
-        $this->num($sheet, "E{$row}", $promedios['deuda'],          $numFmt);
-        $this->num($sheet, "F{$row}", $promedios['pago_total'],     $numFmt);
-        $this->num($sheet, "G{$row}", $promedios['empresa'],        $numFmt);
-        $this->num($sheet, "H{$row}", $promedios['apoyo'],          $numFmt);
-        $this->num($sheet, "I{$row}", $promedios['salidas_total'],  $numFmt);
-        $this->num($sheet, "J{$row}", $promedios['otros'],          $numFmt);
-        $this->num($sheet, "K{$row}", $promedios['ingresos_total'], $numFmt);
-        $this->num($sheet, "L{$row}", $promedios['egreso'],         $numFmt);
-        $this->num($sheet, "M{$row}", $promedios['utilidad'],       $numFmt);
+        $this->paintLightTotal($sheet, "A{$row}:L{$row}");
+        $sheet->setCellValue("A{$row}", 'Promedio');
+        $this->num($sheet, "B{$row}", $promedios['pago'],           $numFmt);
+        $this->num($sheet, "C{$row}", $promedios['retraso'],        $numFmt);
+        $this->num($sheet, "D{$row}", $promedios['deuda'],          $numFmt);
+        $this->num($sheet, "E{$row}", $promedios['pago_total'],     $numFmt);
+        $this->num($sheet, "F{$row}", $promedios['empresa'],        $numFmt);
+        $this->num($sheet, "G{$row}", $promedios['apoyo'],          $numFmt);
+        $this->num($sheet, "H{$row}", $promedios['salidas_total'],  $numFmt);
+        $this->num($sheet, "I{$row}", $promedios['otros'],          $numFmt);
+        $this->num($sheet, "J{$row}", $promedios['ingresos_total'], $numFmt);
+        $this->num($sheet, "K{$row}", $promedios['egreso'],         $numFmt);
+        $this->num($sheet, "L{$row}", $promedios['utilidad'],       $numFmt);
 
-        // Colorear de rojo toda la columna de Utilidad (datos + total + promedio)
+        // Resalta columna Utilidad completa (datos + total + promedio)
         $firstDataRow = $r3 + 1;
         $this->paintUtilidadRed($sheet, $firstDataRow, $row);
 
@@ -310,7 +331,7 @@ class CajaEstadisticaExport implements WithEvents
     }
 
     /* ============================
-     *  Data builders (mismos cálculos del componente)
+     *  Data builders
      * ============================ */
 
     private function buildDailyData(int $year, int $month, ?int $hqId): array
@@ -363,8 +384,9 @@ class CajaEstadisticaExport implements WithEvents
         ];
 
         for ($day=1; $day <= $days; $day++) {
-            $d   = Carbon::create($year, $month, $day)->toDateString();
-            $lbl = Carbon::create($year, $month, $day)->format('d/m/y');
+            $dateObj = Carbon::create($year, $month, $day);
+            $d   = $dateObj->toDateString();
+            $lbl = $dateObj->format('d/m/y');
 
             $cot = (float)($pagos["{$d}|PAGO"]    ?? 0);
             $ret = (float)($pagos["{$d}|RETRASO"] ?? 0);
@@ -383,6 +405,7 @@ class CajaEstadisticaExport implements WithEvents
 
             $rows[] = [
                 'fecha'         => $lbl,
+                'is_sunday'     => $dateObj->isSunday(), // flag para estilo
                 'cotizacion'    => $cot,
                 'retraso'       => $ret,
                 'deuda'         => $deu,
@@ -516,11 +539,9 @@ class CajaEstadisticaExport implements WithEvents
         $val = ($value === null || $value === '') ? 0 : (float)$value;
 
         $sheet->setCellValueExplicit($cell, $val, DataType::TYPE_NUMERIC);
-        $sheet->getStyle($cell)
-            ->getNumberFormat()
-            ->setFormatCode($fmt);
+        $sheet->getStyle($cell)->getNumberFormat()->setFormatCode($fmt);
 
-        // Ceros en gris claro para distinguir vacíos (opcional)
+        // Ceros en gris claro para distinguir vacíos (sin shrink de fuente)
         if ((float)$val === 0.0) {
             $sheet->getStyle($cell)->getFont()->getColor()->setRGB('444444');
         }
@@ -529,7 +550,7 @@ class CajaEstadisticaExport implements WithEvents
     private function paintUtilidadRed(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet, int $fromRow, int $toRow): void
     {
         if ($toRow >= $fromRow) {
-            $sheet->getStyle("M{$fromRow}:M{$toRow}")
+            $sheet->getStyle("L{$fromRow}:L{$toRow}")
                 ->applyFromArray(['font' => ['color' => ['rgb' => self::RED_TITLE]]]);
         }
     }
@@ -538,13 +559,13 @@ class CajaEstadisticaExport implements WithEvents
     {
         $sheet->getStyle($range)->applyFromArray([
             'fill' => [
-                'fillType' => Fill::FILL_SOLID,
+                'fillType'   => Fill::FILL_SOLID,
                 'startColor' => ['rgb' => self::BLUE_DARK],
             ],
             'font' => [
-                'bold' => true,
+                'bold'  => true,
                 'color' => ['rgb' => 'FFFFFF'],
-                'size' => 10,
+                'size'  => 10,
             ],
             'alignment' => [
                 'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -569,10 +590,10 @@ class CajaEstadisticaExport implements WithEvents
                 'wrapText'   => true,
             ],
         ]);
-        // Altura de filas de cabecera
-        foreach ($sheet->rangeToArray($range)[0] as $_) { /* noop */ }
+
+        // Altura de filas de cabecera (≈20pt)
         $dim = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::rangeBoundaries($range);
-        for ($row = $dim[1][1]; $row >= $dim[0][1]; $row--) {
+        for ($row = $dim[0][1]; $row <= $dim[1][1]; $row++) {
             $sheet->getRowDimension($row)->setRowHeight(20);
         }
     }
@@ -581,10 +602,14 @@ class CajaEstadisticaExport implements WithEvents
     {
         $sheet->getStyle($range)->applyFromArray([
             'fill' => [
-                'fillType' => Fill::FILL_SOLID,
+                'fillType'   => Fill::FILL_SOLID,
                 'startColor' => ['rgb' => self::BLUE_LIGHT],
             ],
             'font' => ['bold' => true],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical'   => Alignment::VERTICAL_CENTER,
+            ],
         ]);
     }
 
