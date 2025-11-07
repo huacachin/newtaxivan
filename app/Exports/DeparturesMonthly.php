@@ -94,7 +94,7 @@ class DeparturesMonthly implements FromArray, WithHeadings, WithStyles, WithEven
                 $borderSoft = 'FFCFD8DC';
                 $fontRed    = 'FFCC0000'; // domingos
 
-                // Fuente compacta
+                // Fuente global compacta
                 $sheet->getParent()->getDefaultStyle()->getFont()->setSize(10);
 
                 // Título (fila 1)
@@ -106,9 +106,9 @@ class DeparturesMonthly implements FromArray, WithHeadings, WithStyles, WithEven
                 $sheet->mergeCells("A1:{$lastCol}1");
                 $sheet->setCellValue('A1', $title);
                 $sheet->getStyle("A1:{$lastCol}1")->applyFromArray([
-                    'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
+                    'fill' => ['fillType'=>\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
                     'font' => ['bold'=>true, 'color'=>['argb'=>$fontWhite], 'size'=>10],
-                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER, 'vertical'=>Alignment::VERTICAL_CENTER],
+                    'alignment' => ['horizontal'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER, 'vertical'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER],
                 ]);
                 $sheet->getRowDimension(1)->setRowHeight(18);
 
@@ -116,18 +116,18 @@ class DeparturesMonthly implements FromArray, WithHeadings, WithStyles, WithEven
                 $headerRow    = 2; // headings()
                 $dataStartRow = 3; // datos
                 $sheet->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->applyFromArray([
-                    'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
+                    'fill' => ['fillType'=>\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
                     'font' => ['bold'=>true, 'color'=>['argb'=>$fontWhite], 'size'=>10],
-                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER, 'vertical'=>Alignment::VERTICAL_CENTER],
+                    'alignment' => ['horizontal'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER, 'vertical'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER],
                 ]);
                 $sheet->getRowDimension($headerRow)->setRowHeight(18);
 
                 // Domingos en rojo (solo header de días)
                 $firstDayColIdx = 3; // C = día 1
                 for ($d = 1; $d <= $this->daysInMonth; $d++) {
-                    $date = Carbon::create($this->year, $this->month, $d);
+                    $date = \Carbon\Carbon::create($this->year, $this->month, $d);
                     if ($date->isSunday()) {
-                        $col = Coordinate::stringFromColumnIndex($firstDayColIdx + ($d - 1));
+                        $col = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($firstDayColIdx + ($d - 1));
                         $sheet->getStyle("{$col}{$headerRow}")->getFont()->getColor()->setARGB($fontRed);
                     }
                 }
@@ -135,34 +135,43 @@ class DeparturesMonthly implements FromArray, WithHeadings, WithStyles, WithEven
                 // Congelar encabezado y fijar Item/Placa
                 $sheet->freezePane('C3');
 
-                // AutoFilter SOLO Item/Placa
-                $sheet->setAutoFilter("A{$headerRow}:B{$headerRow}");
+                // === Quitar cualquier AutoFilter residual (A/B u otros) ===
+                if (method_exists($sheet, 'setAutoFilter')) {
+                    $sheet->setAutoFilter(null);
+                }
+                if (method_exists($sheet, 'getAutoFilter')) {
+                    try { $sheet->getAutoFilter()->setRange(''); } catch (\Throwable $e2) {}
+                }
 
                 // Grilla
-                $lastColIdx   = Coordinate::columnIndexFromString($lastCol);
+                $lastColIdx   = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($lastCol);
                 $totalColIdx  = $lastColIdx; // última = T. Salida
                 $dataRows     = count($this->rows);
                 $dataEndRow   = $dataRows > 0 ? ($dataStartRow + $dataRows - 1) : ($dataStartRow - 1);
 
                 // Bordes finos
                 $sheet->getStyle("A{$headerRow}:{$lastCol}{$lastRow}")
-                    ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+                    ->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
                 $sheet->getStyle("A{$headerRow}:{$lastCol}{$lastRow}")
                     ->getBorders()->getAllBorders()->getColor()->setARGB($borderSoft);
 
-                // ---- ANCHOS compactos (y desactivar autosize para que respeten) ----
+                // Evitar wrap/indent que agregan aire
+                $sheet->getStyle("A1:{$lastCol}{$lastRow}")
+                    ->getAlignment()->setWrapText(false)->setIndent(0);
+
+                // ---- ANCHOS compactos (desactivar autosize para que respeten) ----
                 foreach (['A','B'] as $colLetter) {
                     $sheet->getColumnDimension($colLetter)->setAutoSize(false);
                 }
-                $sheet->getColumnDimension('A')->setWidth(6);     // Item
+                $sheet->getColumnDimension('A')->setWidth(6.0);   // Item
                 $sheet->getColumnDimension('B')->setWidth(9.5);   // Placa
 
                 for ($c = $firstDayColIdx; $c < $totalColIdx; $c++) {
-                    $col = Coordinate::stringFromColumnIndex($c);
+                    $col = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($c);
                     $sheet->getColumnDimension($col)->setAutoSize(false);
                     $sheet->getColumnDimension($col)->setWidth(3.0); // días
                 }
-                $totalColLetter = Coordinate::stringFromColumnIndex($totalColIdx);
+                $totalColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($totalColIdx);
                 $sheet->getColumnDimension($totalColLetter)->setAutoSize(false);
                 $sheet->getColumnDimension($totalColLetter)->setWidth(6.5); // T. Salida
 
@@ -185,20 +194,20 @@ class DeparturesMonthly implements FromArray, WithHeadings, WithStyles, WithEven
                 // Alineaciones
                 if ($dataRows > 0) {
                     $sheet->getStyle("B{$dataStartRow}:B{$dataEndRow}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+                        ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
                     $sheet->getStyle("A{$dataStartRow}:A{$dataEndRow}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                        ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
                     $sheet->getStyle("C{$dataStartRow}:{$totalColLetter}{$dataEndRow}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                        ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
                 }
 
                 // Zebra vertical en columnas de días (C .. penúltima)
                 if ($dataRows > 0) {
                     for ($c = $firstDayColIdx; $c < $totalColIdx; $c++) {
                         if ((($c - $firstDayColIdx) % 2) === 1) {
-                            $col = Coordinate::stringFromColumnIndex($c);
+                            $col = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($c);
                             $sheet->getStyle("{$col}{$dataStartRow}:{$col}{$dataEndRow}")
-                                ->getFill()->setFillType(Fill::FILL_SOLID)
+                                ->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
                                 ->getStartColor()->setARGB('FFF8FAFC');
                         }
                     }
@@ -211,14 +220,14 @@ class DeparturesMonthly implements FromArray, WithHeadings, WithStyles, WithEven
 
                 foreach ([$footer1, $footer2] as $fr) {
                     $sheet->getStyle("A{$fr}:{$lastCol}{$fr}")->applyFromArray([
-                        'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$footerFill]],
+                        'fill' => ['fillType'=>\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor'=>['argb'=>$footerFill]],
                         'font' => ['bold'=>true, 'color'=>['argb'=>$fontBlack], 'size'=>10],
-                        'borders' => ['outline' => ['borderStyle'=>Border::BORDER_MEDIUM, 'color' => ['argb'=>$blueDark]]],
+                        'borders' => ['outline' => ['borderStyle'=>\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM, 'color' => ['argb'=>$blueDark]]],
                     ]);
                     $sheet->getStyle("A{$fr}:B{$fr}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+                        ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
                     $sheet->getStyle("C{$fr}:{$lastCol}{$fr}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                        ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
                     $sheet->getStyle("C{$fr}:{$lastCol}{$fr}")
                         ->getNumberFormat()->setFormatCode('0');
 
@@ -235,6 +244,7 @@ class DeparturesMonthly implements FromArray, WithHeadings, WithStyles, WithEven
             }
         ];
     }
+
 
     /* ----------------- Datos & Helpers ----------------- */
 
