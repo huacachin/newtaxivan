@@ -218,7 +218,7 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents, WithColu
 
                 // 2) Overrides columna por columna (ajusta a tu gusto)
                 //    A “al ras” para correlativo / id; B y C más legibles; D-E horas; H..M numéricos compactos.
-                $s->getColumnDimension('A')->setWidth(2.2);
+                $s->getColumnDimension('A')->setWidth(2.5);
                 $s->getColumnDimension('B')->setWidth(9.0);
                 $s->getColumnDimension('C')->setWidth(10.0);
                 $s->getColumnDimension('D')->setWidth(7.0);
