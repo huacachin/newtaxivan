@@ -102,6 +102,7 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
                 $fontB      = 'FF000000';
                 $borderC    = 'FFCFD8DC';
                 $sunRed     = 'FFEF4444'; // domingos (header de días)
+                $white = 'FFFFFF';
 
                 // Tipografía compacta
                 $s->getParent()->getDefaultStyle()->getFont()->setSize(10);
@@ -114,8 +115,8 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
                 $s->setCellValue('A1', $title);
                 $s->getRowDimension(1)->setRowHeight(18);
                 $s->getStyle("A1:{$lastCol}1")->applyFromArray([
-                    'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
-                    'font' => ['bold'=>true, 'size'=>10, 'color'=>['argb'=>$fontW]],
+                    'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$white]],
+                    'font' => ['bold'=>true, 'size'=>10, 'color'=>['argb'=>$sunRed]],
                     'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER, 'vertical'=>Alignment::VERTICAL_CENTER],
                 ]);
 
@@ -140,7 +141,7 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
                 }
 
                 // Congelar filas 1-2 y columnas A-C
-                $s->freezePane('D3');
+                //$s->freezePane('D3');
 
                 // ===== Bordes finos a todo
                 $lastRow = (int)$s->getHighestRow();
@@ -202,6 +203,12 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
                         }
                     }
                 }
+
+                $s->getStyle("C{$dataStartRow}:C{$dataEndRow}")->applyFromArray([
+                    'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
+                    'font' => ['color'=>['argb'=>$white], 'bold'=>true, 'size'=>10],
+                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER, 'vertical'=>Alignment::VERTICAL_CENTER],
+                ]);
 
                 // ===== Merge y estilo por bloques =====
                 // 1) PARADERO (col B): merge de 2 en 2 (Emp./Apoyo) + azul
