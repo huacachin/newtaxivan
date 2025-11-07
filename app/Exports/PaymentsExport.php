@@ -7,12 +7,12 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromQuery;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
@@ -22,8 +22,8 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
 class PaymentsExport implements
-    FromQuery, ShouldAutoSize, WithHeadings, WithMapping,
-    WithColumnFormatting, WithStyles, WithEvents
+    FromQuery, WithHeadings, WithMapping,
+    WithColumnFormatting, WithStyles, WithEvents, WithColumnWidths
 {
     private int $seq = 0; // Item 1..n
 
@@ -77,7 +77,7 @@ class PaymentsExport implements
                 }
             });
 
-        // === Restricción por rol (igual que en render): admin ve todo; controller solo sus registros
+        // Restricción por rol
         $user = Auth::user();
         if ($user && !$user->hasRole('admin')) {
             $q->where('user_id', $user->id);
@@ -99,20 +99,20 @@ class PaymentsExport implements
             ]);
     }
 
-    /** === Encabezados en el orden solicitado === */
+    /** === Encabezados === */
     public function headings(): array
     {
         return [
-            'Item',
-            'Placa',
-            'Serie',
-            'Fecha Registro',
-            'Fecha Pago',
-            'Hora',
-            'Tipo',
-            'Sucursal',
-            'Usuario',
-            'S/',
+            'Item',           // A
+            'Placa',          // B
+            'Serie',          // C
+            'Fecha Registro', // D
+            'Fecha Pago',     // E
+            'Hora',           // F
+            'Tipo',           // G
+            'Sucursal',       // H
+            'Usuario',        // I
+            'S/',             // J
         ];
     }
 
@@ -120,7 +120,7 @@ class PaymentsExport implements
     private function excelTime(?string $hm): ?float
     {
         if (!$hm) return null;
-        $parts = array_map('intval', array_pad(explode(':', $hm), 3, 0));
+        $parts   = array_map('intval', array_pad(explode(':', $hm), 3, 0));
         $seconds = $parts[0]*3600 + $parts[1]*60 + $parts[2];
         return $seconds / 86400; // día Excel
     }
@@ -155,15 +155,25 @@ class PaymentsExport implements
             'D' => NumberFormat::FORMAT_DATE_YYYYMMDD2, // Fecha Registro
             'E' => NumberFormat::FORMAT_DATE_DATETIME,  // Fecha Pago
             'F' => NumberFormat::FORMAT_DATE_TIME3,     // Hora
-            // J (S/) se formatea en AfterSheet con "S/ "
         ];
     }
 
     public function styles(Worksheet $sheet)
     {
-        // Todo a tamaño 10; encabezado en negrita
+        // Global 10pt; header en negrita (fila 1 la ajustamos en AfterSheet)
         $sheet->getParent()->getDefaultStyle()->getFont()->setSize(10);
         return [1 => ['font' => ['bold' => true]]];
+    }
+
+    /** ====== Compactación base (A y B) ====== */
+    public function columnWidths(): array
+    {
+        // Base “al ras”; se re-confirman en AfterSheet
+        return [
+            'A' => 2.2, // Item súper angosto
+            'B' => 9.0, // Placa
+            // C..J se setean en AfterSheet
+        ];
     }
 
     /** === Estilos homologados + anchos al ras === */
@@ -175,10 +185,10 @@ class PaymentsExport implements
 
                 $blueDark   = 'FF2874A6';
                 $footerFill = 'FFCEE7FF';
-                $white  = 'FFFFFFFF';
+                $white      = 'FFFFFFFF';
                 $fontBlack  = 'FF000000';
                 $borderSoft = 'FFCFD8DC';
-                $black = "000000";
+                $black      = 'FF000000';
 
                 // 1) Título (fila 1)
                 $ws->insertNewRowBefore(1, 1);
@@ -209,7 +219,7 @@ class PaymentsExport implements
                 ]);
                 $ws->getRowDimension($headerRow)->setRowHeight(18);
 
-                // Congelar encabezado (sin autofiltros)
+                // Congelar encabezado
                 $ws->freezePane("A{$dataStartRow}");
 
                 if ($last < $dataStartRow) {
@@ -218,8 +228,7 @@ class PaymentsExport implements
 
                 // 3) Bordes + zebra
                 $ws->getStyle("A{$headerRow}:J{$last}")
-                    ->getBorders()->getAllBorders()
-                    ->setBorderStyle(Border::BORDER_THIN);
+                    ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
                 $ws->getStyle("A{$headerRow}:J{$last}")
                     ->getBorders()->getAllBorders()->getColor()->setARGB($borderSoft);
 
@@ -272,43 +281,30 @@ class PaymentsExport implements
                     ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
                 $ws->getRowDimension($totalRow)->setRowHeight(18);
 
-                // === 5) Anchos REALMENTE al ras (sin reducir la fuente) ===
-                // a) sin wraps/indent para no agregar aire
-                $ws->getStyle("A{$headerRow}:J{$totalRow}")
-                    ->getAlignment()->setWrapText(false)->setIndent(0);
-
-                // b) AutoSize EXACT (medición precisa)
-                \PhpOffice\PhpSpreadsheet\Shared\Font::setAutoSizeMethod(
-                    \PhpOffice\PhpSpreadsheet\Shared\Font::AUTOSIZE_METHOD_EXACT
-                );
-
-                $cols = range('A','J');
-                foreach ($cols as $c) {
-                    $ws->getColumnDimension($c)->setAutoSize(true);
+                // ===== 5) Compactación REAL (sin aire) =====
+                // a) Desactivar autosize en todas y poner default MUY angosto,
+                //    quitar sangría y permitir shrink.
+                foreach (range('A','J') as $col) {
+                    $ws->getColumnDimension($col)->setAutoSize(false);
+                    $ws->getColumnDimension($col)->setWidth(3.0); // default global
+                    $ws->getStyle("{$col}{$headerRow}:{$col}{$totalRow}")
+                        ->getAlignment()->setWrapText(false)->setIndent(0)->setShrinkToFit(true);
                 }
-                // fuerza el cálculo (algunas versiones lo requieren)
-                $e->sheet->calculateColumnWidths();
 
-                // c) Ajuste fino por columna para que quede “pegado”
-                foreach ($cols as $c) {
-                    $dim = $ws->getColumnDimension($c);
-                    $w   = (float) $dim->getWidth();
-                    if ($w <= 0.0) { $w = 1.0; }
+                // b) Overrides por columna (ajusta a tu gusto)
+                $ws->getColumnDimension('A')->setWidth(2.2);  // Item
+                $ws->getColumnDimension('B')->setWidth(9.0);  // Placa
+                $ws->getColumnDimension('C')->setWidth(9.0);  // Serie
+                $ws->getColumnDimension('D')->setWidth(10.5); // Fecha Registro
+                $ws->getColumnDimension('E')->setWidth(12.0); // Fecha Pago (datetime)
+                $ws->getColumnDimension('F')->setWidth(7.0);  // Hora
+                $ws->getColumnDimension('G')->setWidth(8.0);  // Tipo
+                $ws->getColumnDimension('H')->setWidth(11.0); // Sucursal
+                $ws->getColumnDimension('I')->setWidth(6.0); // Usuario
+                $ws->getColumnDimension('J')->setWidth(9.5);  // S/ (moneda)
 
-                    // Por tipo de dato, restamos distinto:
-                    $delta = match ($c) {
-                        'A'       => 0.8, // Item corto
-                        'B', 'C'  => 0.6, // Placa, Serie
-                        'D', 'E'  => 0.2, // Fechas
-                        'F'       => 0.5, // Hora
-                        'G', 'H', 'I' => 0.6, // Tipo, Sucursal, Usuario
-                        'J'       => 0.1, // Moneda (un poco más de aire)
-                        default   => 0.6,
-                    };
-
-                    $dim->setAutoSize(false);
-                    $dim->setWidth(max(1.0, $w - $delta));
-                }
+                // (Opcional) más al ras:
+                // A->2.0; F->6.5; G->7.5; H->10; I->12; J->9.0
             },
         ];
     }
