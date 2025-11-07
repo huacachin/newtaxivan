@@ -167,7 +167,8 @@ class DeparturesMonthly implements FromArray, WithHeadings, WithStyles, WithEven
                 $sheet->getColumnDimension('A')->setWidth($colAWidth);
 
                 // B (Placa)
-                $sheet->getColumnDimension('B')->setWidth(3.0);
+                $sheet->getColumnDimension('A')->setWidth(1.0);
+                $sheet->getColumnDimension('B')->setWidth(1.0);
 
                 // Días (C ... penúltima)
                 for ($c = $firstDayColIdx; $c < $totalColIdx; $c++) {
