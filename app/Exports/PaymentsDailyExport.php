@@ -118,7 +118,7 @@ class PaymentsDailyExport implements FromArray, WithHeadings, WithEvents, WithTi
 
                 // ====== cálculo de rango ======
                 $lastColIndex = 3 + $this->daysInMonth + 1 + ($this->mode === 'Pago' ? 4 : 1);
-                $lastCol = $this->col($lastColIndex);
+                $lastCol      = $this->col($lastColIndex);
 
                 // ====== PALETA ======
                 $blueDark   = 'FF2874A6';
@@ -128,7 +128,7 @@ class PaymentsDailyExport implements FromArray, WithHeadings, WithEvents, WithTi
                 $borderSoft = 'FFCFD8DC';
                 $sundayRed  = 'FFEF4444';
 
-                // Fuente compacta
+                // Fuente compacta 10pt (global)
                 $sheet->getParent()->getDefaultStyle()->getFont()->setSize(10);
 
                 // ====== título (fila 1) ======
@@ -140,19 +140,21 @@ class PaymentsDailyExport implements FromArray, WithHeadings, WithEvents, WithTi
                     'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
                     'fill'      => ['fillType' => 'solid', 'startColor' => ['argb' => $blueDark]],
                 ]);
+                $sheet->getRowDimension(1)->setRowHeight(18);
 
                 // ====== header (fila 2) ======
                 $headerRange = "A2:{$lastCol}2";
                 $sheet->getStyle($headerRange)->applyFromArray([
-                    'font'      => ['bold' => true, 'color' => ['argb' => $fontWhite]],
+                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['argb' => $fontWhite]],
                     'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
                     'fill'      => ['fillType' => 'solid', 'startColor' => ['argb' => $blueDark]],
                 ]);
+                $sheet->getRowDimension(2)->setRowHeight(18);
 
                 // Domingos en rojo en el header de días
                 $baseDayCol = 4; // días empiezan en col 4 (A=1,B=2,C=3)
                 for ($d = 1; $d <= $this->daysInMonth; $d++) {
-                    $date = CarbonImmutable::create($this->year, $this->month, $d);
+                    $date = \Carbon\CarbonImmutable::create($this->year, $this->month, $d);
                     if ($date->isSunday()) {
                         $col = $this->col($baseDayCol + ($d - 1));
                         $sheet->getStyle("{$col}2")->applyFromArray([
@@ -171,7 +173,7 @@ class PaymentsDailyExport implements FromArray, WithHeadings, WithEvents, WithTi
                 $sheet->getStyle($tableRange)->applyFromArray([
                     'borders' => [
                         'allBorders' => [
-                            'borderStyle' => Border::BORDER_THIN,
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
                             'color'       => ['argb' => $borderSoft],
                         ],
                     ],
@@ -218,46 +220,69 @@ class PaymentsDailyExport implements FromArray, WithHeadings, WithEvents, WithTi
                         ->getNumberFormat()->setFormatCode('#,##0.00');
                 }
 
-                // alineaciones
-                $sheet->getStyle("A{$firstDataRow}:C{$dataLastRow}")->getAlignment()->setHorizontal('left');
-                $sheet->getStyle("A2:C2")->getAlignment()->setHorizontal('center');
+                // ====== alineaciones ======
+                // A..C datos a la izquierda; header centrado ya aplicado
+                $sheet->getStyle("A{$firstDataRow}:C{$dataLastRow}")
+                    ->getAlignment()->setHorizontal('left');
+                $sheet->getStyle("D{$firstDataRow}:{$lastCol}{$dataLastRow}")
+                    ->getAlignment()->setHorizontal('center');
 
                 // ====== anchos compactos ======
                 $setW = function(int $idx, float $w) use ($sheet) {
+                    $sheet->getColumnDimension($this->col($idx))->setAutoSize(false);
                     $sheet->getColumnDimension($this->col($idx))->setWidth($w);
                 };
                 $setW(1, 5.5);  // Item
-                $setW(2, 12);   // Placa
+                $setW(2, 11);   // Placa
                 $setW(3, 7);    // Cond.
-                for ($i = $dayStart; $i <= $dayEnd; $i++) $setW($i, 4.2); // días (más holgados)
+                for ($i = $dayStart; $i <= $dayEnd; $i++) $setW($i, 2.7); // días (holgados)
                 $setW($dayEnd + 1, 11); // Total (S/)
                 $setW($dayEnd + 2, 9);  // Días Pag.
                 if ($this->mode === 'Pago') {
-                    $setW($dayEnd + 3, 9);  // Deuda (días)
-                    $setW($dayEnd + 4, 11); // Deuda (S/)
-                    $setW($dayEnd + 5, 12); // Deuda Real (S/)
+                    $setW($dayEnd + 3, 9);   // Deuda (días)
+                    $setW($dayEnd + 4, 11);  // Deuda (S/)
+                    $setW($dayEnd + 5, 12);  // Deuda Real (S/)
+                }
+
+                // === +1 punto de ancho a columnas D..AG (si existen)
+                $toIdx = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString('AG');
+                $endIdx = min($toIdx, $lastColIndex);
+                for ($c = $dayStart; $c <= $endIdx; $c++) {
+                    $dim = $sheet->getColumnDimension($this->col($c));
+                    $current = (float)$dim->getWidth();
+                    if ($current <= 0.0) { $current = 3.0; }
+                    $dim->setWidth($current + 1.0);
                 }
 
                 // ====== COLOREADO CONDICIONAL (SÓLO DÍAS) ======
                 // = 0  => rojo + blanco
-                $condZero = new Conditional();
-                $condZero->setConditionType(Conditional::CONDITION_CELLIS)
-                    ->setOperatorType(Conditional::OPERATOR_EQUAL)
+                $condZero = new \PhpOffice\PhpSpreadsheet\Style\Conditional();
+                $condZero->setConditionType(\PhpOffice\PhpSpreadsheet\Style\Conditional::CONDITION_CELLIS)
+                    ->setOperatorType(\PhpOffice\PhpSpreadsheet\Style\Conditional::OPERATOR_EQUAL)
                     ->addCondition('0');
-                $condZero->getStyle()->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('EF4444');
+                $condZero->getStyle()->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('EF4444');
                 $condZero->getStyle()->getFont()->getColor()->setRGB('FFFFFF');
 
                 // > 0 => verde + blanco
-                $condGt = new Conditional();
-                $condGt->setConditionType(Conditional::CONDITION_CELLIS)
-                    ->setOperatorType(Conditional::OPERATOR_GREATERTHAN)
+                $condGt = new \PhpOffice\PhpSpreadsheet\Style\Conditional();
+                $condGt->setConditionType(\PhpOffice\PhpSpreadsheet\Style\Conditional::CONDITION_CELLIS)
+                    ->setOperatorType(\PhpOffice\PhpSpreadsheet\Style\Conditional::OPERATOR_GREATERTHAN)
                     ->addCondition('0');
-                $condGt->getStyle()->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('22C55E');
+                $condGt->getStyle()->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('22C55E');
                 $condGt->getStyle()->getFont()->getColor()->setRGB('FFFFFF');
 
                 // aplicar a días (filas de datos, sin footer)
                 $daysRange = $this->col($dayStart) . $firstDataRow . ':' . $this->col($dayEnd) . $dataLastRow;
                 $sheet->getStyle($daysRange)->setConditionalStyles([$condZero, $condGt]);
+
+                // ====== “badge” azul para la columna C (Cond.) en el cuerpo ======
+                if ($dataLastRow >= $firstDataRow) {
+                    $sheet->getStyle("C{$firstDataRow}:C{$dataLastRow}")->applyFromArray([
+                        'fill'  => ['fillType'=>'solid','startColor'=>['argb'=>$blueDark]],
+                        'font'  => ['bold'=>true,'color'=>['argb'=>$fontWhite],'size'=>10],
+                        'alignment' => ['horizontal'=>'center','vertical'=>'center'],
+                    ]);
+                }
 
                 // ====== GRIS SUAVE para columnas resumen (filas de datos) ======
                 $grey = [
@@ -287,13 +312,12 @@ class PaymentsDailyExport implements FromArray, WithHeadings, WithEvents, WithTi
                 }
 
                 // ====== RELLENAR CUALQUIER VACÍO CON 0 (días + totales) ======
-                $lastColIdx = 3 + $this->daysInMonth + 1 + ($this->mode === 'Pago' ? 4 : 1);
                 for ($r = $firstDataRow; $r <= $dataLastRow; $r++) {
-                    for ($c = $dayStart; $c <= $lastColIdx; $c++) {
+                    for ($c = $dayStart; $c <= $lastColIndex; $c++) {
                         $cell = $sheet->getCellByColumnAndRow($c, $r);
                         $v    = $cell->getValue();
                         if ($v === null || $v === '') {
-                            $cell->setValueExplicit(0, DataType::TYPE_NUMERIC);
+                            $cell->setValueExplicit(0, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_NUMERIC);
                         }
                     }
                 }
@@ -304,7 +328,7 @@ class PaymentsDailyExport implements FromArray, WithHeadings, WithEvents, WithTi
                     ->applyFromArray([
                         'font'   => ['bold' => true, 'color' => ['argb' => $fontBlack]],
                         'fill'   => ['fillType' => 'solid', 'startColor' => ['argb' => $footerFill]],
-                        'borders'=> ['outline' => ['borderStyle'=>Border::BORDER_MEDIUM, 'color'=>['argb'=>$blueDark]]],
+                        'borders'=> ['outline' => ['borderStyle'=>\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM, 'color'=>['argb'=>$blueDark]]],
                     ]);
 
                 // formatos del footer: días (enteros) y montos (0.00)
@@ -323,6 +347,7 @@ class PaymentsDailyExport implements FromArray, WithHeadings, WithEvents, WithTi
             },
         ];
     }
+
 
     /* ======================= DATA BUILDER ======================= */
     protected function build(): void
