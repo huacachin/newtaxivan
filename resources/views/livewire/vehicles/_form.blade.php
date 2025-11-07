@@ -51,7 +51,7 @@
     </div>
 
     {{-- Marca --}}
-    <div class="col-6 col-md-4">
+    <div class="col-6 col-md-3">
         <label for="brand" class="form-label">Marca</label>
         <select id="brand" class="form-control form-control-sm" wire:model="brand">
             <option value="">Seleccione</option>
@@ -68,21 +68,21 @@
     </div>
 
     {{-- Año --}}
-    <div class="col-6 col-md-4">
+    <div class="col-6 col-md-3">
         <label for="year" class="form-label">Año</label>
         <input id="year" type="number" inputmode="numeric" class="form-control form-control-sm" placeholder="Ej. 2020" wire:model="year" min="1900" max="2100" step="1">
         @error('year') <span class="text-danger">{{ $message }}</span> @enderror
     </div>
 
     {{-- Modelo --}}
-    <div class="col-6 col-md-4">
+    <div class="col-6 col-md-3">
         <label for="model" class="form-label">Modelo</label>
         <input id="model" type="text" class="form-control form-control-sm" placeholder="Ingresar modelo" wire:model="model">
         @error('model') <span class="text-danger">{{ $message }}</span> @enderror
     </div>
 
     {{-- Carrocería --}}
-    <div class="col-6 col-md-4">
+    <div class="col-6 col-md-3">
         <label for="bodywork" class="form-label">Carrocería</label>
         <select id="bodywork" class="form-control form-control-sm" wire:model="bodywork">
             <option value="">Seleccione</option>
