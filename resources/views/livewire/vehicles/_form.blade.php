@@ -179,7 +179,7 @@
     </div>
 
     {{-- Combustible --}}
-    <div class="col-6 col-md-4">
+    <div class="col-6 col-md-3">
         <label for="fuel" class="form-label">Combustible</label>
         <select id="fuel" class="form-control form-control-sm" wire:model="fuel">
             <option value="">Seleccionar</option>
@@ -190,21 +190,21 @@
     </div>
 
     {{-- Soat F.V --}}
-    <div class="col-6 col-md-4">
+    <div class="col-6 col-md-3">
         <label for="soat_date" class="form-label">Soat F.V</label>
         <input id="soat_date" type="date" class="form-control form-control-sm" wire:model="soat_date">
         @error('soat_date') <span class="text-danger">{{ $message }}</span> @enderror
     </div>
 
     {{-- Certificado F.V --}}
-    <div class="col-6 col-md-4">
+    <div class="col-6 col-md-3">
         <label for="certificate_date" class="form-label">Certificado F.V</label>
         <input id="certificate_date" type="date" class="form-control form-control-sm" wire:model="certificate_date">
         @error('certificate_date') <span class="text-danger">{{ $message }}</span> @enderror
     </div>
 
     {{-- Revisión Técnica F.V --}}
-    <div class="col-6 col-md-4">
+    <div class="col-6 col-md-3">
         <label for="technical_review" class="form-label">Revisión Técnica F.V</label>
         <input id="technical_review" type="date" class="form-control form-control-sm" wire:model="technical_review">
         @error('technical_review') <span class="text-danger">{{ $message }}</span> @enderror
