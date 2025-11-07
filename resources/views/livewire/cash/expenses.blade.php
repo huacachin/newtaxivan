@@ -71,7 +71,7 @@
                         <div class="d-flex flex-wrap align-items-end gap-2 py-1">
 
                             <!-- Buscar -->
-                            <div class="flex-shrink-0" style="min-width: 240px;">
+                            <div class="flex-shrink-0">
                                 <div class="row g-2 mb-2">
                                     <div class="col-12 f-s-11">
                                         <div class="d-flex flex-wrap align-items-center gap-3">
@@ -128,13 +128,13 @@
                             </div>
 
                             <!-- Fecha Inicio -->
-                            <div class="flex-shrink-0" style="min-width: 180px;">
+                            <div class="flex-shrink-0" >
                                 <label class="form-label mb-1">Fecha Inicio</label>
                                 <input type="text" id="date_start" class="form-control form-control-sm" wire:ignore wire:model="ui_date_start">
                             </div>
 
                             <!-- Fecha Fin -->
-                            <div class="flex-shrink-0" style="min-width: 180px;">
+                            <div class="flex-shrink-0">
                                 <label class="form-label mb-1">Fecha Fin</label>
                                 <input type="text" id="date_end"  class="form-control form-control-sm" wire:ignore wire:model="ui_date_end">
                             </div>
