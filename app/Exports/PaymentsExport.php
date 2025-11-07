@@ -190,7 +190,7 @@ class PaymentsExport implements
                 $borderSoft = 'FFCFD8DC';
                 $black      = 'FF000000';
 
-                // 1) Título (fila 1)
+                // ===== Título (fila 1)
                 $ws->insertNewRowBefore(1, 1);
                 $ws->mergeCells('A1:J1');
                 $ws->setCellValue('A1', 'REPORTE DE PAGOS');
@@ -204,7 +204,7 @@ class PaymentsExport implements
                 ]);
                 $ws->getRowDimension(1)->setRowHeight(18);
 
-                // 2) Header (fila 2) y datos desde 3
+                // ===== Header (fila 2) y datos desde 3
                 $headerRow    = 2;
                 $dataStartRow = 3;
                 $last         = (int) $ws->getHighestRow();
@@ -226,7 +226,7 @@ class PaymentsExport implements
                     return; // sin datos
                 }
 
-                // 3) Bordes + zebra
+                // ===== Bordes + zebra
                 $ws->getStyle("A{$headerRow}:J{$last}")
                     ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
                 $ws->getStyle("A{$headerRow}:J{$last}")
@@ -242,7 +242,7 @@ class PaymentsExport implements
                 $styles[] = $cond;
                 $ws->getStyle($rangeData)->setConditionalStyles($styles);
 
-                // Alineaciones específicas
+                // ===== Alineaciones
                 $ws->getStyle("A{$dataStartRow}:A{$last}")
                     ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // Item
                 $ws->getStyle("D{$dataStartRow}:D{$last}")
@@ -258,7 +258,7 @@ class PaymentsExport implements
                 $ws->getStyle("J{$dataStartRow}:J{$last}")
                     ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
 
-                // 4) TOTAL (fila final + 1)
+                // ===== TOTAL (última fila + 1)
                 $totalRow = $last + 1;
                 $ws->mergeCells("A{$totalRow}:I{$totalRow}");
                 $ws->setCellValue("A{$totalRow}", 'TOTAL');
@@ -281,31 +281,28 @@ class PaymentsExport implements
                     ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
                 $ws->getRowDimension($totalRow)->setRowHeight(18);
 
-                // ===== 5) Compactación REAL (sin aire) =====
-                // a) Desactivar autosize en todas y poner default MUY angosto,
-                //    quitar sangría y permitir shrink.
+                // ===== Compactación SIN reducir fuente (no shrinkToFit) =====
+                // Quita wrap e indent para evitar “aire”
+                $ws->getStyle("A{$headerRow}:J{$totalRow}")
+                    ->getAlignment()->setWrapText(false)->setIndent(0);
+                // Anchos fijos (no autosize) — ajustados para no forzar reducción
                 foreach (range('A','J') as $col) {
                     $ws->getColumnDimension($col)->setAutoSize(false);
-                    $ws->getColumnDimension($col)->setWidth(3.0); // default global
-                    $ws->getStyle("{$col}{$headerRow}:{$col}{$totalRow}")
-                        ->getAlignment()->setWrapText(false)->setIndent(0)->setShrinkToFit(true);
+                    $ws->getColumnDimension($col)->setWidth(3.0); // default base
                 }
-
-                // b) Overrides por columna (ajusta a tu gusto)
+                // Overrides por columna (ligeramente más amplios)
                 $ws->getColumnDimension('A')->setWidth(2.2);  // Item
-                $ws->getColumnDimension('B')->setWidth(9.0);  // Placa
-                $ws->getColumnDimension('C')->setWidth(9.0);  // Serie
-                $ws->getColumnDimension('D')->setWidth(10.5); // Fecha Registro
-                $ws->getColumnDimension('E')->setWidth(12.0); // Fecha Pago (datetime)
-                $ws->getColumnDimension('F')->setWidth(7.0);  // Hora
-                $ws->getColumnDimension('G')->setWidth(8.0);  // Tipo
-                $ws->getColumnDimension('H')->setWidth(11.0); // Sucursal
-                $ws->getColumnDimension('I')->setWidth(6.0); // Usuario
-                $ws->getColumnDimension('J')->setWidth(9.5);  // S/ (moneda)
-
-                // (Opcional) más al ras:
-                // A->2.0; F->6.5; G->7.5; H->10; I->12; J->9.0
+                $ws->getColumnDimension('B')->setWidth(9.5);  // Placa
+                $ws->getColumnDimension('C')->setWidth(9.5);  // Serie
+                $ws->getColumnDimension('D')->setWidth(11.0); // Fecha Registro
+                $ws->getColumnDimension('E')->setWidth(12.5); // Fecha Pago
+                $ws->getColumnDimension('F')->setWidth(7.5);  // Hora
+                $ws->getColumnDimension('G')->setWidth(8.5);  // Tipo
+                $ws->getColumnDimension('H')->setWidth(12.0); // Sucursal
+                $ws->getColumnDimension('I')->setWidth(6.5); // Usuario
+                $ws->getColumnDimension('J')->setWidth(10.0); // S/
             },
         ];
     }
+
 }
