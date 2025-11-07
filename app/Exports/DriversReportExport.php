@@ -36,7 +36,7 @@ class DriversReportExport implements FromArray, WithColumnFormatting, WithEvents
         // A..H
         return [
             'ID', 'Placa', 'Nombre', 'N° Documento',
-            'Contrato Inicio', 'Contrato Fin', 'Teléfono', 'Condición',
+            'I.Contrato', 'F.Contrato', 'Teléfono', 'Condición',
         ];
     }
 
