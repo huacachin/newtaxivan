@@ -231,7 +231,9 @@ class RepEstDracoBaseExport implements FromArray, ShouldAutoSize, WithHeadings, 
                 $WHITE= 'FFFFFFFF';
                 $BORD = 'FFCBD5E1';
 
+                // Fuente base y alto compacto
                 $ws->getParent()->getDefaultStyle()->getFont()->setSize(10);
+                $ws->getDefaultRowDimension()->setRowHeight(13);
 
                 // Insertar 1 fila para título
                 $ws->insertNewRowBefore(1, 1);
@@ -243,42 +245,61 @@ class RepEstDracoBaseExport implements FromArray, ShouldAutoSize, WithHeadings, 
                 // Título
                 $ws->setCellValue('A1', "REPORTE ESTADÍSTICO DRACO {$this->year}");
                 $ws->mergeCells("A1:{$lastCol}1");
-                $ws->getStyle('A1')->getFont()->setBold(true)->setSize(12)->getColor()->setARGB('FFE11D48');
-                $ws->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $ws->getRowDimension(1)->setRowHeight(18);
+                $ws->getStyle('A1')->applyFromArray([
+                    'font'      => ['bold' => true, 'size' => 11, 'color' => ['argb' => 'FFE11D48']],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                ]);
 
                 // Encabezado azul
-                $ws->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->getFill()
-                    ->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB($BLUE);
-                $ws->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->getFont()
-                    ->setBold(true)->getColor()->setARGB($WHITE);
-                $ws->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->getAlignment()
-                    ->setHorizontal(Alignment::HORIZONTAL_CENTER)->setVertical(Alignment::VERTICAL_CENTER);
-                $ws->getRowDimension($headerRow)->setRowHeight(20);
+                $ws->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->applyFromArray([
+                    'font'      => ['bold' => true, 'color' => ['argb' => $WHITE]],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                    'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $BLUE]],
+                ]);
+                $ws->getRowDimension($headerRow)->setRowHeight(16);
 
+                // Congelar bajo encabezado
                 $ws->freezePane("A{$dataStartRow}");
 
-                // Anchos compactos
-                $ws->getColumnDimension('A')->setWidth(18);
-                $ws->getColumnDimension('B')->setWidth(18);
-                foreach(range('C','N') as $c){ $ws->getColumnDimension($c)->setWidth(9); }
-                $ws->getColumnDimension('O')->setWidth(10);
+                // ===== Anchos “al ras” (desactivar autosize en todas) =====
+                foreach (range('A','O') as $c) {
+                    $ws->getColumnDimension($c)->setAutoSize(false);
+                }
+                // A/B (texto) compactos pero legibles
+                $ws->getColumnDimension('A')->setWidth(18.0); // CONTROLADOR
+                $ws->getColumnDimension('B')->setWidth(18.0); // PARADERO
+                // Meses C..N súper compactos (montos)
+                foreach (range('C','N') as $c) {
+                    $ws->getColumnDimension($c)->setWidth(8.2);
+                }
+                // TOTAL (O) un poco más ancho
+                $ws->getColumnDimension('O')->setWidth(10.5);
 
-                // Bordes
-                $ws->getStyle("A{$headerRow}:{$lastCol}{$lastRow}")->getBorders()
-                    ->getAllBorders()->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB($BORD);
+                // ===== Bordes finos
+                $ws->getStyle("A{$headerRow}:{$lastCol}{$lastRow}")
+                    ->getBorders()->getAllBorders()
+                    ->setBorderStyle(Border::BORDER_THIN)
+                    ->getColor()->setARGB($BORD);
 
-                // Alineaciones
+                // ===== Alineaciones “al ras”
                 if ($lastRow >= $dataStartRow){
-                    $ws->getStyle("A{$dataStartRow}:A{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-                    $ws->getStyle("B{$dataStartRow}:B{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-                    $ws->getStyle("C{$dataStartRow}:O{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                    // Texto a la izquierda (con shrink para evitar wraps)
+                    $ws->getStyle("A{$dataStartRow}:A{$lastRow}")
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT)->setShrinkToFit(true);
+                    $ws->getStyle("B{$dataStartRow}:B{$lastRow}")
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT)->setShrinkToFit(true);
+
+                    // Montos a la derecha
+                    $ws->getStyle("C{$dataStartRow}:O{$lastRow}")
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
                 }
 
-                // Formatos moneda para meses + total
+                // ===== Formatos moneda para meses + total
                 $ws->getStyle("C{$dataStartRow}:O{$lastRow}")
                     ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
 
-                // ===== Forzar vacíos -> 0 en la tabla principal (C..O) =====
+                // ===== Forzar vacíos -> 0 en la tabla principal (C..O)
                 $mainLastRow = $dataStartRow + $this->mainRowCount - 1;
                 for ($r = $dataStartRow; $r <= $mainLastRow; $r++) {
                     $a = (string)$ws->getCell("A{$r}")->getValue();
@@ -290,17 +311,17 @@ class RepEstDracoBaseExport implements FromArray, ShouldAutoSize, WithHeadings, 
                     }
                 }
 
-                // ===== Estilos especiales =====
+                // ===== Estilos especiales (usuario, vacío, total general, mini tabla total)
                 for ($r=$dataStartRow; $r<=$lastRow; $r++){
                     $a = (string)$ws->getCell("A{$r}")->getValue();
 
                     // Cabecera de usuario
                     if (str_starts_with($a,'__USER__:')){
                         $ws->setCellValue("A{$r}", substr($a,9));
-                        $ws->getStyle("A{$r}:{$lastCol}{$r}")->getFill()
-                            ->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB($BLUE);
-                        $ws->getStyle("A{$r}:{$lastCol}{$r}")->getFont()
-                            ->setBold(true)->getColor()->setARGB($WHITE);
+                        $ws->getStyle("A{$r}:{$lastCol}{$r}")->applyFromArray([
+                            'font' => ['bold' => true, 'color' => ['argb' => $WHITE]],
+                            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $BLUE]],
+                        ]);
                         $ws->getStyle("A{$r}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
                         continue;
                     }
@@ -316,10 +337,13 @@ class RepEstDracoBaseExport implements FromArray, ShouldAutoSize, WithHeadings, 
 
                     // Pie TOTAL GENERAL
                     if ($a==='TOTAL GENERAL (DRACO + BASE)'){
-                        $ws->getStyle("A{$r}:{$lastCol}{$r}")->getFont()->setBold(true);
-                        $ws->getStyle("A{$r}:{$lastCol}{$r}")->getFill()
-                            ->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB($FOOT);
-                        $ws->getStyle("A{$r}:B{$r}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+                        $ws->getStyle("A{$r}:{$lastCol}{$r}")->applyFromArray([
+                            'font' => ['bold' => true],
+                            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $FOOT]],
+                        ]);
+                        $ws->getStyle("A{$r}:B{$r}")
+                            ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+                        // Asegura 0 en vacíos C..O
                         for ($col='C'; $col<='O'; $col++){
                             $cell=$ws->getCell("{$col}{$r}");
                             if ($cell->getValue()==='' || $cell->getValue()===null){ $cell->setValue(0); }
@@ -330,11 +354,14 @@ class RepEstDracoBaseExport implements FromArray, ShouldAutoSize, WithHeadings, 
                     // Total de la mini tabla
                     if ($a==='__RSTOTAL__'){
                         $ws->setCellValue("A{$r}", 'TOTAL');
-                        $ws->getStyle("A{$r}:B{$r}")->getFont()->setBold(true);
-                        $ws->getStyle("A{$r}:B{$r}")->getFill()
-                            ->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB($FOOT);
-                        $ws->getStyle("B{$r}")->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
-                        $ws->getStyle("B{$r}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+                        $ws->getStyle("A{$r}:B{$r}")->applyFromArray([
+                            'font' => ['bold' => true],
+                            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $FOOT]],
+                        ]);
+                        $ws->getStyle("B{$r}")
+                            ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
+                        $ws->getStyle("B{$r}")
+                            ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
                         if ($ws->getCell("B{$r}")->getValue()==='' || $ws->getCell("B{$r}")->getValue()===null){
                             $ws->getCell("B{$r}")->setValue(0);
                         }
@@ -345,20 +372,22 @@ class RepEstDracoBaseExport implements FromArray, ShouldAutoSize, WithHeadings, 
                 // Mini tabla: encabezado azul
                 $miniHead = $dataStartRow + ($this->summaryHeadRow - 1);
                 if ($miniHead >= $dataStartRow && $miniHead <= $lastRow){
-                    $ws->getStyle("A{$miniHead}:B{$miniHead}")->getFill()
-                        ->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB($BLUE);
-                    $ws->getStyle("A{$miniHead}:B{$miniHead}")->getFont()
-                        ->setBold(true)->getColor()->setARGB($WHITE);
-                    $ws->getStyle("A{$miniHead}:B{$miniHead}")->getAlignment()
-                        ->setHorizontal(Alignment::HORIZONTAL_CENTER)->setVertical(Alignment::VERTICAL_CENTER);
+                    $ws->getStyle("A{$miniHead}:B{$miniHead}")->applyFromArray([
+                        'font' => ['bold' => true, 'color' => ['argb' => $WHITE]],
+                        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $BLUE]],
+                        'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                    ]);
                 }
 
-                // Mini tabla: datos moneda + vacíos -> 0
+                // Mini tabla: datos (A izquierda, B moneda derecha) + vacíos -> 0
                 $miniDataStart = $miniHead + 1;
                 if ($miniDataStart <= $lastRow){
-                    $ws->getStyle("A{$miniDataStart}:A{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-                    $ws->getStyle("B{$miniDataStart}:B{$lastRow}")->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
-                    $ws->getStyle("B{$miniDataStart}:B{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+                    $ws->getStyle("A{$miniDataStart}:A{$lastRow}")
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT)->setShrinkToFit(true);
+                    $ws->getStyle("B{$miniDataStart}:B{$lastRow}")
+                        ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
+                    $ws->getStyle("B{$miniDataStart}:B{$lastRow}")
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
                     for ($r=$miniDataStart; $r<=$lastRow; $r++){
                         $cell=$ws->getCell("B{$r}");
                         if ($cell->getValue()==='' || $cell->getValue()===null){ $cell->setValue(0); }
@@ -367,6 +396,7 @@ class RepEstDracoBaseExport implements FromArray, ShouldAutoSize, WithHeadings, 
             },
         ];
     }
+
 
     /** IDs por rol. Para el año actual, filtra por status=active. Para años pasados, no filtra status. */
     private function loadUserIdsByRole(int $year): array
