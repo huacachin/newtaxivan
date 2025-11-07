@@ -64,51 +64,72 @@ class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, With
             AfterSheet::class => function (AfterSheet $event) {
                 $s = $event->sheet->getDelegate();
 
-                // --- Paleta
+                // Paleta
                 $blue      = 'FF2874A6';
                 $footerBg  = 'FFCEE7FF';
                 $white     = 'FFFFFFFF';
                 $black     = 'FF000000';
                 $borderC   = 'FFCFD8DC';
 
-                // ========== Layout (insertamos 2 filas: Título y Cabecera de grupos) ==========
-                $s->insertNewRowBefore(1, 2);            // empuja headings a la fila 3
-                $lastCol = 'L';                          // A..L
-                $titleRow  = 1;
-                $groupRow  = 2;
-                $headRow   = 3;
-                $dataRow1  = 4;
+                // Tipografía global 10pt
+                $s->getParent()->getDefaultStyle()->getFont()->setSize(10);
+
+                // ===== Layout (insertamos 2 filas: Título y Cabecera de grupos) =====
+                $s->insertNewRowBefore(1, 2);   // headings() se mueve a la fila 3
+                $lastCol  = 'L';                // A..L
+                $titleRow = 1;
+                $groupRow = 2;
+                $headRow  = 3;
+                $dataRow1 = 4;
 
                 // Título
                 $s->mergeCells("A{$titleRow}:{$lastCol}{$titleRow}");
                 $s->setCellValue("A{$titleRow}", 'REPORTE MENSUAL DE PAGOS '.$this->mesTexto($this->month).' '.$this->year);
                 $s->getStyle("A{$titleRow}:{$lastCol}{$titleRow}")->applyFromArray([
-                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blue]],
-                    'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$white]],
-                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
+                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$white]],
+                    'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$black]],
+                    'alignment' => ['horizontal'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,'vertical'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER],
                 ]);
                 $s->getRowDimension($titleRow)->setRowHeight(18);
 
-                // Cabecera de grupos (D:F y H:K)
+                // Cabecera de grupos (fila 2)
+                // Ponemos etiquetas para A,B,C en la fila 2 y luego merge vertical con fila 3
+                $s->setCellValue("A{$groupRow}", 'Item');
+                $s->setCellValue("B{$groupRow}", 'Cod');
+                $s->setCellValue("C{$groupRow}", 'Placa');
+
+                // Grupos D:F y H:K
                 $s->mergeCells("D{$groupRow}:F{$groupRow}");
                 $s->mergeCells("H{$groupRow}:K{$groupRow}");
                 $s->setCellValue("D{$groupRow}", 'DEUDA DEL MES ANTERIOR');
                 $s->setCellValue("H{$groupRow}", 'PAGOS');
+
+                // Merge vertical para A,B,C: fila 2 y 3
+                $s->mergeCells("A{$groupRow}:A{$headRow}");
+                $s->mergeCells("B{$groupRow}:B{$headRow}");
+                $s->mergeCells("C{$groupRow}:C{$headRow}");
+
                 $s->getStyle("A{$groupRow}:{$lastCol}{$groupRow}")->applyFromArray([
                     'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blue]],
                     'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$white]],
-                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
+                    'alignment' => [
+                        'horizontal'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                        'vertical'  =>\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                    ],
                 ]);
                 $s->getRowDimension($groupRow)->setRowHeight(16);
 
-                // Headings (fila 3)
+                // Encabezados originales (fila 3) — ya vienen de headings()
                 $s->getStyle("A{$headRow}:{$lastCol}{$headRow}")->applyFromArray([
                     'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blue]],
                     'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$white]],
-                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
+                    'alignment' => [
+                        'horizontal'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                        'vertical'  =>\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                    ],
                 ]);
 
-                // Congelar
+                // Congelar (primera fila de datos)
                 $s->freezePane("A{$dataRow1}");
 
                 // Bordes finos para toda la tabla (incl. pies)
@@ -118,26 +139,29 @@ class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, With
                 $s->getStyle("A{$groupRow}:{$lastCol}{$lastRow}")
                     ->getBorders()->getAllBorders()->getColor()->setARGB($borderC);
 
-                // Anchos
+                // ===== Anchos (compactos) =====
                 foreach (range('A','L') as $col) $s->getColumnDimension($col)->setAutoSize(false);
-                $s->getColumnDimension('A')->setWidth(5.5);
-                $s->getColumnDimension('B')->setWidth(6.5);
-                $s->getColumnDimension('C')->setWidth(12);
-                foreach (['D','E','F'] as $c) $s->getColumnDimension($c)->setWidth(10);
-                $s->getColumnDimension('G')->setWidth(12);
-                foreach (['H','I','J'] as $c) $s->getColumnDimension($c)->setWidth(6.5);
-                $s->getColumnDimension('K')->setWidth(10);
-                $s->getColumnDimension('L')->setWidth(12);
+                $s->getColumnDimension('A')->setWidth(5.5);   // Item
+                $s->getColumnDimension('B')->setWidth(5.5);   // Cod
+                $s->getColumnDimension('C')->setWidth(12);    // Placa
+                foreach (['D','E','F'] as $c) $s->getColumnDimension($c)->setWidth(9);   // Deuda ant./Exonerado/P.Deuda
+                $s->getColumnDimension('G')->setWidth(12);    // Mes actual
+                foreach (['H','I','J'] as $c) $s->getColumnDimension($c)->setWidth(6.5);  // Lab./DT/DNT
+                $s->getColumnDimension('K')->setWidth(10);    // Condición
+                $s->getColumnDimension('L')->setWidth(12);    // T.Deuda
 
-                // Alineaciones: texto a la izq en B,C,K; resto centrado/numérico
-                $dataEnd = $lastRow - 2;  // antes de footers (hay 2)
+                // ===== Alineaciones (texto a la izq en B,C,K) =====
+                $dataEnd = $lastRow - 2;  // antes de footers (2 filas)
                 if ($dataEnd >= $dataRow1) {
-                    $s->getStyle("B{$dataRow1}:B{$dataEnd}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-                    $s->getStyle("C{$dataRow1}:C{$dataEnd}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-                    $s->getStyle("K{$dataRow1}:K{$dataEnd}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+                    $s->getStyle("B{$dataRow1}:B{$dataEnd}")
+                        ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+                    $s->getStyle("C{$dataRow1}:C{$dataEnd}")
+                        ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+                    $s->getStyle("K{$dataRow1}:K{$dataEnd}")
+                        ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
                 }
 
-                // Formatos numéricos
+                // ===== Formatos numéricos =====
                 // Moneda: D,E,F,G,L
                 foreach (['D','E','F','G','L'] as $c) {
                     $s->getStyle("{$c}{$dataRow1}:{$c}{$lastRow}")
@@ -149,10 +173,10 @@ class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, With
                         ->getNumberFormat()->setFormatCode('0');
                 }
 
-                // Rellenar vacíos numéricos con 0 en todo el bloque de datos + pies
-                $colIdxsNum = ['A','D','E','F','G','H','I','J','L'];
+                // Rellenar vacíos numéricos con 0 en datos + pies
+                $numCols = ['A','D','E','F','G','H','I','J','L'];
                 for ($r = $dataRow1; $r <= $lastRow; $r++) {
-                    foreach ($colIdxsNum as $c) {
+                    foreach ($numCols as $c) {
                         $cell = $s->getCell("{$c}{$r}");
                         $val  = $cell->getValue();
                         if ($val === null || $val === '') {
@@ -161,20 +185,21 @@ class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, With
                     }
                 }
 
-                // Pies (últimas 2 filas) en #CEE7FF
+                // ===== Pies (últimas 2 filas) =====
                 $footer1 = $lastRow - 1;
                 $footer2 = $lastRow;
                 foreach ([$footer1,$footer2] as $fr) {
                     $s->getStyle("A{$fr}:{$lastCol}{$fr}")->applyFromArray([
                         'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$footerBg]],
                         'font' => ['bold'=>true,'color'=>['argb'=>$black]],
-                        'borders' => ['outline' => ['borderStyle'=>Border::BORDER_MEDIUM,'color'=>['argb'=>$blue]]],
-                        'alignment' => ['vertical'=>Alignment::VERTICAL_CENTER],
+                        'borders' => ['outline' => ['borderStyle'=>\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM,'color'=>['argb'=>$blue]]],
+                        'alignment' => ['vertical'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER],
                     ]);
                 }
             },
         ];
     }
+
 
     /* ==================== DATA ==================== */
 
