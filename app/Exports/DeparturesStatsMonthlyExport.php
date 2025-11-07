@@ -152,7 +152,7 @@ class DeparturesStatsMonthlyExport implements FromArray, WithHeadings, WithStyle
                 $s->getColumnDimension('C')->setWidth(6.5);  // TIPO
                 // D..(penúltima): días
                 for ($c=$firstDayColIdx; $c < $lastColIdx-1; $c++) {
-                    $s->getColumnDimensionByColumn($c)->setWidth(3.7);
+                    $s->getColumnDimensionByColumn($c)->setWidth(3);
                 }
                 // Penúltima = SALIDAS, Última = S/
                 $s->getColumnDimensionByColumn($lastColIdx-1)->setWidth(7.0);
