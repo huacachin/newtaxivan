@@ -102,11 +102,12 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
 
     public function headings(): array
     {
+        $monthL = \Carbon\Carbon::parse($this->monthDate)->startOfMonth()->locale('es')->translatedFormat('F');
         return [
             'Item',
             'Placa',
             'Cond.',
-            'No trabajados',
+            'No trabajados '. ($monthL ? " ({$monthL})" : ''),
             'D. deuda',
             'Total',
             'Exon.',
