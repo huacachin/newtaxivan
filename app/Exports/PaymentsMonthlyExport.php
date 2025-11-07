@@ -141,8 +141,8 @@ class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, With
 
                 // ===== Anchos (compactos) =====
                 foreach (range('A','L') as $col) $s->getColumnDimension($col)->setAutoSize(false);
-                $s->getColumnDimension('A')->setWidth(5.5);   // Item
-                $s->getColumnDimension('B')->setWidth(5.5);   // Cod
+                $s->getColumnDimension('A')->setWidth(4.5);   // Item
+                $s->getColumnDimension('B')->setWidth(4.5);   // Cod
                 $s->getColumnDimension('C')->setWidth(12);    // Placa
                 foreach (['D','E','F'] as $c) $s->getColumnDimension($c)->setWidth(7);   // Deuda ant./Exonerado/P.Deuda
                 $s->getColumnDimension('G')->setWidth(12);    // Mes actual
