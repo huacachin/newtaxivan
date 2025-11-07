@@ -21,6 +21,9 @@ class ExpensesExport implements
     FromQuery, ShouldAutoSize, WithHeadings, WithMapping,
     WithColumnFormatting, WithStyles, WithEvents
 {
+    /** contador de item (1..n) */
+    private int $i = 0;
+
     public function __construct(
         protected ?string $search = '',
         protected int $filterType = 1,   // 1=reason, 2=detail, 3=user.name, 4=in_charge
@@ -36,7 +39,6 @@ class ExpensesExport implements
             ->orderBy('date')
             ->orderBy('id');
 
-        // Rango de fechas
         if ($this->date_start && $this->date_end) {
             $q->whereBetween('date', [$this->date_start, $this->date_end]);
         } elseif ($this->date_start) {
@@ -45,7 +47,6 @@ class ExpensesExport implements
             $q->where('date', '<=', $this->date_end);
         }
 
-        // Búsqueda
         $s = trim((string)$this->search);
         if ($s !== '') {
             switch ((int)$this->filterType) {
@@ -67,7 +68,7 @@ class ExpensesExport implements
     public function headings(): array
     {
         return [
-            'ID',
+            'Item',           // <- antes era "ID"
             'Fecha',
             'A (Razón)',
             'Motivo (Detalle)',
@@ -79,10 +80,13 @@ class ExpensesExport implements
 
     public function map($row): array
     {
+        // Item secuencial (1..n)
+        $this->i++;
+
         return [
-            $row->id,
+            $this->i, // <- ítem secuencial en lugar de $row->id
             $row->date
-                ? ExcelDate::dateTimeToExcel(Carbon::parse($row->date)->startOfDay()) // fecha sin hora
+                ? ExcelDate::dateTimeToExcel(Carbon::parse($row->date)->startOfDay())
                 : null,
             $row->reason,
             $row->detail,
@@ -94,10 +98,9 @@ class ExpensesExport implements
 
     public function columnFormats(): array
     {
-        // Columnas A..G
         return [
             'B' => NumberFormat::FORMAT_DATE_DDMMYYYY, // dd/mm/aaaa
-            'E' => NumberFormat::FORMAT_NUMBER_00,     // Total (si quieres sin decimales, cámbialo en AfterSheet)
+            'E' => NumberFormat::FORMAT_NUMBER_00,     // si prefieres sin decimales, se sobreescribe en AfterSheet
         ];
     }
 
@@ -113,16 +116,14 @@ class ExpensesExport implements
             AfterSheet::class => function (AfterSheet $e) {
                 $ws = $e->sheet->getDelegate();
 
-                // Paleta
                 $BLUE   = 'FF2874A6';
                 $FOOT   = 'FFCEE7FF';
                 $BORDER = 'FFCFD8DC';
 
-                // Fuente base 10 y altura compacta (sin shrink en celdas de texto)
                 $ws->getParent()->getDefaultStyle()->getFont()->setSize(10);
                 $ws->getDefaultRowDimension()->setRowHeight(13);
 
-                // ===== Título (fila 1)
+                // Título
                 $ws->insertNewRowBefore(1, 1);
                 $ws->setCellValue('A1', 'REPORTE DE GASTOS');
                 $ws->mergeCells('A1:G1');
@@ -135,12 +136,11 @@ class ExpensesExport implements
                     ],
                 ]);
 
-                // Filas clave
                 $headerRow    = 2;
                 $dataStartRow = 3;
                 $last         = (int)$ws->getHighestRow();
 
-                // ===== THEAD (azul)
+                // THEAD
                 $ws->getStyle("A{$headerRow}:G{$headerRow}")->applyFromArray([
                     'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
                     'alignment' => [
@@ -154,52 +154,45 @@ class ExpensesExport implements
                 ]);
                 $ws->getRowDimension($headerRow)->setRowHeight(16);
 
-                // ===== Anchos “al ras”
+                // Anchos “al ras”
                 foreach (range('A','G') as $c) {
                     $ws->getColumnDimension($c)->setAutoSize(false);
                 }
-                $ws->getColumnDimension('A')->setWidth(6.0);   // ID
-                $ws->getColumnDimension('B')->setWidth(9.6);   // Fecha dd/mm/aa
+                $ws->getColumnDimension('A')->setWidth(4.6);   // Item
+                $ws->getColumnDimension('B')->setWidth(9.6);   // Fecha
                 $ws->getColumnDimension('C')->setWidth(12.0);  // Razón
-                $ws->getColumnDimension('D')->setWidth(24.0);  // Motivo (compacto, con wrap)
+                $ws->getColumnDimension('D')->setWidth(24.0);  // Motivo (wrap)
                 $ws->getColumnDimension('E')->setWidth(9.0);   // Total
                 $ws->getColumnDimension('F')->setWidth(14.0);  // Usuario
                 $ws->getColumnDimension('G')->setWidth(14.0);  // Responsable
 
-                // Congelar bajo encabezado
                 $ws->freezePane("A{$dataStartRow}");
 
-                // SIN filtros
-
-                // ===== Alineaciones y formatos
+                // Alineaciones y formatos
                 if ($last >= $dataStartRow) {
-                    // A..C,F,G centrado; D izquierda con wrap; E derecha
                     $ws->getStyle("A{$dataStartRow}:C{$last}")
                         ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
                     $ws->getStyle("F{$dataStartRow}:G{$last}")
                         ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
                     $ws->getStyle("D{$dataStartRow}:D{$last}")
                         ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT)
-                        ->setWrapText(true); // sin shrink
+                        ->setWrapText(true);
                     $ws->getStyle("E{$dataStartRow}:E{$last}")
                         ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
 
-                    // Formatos explícitos
                     $ws->getStyle("B{$dataStartRow}:B{$last}")
                         ->getNumberFormat()->setFormatCode('d/m/yy');
-                    // Si quieres SIN decimales:
+                    // Total sin decimales
                     $ws->getStyle("E{$dataStartRow}:E{$last}")
                         ->getNumberFormat()->setFormatCode('"S/ " #,##0');
-                    // Si los quieres con decimales, usa: '"S/ " #,##0.00'
                 }
 
-                // ===== Bordes finos (header + datos)
+                // Bordes
                 $ws->getStyle("A{$headerRow}:G" . max($headerRow, $last))
                     ->getBorders()->getAllBorders()
                     ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN)
                     ->getColor()->setARGB($BORDER);
 
-                // Línea punteada entre filas (suave)
                 if ($last >= $dataStartRow) {
                     $ws->getStyle("A{$dataStartRow}:G{$last}")
                         ->getBorders()->getHorizontal()
@@ -207,7 +200,7 @@ class ExpensesExport implements
                         ->getColor()->setARGB($BORDER);
                 }
 
-                // ===== TOTAL (footer)
+                // TOTAL
                 $totalRow = max($last, $dataStartRow - 1) + 1;
                 $ws->mergeCells("A{$totalRow}:D{$totalRow}");
                 $ws->setCellValue("A{$totalRow}", 'Total');
@@ -232,7 +225,7 @@ class ExpensesExport implements
                 $ws->getStyle("E{$totalRow}")
                     ->getNumberFormat()->setFormatCode('"S/ " #,##0');
 
-                // Borde exterior del bloque completo
+                // Borde exterior
                 $ws->getStyle("A{$headerRow}:G{$totalRow}")
                     ->getBorders()->getOutline()
                     ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN)
