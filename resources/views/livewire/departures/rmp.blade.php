@@ -121,7 +121,7 @@
                                 <th>TIPO</th>
                                 @for($d=1; $d<=$daysInMonth; $d++)
                                     @php $isSun = \Illuminate\Support\Carbon::create($year, $month, $d)->isSunday(); @endphp
-                                    <th class="{{ $isSun ? 'sunday' : '' }}">{{ $d }}</th>
+                                    <th class="{{ $isSun ? 'bg-danger' : '' }}">{{ $d }}</th>
                                 @endfor
                                 <th>TOTAL</th>
                             </tr>
