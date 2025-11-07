@@ -87,15 +87,16 @@ class DeparturesMonthly implements FromArray, WithHeadings, WithStyles, WithEven
                 $sheet = $e->sheet->getDelegate();
 
                 // Paleta
-                $blueDark   = 'FF2874A6'; // encabezado/título
-                $footerFill = 'FFCEE7FF'; // pies
+                $blueDark   = 'FF2874A6';
+                $footerFill = 'FFCEE7FF';
                 $fontWhite  = 'FFFFFFFF';
                 $fontBlack  = 'FF000000';
                 $borderSoft = 'FFCFD8DC';
-                $fontRed    = 'FFCC0000'; // domingos
+                $fontRed    = 'FFCC0000';
 
-                // Fuente compacta
+                // Fuente compacta y sin wrap global
                 $sheet->getParent()->getDefaultStyle()->getFont()->setSize(10);
+                $sheet->getParent()->getDefaultStyle()->getAlignment()->setWrapText(false);
 
                 // Título (fila 1)
                 $sheet->insertNewRowBefore(1, 1);
@@ -106,67 +107,89 @@ class DeparturesMonthly implements FromArray, WithHeadings, WithStyles, WithEven
                 $sheet->mergeCells("A1:{$lastCol}1");
                 $sheet->setCellValue('A1', $title);
                 $sheet->getStyle("A1:{$lastCol}1")->applyFromArray([
-                    'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
+                    'fill' => ['fillType'=>\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
                     'font' => ['bold'=>true, 'color'=>['argb'=>$fontWhite], 'size'=>10],
-                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER, 'vertical'=>Alignment::VERTICAL_CENTER],
+                    'alignment' => ['horizontal'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER, 'vertical'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER],
                 ]);
                 $sheet->getRowDimension(1)->setRowHeight(18);
 
                 // Cabecera (fila 2)
-                $headerRow    = 2; // headings()
-                $dataStartRow = 3; // datos
+                $headerRow    = 2;
+                $dataStartRow = 3;
                 $sheet->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->applyFromArray([
-                    'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
+                    'fill' => ['fillType'=>\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
                     'font' => ['bold'=>true, 'color'=>['argb'=>$fontWhite], 'size'=>10],
-                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER, 'vertical'=>Alignment::VERTICAL_CENTER],
+                    'alignment' => ['horizontal'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER, 'vertical'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER],
                 ]);
                 $sheet->getRowDimension($headerRow)->setRowHeight(18);
 
                 // Domingos en rojo (solo header de días)
-                $firstDayColIdx = 3; // C = día 1
+                $firstDayColIdx = 3; // C
                 for ($d = 1; $d <= $this->daysInMonth; $d++) {
-                    $date = Carbon::create($this->year, $this->month, $d);
+                    $date = \Carbon\Carbon::create($this->year, $this->month, $d);
                     if ($date->isSunday()) {
-                        $col = Coordinate::stringFromColumnIndex($firstDayColIdx + ($d - 1));
+                        $col = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($firstDayColIdx + ($d - 1));
                         $sheet->getStyle("{$col}{$headerRow}")->getFont()->getColor()->setARGB($fontRed);
                     }
                 }
 
                 // Congelar encabezado y fijar Item/Placa
-                $sheet->freezePane('C3');
+                //$sheet->freezePane('C3');
 
                 // AutoFilter SOLO Item/Placa
                 $sheet->setAutoFilter("A{$headerRow}:B{$headerRow}");
 
                 // Grilla
-                $lastColIdx   = Coordinate::columnIndexFromString($lastCol);
+                $lastColIdx   = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($lastCol);
                 $totalColIdx  = $lastColIdx; // última = T. Salida
                 $dataRows     = count($this->rows);
                 $dataEndRow   = $dataRows > 0 ? ($dataStartRow + $dataRows - 1) : ($dataStartRow - 1);
 
                 // Bordes finos
                 $sheet->getStyle("A{$headerRow}:{$lastCol}{$lastRow}")
-                    ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+                    ->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
                 $sheet->getStyle("A{$headerRow}:{$lastCol}{$lastRow}")
                     ->getBorders()->getAllBorders()->getColor()->setARGB($borderSoft);
 
-                // ---- ANCHOS compactos (y desactivar autosize para que respeten) ----
+                // ====== AJUSTES "AL RAS" ======
+                // 1) Desactivar autosize en A y B
                 foreach (['A','B'] as $colLetter) {
                     $sheet->getColumnDimension($colLetter)->setAutoSize(false);
                 }
-                $sheet->getColumnDimension('A')->setWidth(6);     // Item
-                $sheet->getColumnDimension('B')->setWidth(9.5);   // Placa
 
+                // 2) Ancho dinámico ultra-compacto para A (Item)
+                //    Calcula dígitos del último ítem (p.ej. 1..9 => 1 dígito; 10..99 => 2; etc.)
+                $digits = max(1, strlen((string) $dataRows));
+                //    Escala mínima + pequeño margen visual (casi sin aire)
+                $colAWidth = max(2.2, ($digits * 1.05) + 0.6);
+                $sheet->getColumnDimension('A')->setWidth($colAWidth);
+
+                //    Centrado + sin sangría + shrinkToFit para que no “respire”
+                $sheet->getStyle("A{$dataStartRow}:A".max($dataEndRow, $headerRow))->getAlignment()
+                    ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
+                    ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER)
+                    ->setIndent(0)
+                    ->setShrinkToFit(true);
+
+                // 3) Placa compacta (ligeramente menor)
+                $sheet->getColumnDimension('B')->setWidth(9.0);
+                $sheet->getStyle("B{$dataStartRow}:B".max($dataEndRow, $headerRow))->getAlignment()
+                    ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT)
+                    ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER)
+                    ->setIndent(0)
+                    ->setShrinkToFit(true);
+
+                // 4) Días y Total muy angostos
                 for ($c = $firstDayColIdx; $c < $totalColIdx; $c++) {
-                    $col = Coordinate::stringFromColumnIndex($c);
+                    $col = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($c);
                     $sheet->getColumnDimension($col)->setAutoSize(false);
-                    $sheet->getColumnDimension($col)->setWidth(3.0); // días
+                    $sheet->getColumnDimension($col)->setWidth(3.0);
                 }
-                $totalColLetter = Coordinate::stringFromColumnIndex($totalColIdx);
+                $totalColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($totalColIdx);
                 $sheet->getColumnDimension($totalColLetter)->setAutoSize(false);
-                $sheet->getColumnDimension($totalColLetter)->setWidth(6.5); // T. Salida
+                $sheet->getColumnDimension($totalColLetter)->setWidth(6.2);
 
-                // ---- Forzar 0 en celdas vacías (días y total) + formato entero ----
+                // Forzar 0 + formato entero
                 if ($dataRows > 0) {
                     for ($r = $dataStartRow; $r <= $dataEndRow; $r++) {
                         for ($c = $firstDayColIdx; $c <= $totalColIdx; $c++) {
@@ -177,28 +200,21 @@ class DeparturesMonthly implements FromArray, WithHeadings, WithStyles, WithEven
                             }
                         }
                     }
-                    // Formato "0" para todo el rango numérico
                     $sheet->getStyle("C{$dataStartRow}:{$totalColLetter}{$dataEndRow}")
                         ->getNumberFormat()->setFormatCode('0');
-                }
 
-                // Alineaciones
-                if ($dataRows > 0) {
-                    $sheet->getStyle("B{$dataStartRow}:B{$dataEndRow}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-                    $sheet->getStyle("A{$dataStartRow}:A{$dataEndRow}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                    // alineaciones
                     $sheet->getStyle("C{$dataStartRow}:{$totalColLetter}{$dataEndRow}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                        ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
                 }
 
-                // Zebra vertical en columnas de días (C .. penúltima)
+                // Zebra vertical en días
                 if ($dataRows > 0) {
                     for ($c = $firstDayColIdx; $c < $totalColIdx; $c++) {
                         if ((($c - $firstDayColIdx) % 2) === 1) {
-                            $col = Coordinate::stringFromColumnIndex($c);
+                            $col = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($c);
                             $sheet->getStyle("{$col}{$dataStartRow}:{$col}{$dataEndRow}")
-                                ->getFill()->setFillType(Fill::FILL_SOLID)
+                                ->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
                                 ->getStartColor()->setARGB('FFF8FAFC');
                         }
                     }
@@ -211,18 +227,19 @@ class DeparturesMonthly implements FromArray, WithHeadings, WithStyles, WithEven
 
                 foreach ([$footer1, $footer2] as $fr) {
                     $sheet->getStyle("A{$fr}:{$lastCol}{$fr}")->applyFromArray([
-                        'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$footerFill]],
+                        'fill' => ['fillType'=>\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor'=>['argb'=>$footerFill]],
                         'font' => ['bold'=>true, 'color'=>['argb'=>$fontBlack], 'size'=>10],
-                        'borders' => ['outline' => ['borderStyle'=>Border::BORDER_MEDIUM, 'color' => ['argb'=>$blueDark]]],
+                        'borders' => ['outline' => ['borderStyle'=>\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM, 'color' => ['argb'=>$blueDark]]],
                     ]);
                     $sheet->getStyle("A{$fr}:B{$fr}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+                        ->getAlignment()
+                        ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT)
+                        ->setIndent(0);
                     $sheet->getStyle("C{$fr}:{$lastCol}{$fr}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                        ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
                     $sheet->getStyle("C{$fr}:{$lastCol}{$fr}")
                         ->getNumberFormat()->setFormatCode('0');
 
-                    // También rellenar 0 si algo quedó vacío en pies
                     for ($c = $firstDayColIdx; $c <= $totalColIdx; $c++) {
                         $cell = $sheet->getCellByColumnAndRow($c, $fr);
                         $val  = $cell->getValue();
@@ -235,6 +252,7 @@ class DeparturesMonthly implements FromArray, WithHeadings, WithStyles, WithEven
             }
         ];
     }
+
 
     /* ----------------- Datos & Helpers ----------------- */
 
