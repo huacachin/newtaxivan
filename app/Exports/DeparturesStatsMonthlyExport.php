@@ -95,6 +95,7 @@ class DeparturesStatsMonthlyExport implements FromArray, WithHeadings, WithStyle
                 $sunRed     = 'FFEF4444';
                 $moneyRed   = 'FFCC0000';
 
+
                 // Fuente global 10pt
                 $s->getParent()->getDefaultStyle()->getFont()->setSize(10);
 
@@ -107,8 +108,8 @@ class DeparturesStatsMonthlyExport implements FromArray, WithHeadings, WithStyle
                 $s->setCellValue('A1', $title);
                 $s->getRowDimension(1)->setRowHeight(18);
                 $s->getStyle("A1:{$lastCol}1")->applyFromArray([
-                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blueDark]],
-                    'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$fontW]],
+                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$fontW]],
+                    'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$moneyRed]],
                     'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
                 ]);
 
@@ -151,7 +152,7 @@ class DeparturesStatsMonthlyExport implements FromArray, WithHeadings, WithStyle
                 $s->getColumnDimension('C')->setWidth(6.5);  // TIPO
                 // D..(penúltima): días
                 for ($c=$firstDayColIdx; $c < $lastColIdx-1; $c++) {
-                    $s->getColumnDimensionByColumn($c)->setWidth(4.2);
+                    $s->getColumnDimensionByColumn($c)->setWidth(3.7);
                 }
                 // Penúltima = SALIDAS, Última = S/
                 $s->getColumnDimensionByColumn($lastColIdx-1)->setWidth(7.0);
@@ -237,7 +238,7 @@ class DeparturesStatsMonthlyExport implements FromArray, WithHeadings, WithStyle
                         $type = (string)$s->getCell("C{$r}")->getValue();
                         if ($type === 'S/') {
                             $s->getStyle("A{$r}:{$lastColL}{$r}")
-                                ->getFont()->getColor()->setARGB($moneyRed);
+                                ->getFont()->getColor()->setARGB($white);
                         }
                     }
                 }
