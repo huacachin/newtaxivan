@@ -10,6 +10,7 @@ use Livewire\WithPagination;
 use Illuminate\Support\Facades\Schema;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class Expenses extends Component
 {
@@ -38,7 +39,7 @@ class Expenses extends Component
     ];
 
     /** ====== Estado del modal (crear/editar) ====== */
-    public ?int   $editId = null;      // null = crear, int = editar ID
+    public ?int   $editId = null;        // null = crear, int = editar ID
     public string $expenseKind = 'Otros'; // 'Fijos' | 'Otros'
 
     // Campos “Fijos”
@@ -123,11 +124,20 @@ class Expenses extends Component
 
     public function render()
     {
+        $user = Auth::user();
+
         $q = Expense::query()
             ->with(['user:id,name'])
             ->orderBy('date')
             ->orderBy('id');
 
+        // ---- Restricción por rol ----
+        if ($user && method_exists($user, 'hasRole') && $user->hasRole('controller')) {
+            $q->where('user_id', $user->id);
+        }
+        // admin (u otros roles) ven sin restricción extra.
+
+        // Rango de fechas
         if ($this->date_start && $this->date_end) {
             $q->whereBetween('date', [$this->date_start, $this->date_end]);
         } elseif ($this->date_start) {
@@ -136,6 +146,7 @@ class Expenses extends Component
             $q->where('date', '<=', $this->date_end);
         }
 
+        // Búsqueda
         $s = trim((string)$this->search);
         if ($s !== '') {
             switch ((int)$this->filterType) {
@@ -183,7 +194,13 @@ class Expenses extends Component
 
     public function openEditModal(int $id): void
     {
-        $e = Expense::findOrFail($id);
+        // Restringir qué registro se puede abrir si es controller
+        $query = Expense::query();
+        $user  = Auth::user();
+        if ($user && method_exists($user, 'hasRole') && $user->hasRole('controller')) {
+            $query->where('user_id', $user->id);
+        }
+        $e = $query->findOrFail($id);
 
         $this->editId        = $e->id;
         $this->date          = (string)$e->date;
@@ -228,7 +245,7 @@ class Expenses extends Component
     {
         $this->validate();
 
-        $userId = optional(auth()->user())->id ?? 1;
+        $userId = Auth::id();
 
         // === Resolver HQ primario del usuario que se está guardando en user_id
         $hqId = $this->resolveUserPrimaryHeadquarterId((int)$userId);
@@ -269,7 +286,14 @@ class Expenses extends Component
         }
 
         if ($this->editId) {
-            $e = Expense::findOrFail($this->editId);
+            // Limitar edición si es controller
+            $query = Expense::query();
+            $user  = Auth::user();
+            if ($user && method_exists($user, 'hasRole') && $user->hasRole('controller')) {
+                $query->where('user_id', $user->id);
+            }
+
+            $e = $query->findOrFail($this->editId);
 
             // si hay nueva imagen, elimina la anterior
             if ($newImagePath && $e->image_path && Storage::disk('public')->exists($e->image_path)) {
