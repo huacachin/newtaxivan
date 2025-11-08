@@ -114,10 +114,18 @@ class Incomes extends Component
     // ===== Listado =====
     public function render()
     {
+        $user = Auth::user();
+
         $q = Income::query()
             ->with(['user:id,name'])
             ->orderBy('date')
             ->orderBy('id');
+
+        // --- Filtro por rol: controller ve solo lo suyo; admin ve todo ---
+        if ($user && method_exists($user, 'hasRole') && $user->hasRole('controller')) {
+            $q->where('user_id', $user->id);
+        }
+        // Nota: si no es controller (p.ej. admin), no se aplica restricción adicional.
 
         // Rango de fechas
         if ($this->date_start && $this->date_end) {
@@ -168,7 +176,15 @@ class Incomes extends Component
     {
         $this->resetForm();
 
-        $i = Income::with('user:id,name')->findOrFail($id);
+        // Refuerzo: si es controller, solo puede abrir sus registros
+        $query = Income::with('user:id,name');
+        $user  = Auth::user();
+        if ($user && method_exists($user, 'hasRole') && $user->hasRole('controller')) {
+            $query->where('user_id', $user->id);
+        }
+
+        $i = $query->findOrFail($id);
+
         $this->incomeId = $i->id;
         $this->date     = $i->date ? Carbon::parse($i->date)->toDateString() : now()->toDateString();
         $this->reason   = (string)$i->reason;
@@ -206,7 +222,7 @@ class Incomes extends Component
             'date'       => $this->date,
             'reason'     => $this->reason,
             'detail'     => $this->detail,
-            'image_path' => $storedPath,      // NUEVO
+            'image_path' => $storedPath,
             'total'      => $total,           // guardamos en S/
             'user_id'    => Auth::id(),
         ]);
@@ -226,7 +242,14 @@ class Incomes extends Component
             ? round(((float)$this->amount_input) * $this->exchange, 2)
             : round((float)$this->amount_input, 2);
 
-        $i = Income::findOrFail($this->incomeId);
+        // Refuerzo: limitar edición si es controller
+        $query = Income::query();
+        $user  = Auth::user();
+        if ($user && method_exists($user, 'hasRole') && $user->hasRole('controller')) {
+            $query->where('user_id', $user->id);
+        }
+
+        $i = $query->findOrFail($this->incomeId);
 
         $payload = [
             'date'    => $this->date,
@@ -238,7 +261,6 @@ class Incomes extends Component
 
         // Si sube nueva imagen, reemplaza
         if ($this->image_file) {
-            // borra la anterior si existe
             if ($i->image_path && Storage::disk('public')->exists($i->image_path)) {
                 Storage::disk('public')->delete($i->image_path);
             }
@@ -293,7 +315,7 @@ class Incomes extends Component
         $this->reset([
             'incomeId', 'date', 'reason', 'detail',
             'currency', 'amount_input', 'exchange', 'converted_total',
-            'image_file', 'image_path', // limpia imagen
+            'image_file', 'image_path',
         ]);
     }
 
@@ -309,5 +331,4 @@ class Incomes extends Component
 
         $this->dispatch('url-open', ["url" => $route]);
     }
-
 }
