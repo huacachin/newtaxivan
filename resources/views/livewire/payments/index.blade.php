@@ -198,10 +198,12 @@
                                 <button class="btn btn-sm btn-primary" wire:click="stats">
                                     <i class="ti ti-report-analytics f-s-12"></i> Estadis.
                                 </button>
+
+                                @endrole
+
                                 <button class="btn btn-sm btn-primary" wire:click="export">
                                     <i class="ti ti-file-analytics f-s-12"></i>
                                 </button>
-                                @endrole
 
 
                                 <button class="btn btn-sm btn-primary" id="down">
