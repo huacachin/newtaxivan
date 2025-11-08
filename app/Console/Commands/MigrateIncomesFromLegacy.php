@@ -14,7 +14,7 @@ class MigrateIncomesFromLegacy extends Command
         {--limit=0 : Límite de filas (0 = sin límite)}
         {--chunk=1000 : Tamaño de chunk}
         {--dry-run=0 : Simular sin escribir}
-        {--since=2021-01-01 : Migrar sólo registros con fechaentrada > since}
+        {--since=2017-01-01 : Migrar sólo registros con fechaentrada > since}
         {--col-id=identrada : Columna legacy id}
         {--col-date=fechaentrada : Columna legacy fecha}
         {--col-reason=aa : Columna legacy motivo}

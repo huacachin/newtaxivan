@@ -14,7 +14,7 @@ class MigrateExpensesFromLegacy extends Command
         {--limit=0 : Límite de filas (0 = sin límite)}
         {--chunk=1000 : Tamaño del chunk}
         {--dry-run=0 : Simular sin escribir}
-        {--since=2021-01-01 : Sólo migrar registros con fechaentrada > since}
+        {--since=2018-01-01 : Sólo migrar registros con fechaentrada > since}
         {--col-id=identrada : Columna legacy id}
         {--col-date=fechaentrada : Columna legacy fecha}
         {--col-reason=aa : Columna legacy motivo}
