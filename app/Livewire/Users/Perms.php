@@ -91,8 +91,7 @@ class Perms extends Component
 
         app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
 
-        session()->flash('success','Rol & permisos actualizados');
-        redirect()->route('settings.users.index')->send();
+        $this->dispatch('successAlert', ['message' => 'Rol & permisos actualizados']);
     }
 
     public function render()
