@@ -5,6 +5,7 @@ namespace App\Exports;
 use App\Models\Income;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth; // <-- agregado
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -38,6 +39,13 @@ class IncomesExport implements
             ->with(['user:id,name'])
             ->orderBy('date')
             ->orderBy('id');
+
+        // === Restricción por rol: controller solo sus propios registros ===
+        $user = Auth::user();
+        if ($user && method_exists($user, 'hasRole') && $user->hasRole('controller')) {
+            $q->where('user_id', $user->id);
+        }
+        // admin (u otros) ven todo sin filtro extra.
 
         // Fechas
         if ($this->date_start && $this->date_end) {
@@ -146,18 +154,18 @@ class IncomesExport implements
                 ]);
                 $ws->getRowDimension($headerRow)->setRowHeight(16);
 
-                // ===== Anchos “al ras” (desactivar autosize y fijar anchos)
+                // ===== Anchos “al ras”
                 foreach (range('A', 'F') as $c) {
                     $ws->getColumnDimension($c)->setAutoSize(false);
                 }
-                $ws->getColumnDimension('A')->setWidth(5.0);   // Item
-                $ws->getColumnDimension('B')->setWidth(10.0);  // Fecha dd/mm/aa
-                $ws->getColumnDimension('C')->setWidth(14.0);  // Respons.
-                $ws->getColumnDimension('D')->setWidth(8.5);   // A
-                $ws->getColumnDimension('E')->setWidth(32.0);  // Motivo (sin shrink; con wrap)
-                $ws->getColumnDimension('F')->setWidth(9.5);   // S/.
+                $ws->getColumnDimension('A')->setWidth(5.0);
+                $ws->getColumnDimension('B')->setWidth(10.0);
+                $ws->getColumnDimension('C')->setWidth(14.0);
+                $ws->getColumnDimension('D')->setWidth(8.5);
+                $ws->getColumnDimension('E')->setWidth(32.0);
+                $ws->getColumnDimension('F')->setWidth(9.5);
 
-                // ===== Alineaciones de datos (sin shrink; E con wrap)
+                // ===== Alineaciones/formatos
                 if ($last >= $dataStartRow) {
                     $ws->getStyle("A{$dataStartRow}:D{$last}")
                         ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
@@ -165,27 +173,25 @@ class IncomesExport implements
                         ->getAlignment()
                         ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT)
                         ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER)
-                        ->setWrapText(true); // ← evita reducir letra
+                        ->setWrapText(true);
                     $ws->getStyle("F{$dataStartRow}:F{$last}")
                         ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
 
-                    // Formatos
                     $ws->getStyle("B{$dataStartRow}:B{$last}")
                         ->getNumberFormat()->setFormatCode('d/m/yy');
                     $ws->getStyle("F{$dataStartRow}:F{$last}")
-                        ->getNumberFormat()->setFormatCode('"S/ " #,##0'); // sin decimales
+                        ->getNumberFormat()->setFormatCode('"S/ " #,##0');
                 }
 
                 // ===== Congelar bajo encabezado
                 $ws->freezePane("A{$dataStartRow}");
 
-                // ===== Bordes finos (header + datos)
+                // ===== Bordes
                 $ws->getStyle("A{$headerRow}:F" . max($headerRow, $last))
                     ->getBorders()->getAllBorders()
                     ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN)
                     ->getColor()->setARGB($BORDER);
 
-                // Línea punteada entre filas de datos
                 if ($last >= $dataStartRow) {
                     $ws->getStyle("A{$dataStartRow}:F{$last}")
                         ->getBorders()->getHorizontal()
@@ -193,7 +199,7 @@ class IncomesExport implements
                         ->getColor()->setARGB($BORDER);
                 }
 
-                // ===== TOTAL (footer)
+                // ===== TOTAL
                 $totalRow = max($last, $dataStartRow - 1) + 1;
                 $ws->mergeCells("A{$totalRow}:E{$totalRow}");
                 $ws->setCellValue("A{$totalRow}", 'Total');
@@ -218,7 +224,7 @@ class IncomesExport implements
                 $ws->getStyle("F{$totalRow}")
                     ->getNumberFormat()->setFormatCode('"S/ " #,##0');
 
-                // Borde exterior del bloque completo
+                // Borde exterior
                 $ws->getStyle("A{$headerRow}:F{$totalRow}")
                     ->getBorders()->getOutline()
                     ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN)

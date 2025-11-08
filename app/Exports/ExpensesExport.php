@@ -5,6 +5,7 @@ namespace App\Exports;
 use App\Models\Expense;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth; // <-- agregado
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -39,6 +40,13 @@ class ExpensesExport implements
             ->orderBy('date')
             ->orderBy('id');
 
+        // === Restricción por rol: controller solo sus propios registros ===
+        $user = Auth::user();
+        if ($user && method_exists($user, 'hasRole') && $user->hasRole('controller')) {
+            $q->where('user_id', $user->id);
+        }
+        // Nota: admin (u otros) ven todo sin filtro extra.
+
         if ($this->date_start && $this->date_end) {
             $q->whereBetween('date', [$this->date_start, $this->date_end]);
         } elseif ($this->date_start) {
@@ -68,7 +76,7 @@ class ExpensesExport implements
     public function headings(): array
     {
         return [
-            'Item',           // <- antes era "ID"
+            'Item',
             'Fecha',
             'A (Razón)',
             'Motivo (Detalle)',
@@ -80,11 +88,10 @@ class ExpensesExport implements
 
     public function map($row): array
     {
-        // Item secuencial (1..n)
         $this->i++;
 
         return [
-            $this->i, // <- ítem secuencial en lugar de $row->id
+            $this->i,
             $row->date
                 ? ExcelDate::dateTimeToExcel(Carbon::parse($row->date)->startOfDay())
                 : null,
@@ -99,8 +106,8 @@ class ExpensesExport implements
     public function columnFormats(): array
     {
         return [
-            'B' => NumberFormat::FORMAT_DATE_DDMMYYYY, // dd/mm/aaaa
-            'E' => NumberFormat::FORMAT_NUMBER_00,     // si prefieres sin decimales, se sobreescribe en AfterSheet
+            'B' => NumberFormat::FORMAT_DATE_DDMMYYYY,
+            'E' => NumberFormat::FORMAT_NUMBER_00,
         ];
     }
 
@@ -158,17 +165,16 @@ class ExpensesExport implements
                 foreach (range('A','G') as $c) {
                     $ws->getColumnDimension($c)->setAutoSize(false);
                 }
-                $ws->getColumnDimension('A')->setWidth(4.6);   // Item
-                $ws->getColumnDimension('B')->setWidth(9.6);   // Fecha
-                $ws->getColumnDimension('C')->setWidth(12.0);  // Razón
-                $ws->getColumnDimension('D')->setWidth(24.0);  // Motivo (wrap)
-                $ws->getColumnDimension('E')->setWidth(9.0);   // Total
-                $ws->getColumnDimension('F')->setWidth(14.0);  // Usuario
-                $ws->getColumnDimension('G')->setWidth(14.0);  // Responsable
+                $ws->getColumnDimension('A')->setWidth(4.6);
+                $ws->getColumnDimension('B')->setWidth(9.6);
+                $ws->getColumnDimension('C')->setWidth(12.0);
+                $ws->getColumnDimension('D')->setWidth(24.0);
+                $ws->getColumnDimension('E')->setWidth(9.0);
+                $ws->getColumnDimension('F')->setWidth(14.0);
+                $ws->getColumnDimension('G')->setWidth(14.0);
 
                 $ws->freezePane("A{$dataStartRow}");
 
-                // Alineaciones y formatos
                 if ($last >= $dataStartRow) {
                     $ws->getStyle("A{$dataStartRow}:C{$last}")
                         ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
@@ -182,12 +188,10 @@ class ExpensesExport implements
 
                     $ws->getStyle("B{$dataStartRow}:B{$last}")
                         ->getNumberFormat()->setFormatCode('d/m/yy');
-                    // Total sin decimales
                     $ws->getStyle("E{$dataStartRow}:E{$last}")
                         ->getNumberFormat()->setFormatCode('"S/ " #,##0');
                 }
 
-                // Bordes
                 $ws->getStyle("A{$headerRow}:G" . max($headerRow, $last))
                     ->getBorders()->getAllBorders()
                     ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN)
@@ -200,7 +204,6 @@ class ExpensesExport implements
                         ->getColor()->setARGB($BORDER);
                 }
 
-                // TOTAL
                 $totalRow = max($last, $dataStartRow - 1) + 1;
                 $ws->mergeCells("A{$totalRow}:D{$totalRow}");
                 $ws->setCellValue("A{$totalRow}", 'Total');
@@ -225,7 +228,6 @@ class ExpensesExport implements
                 $ws->getStyle("E{$totalRow}")
                     ->getNumberFormat()->setFormatCode('"S/ " #,##0');
 
-                // Borde exterior
                 $ws->getStyle("A{$headerRow}:G{$totalRow}")
                     ->getBorders()->getOutline()
                     ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN)
