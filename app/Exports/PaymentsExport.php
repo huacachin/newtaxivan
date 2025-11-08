@@ -77,9 +77,9 @@ class PaymentsExport implements
                 }
             });
 
-        // Restricción por rol
+        // === Restricción por rol: controller => solo sus pagos; admin => todos ===
         $user = Auth::user();
-        if ($user && !$user->hasRole('admin')) {
+        if ($user && method_exists($user, 'hasRole') && $user->hasRole('controller')) {
             $q->where('user_id', $user->id);
         }
 
@@ -153,14 +153,13 @@ class PaymentsExport implements
     {
         return [
             'D' => NumberFormat::FORMAT_DATE_YYYYMMDD2, // Fecha Registro
-            'E' => NumberFormat::FORMAT_DATE_YYYYMMDD2,  // Fecha Pago
+            'E' => NumberFormat::FORMAT_DATE_YYYYMMDD2, // Fecha Pago
             'F' => NumberFormat::FORMAT_DATE_TIME3,     // Hora
         ];
     }
 
     public function styles(Worksheet $sheet)
     {
-        // Global 10pt; header en negrita (fila 1 la ajustamos en AfterSheet)
         $sheet->getParent()->getDefaultStyle()->getFont()->setSize(10);
         return [1 => ['font' => ['bold' => true]]];
     }
@@ -168,11 +167,9 @@ class PaymentsExport implements
     /** ====== Compactación base (A y B) ====== */
     public function columnWidths(): array
     {
-        // Base “al ras”; se re-confirman en AfterSheet
         return [
-            'A' => 2.2, // Item súper angosto
-            'B' => 9.0, // Placa
-            // C..J se setean en AfterSheet
+            'A' => 2.2,
+            'B' => 9.0,
         ];
     }
 
@@ -283,26 +280,24 @@ class PaymentsExport implements
                     ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
                 $ws->getRowDimension($totalRow)->setRowHeight(18);
 
-                // ===== Compactación SIN reducir fuente (no shrinkToFit) =====
-                // Quita wrap e indent para evitar “aire”
+                // ===== Compactación SIN reducir fuente =====
                 $ws->getStyle("A{$headerRow}:J{$totalRow}")
                     ->getAlignment()->setWrapText(false)->setIndent(0);
-                // Anchos fijos (no autosize) — ajustados para no forzar reducción
+
                 foreach (range('A','J') as $col) {
                     $ws->getColumnDimension($col)->setAutoSize(false);
-                    $ws->getColumnDimension($col)->setWidth(3.0); // default base
+                    $ws->getColumnDimension($col)->setWidth(3.0);
                 }
-                // Overrides por columna (ligeramente más amplios)
-                $ws->getColumnDimension('A')->setWidth(5);  // Item
-                $ws->getColumnDimension('B')->setWidth(9.5);  // Placa
-                $ws->getColumnDimension('C')->setWidth(8);  // Serie
-                $ws->getColumnDimension('D')->setWidth(11.0); // Fecha Registro
-                $ws->getColumnDimension('E')->setWidth(11.0); // Fecha Pago
-                $ws->getColumnDimension('F')->setWidth(7.5);  // Hora
-                $ws->getColumnDimension('G')->setWidth(8.5);  // Tipo
-                $ws->getColumnDimension('H')->setWidth(8.0); // Sucursal
-                $ws->getColumnDimension('I')->setWidth(6.5); // Usuario
-                $ws->getColumnDimension('J')->setWidth(10.0); // S/
+                $ws->getColumnDimension('A')->setWidth(5);
+                $ws->getColumnDimension('B')->setWidth(9.5);
+                $ws->getColumnDimension('C')->setWidth(8);
+                $ws->getColumnDimension('D')->setWidth(11.0);
+                $ws->getColumnDimension('E')->setWidth(11.0);
+                $ws->getColumnDimension('F')->setWidth(7.5);
+                $ws->getColumnDimension('G')->setWidth(8.5);
+                $ws->getColumnDimension('H')->setWidth(8.0);
+                $ws->getColumnDimension('I')->setWidth(6.5);
+                $ws->getColumnDimension('J')->setWidth(10.0);
             },
         ];
     }
