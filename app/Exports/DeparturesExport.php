@@ -4,6 +4,7 @@ namespace App\Exports;
 
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth; // <-- agregado
 use Maatwebsite\Excel\Concerns\FromView;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithEvents;
@@ -59,9 +60,8 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents, WithColu
     {
         // Estas se reafirman en AfterSheet; aquí ya dejas la base “al ras”.
         return [
-            'A' => 2.2, // Id/Ítem muy angosto
-            'B' => 9.0, // Placa o texto corto legible
-            // C..M se rematan en AfterSheet
+            'A' => 2.2,
+            'B' => 9.0,
         ];
     }
 
@@ -72,8 +72,8 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents, WithColu
                 $s = $e->sheet->getDelegate();
 
                 // Paleta
-                $blueDark   = 'FF2874A6'; // encabezados
-                $footerFill = 'FFCEE7FF'; // totales
+                $blueDark   = 'FF2874A6';
+                $footerFill = 'FFCEE7FF';
                 $white      = 'FFFFFFFF';
                 $fontBlack  = 'FF000000';
                 $red        = 'FFCC0000';
@@ -123,7 +123,7 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents, WithColu
                 $this->mergeHeader($s, $rSec1Hdr1, $rSec1Hdr2);
                 $this->mergeHeader($s, $rSec2Hdr1, $rSec2Hdr2);
 
-                // THEADs en azul, 10pt, compacto (wrap solo en cabeceras)
+                // THEADs
                 foreach ([[$rSec1Hdr1,$rSec1Hdr2], [$rSec2Hdr1,$rSec2Hdr2]] as [$h1,$h2]) {
                     $s->getStyle("A{$h1}:M{$h2}")->applyFromArray([
                         'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
@@ -196,8 +196,7 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents, WithColu
                         ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
                 }
 
-                // ====== COMPACTACIÓN (reemplaza autosize por anchos fijos) ======
-                // Altura por defecto compacta y sin wrap en cuerpo
+                // ====== Compactación de anchos ======
                 $s->getDefaultRowDimension()->setRowHeight(14);
                 if ($this->countExisting > 0) {
                     $s->getStyle("A{$rSec1Body1}:M{$rSec1BodyN}")
@@ -208,16 +207,14 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents, WithColu
                         ->getAlignment()->setWrapText(false);
                 }
 
-                // 1) Desactivar autosize y poner un default MUY angosto a todas
                 foreach (range('A','M') as $col) {
                     $s->getColumnDimension($col)->setAutoSize(false);
-                    $s->getColumnDimension($col)->setWidth(3.0); // default global súper compacto
+                    $s->getColumnDimension($col)->setWidth(3.0);
                     $s->getStyle("{$col}1:{$col}{$lastRow}")
                         ->getAlignment()->setIndent(0)->setShrinkToFit(true);
                 }
 
-                // 2) Overrides columna por columna (ajusta a tu gusto)
-                //    A “al ras” para correlativo / id; B y C más legibles; D-E horas; H..M numéricos compactos.
+                // Overrides
                 $s->getColumnDimension('A')->setWidth(3);
                 $s->getColumnDimension('B')->setWidth(9.0);
                 $s->getColumnDimension('C')->setWidth(10.0);
@@ -231,9 +228,6 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents, WithColu
                 $s->getColumnDimension('K')->setWidth(4.0);
                 $s->getColumnDimension('L')->setWidth(4.0);
                 $s->getColumnDimension('M')->setWidth(4.0);
-
-                // Si quieres aún más “al ras”, prueba:
-                // A->2.0, D/E->6.5, H..M->7.5, etc.
             },
         ];
     }
@@ -257,6 +251,13 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents, WithColu
             ->leftJoin('users as u', 'u.id', '=', 'd.user_id')
             ->leftJoin('headquarters as h', 'h.id', '=', 'd.headquarter_id')
             ->where('v.status', 'active');
+
+        // --- Restricción por rol (controller -> solo sus registros) ---
+        $user = Auth::user();
+        if ($user && method_exists($user, 'hasRole') && $user->hasRole('controller')) {
+            $q->where('d.user_id', $user->id);
+        }
+        // admin/otros -> sin restricción adicional.
 
         if ($this->fromDate && $this->toDate)       $q->whereBetween('d.date', [$this->fromDate, $this->toDate]);
         elseif ($this->fromDate)                    $q->whereDate('d.date', '>=', $this->fromDate);
@@ -282,6 +283,13 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithEvents, WithColu
             ->leftJoin('users as u', 'u.id', '=', 'd.user_id')
             ->leftJoin('headquarters as h', 'h.id', '=', 'd.headquarter_id')
             ->where('d.is_support', 1);
+
+        // --- Restricción por rol (controller -> solo sus registros) ---
+        $user = Auth::user();
+        if ($user && method_exists($user, 'hasRole') && $user->hasRole('controller')) {
+            $q->where('d.user_id', $user->id);
+        }
+        // admin/otros -> sin restricción adicional.
 
         if ($this->fromDate && $this->toDate)       $q->whereBetween('d.date', [$this->fromDate, $this->toDate]);
         elseif ($this->fromDate)                    $q->whereDate('d.date', '>=', $this->fromDate);
