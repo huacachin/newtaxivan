@@ -67,7 +67,7 @@
                     <div class="row my-2">
 
                         <div class="col-12 d-flex align-items-end justify-content-end">
-                            <select class="form-control form-control-sm w-80 mg-e-10" wire:model.live="year">
+                            <select class="form-select form-select-sm w-80 mg-e-10" wire:model.live="year">
                                 @for($y = now()->year + 1; $y >= 2015; $y--)
                                     <option value="{{ $y }}">{{ $y }}</option>
                                 @endfor

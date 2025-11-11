@@ -75,7 +75,7 @@
                                 <!-- Mes -->
                                 <div class="flex-shrink-0" style="min-width: 160px;">
                                     <label class="form-label mb-1">Mes</label>
-                                    <select class="form-control form-control-sm" wire:model.live="month">
+                                    <select class="form-select form-select-sm" wire:model.live="month">
                                         @foreach($months as $mVal => $mName)
                                             <option value="{{ $mVal }}">{{ $mName }}</option>
                                         @endforeach
@@ -85,7 +85,7 @@
                                 <!-- Año -->
                                 <div class="flex-shrink-0" style="min-width: 120px;">
                                     <label class="form-label mb-1">Año</label>
-                                    <select class="form-control form-control-sm" wire:model.live="year">
+                                    <select class="form-select form-select-sm" wire:model.live="year">
                                         @foreach($years as $y)
                                             <option value="{{ $y }}">{{ $y }}</option>
                                         @endforeach

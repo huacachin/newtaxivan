@@ -38,6 +38,13 @@
             z-index: 2000;            /* sobre modals/backdrops de Bootstrap */
             pointer-events: all;      /* bloquea clics */
         }
+
+        #date_start, #date_end{
+            background: url({{asset('images/calen.png')}}) #fff no-repeat right;
+            background-size: 21px 16px;
+            padding-right: 2rem;
+        }
+
     </style>
 @endpush
 
@@ -150,7 +157,7 @@
 
                         <div class="col-auto">
                             <label class="form-label mb-1">Sucursal</label>
-                            <select class="form-control form-control-sm"
+                            <select class="form-select form-select-sm"
                                     wire:model.live="headquarter_id"
                                     aria-label="Selecciona sucursal"
                                     wire:key="hq-select">
@@ -163,7 +170,7 @@
 
                         <div class="col-auto">
                             <label class="form-label mb-1">Tipo</label>
-                            <select class="form-control form-control-sm"
+                            <select class="form-select form-select-sm"
                                     wire:model.live="type"
                                     aria-label="Selecciona tipo">
                                 <option value="">Todos</option>
@@ -198,7 +205,6 @@
                                 <button class="btn btn-sm btn-primary" wire:click="stats">
                                     <i class="ti ti-report-analytics f-s-12"></i> Estadis.
                                 </button>
-
                                 @endrole
 
                                 <button class="btn btn-sm btn-primary" wire:click="export">

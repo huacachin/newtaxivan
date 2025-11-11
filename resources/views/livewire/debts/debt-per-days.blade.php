@@ -82,7 +82,7 @@
                             <div class="d-flex flex-wrap align-items-end gap-2 overflow-auto py-1">
 
                                 <!-- Mes -->
-                                <div class="flex-shrink-0" style="min-width: 180px;">
+                                <div class="flex-shrink-0" >
                                     <label class="form-label mb-1">Mes</label>
                                     <select class="form-select form-select-sm" wire:model.live="month">
                                         @foreach($months as $val => $label)

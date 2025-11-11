@@ -3,7 +3,7 @@
 @php
     // 1) Menú con condiciones de permiso
     $sidebarItems = [
-        [ 'type'  => 'title',   'title' => 'Dashboard' ],
+        [ 'type'  => 'title',   'title' => '' ],
 
         [
             'id'    => 'dashboard-simple',

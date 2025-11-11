@@ -35,6 +35,12 @@
             pointer-events: all;      /* bloquea clics */
         }
 
+        #date_start, #date_end{
+            background: url({{asset('images/calen.png')}}) #fff no-repeat right;
+            background-size: 21px 16px;
+            padding-right: 2rem;
+        }
+
 
     </style>
 @endpush
