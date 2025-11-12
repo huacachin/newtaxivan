@@ -150,10 +150,10 @@
                                 <td @if($isSunday) class="text-white" @endif >{{ number_format($r['salidas_total'],2,'.',',') }}</td>
 
                                 <td @if($isSunday) class="text-white" @endif >{{ number_format($r['otros'],2,'.',',') }}</td>
-                                <td @if($isSunday) class="text-white" @endif >{{ number_format($r['ingresos_total'],2,'.',',') }}</td>
+                                <td @if($isSunday) class="title-modules" @endif >{{ number_format($r['ingresos_total'],2,'.',',') }}</td>
 
                                 <td @if($isSunday) class="text-white" @endif >{{ number_format($r['egreso'],2,'.',',') }}</td>
-                                <td @if($isSunday) class="text-white" @endif >{{ number_format($r['utilidad'],2,'.',',') }}</td>
+                                <td @if($isSunday) class="title-modules" @endif >{{ number_format($r['utilidad'],2,'.',',') }}</td>
                             </tr>
                         @empty
                             <tr>
@@ -225,10 +225,10 @@
                                 <td>{{ number_format($r['salidas_total'],2,'.',',') }}</td>
 
                                 <td>{{ number_format($r['otros'],2,'.',',') }}</td>
-                                <td>{{ number_format($r['ingresos_total'],2,'.',',') }}</td>
+                                <td class="title-modules f-w-600">{{ number_format($r['ingresos_total'],2,'.',',') }}</td>
 
                                 <td>{{ number_format($r['egreso'],2,'.',',') }}</td>
-                                <td>{{ number_format($r['utilidad'],2,'.',',') }}</td>
+                                <td class="title-modules f-w-600">{{ number_format($r['utilidad'],2,'.',',') }}</td>
                             </tr>
                         @endforeach
 
