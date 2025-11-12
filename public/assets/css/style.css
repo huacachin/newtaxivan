@@ -23977,10 +23977,10 @@ select#model {
   cursor: pointer;
 }
 
-.text-danger {
+.title-modules {
   color: rgba(var(--danger), 1) !important;
 }
-.text-danger:hover {
+.title-modules:hover {
   color: rgba(var(--danger), 0.8) !important;
   cursor: pointer;
 }

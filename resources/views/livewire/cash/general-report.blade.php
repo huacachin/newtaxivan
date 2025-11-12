@@ -33,7 +33,7 @@
 
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title text-danger">REPORTE GENERAL</h4>
+            <h4 class="main-title title-modules">REPORTE GENERAL</h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -142,12 +142,12 @@
 
                                     {{-- Columna "DATOS CLIENTE" --}}
                                     <td colspan="4">
-                                        <strong class="text-dark f-w-bold">SALDO </strong><strong class="text-danger">FINAL-INICIAL</strong>
-                                        <strong class="f-w-bold text-danger f-w-bold">
+                                        <strong class="text-dark f-w-bold">SALDO </strong><strong class="title-modules">FINAL-INICIAL</strong>
+                                        <strong class="f-w-bold title-modules f-w-bold">
                     Saldo del día:
                     <span class="text-primary">{{ number_format($saldoD, 2) }}</span>
                 </strong>
-                                        <strong class="f-w-bold text-danger f-w-bold">Saldo acumulado:</strong>
+                                        <strong class="f-w-bold title-modules f-w-bold">Saldo acumulado:</strong>
                                         <strong class="text-primary">{{ number_format($saldoA, 2) }}</strong>
                                     </td>
 

@@ -49,7 +49,7 @@
     {{-- Header --}}
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title text-danger">EGRESOS</h4>
+            <h4 class="main-title title-modules">EGRESOS</h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -321,7 +321,7 @@
                         <div class="col-md-12">
                             <label class="form-label">Comprobante (imagen)</label>
                             <input type="file" class="form-control" wire:model="image_file" accept="image/*">
-                            @error('image_file') <div class="text-danger">{{ $message }}</div> @enderror
+                            @error('image_file') <div class="title-modules">{{ $message }}</div> @enderror
 
                             <div class="mt-2">
                                 @if ($image_file)

@@ -48,7 +48,7 @@
     <!-- Header -->
     <div class="row align-items-center mb-3">
         <div class="col-sm-6">
-            <h4 class="main-title mb-0 text-danger">REPORTE MENSUAL DE PAGO – {{$monthName}} DEL {{$year}}</h4>
+            <h4 class="main-title mb-0 title-modules">REPORTE MENSUAL DE PAGO – {{$monthName}} DEL {{$year}}</h4>
         </div>
         <div class="col-sm-6 mt-sm-0 mt-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end mb-0">
@@ -183,7 +183,7 @@
                                     @php $tdebt = (float)$r['tdebt']; @endphp
                                     <td>
                                         <span @class([
-                                            'text-danger' => $tdebt > 0 && !str_starts_with($cond,'EX'),
+                                            'title-modules' => $tdebt > 0 && !str_starts_with($cond,'EX'),
                                             'text-success' => $tdebt == 0
                                         ])>
                                             {{ number_format($tdebt, 2) }}

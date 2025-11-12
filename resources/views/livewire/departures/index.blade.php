@@ -48,7 +48,7 @@
     <!-- Header -->
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title text-danger">LISTADO GENERAL DE SALIDAS</h4>
+            <h4 class="main-title title-modules">LISTADO GENERAL DE SALIDAS</h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -313,7 +313,7 @@
                         </table>
                     </div>
 
-                    <h5 class="my-2">Vehículos de apoyo</h5>
+                    <h4 class="my-2 title-modules text-center">VEHÍCULOS DE APOYO</h4>
                     <div class="table-responsive mb-3">
                         <table class=" table table-bordered table-striped   p-0">
                             <thead class="text-center bg-primary">
@@ -349,27 +349,27 @@
                             @forelse($supportRows as $d)
                                 <tr class="text-center ">
                                     @if(!$groupMode)
-                                        <td class="text-center text-danger">
+                                        <td class="text-center title-modules">
                                             <i  class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
                                                 wire:click="openEditWindow({{ $d->id }})"></i>
                                         </td>
                                     @endif
 
                                     {{-- Nº --}}
-                                    <td class="text-danger">@if($groupMode) {{ $d->ordinal }} @else {{ $loop->iteration }} @endif</td>
+                                    <td class="title-modules">@if($groupMode) {{ $d->ordinal }} @else {{ $loop->iteration }} @endif</td>
 
-                                    <td class="text-danger">{{ $d->plate }}</td>
-                                    <td class="text-danger">{{ \Illuminate\Support\Carbon::parse($d->date)->format('d/m/Y') }}</td>
+                                    <td class="title-modules">{{ $d->plate }}</td>
+                                    <td class="title-modules">{{ \Illuminate\Support\Carbon::parse($d->date)->format('d/m/Y') }}</td>
 
                                     {{-- Hora: Salida --}}
                                     @if(!$groupMode)
-                                        <td class="text-danger">{{ $d->hour }}</td>
+                                        <td class="title-modules">{{ $d->hour }}</td>
                                     @else
-                                        <td class="text-danger">-</td>
+                                        <td class="title-modules">-</td>
                                     @endif
 
                                     {{-- Hora: Frec. (fix para agrupar) --}}
-                                    <td class="text-danger">
+                                    <td class="title-modules">
                                         @if($groupMode)
                                             -
                                         @else
@@ -377,22 +377,22 @@
                                         @endif
                                     </td>
 
-                                    <td class="p-2 text-danger" >{{ $d->headquarter_name ?? '-' }}</td>
-                                    <td class="p-2 text-danger" >{{ $d->user_name ?? '-' }}</td>
+                                    <td class="p-2 title-modules" >{{ $d->headquarter_name ?? '-' }}</td>
+                                    <td class="p-2 title-modules" >{{ $d->user_name ?? '-' }}</td>
 
                                     {{-- Empresa --}}
-                                    <td class="p-2 text-danger" >{{ number_format($groupMode ? ($d->k1 ?? 0) : ($d->times ?? 0)) }}</td>
-                                    <td class="p-2 text-danger" >{{ number_format($groupMode ? ($d->k1 ?? 0) : ($d->times ?? 0)) }}</td>
-                                    <td class="p-2 text-danger" >{{ number_format($groupMode ? ($d->p1 ?? 0) : ($d->price ?? 0), 2) }}</td>
+                                    <td class="p-2 title-modules" >{{ number_format($groupMode ? ($d->k1 ?? 0) : ($d->times ?? 0)) }}</td>
+                                    <td class="p-2 title-modules" >{{ number_format($groupMode ? ($d->k1 ?? 0) : ($d->times ?? 0)) }}</td>
+                                    <td class="p-2 title-modules" >{{ number_format($groupMode ? ($d->p1 ?? 0) : ($d->price ?? 0), 2) }}</td>
 
                                     {{-- Vehículo --}}
-                                    <td class="p-2 text-danger" >{{ number_format($groupMode ? ($d->pasajeros ?? 0) : ($d->passenger ?? 0)) }}</td>
-                                    <td class="p-2 text-danger" >{{ number_format($groupMode ? ($d->pasaje ?? 0) : ($d->passage ?? 0), 2) }}</td>
-                                    <td class="p-2 text-danger" >{{ number_format($d->total_pasaje ?? 0, 2) }}</td>
+                                    <td class="p-2 title-modules" >{{ number_format($groupMode ? ($d->pasajeros ?? 0) : ($d->passenger ?? 0)) }}</td>
+                                    <td class="p-2 title-modules" >{{ number_format($groupMode ? ($d->pasaje ?? 0) : ($d->passage ?? 0), 2) }}</td>
+                                    <td class="p-2 title-modules" >{{ number_format($d->total_pasaje ?? 0, 2) }}</td>
 
                                     {{-- Map solo en detalle --}}
                                     @if(!$groupMode)
-                                        <td class="text-danger">
+                                        <td class="title-modules">
                                             @if(!empty($d->latitude) && !empty($d->longitude))
                                                 <a href="https://maps.google.com/?q={{ $d->latitude }},{{ $d->longitude }}" target="_blank">🌍</a>
                                             @else
@@ -400,12 +400,12 @@
                                             @endif
                                         </td>
                                     @else
-                                        <td class="text-danger">-</td>
+                                        <td class="title-modules">-</td>
                                     @endif
                                 </tr>
                             @empty
                                 <tr>
-                                    <td  colspan="15 text-danger">No se encontraron resultados</td>
+                                    <td  colspan="15 title-modules">No se encontraron resultados</td>
                                 </tr>
                             @endforelse
                             </tbody>

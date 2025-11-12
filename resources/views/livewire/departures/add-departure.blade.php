@@ -52,7 +52,7 @@
                                        style="text-transform: uppercase;"
                                        autocapitalize="characters"
                                        data-upper-plate>
-                                @error('plate') <span class="text-danger">{{ $message }}</span> @enderror
+                                @error('plate') <span class="title-modules">{{ $message }}</span> @enderror
                             </div>
                         </div>
 
@@ -60,7 +60,7 @@
                             <div class="mb-3">
                                 <label class="form-label">Fecha</label>
                                 <input type="date" class="form-control form-control-sm" wire:model.defer="date" readonly>
-                                @error('date') <span class="text-danger">{{ $message }}</span> @enderror
+                                @error('date') <span class="title-modules">{{ $message }}</span> @enderror
                             </div>
                         </div>
 
@@ -73,7 +73,7 @@
                                         <option value="{{ $hq->id }}">{{ $hq->name }}</option>
                                     @endforeach
                                 </select>
-                                @error('headquarter_id') <span class="text-danger">{{ $message }}</span> @enderror
+                                @error('headquarter_id') <span class="title-modules">{{ $message }}</span> @enderror
                             </div>
                         </div>
 
@@ -82,7 +82,7 @@
                                 <label class="form-label">Salida (S/)</label>
                                 <input type="number" step="0.01" min="1" class="form-control form-control-sm"
                                        wire:model.defer="price" inputmode="decimal">
-                                @error('price') <span class="text-danger">{{ $message }}</span> @enderror
+                                @error('price') <span class="title-modules">{{ $message }}</span> @enderror
                             </div>
                         </div>
 
@@ -92,7 +92,7 @@
                                 <input type="number" class="form-control form-control-sm"
                                        wire:model.defer="passenger" min="1"
                                        inputmode="numeric" pattern="[0-9]*">
-                                @error('passenger') <span class="text-danger">{{ $message }}</span> @enderror
+                                @error('passenger') <span class="title-modules">{{ $message }}</span> @enderror
                             </div>
                         </div>
 
@@ -102,7 +102,7 @@
                                 <input type="number" class="form-control form-control-sm"
                                        wire:model.defer="passage" step="0.01" min="1"
                                        inputmode="decimal">
-                                @error('passage') <span class="text-danger">{{ $message }}</span> @enderror
+                                @error('passage') <span class="title-modules">{{ $message }}</span> @enderror
                             </div>
                         </div>
 

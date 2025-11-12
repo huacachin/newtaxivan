@@ -33,7 +33,7 @@
     <div class="flex items-center gap-3">
         <div class="row">
             <div class="col-sm-6">
-                <h4 class="main-title text-danger">REPORTE ESTADÍSTICO DE SALIDAS–PAGOS DE CONTROLADOR {{ $year }}</h4>
+                <h4 class="main-title title-modules">REPORTE ESTADÍSTICO DE SALIDAS–PAGOS DE CONTROLADOR {{ $year }}</h4>
             </div>
             <div class="col-sm-6 mt-sm-2">
                 <ul class="breadcrumb breadcrumb-start float-sm-end">

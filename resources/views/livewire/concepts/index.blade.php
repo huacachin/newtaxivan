@@ -40,7 +40,7 @@
     <!-- Header -->
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title text-danger">LISTADO GENERAL DE CONCEPTOS</h4>
+            <h4 class="main-title title-modules">LISTADO GENERAL DE CONCEPTOS</h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -152,7 +152,7 @@
                                     <label for="code" class="form-label">Código</label>
                                     <input id="code" type="text" class="form-control" placeholder="Ingresar Código"
                                            wire:model="code">
-                                    @error('code') <span class="text-danger">{{ $message }}</span> @enderror
+                                    @error('code') <span class="title-modules">{{ $message }}</span> @enderror
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -160,7 +160,7 @@
                                     <label for="name" class="form-label">Nombre del Concepto</label>
                                     <input id="name" type="text" class="form-control"
                                            placeholder="Ingresar Nombre del Concepto" wire:model="name">
-                                    @error('name') <span class="text-danger">{{ $message }}</span> @enderror
+                                    @error('name') <span class="title-modules">{{ $message }}</span> @enderror
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -170,7 +170,7 @@
                                         <option value="inactive">Cancelado</option>
                                         <option value="active">Vigente</option>
                                     </select>
-                                    @error('status') <span class="text-danger">{{ $message }}</span> @enderror
+                                    @error('status') <span class="title-modules">{{ $message }}</span> @enderror
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -180,7 +180,7 @@
                                         <option value="ingreso">Ingreso</option>
                                         <option value="egreso">Egreso</option>
                                     </select>
-                                    @error('type') <span class="text-danger">{{ $message }}</span> @enderror
+                                    @error('type') <span class="title-modules">{{ $message }}</span> @enderror
                                 </div>
                             </div>
                         </div>
@@ -210,7 +210,7 @@
                                     <label for="code_e" class="form-label">Código</label>
                                     <input id="code_e" type="text" class="form-control" placeholder="Ingresar Código"
                                            wire:model="code">
-                                    @error('code') <span class="text-danger">{{ $message }}</span> @enderror
+                                    @error('code') <span class="title-modules">{{ $message }}</span> @enderror
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -218,7 +218,7 @@
                                     <label for="name_e" class="form-label">Nombre del Concepto</label>
                                     <input id="name_e" type="text" class="form-control"
                                            placeholder="Ingresar Nombre del Concepto" wire:model="name">
-                                    @error('name') <span class="text-danger">{{ $message }}</span> @enderror
+                                    @error('name') <span class="title-modules">{{ $message }}</span> @enderror
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -228,7 +228,7 @@
                                         <option value="inactive">Cancelado</option>
                                         <option value="active">Vigente</option>
                                     </select>
-                                    @error('status') <span class="text-danger">{{ $message }}</span> @enderror
+                                    @error('status') <span class="title-modules">{{ $message }}</span> @enderror
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -238,7 +238,7 @@
                                         <option value="ingreso">Ingreso</option>
                                         <option value="egreso">Egreso</option>
                                     </select>
-                                    @error('type') <span class="text-danger">{{ $message }}</span> @enderror
+                                    @error('type') <span class="title-modules">{{ $message }}</span> @enderror
                                 </div>
                             </div>
                         </div>

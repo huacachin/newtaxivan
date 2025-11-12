@@ -49,7 +49,7 @@
     {{-- ===== Header & Breadcrumb ===== --}}
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title text-danger">LISTA GENERAL DE INGRESO</h4>
+            <h4 class="main-title title-modules">LISTA GENERAL DE INGRESO</h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -255,7 +255,7 @@
                         <div class="col-md-4">
                             <label class="form-label">Fecha</label>
                             <input type="date" class="form-control" wire:model.live="date">
-                            @error('date') <span class="text-danger">{{ $message }}</span> @enderror
+                            @error('date') <span class="title-modules">{{ $message }}</span> @enderror
                         </div>
 
                         <div class="col-md-4">
@@ -264,14 +264,14 @@
                                 <option value="Soles">Soles</option>
                                 <option value="Dolares">Dólares</option>
                             </select>
-                            @error('currency') <span class="text-danger">{{ $message }}</span> @enderror
+                            @error('currency') <span class="title-modules">{{ $message }}</span> @enderror
                         </div>
 
                         <div class="col-md-4">
                             <label class="form-label">Monto</label>
                             <input type="number" step="0.01" min="0.01" class="form-control" placeholder="0.00"
                                    wire:model.live="amount_input">
-                            @error('amount_input') <span class="text-danger">{{ $message }}</span> @enderror
+                            @error('amount_input') <span class="title-modules">{{ $message }}</span> @enderror
                             @if(!is_null($converted_total))
                                 <small class="text-muted">Total en S/: {{ number_format($converted_total, 2) }}</small>
                             @endif
@@ -281,19 +281,19 @@
                             <label class="form-label">A</label>
                             <input type="text" class="form-control" placeholder="A quién / Área"
                                    wire:model.defer="reason">
-                            @error('reason') <span class="text-danger">{{ $message }}</span> @enderror
+                            @error('reason') <span class="title-modules">{{ $message }}</span> @enderror
                         </div>
 
                         <div class="col-md-6">
                             <label class="form-label">Motivo</label>
                             <input type="text" class="form-control" placeholder="Detalle" wire:model.defer="detail">
-                            @error('detail') <span class="text-danger">{{ $message }}</span> @enderror
+                            @error('detail') <span class="title-modules">{{ $message }}</span> @enderror
                         </div>
 
                         <div class="col-md-12">
                             <label class="form-label">Comprobante (imagen)</label>
                             <input type="file" class="form-control" wire:model="image_file" accept="image/*">
-                            @error('image_file') <span class="text-danger">{{ $message }}</span> @enderror
+                            @error('image_file') <span class="title-modules">{{ $message }}</span> @enderror
 
                             {{-- Vista previa si el usuario ya seleccionó una imagen --}}
                             @if ($image_file)
@@ -347,7 +347,7 @@
                         <div class="col-md-4">
                             <label class="form-label">Fecha</label>
                             <input type="date" class="form-control" wire:model.live="date">
-                            @error('date') <span class="text-danger">{{ $message }}</span> @enderror
+                            @error('date') <span class="title-modules">{{ $message }}</span> @enderror
                         </div>
 
                         <div class="col-md-4">
@@ -356,14 +356,14 @@
                                 <option value="Soles">Soles</option>
                                 <option value="Dolares">Dólares</option>
                             </select>
-                            @error('currency') <span class="text-danger">{{ $message }}</span> @enderror
+                            @error('currency') <span class="title-modules">{{ $message }}</span> @enderror
                         </div>
 
                         <div class="col-md-4">
                             <label class="form-label">Monto</label>
                             <input type="number" step="0.01" min="0.01" class="form-control" placeholder="0.00"
                                    wire:model.live="amount_input">
-                            @error('amount_input') <span class="text-danger">{{ $message }}</span> @enderror
+                            @error('amount_input') <span class="title-modules">{{ $message }}</span> @enderror
                             @if(!is_null($converted_total))
                                 <small class="text-muted">Total en S/: {{ number_format($converted_total, 2) }}</small>
                             @endif
@@ -373,19 +373,19 @@
                             <label class="form-label">A</label>
                             <input type="text" class="form-control" placeholder="A quién / Área"
                                    wire:model.defer="reason">
-                            @error('reason') <span class="text-danger">{{ $message }}</span> @enderror
+                            @error('reason') <span class="title-modules">{{ $message }}</span> @enderror
                         </div>
 
                         <div class="col-md-6">
                             <label class="form-label">Motivo</label>
                             <input type="text" class="form-control" placeholder="Detalle" wire:model.defer="detail">
-                            @error('detail') <span class="text-danger">{{ $message }}</span> @enderror
+                            @error('detail') <span class="title-modules">{{ $message }}</span> @enderror
                         </div>
 
                         <div class="col-md-12">
                             <label class="form-label">Comprobante (imagen)</label>
                             <input type="file" class="form-control" wire:model="image_file" accept="image/*">
-                            @error('image_file') <span class="text-danger">{{ $message }}</span> @enderror
+                            @error('image_file') <span class="title-modules">{{ $message }}</span> @enderror
 
                             <div class="mt-2">
                                 @if ($image_file)

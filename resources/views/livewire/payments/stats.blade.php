@@ -38,7 +38,7 @@
     {{-- Header --}}
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title">REPORTE ESTADÍSTICO DE PAGO – {{$this->monthName()}} {{$year}}</h4>
+            <h4 class="main-title title-modules">REPORTE ESTADÍSTICO DE PAGO – {{$this->monthName()}} {{$year}}</h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">

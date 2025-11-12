@@ -46,7 +46,7 @@
     <!-- Header -->
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title text-danger">REPORTE MENSUAL POR PLACA - V.T {{$monthName}} DEL {{$year}}</h4>
+            <h4 class="main-title title-modules">REPORTE MENSUAL POR PLACA - V.T {{$monthName}} DEL {{$year}}</h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">

@@ -39,7 +39,7 @@
     <!-- Header -->
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title text-danger">LISTADO GENERAL DE PROPIETARIOS ({{ $owners->count() }})</h4>
+            <h4 class="main-title title-modules">LISTADO GENERAL DE PROPIETARIOS ({{ $owners->count() }})</h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -144,7 +144,7 @@
                             </tfoot>
                         </table>
                     </div>
-                    <h5 class="mb-2">Propietarios Libres: {{ $ownersFree->count() }}</h5>
+                    <h5 class="mb-2 title-modules text-center">Propietarios Libres: {{ $ownersFree->count() }}</h5>
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">

@@ -33,7 +33,7 @@
 
 <div class="container-fluid">
     <div class="row">
-        <div class="col-sm-6"><h4 class="main-title">Editar Usuario</h4></div>
+        <div class="col-sm-6"><h4 class="main-title title-modules">EDITAR USUARIO</h4></div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
                 <li class="d-flex">
@@ -54,7 +54,7 @@
                     <div class="perm-col-title">Nombre</div>
                     <div class="perm-col-controls">
                         <input type="text" class="form-control form-control-sm" placeholder="Ingresar nombre" wire:model.live="name">
-                        @error('name') <span class="text-danger small">{{ $message }}</span> @enderror
+                        @error('name') <span class="title-modules small">{{ $message }}</span> @enderror
                     </div>
                 </div>
 
@@ -63,7 +63,7 @@
                     <div class="perm-col-title">Usuario</div>
                     <div class="perm-col-controls">
                         <input type="text" class="form-control form-control-sm" placeholder="Ingresar usuario" wire:model="username">
-                        @error('username') <span class="text-danger small">{{ $message }}</span> @enderror
+                        @error('username') <span class="title-modules small">{{ $message }}</span> @enderror
                     </div>
                 </div>
 
@@ -72,7 +72,7 @@
                     <div class="perm-col-title">Contraseña</div>
                     <div class="perm-col-controls">
                         <input type="text" class="form-control form-control-sm" placeholder="Nueva contraseña (opcional)" wire:model.live="pwd">
-                        @error('pwd') <span class="text-danger small">{{ $message }}</span> @enderror
+                        @error('pwd') <span class="title-modules small">{{ $message }}</span> @enderror
                     </div>
                 </div>
 
@@ -81,7 +81,7 @@
                     <div class="perm-col-title">Email</div>
                     <div class="perm-col-controls">
                         <input type="email" class="form-control form-control-sm" placeholder="Ingresar email" wire:model="email">
-                        @error('email') <span class="text-danger small">{{ $message }}</span> @enderror
+                        @error('email') <span class="title-modules small">{{ $message }}</span> @enderror
                     </div>
                 </div>
 
@@ -94,7 +94,7 @@
                             <option value="ruc">RUC</option>
                             <option value="ce">CE</option>
                         </select>
-                        @error('document_type') <span class="text-danger small">{{ $message }}</span> @enderror
+                        @error('document_type') <span class="title-modules small">{{ $message }}</span> @enderror
                     </div>
                 </div>
 
@@ -103,7 +103,7 @@
                     <div class="perm-col-title">N° Documento</div>
                     <div class="perm-col-controls">
                         <input type="text" class="form-control form-control-sm" placeholder="Ingresar número" wire:model="document_number">
-                        @error('document_number') <span class="text-danger small">{{ $message }}</span> @enderror
+                        @error('document_number') <span class="title-modules small">{{ $message }}</span> @enderror
                     </div>
                 </div>
 
@@ -112,7 +112,7 @@
                     <div class="perm-col-title">Teléfono</div>
                     <div class="perm-col-controls">
                         <input type="text" class="form-control form-control-sm" placeholder="Ingresar teléfono" wire:model="phone">
-                        @error('phone') <span class="text-danger small">{{ $message }}</span> @enderror
+                        @error('phone') <span class="title-modules small">{{ $message }}</span> @enderror
                     </div>
                 </div>
 
@@ -139,8 +139,8 @@
                                 </label>
                             @endforeach
                         </div>
-                        @error('selectedHeadquarters') <span class="text-danger d-block small mt-1">{{ $message }}</span> @enderror
-                        @error('defaultHeadquarter')  <span class="text-danger d-block small mt-1">{{ $message }}</span> @enderror
+                        @error('selectedHeadquarters') <span class="title-modules d-block small mt-1">{{ $message }}</span> @enderror
+                        @error('defaultHeadquarter')  <span class="title-modules d-block small mt-1">{{ $message }}</span> @enderror
                     </div>
                 </div>
 
@@ -159,7 +159,7 @@
                                 <span class="text-warning small">No hay roles definidos.</span>
                             @endforelse
                         </div>
-                        @error('selectedRoleId') <span class="text-danger small">{{ $message }}</span> @enderror
+                        @error('selectedRoleId') <span class="title-modules small">{{ $message }}</span> @enderror
                     </div>
                 </div>
             </div>

@@ -4,7 +4,7 @@
     <div class="col-6 col-md-3">
         <label for="plate" class="form-label">Placa</label>
         <input id="plate" type="text" class="form-control form-control-sm" placeholder="Ingresar placa" wire:model="plate" autocomplete="off">
-        @error('plate') <span class="text-danger">{{ $message }}</span> @enderror
+        @error('plate') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
     {{-- Sede --}}
@@ -16,21 +16,21 @@
                 <option value="{{ $hq->name }}">{{ $hq->name }}</option>
             @endforeach
         </select>
-        @error('headquarter') <span class="text-danger">{{ $message }}</span> @enderror
+        @error('headquarter') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
     {{-- F. Ingreso --}}
     <div class="col-6 col-md-3">
         <label for="entry_date" class="form-label">F. Ingreso</label>
         <input id="entry_date" type="date" class="form-control form-control-sm" wire:model="entry_date">
-        @error('entry_date') <span class="text-danger">{{ $message }}</span> @enderror
+        @error('entry_date') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
     {{-- Fecha Cese --}}
     <div class="col-6 col-md-3">
         <label for="termination_date" class="form-label">Fecha Cese</label>
         <input id="termination_date" type="date" class="form-control form-control-sm" wire:model="termination_date">
-        @error('termination_date') <span class="text-danger">{{ $message }}</span> @enderror
+        @error('termination_date') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
     {{-- Categoría --}}
@@ -47,7 +47,7 @@
             <option value="M3-C3">M3-C3</option>
             <option value="M2-C3">M2-C3</option>
         </select>
-        @error('class') <span class="text-danger">{{ $message }}</span> @enderror
+        @error('class') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
     {{-- Marca --}}
@@ -64,21 +64,21 @@
             <option value="Faw">Faw</option>
             <option value="Volkswagen">Volkswagen</option>
         </select>
-        @error('brand') <span class="text-danger">{{ $message }}</span> @enderror
+        @error('brand') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
     {{-- Año --}}
     <div class="col-6 col-md-3">
         <label for="year" class="form-label">Año</label>
         <input id="year" type="number" inputmode="numeric" class="form-control form-control-sm" placeholder="Ej. 2020" wire:model="year" min="1900" max="2100" step="1">
-        @error('year') <span class="text-danger">{{ $message }}</span> @enderror
+        @error('year') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
     {{-- Modelo --}}
     <div class="col-6 col-md-3">
         <label for="model" class="form-label">Modelo</label>
         <input id="model" type="text" class="form-control form-control-sm" placeholder="Ingresar modelo" wire:model="model">
-        @error('model') <span class="text-danger">{{ $message }}</span> @enderror
+        @error('model') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
     {{-- Carrocería --}}
@@ -90,7 +90,7 @@
             <option value="MICROBUS">MICROBUS</option>
             <option value="Minibus">Minibus</option>
         </select>
-        @error('bodywork') <span class="text-danger">{{ $message }}</span> @enderror
+        @error('bodywork') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
     {{-- Color --}}
@@ -117,7 +117,7 @@
             <option value="Plata Metalizado">Plata Metalizado</option>
             <option value="Plomo">Plomo</option>
         </select>
-        @error('color') <span class="text-danger">{{ $message }}</span> @enderror
+        @error('color') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
     {{-- Modalidad --}}
@@ -131,7 +131,7 @@
             <option value="Transporte Personal">Transporte Personal</option>
             <option value="Transporte Turismo">Transporte Turismo</option>
         </select>
-        @error('type') <span class="text-danger">{{ $message }}</span> @enderror
+        @error('type') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
     {{-- Condición --}}
@@ -144,14 +144,14 @@
             <option value="EX">EX</option>
             <option value="EX5">EX5</option>
         </select>
-        @error('condition') <span class="text-danger">{{ $message }}</span> @enderror
+        @error('condition') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
     {{-- Empresa Afiliada --}}
     <div class="col-6 col-md-4">
         <label for="affiliated_company" class="form-label">Empresa Afiliada</label>
         <input id="affiliated_company" type="text" class="form-control form-control-sm" placeholder="Ingresar empresa afiliada" wire:model="affiliated_company">
-        @error('affiliated_company') <span class="text-danger">{{ $message }}</span> @enderror
+        @error('affiliated_company') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
 
@@ -165,7 +165,7 @@
                 <option value="{{ $owner->id }}">{{ $owner->name }}</option>
             @endforeach
         </select>
-        @error('owner_id') <span class="text-danger">{{ $message }}</span> @enderror
+        @error('owner_id') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
     {{-- Conductor --}}
@@ -177,7 +177,7 @@
                 <option value="{{ $driver->id }}">{{ $driver->name }}</option>
             @endforeach
         </select>
-        @error('driver_id') <span class="text-danger">{{ $message }}</span> @enderror
+        @error('driver_id') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
     {{-- Combustible --}}
@@ -188,34 +188,34 @@
             <option value="D2">D2</option>
             <option value="GAS">GAS</option>
         </select>
-        @error('fuel') <span class="text-danger">{{ $message }}</span> @enderror
+        @error('fuel') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
     {{-- Soat F.V --}}
     <div class="col-6 col-md-3">
         <label for="soat_date" class="form-label">Soat F.V</label>
         <input id="soat_date" type="date" class="form-control form-control-sm" wire:model="soat_date">
-        @error('soat_date') <span class="text-danger">{{ $message }}</span> @enderror
+        @error('soat_date') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
     {{-- Certificado F.V --}}
     <div class="col-6 col-md-3">
         <label for="certificate_date" class="form-label">Certificado F.V</label>
         <input id="certificate_date" type="date" class="form-control form-control-sm" wire:model="certificate_date">
-        @error('certificate_date') <span class="text-danger">{{ $message }}</span> @enderror
+        @error('certificate_date') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
     {{-- Revisión Técnica F.V --}}
     <div class="col-6 col-md-3">
         <label for="technical_review" class="form-label">Revisión Técnica F.V</label>
         <input id="technical_review" type="date" class="form-control form-control-sm" wire:model="technical_review">
-        @error('technical_review') <span class="text-danger">{{ $message }}</span> @enderror
+        @error('technical_review') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
     {{-- Detalle (ocupa ancho completo en md) --}}
     <div class="col-12">
         <label for="detail" class="form-label">Detalle</label>
         <textarea id="detail" rows="2" class="form-control form-control-sm" placeholder="Observaciones..." wire:model="detail"></textarea>
-        @error('detail') <span class="text-danger">{{ $message }}</span> @enderror
+        @error('detail') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 </div>

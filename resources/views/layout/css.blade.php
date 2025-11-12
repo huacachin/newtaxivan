@@ -69,6 +69,11 @@
         background: rgba(var(--dark), .08);
         border: 1px dashed rgba(var(--dark), .2);
     }
+
+    .title-modules{
+        color: red !important;
+    }
+
 </style>
 @vite(['public/assets/scss/style.scss'])
 @livewireStyles

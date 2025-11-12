@@ -37,7 +37,7 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title text-danger">REPORTE ESTADÍSTICO CAJA M.A</h4>
+            <h4 class="main-title title-modules">REPORTE ESTADÍSTICO CAJA M.A</h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -185,7 +185,7 @@
                         @endif
                         </tbody>
                     </table>
-                    <h5 class="mb-2 text-danger" >ESTADÍSTICA DE CAJA ANUAL – {{ $year }}</h5>
+                    <h5 class="mb-2 title-modules" >ESTADÍSTICA DE CAJA ANUAL – {{ $year }}</h5>
                     <table class="table table-striped table-bordered">
                         <thead class="bg-primary">
                         <tr>

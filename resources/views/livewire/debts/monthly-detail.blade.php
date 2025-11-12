@@ -44,7 +44,7 @@
     {{-- Header --}}
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title text-danger">DEUDA: ACTUALIZAR</h4>
+            <h4 class="main-title title-modules">DEUDA: ACTUALIZAR</h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -112,7 +112,7 @@
                           {{-- Días no trabajados — detalle (más ancho, puede ir a otra fila) --}}
                           <div class="flex-item" style="flex:2 1 420px; min-width:320px; max-width:100%;">
                               <label class="form-label mb-1">
-                                  <b class="text-danger">Días no trabajados — detalle</b>
+                                  <b class="title-modules">Días no trabajados — detalle</b>
                               </label>
                               <input class="form-control form-control-sm" rows="2" value="{!! $this->daysString !!}" readonly/>
                           </div>

@@ -50,7 +50,7 @@
                                        style="text-transform: uppercase;"
                                        autocapitalize="characters"
                                        data-upper-plate>
-                                @error('plate') <span class="text-danger">{{ $message }}</span> @enderror
+                                @error('plate') <span class="title-modules">{{ $message }}</span> @enderror
                             </div>
                         </div>
 
@@ -58,7 +58,7 @@
                             <div class="mb-3">
                                 <label class="form-label">Serie</label>
                                 <input type="text" class="form-control form-control-sm" wire:model.defer="serie">
-                                @error('serie') <span class="text-danger">{{ $message }}</span> @enderror
+                                @error('serie') <span class="title-modules">{{ $message }}</span> @enderror
                             </div>
                         </div>
 
@@ -71,7 +71,7 @@
                                         <option value="{{ $hq->id }}">{{ $hq->name }}</option>
                                     @endforeach
                                 </select>
-                                @error('headquarter_id_form') <span class="text-danger">{{ $message }}</span> @enderror
+                                @error('headquarter_id_form') <span class="title-modules">{{ $message }}</span> @enderror
                             </div>
                         </div>
 
@@ -79,7 +79,7 @@
                             <div class="mb-3">
                                 <label class="form-label">Fecha Registro</label>
                                 <input type="date" class="form-control form-control-sm" wire:model.live="date_register" readonly>
-                                @error('date_register') <span class="text-danger">{{ $message }}</span> @enderror
+                                @error('date_register') <span class="title-modules">{{ $message }}</span> @enderror
                             </div>
                         </div>
 
@@ -95,7 +95,7 @@
                                        style="background:#eee; pointer-events:none;"
                                     @endif
                                 >
-                                @error('date_payment') <span class="text-danger">{{ $message }}</span> @enderror
+                                @error('date_payment') <span class="title-modules">{{ $message }}</span> @enderror
                             </div>
                         </div>
 
@@ -103,7 +103,7 @@
                             <div class="mb-3">
                                 <label class="form-label">Hora</label>
                                 <input type="time" class="form-control form-control-sm" wire:model.defer="hour">
-                                @error('hour') <span class="text-danger">{{ $message }}</span> @enderror
+                                @error('hour') <span class="title-modules">{{ $message }}</span> @enderror
                             </div>
                         </div>
 
@@ -116,7 +116,7 @@
                                     <option value="DEUDA">Deuda</option>
                                     <option value="RETRASO">Retraso</option>
                                 </select>
-                                @error('type_form') <span class="text-danger">{{ $message }}</span> @enderror
+                                @error('type_form') <span class="title-modules">{{ $message }}</span> @enderror
                             </div>
                         </div>
 
@@ -127,7 +127,7 @@
                                        wire:model.defer="amount"
                                        @if($type_form !== 'DEUDA' && !is_null($detected_cost)) readonly @endif
                                        inputmode="decimal">
-                                @error('amount') <span class="text-danger">{{ $message }}</span> @enderror
+                                @error('amount') <span class="title-modules">{{ $message }}</span> @enderror
 
                                 @if($type_form === 'DEUDA')
                                     @if(!is_null($pending_debt))

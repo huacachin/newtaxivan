@@ -19,7 +19,7 @@ document.querySelector('#push').onclick = function () {
                         ${document.querySelector('#newtask input').value}
                     </span>
                     <button class="btn btn-sm p-1 border-0  delete">
-                            <i class="ti ti-trash text-danger f-s-18"></i>
+                            <i class="ti ti-trash title-modules f-s-18"></i>
                     </button>
                 </div>
             </div>

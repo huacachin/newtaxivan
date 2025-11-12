@@ -83,7 +83,7 @@
                         <h6>Utilidad del Mes</h6>
 
                         <div class="d-flex align-items-center gap-2 mt-2">
-                            <h4 class=" text-danger f-w-600 counting" data-count='220'></h4>
+                            <h4 class=" title-modules f-w-600 counting" data-count='220'></h4>
                             <h2 class="m-0 text-secondary">{{ number_format($utilMes, 2) }}</h2>
                         </div>
                     </div>
@@ -134,7 +134,7 @@
                         <h6>Egresos hoy</h6>
 
                         <div class="d-flex align-items-center gap-2 mt-2">
-                            <h4 class=" text-danger f-w-600 counting" data-count='220'></h4>
+                            <h4 class=" title-modules f-w-600 counting" data-count='220'></h4>
                             <h2 class="m-0 text-secondary">{{ number_format($egrHoy, 2) }}</h2>
                         </div>
                     </div>

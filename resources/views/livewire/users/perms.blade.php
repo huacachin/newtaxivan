@@ -14,7 +14,7 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title">Rol & Permisos</h4>
+            <h4 class="main-title title-modules">ROL & PERMISOS</h4>
             @if($permsUserName)
                 <small class="text-muted d-block">Usuario: {{ $permsUserName }}</small>
             @endif
@@ -49,7 +49,7 @@
                             <span class="text-warning small">No hay roles definidos.</span>
                         @endforelse
                     </div>
-                    @error('selectedRoleId') <span class="text-danger small">{{ $message }}</span> @enderror
+                    @error('selectedRoleId') <span class="title-modules small">{{ $message }}</span> @enderror
                 </div>
             </div>
 

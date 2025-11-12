@@ -63,7 +63,7 @@
     {{-- Header / migas --}}
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title text-danger">DEUDA</h4>
+            <h4 class="main-title title-modules">DEUDA</h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -197,7 +197,7 @@
                                     <td>{!! $r['days_text'] !!}</td>
                                     <td>{{ $r['days_late'] }}</td>
                                     <td>{{ number_format($r['total'], 2) }}</td>
-                                    <td class="text-danger">{{ number_format($r['exonerated'], 2) }}</td>
+                                    <td class="title-modules">{{ number_format($r['exonerated'], 2) }}</td>
                                     <td>{{ number_format($r['to_pay'], 2) }}</td>
                                     <td>{{ number_format($r['amortized'], 2) }}</td>
                                     <td>{{ number_format($r['pending'], 2) }}</td>
