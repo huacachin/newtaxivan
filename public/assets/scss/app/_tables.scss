@@ -2,7 +2,7 @@
 
 
 .table-striped>tbody>tr:nth-of-type(odd)>* {
-    --bs-table-accent-bg: rgba(var(--dark), 0.03);
+    --bs-table-accent-bg: #d0cdcd; /* Antiguo: rgba(var(--dark), 0.03); */
     color: rgba(var(--dark), 1);
 }
 
@@ -12,7 +12,7 @@
 }
 
 .table-hover>tbody>tr:hover>* {
-    --bs-table-accent-bg: rgba(var(--dark), 0.05);
+    --bs-table-accent-bg: #CCFF66; /* rgba(var(--dark), 0.05); */
     color: rgba(var(--dark), 1);
 }
 .table-box-hover>tbody>tr:hover{
