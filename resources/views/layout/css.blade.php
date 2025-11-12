@@ -74,6 +74,10 @@
         color: red !important;
     }
 
+    label{
+        font-weight: 600;
+    }
+
 </style>
 @vite(['public/assets/scss/style.scss'])
 @livewireStyles
