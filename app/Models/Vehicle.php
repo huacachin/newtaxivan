@@ -33,6 +33,8 @@ class Vehicle extends Model
         'detail',
         'validity_status',
         'status',
+        'seats',
+        'passengers'
     ];
 
     protected $casts = [

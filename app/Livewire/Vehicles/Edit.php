@@ -17,7 +17,7 @@ class Edit extends Component
     public $class = '', $brand = '', $year, $model, $bodywork = '';
     public $color, $type, $affiliated_company, $condition;
     public $owner_id, $driver_id, $fuel, $soat_date, $technical_review, $certificate_date;
-    public $detail, $plate;
+    public $detail, $plate,$sort_order, $seats = 0,$passengers = 0;
 
     public $listDrivers, $listOwners, $listHeadquarters;
 
@@ -29,6 +29,7 @@ class Edit extends Component
         $this->listDrivers = Driver::all();
         $this->listHeadquarters = Headquarter::all();
 
+        $this->sort_order = $this->vehicle->sort_order;
         $this->plate = $this->vehicle->plate;
         $this->headquarter = $this->vehicle->headquarters;
         $this->entry_date = optional($this->vehicle->entry_date)->format('Y-m-d');
@@ -49,11 +50,14 @@ class Edit extends Component
         $this->certificate_date = optional($this->vehicle->certificate_date)->format('Y-m-d');
         $this->technical_review = optional($this->vehicle->technical_review)->format('Y-m-d');
         $this->detail = $this->vehicle->detail;
+        $this->seats = $this->vehicle->seats;
+        $this->passengers = $this->vehicle->passengers;
     }
 
     public function rules()
     {
         return [
+            "sort_order" => "nullable|integer",
             "plate" => "required|string|max:20|unique:vehicles,plate," . $this->vehicle->id,
             "entry_date" => "required|date",
             "termination_date" => "nullable|date",
@@ -73,7 +77,9 @@ class Edit extends Component
             "soat_date" => "nullable|date",
             "technical_review" => "nullable|date",
             "certificate_date" => "nullable|date",
-            "detail" => "nullable|string"
+            "detail" => "nullable|string",
+            "seats" => "nullable|integer",
+            "passengers" => "nullable|integer"
         ];
     }
 
@@ -82,6 +88,7 @@ class Edit extends Component
         $this->validate();
 
         $this->vehicle->update([
+            "sort_order" => $this->sort_order,
             "plate" => $this->plate,
             "headquarters" => $this->headquarter,
             "entry_date" => $this->entry_date,
@@ -101,7 +108,9 @@ class Edit extends Component
             "soat_date" => $this->soat_date,
             "certificate_date" => $this->certificate_date,
             "technical_review" => $this->technical_review,
-            "detail" => $this->detail
+            "detail" => $this->detail,
+            "seats" => $this->seats,
+            "passengers" => $this->passengers
         ]);
 
         $this->dispatch('successAlert', ['message' => 'Vehículo actualizado correctamente.']);

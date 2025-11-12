@@ -191,12 +191,35 @@
         @error('fuel') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
+
+
+    <div class="col-6 col-md-1">
+        <label for="seats" class="form-label">Asientos</label>
+        <input id="seats" type="number" inputmode="numeric" class="form-control form-control-sm"  wire:model="seats" min="1" step="1">
+        @error('seats') <span class="title-modules">{{ $message }}</span> @enderror
+    </div>
+
+    <div class="col-6 col-md-1">
+        <label for="passengers" class="form-label">Pasajeros</label>
+        <input id="passengers" type="number" inputmode="numeric" class="form-control form-control-sm"  wire:model="passengers" min="1" step="1">
+        @error('passengers') <span class="title-modules">{{ $message }}</span> @enderror
+    </div>
+
+    {{-- Sort Order --}}
+    <div class="col-6 col-md-2">
+        <label for="sort_order" class="form-label">Orden</label>
+        <input id="sort_order" type="number" inputmode="numeric" class="form-control form-control-sm"  wire:model="sort_order" min="1" step="1">
+        @error('sort_order') <span class="title-modules">{{ $message }}</span> @enderror
+    </div>
+
     {{-- Detalle (ocupa ancho completo en md) --}}
     <div class="col-12">
         <label for="detail" class="form-label">Detalle</label>
         <textarea id="detail" rows="2" class="form-select form-select-sm" placeholder="Observaciones..." wire:model="detail"></textarea>
         @error('detail') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
+
+
 
     {{-- Soat F.V --}}
     <div class="col-6 col-md-2">

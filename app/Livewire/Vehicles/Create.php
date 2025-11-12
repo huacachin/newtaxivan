@@ -14,7 +14,7 @@ class Create extends Component
     public $class = '', $brand = '', $year, $model, $bodywork = '';
     public $color, $type, $affiliated_company, $condition;
     public $owner_id, $driver_id, $fuel, $soat_date, $technical_review, $certificate_date;
-    public $detail, $plate;
+    public $detail, $plate, $sort_order = 0, $seats = 0,$passengers = 0;
 
     public $listDrivers, $listOwners, $listHeadquarters;
 
@@ -38,7 +38,10 @@ class Create extends Component
         "soat_date" => "nullable|date",
         "technical_review" => "nullable|date",
         "certificate_date" => "nullable|date",
-        "detail" => "nullable|string"
+        "detail" => "nullable|string",
+        "sort_order" => "nullable|integer",
+        "seats" => "nullable|integer",
+        "passengers" => "nullable|integer"
     ];
 
     public function mount()
@@ -53,6 +56,7 @@ class Create extends Component
         $this->validate();
 
         Vehicle::create([
+            "sort_order" => $this->sort_order,
             "plate" => $this->plate,
             "headquarters" => $this->headquarter,
             "entry_date" => $this->entry_date,
@@ -72,10 +76,12 @@ class Create extends Component
             "soat_date" => $this->soat_date,
             "certificate_date" => $this->certificate_date,
             "technical_review" => $this->technical_review,
-            "detail" => $this->detail
+            "detail" => $this->detail,
+            "seats" => $this->seats,
+            "passengers" => $this->passengers
         ]);
 
-        $this->reset(['plate','headquarter','entry_date','termination_date','class','brand','year','model','bodywork','color','type','affiliated_company','condition','owner_id','driver_id','fuel','soat_date','technical_review','certificate_date','detail']);
+        $this->reset(['plate','headquarter','entry_date','termination_date','class','brand','year','model','bodywork','color','type','affiliated_company','condition','owner_id','driver_id','fuel','soat_date','technical_review','certificate_date','detail','sort_order','seats','passengers']);
         $this->dispatch('successAlert', ['message' => 'Vehículo creado correctamente.']);
     }
 

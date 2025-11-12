@@ -144,7 +144,8 @@
                             <thead class="bg-primary">
                             <tr>
                                 <th class="sticky-col">Acción</th>
-                                <th>Id</th>
+                                <th>Item</th>
+                                <th>Cod</th>
                                 <th class="sticky-col-2">Placa</th>
                                 <th>Marca</th>
                                 <th>Año</th>
@@ -179,6 +180,7 @@
                                         </td>
 
                                         <td>{{ $loop->iteration }}</td>
+                                        <td>{{ $vehicle->sort_order }}</td>
 
                                         <td>
                                             {{ $vehicle->plate }}

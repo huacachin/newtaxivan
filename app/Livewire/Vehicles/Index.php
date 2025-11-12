@@ -68,10 +68,11 @@ class Index extends Component
                     default => $q,
                 };
             })
+            ->orderBy('sort_order')
             ->with(['owner:id,name','driver:id,name']);
 
         $this->vehicles = $query->get([
-            'id','owner_id','driver_id','plate','status','year','condition',
+            'sort_order','id','owner_id','driver_id','plate','status','year','condition',
             'affiliated_company','termination_date','brand','class','type','fuel',
             'soat_date','certificate_date','technical_review','detail'
         ]);
