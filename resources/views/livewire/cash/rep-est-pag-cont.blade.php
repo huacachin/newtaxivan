@@ -141,7 +141,7 @@
 
                                      {{-- Saldo --}}
                                      <tr>
-                                         <th class="bg-primary title-modules" colspan="2">Saldo</th>
+                                         <th class="bg-primary text-white" colspan="2">Saldo</th>
                                          @for ($m=1; $m<=12; $m++)
                                              <td id="saldo" class="title-modules">
                                                  <strong>{{ number_format($ctrl['saldos'][$m], 2, '.', ',') }}</strong>
