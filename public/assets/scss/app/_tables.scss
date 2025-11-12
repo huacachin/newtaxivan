@@ -2,7 +2,7 @@
 
 
 .table-striped>tbody>tr:nth-of-type(odd)>* {
-    --bs-table-accent-bg: #d0cdcd; /* Antiguo: rgba(var(--dark), 0.03); */
+    background-color: #d0cdcd; /* Antiguo: rgba(var(--dark), 0.03); */
     color: rgba(var(--dark), 1);
 }
 

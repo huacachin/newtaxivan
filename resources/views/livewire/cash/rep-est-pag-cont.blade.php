@@ -104,7 +104,7 @@
                                      <tr>
                                          @endif
                                          <th class="bg-primary text-white">{{ $p['sucursal'] }}</th>
-                                         <th class="bg-primary text-white">Ingr. Sal.</th>
+                                         <th class="bg-primary text-white">Ingr. Sal1.</th>
                                          @for ($m=1; $m<=12; $m++)
                                              <td>{{ number_format($p['ingresos_mes'][$m], 2, '.', ',') }}</td>
                                          @endfor
@@ -141,9 +141,9 @@
 
                                      {{-- Saldo --}}
                                      <tr>
-                                         <th class="bg-primary" colspan="2">Saldo</th>
+                                         <th class="bg-primary title-modules" colspan="2">Saldo</th>
                                          @for ($m=1; $m<=12; $m++)
-                                             <td id="saldo">
+                                             <td id="saldo" class="title-modules">
                                                  <strong>{{ number_format($ctrl['saldos'][$m], 2, '.', ',') }}</strong>
                                              </td>
                                          @endfor
