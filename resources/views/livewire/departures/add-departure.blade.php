@@ -2,7 +2,7 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title">Agregar salida</h4>
+            <h4 class="main-title title-modules">AGREGAR SALIDA</h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -41,7 +41,7 @@
                     @endif
 
                     <div class="row">
-                        <div class="col-md-4 col-6">
+                        <div class="col-md-2 col-6">
                             <div class="mb-3">
                                 <label for="dep_plate" class="form-label">Placa</label>
                                 <input id="dep_plate"
@@ -56,7 +56,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4 col-6">
+                        <div class="col-md-2 col-6">
                             <div class="mb-3">
                                 <label class="form-label">Fecha</label>
                                 <input type="date" class="form-control form-control-sm" wire:model.defer="date" readonly>
@@ -64,7 +64,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4 col-6">
+                        <div class="col-md-2 col-6">
                             <div class="mb-3">
                                 <label class="form-label">Sucursal</label>
                                 <select class="form-control form-control-sm" wire:model.defer="headquarter_id">
@@ -77,7 +77,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4 col-6">
+                        <div class="col-md-2 col-6">
                             <div class="mb-3">
                                 <label class="form-label">Salida (S/)</label>
                                 <input type="number" step="0.01" min="1" class="form-control form-control-sm"
@@ -86,7 +86,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4 col-6">
+                        <div class="col-md-2 col-6">
                             <div class="mb-3">
                                 <label class="form-label">Pasajeros</label>
                                 <input type="number" class="form-control form-control-sm"
@@ -96,7 +96,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4 col-6">
+                        <div class="col-md-2 col-6">
                             <div class="mb-3">
                                 <label class="form-label">Pasaje (S/)</label>
                                 <input type="number" class="form-control form-control-sm"

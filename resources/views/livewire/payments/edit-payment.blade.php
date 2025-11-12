@@ -2,7 +2,7 @@
     <!-- Header -->
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title">Editar Pago</h4>
+            <h4 class="main-title title-modules">EDITAR PAGO</h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -42,7 +42,7 @@
                     @endif
 
                     <div id="edit-payment-form" class="row">
-                        <div class="col-md-4 col-6">
+                        <div class="col-auto">
                             <div class="mb-3">
                                 <label for="pay_plate_edit" class="form-label">Placa</label>
                                 <input id="pay_plate_edit" type="text" class="form-control form-control-sm" placeholder="ABC123"
@@ -54,7 +54,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4 col-6">
+                        <div class="col-auto">
                             <div class="mb-3">
                                 <label class="form-label">Serie</label>
                                 <input type="text" class="form-control form-control-sm" wire:model.defer="serie">
@@ -62,7 +62,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4 col-6">
+                        <div class="col-auto">
                             <div class="mb-3">
                                 <label class="form-label">Sucursal</label>
                                 <select class="form-control form-control-sm" wire:model.live="headquarter_id_form">
@@ -75,7 +75,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4 col-6">
+                        <div class="col-auto">
                             <div class="mb-3">
                                 <label class="form-label">Fecha Registro</label>
                                 <input type="date" class="form-control form-control-sm" wire:model.live="date_register" readonly>
@@ -83,7 +83,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4 col-6">
+                        <div class="col-auto">
                             <div class="mb-3">
                                 <label class="form-label">Fecha Pago</label>
                                 <input type="date" class="form-control form-control-sm"
@@ -99,7 +99,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4 col-6">
+                        <div class="col-auto">
                             <div class="mb-3">
                                 <label class="form-label">Hora</label>
                                 <input type="time" class="form-control form-control-sm" wire:model.defer="hour">
@@ -107,7 +107,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4 col-6">
+                        <div class="col-auto">
                             <div class="mb-3">
                                 <label class="form-label">Tipo</label>
                                 <select class="form-control form-control-sm" wire:model.live="type_form">
@@ -120,7 +120,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-8">
+                        <div class="col-auto">
                             <div class="mb-3">
                                 <label class="form-label">Monto (S/)</label>
                                 <input type="number" step="0.01" min="0.01" class="form-control form-control-sm"

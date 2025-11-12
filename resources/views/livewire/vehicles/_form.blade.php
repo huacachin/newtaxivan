@@ -12,9 +12,31 @@
         <label for="headquarter" class="form-label">Sede</label>
         <select id="headquarter" class="form-select form-select-sm" wire:model="headquarter">
             <option value="">Seleccione</option>
-            @foreach($listHeadquarters as $hq)
-                <option value="{{ $hq->name }}">{{ $hq->name }}</option>
-            @endforeach
+            <option value="LA MERCED (SELVA CENTRAL)">LA MERCED (SELVA CENTRAL)</option>
+            <option value="LIMA">LIMA</option>
+            <option value="MADRE DE DIOS">MADRE DE DIOS</option>
+            <option value="MAYNAS">MAYNAS</option>
+            <option value="MOQUEGUA)">MOQUEGUA)</option>
+            <option value="MOYOBAMBA">MOYOBAMBA</option>
+            <option value="NAZCA">NAZCA</option>
+            <option value="OTUZCO">OTUZCO</option>
+            <option value="PASCO">PASCO</option>
+            <option value="PISCO">PISCO</option>
+            <option value="PIURA">PIURA</option>
+            <option value="PUCALLPA">PUCALLPA</option>
+            <option value="PUNO">PUNO</option>
+            <option value="QUILLABAMBA">QUILLABAMBA</option>
+            <option value="SAN PEDRO">SAN PEDRO</option>
+            <option value="SATIPO">SATIPO</option>
+            <option value="SICUANI">SICUANI</option>
+            <option value="SULLANA">SULLANA</option>
+            <option value="TACNA">TACNA</option>
+            <option value="TARAPOTO">TARAPOTO</option>
+            <option value="TARMA">TARMA</option>
+            <option value="TINGO MARIA">TINGO MARIA</option>
+            <option value="TRUJILLO">TRUJILLO</option>
+            <option value="TUMBES">TUMBES</option>
+            <option value="YURIMAGUAS">YURIMAGUAS</option>
         </select>
         @error('headquarter') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
