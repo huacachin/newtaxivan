@@ -208,8 +208,8 @@ class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTi
                 $blue     = 'FF2874A6'; // header
                 $footerBg = 'FFCEE7FF'; // footer
                 $white    = 'FFFFFFFF';
-                $borderC  = 'FFCFD8DC';
-                $sunRed   = 'FFEF4444';
+                $borderC  = '000000';
+                $sunRed   = 'F80000';
 
                 // Fuente base 10 pt (compacto)
                 $ws->getParent()->getDefaultStyle()->getFont()->setSize(10);
@@ -234,9 +234,9 @@ class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTi
                 $ws->mergeCells("A1:{$lastColLetter}1");
                 $ws->getRowDimension(1)->setRowHeight(18);
                 $ws->getStyle('A1')->applyFromArray([
-                    'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$white]],
+                    'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$sunRed]],
                     'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
-                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blue]],
+                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$white]],
                 ]);
 
                 // ===== THEAD (fila 2) azul =====
