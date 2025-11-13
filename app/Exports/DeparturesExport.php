@@ -74,9 +74,9 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithColumnWidths, Wi
             'E' => 7,
             'F' => 9,
             'G' => 6,
-            'H' => 5,
+            'H' => 6,
             'I' => 4,
-            'J' => 4,
+            'J' => 3,
             'K' => 4,
             'L' => 4,
             'M' => 8,
@@ -110,7 +110,7 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithColumnWidths, Wi
                 $white      = 'FFFFFFFF';
                 $red        = 'F80000';
                 $black      = 'FF000000';
-                $borderSoft = 'FF9E9E9E'; // gris suave para bordes
+                $borderSoft = '000000'; // gris suave para bordes
 
                 // n1/n2: cantidad de filas de cuerpo por sección (mínimo 1 por "Sin datos")
                 $n1 = max(1, $this->countExisting);
