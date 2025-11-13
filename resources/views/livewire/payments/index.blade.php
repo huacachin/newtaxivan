@@ -192,7 +192,7 @@
                                         wire:target="applyDate">
                                     <i class="ti ti-search f-s-12"></i>
                                 </button>
-                                <button class="btn btn-sm btn-primary" wire:click="openAddWindow">
+                                <button class="btn btn-sm btn-nuevo" wire:click="openAddWindow">
                                     <i class="ti ti-square-plus f-s-12"></i> Nuevo
                                 </button>
                                 @role('admin')

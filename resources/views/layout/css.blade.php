@@ -78,6 +78,11 @@
         font-weight: 600;
     }
 
+    .btn-nuevo{
+        background: #2d2f39 !important;
+        color: #fff !important;
+    }
+
 </style>
 @vite(['public/assets/scss/style.scss'])
 @livewireStyles
