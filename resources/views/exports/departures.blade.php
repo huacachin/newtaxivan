@@ -11,9 +11,7 @@
     <tr>
         <td colspan="13" align="center"
             style="font-weight:bold;color:#F80000;">
-            SALIDAS | Rango: {{ $range }}
-            @if($extra !== '') | {{ $label }}: {{ $extra }} @endif
-            | Modo: {{ $groupMode ? 'Agrupado' : 'Detalle' }}
+            LISTADO GENERAL DE SALIDAS
         </td>
     </tr>
 
