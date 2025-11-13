@@ -68,8 +68,8 @@ class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, With
                 $blue      = 'FF2874A6';
                 $footerBg  = 'FFCEE7FF';
                 $white     = 'FFFFFFFF';
-                $black     = 'FF000000';
-                $borderC   = 'FFCFD8DC';
+                $red     = 'F80000';
+                $borderC   = '000000';
 
                 // Tipografía global 10pt
                 $s->getParent()->getDefaultStyle()->getFont()->setSize(10);
@@ -87,7 +87,7 @@ class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, With
                 $s->setCellValue("A{$titleRow}", 'REPORTE MENSUAL DE PAGOS '.$this->mesTexto($this->month).' '.$this->year);
                 $s->getStyle("A{$titleRow}:{$lastCol}{$titleRow}")->applyFromArray([
                     'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$white]],
-                    'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$black]],
+                    'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$red]],
                     'alignment' => ['horizontal'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,'vertical'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER],
                 ]);
                 $s->getRowDimension($titleRow)->setRowHeight(18);
@@ -191,7 +191,7 @@ class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, With
                 foreach ([$footer1,$footer2] as $fr) {
                     $s->getStyle("A{$fr}:{$lastCol}{$fr}")->applyFromArray([
                         'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$footerBg]],
-                        'font' => ['bold'=>true,'color'=>['argb'=>$black]],
+                        'font' => ['bold'=>true,'color'=>['argb'=>$red]],
                         'borders' => ['outline' => ['borderStyle'=>\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM,'color'=>['argb'=>$blue]]],
                         'alignment' => ['vertical'=>\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER],
                     ]);

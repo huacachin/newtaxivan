@@ -73,8 +73,8 @@ class PaymentsStatsExport implements FromArray, WithHeadings, WithEvents, WithTi
                 $footerBg  = 'FFCEE7FF';  // pie
                 $white     = 'FFFFFFFF';
                 $black     = 'FF000000';
-                $borderC   = 'FFCFD8DC';
-                $sundayRed = 'FFEF4444';
+                $borderC   = '000000';
+                $sundayRed = 'F80000';
 
                 // Tipografía compacta
                 $sheet->getParent()->getDefaultStyle()->getFont()->setSize(10);
@@ -181,7 +181,7 @@ class PaymentsStatsExport implements FromArray, WithHeadings, WithEvents, WithTi
                 $sheet->getStyle("A{$footerExcelRow}:{$endCol}{$footerExcelRow}")->applyFromArray([
                     'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$footerBg]],
                     'font' => ['bold'=>true,'color'=>['argb'=>$black]],
-                    'borders' => ['outline'=>['borderStyle'=>Border::BORDER_MEDIUM,'color'=>['argb'=>$blueDark]]],
+                    'borders' => ['outline'=>['borderStyle'=>Border::BORDER_THIN,'color'=>['argb'=>$borderC]]],
                 ]);
             },
         ];

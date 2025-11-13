@@ -125,8 +125,8 @@ class PaymentsDailyExport implements FromArray, WithHeadings, WithEvents, WithTi
                 $footerFill = 'FFCEE7FF';
                 $fontWhite  = 'FFFFFFFF';
                 $fontBlack  = 'FF000000';
-                $borderSoft = 'FFCFD8DC';
-                $sundayRed  = 'FFEF4444';
+                $borderSoft = '000000';
+                $sundayRed  = 'F80000';
 
                 // Fuente compacta 10pt (global)
                 $sheet->getParent()->getDefaultStyle()->getFont()->setSize(10);

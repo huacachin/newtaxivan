@@ -13,6 +13,7 @@ use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
+use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
@@ -23,7 +24,7 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
 class PaymentsExport implements
     FromQuery, WithHeadings, WithMapping,
-    WithColumnFormatting, WithStyles, WithEvents, WithColumnWidths
+    WithColumnFormatting, WithStyles, WithEvents, WithColumnWidths,WithTitle
 {
     private int $seq = 0; // Item 1..n
 
@@ -173,6 +174,11 @@ class PaymentsExport implements
         ];
     }
 
+    public function title(): string
+    {
+        return "Pagos";
+    }
+
     /** === Estilos homologados + anchos al ras === */
     public function registerEvents(): array
     {
@@ -186,8 +192,8 @@ class PaymentsExport implements
                 $footerFill = 'FFCEE7FF';
                 $white      = 'FFFFFFFF';
                 $fontBlack  = 'FF000000';
-                $borderSoft = 'FFCFD8DC';
-                $black      = 'FF000000';
+                $borderSoft = '000000';
+                $red      = 'F80000';
 
                 // ===== Título (fila 1)
                 $ws->insertNewRowBefore(1, 1);
@@ -195,7 +201,7 @@ class PaymentsExport implements
                 $ws->setCellValue('A1', 'REPORTE DE PAGOS');
                 $ws->getStyle('A1:J1')->applyFromArray([
                     'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$white]],
-                    'font' => ['bold'=>true, 'color'=>['argb'=>$black], 'size'=>10],
+                    'font' => ['bold'=>true, 'color'=>['argb'=>$red], 'size'=>10],
                     'alignment' => [
                         'horizontal'=>Alignment::HORIZONTAL_CENTER,
                         'vertical'  =>Alignment::VERTICAL_CENTER,

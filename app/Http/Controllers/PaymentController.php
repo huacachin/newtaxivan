@@ -49,7 +49,7 @@ class PaymentController extends Controller
         $headquarterId = $request->query('headquarter_id', '');
         $type          = $request->query('type', '');
 
-        $filename = 'payments_' . now()->format('Ymd_His') . '.xlsx';
+        $filename = 'pagos_' . now()->format('Ymd_His') . '.xlsx';
 
         return Excel::download(
             new PaymentsExport($search, $filter, $date_start, $date_end, $headquarterId, $type),
