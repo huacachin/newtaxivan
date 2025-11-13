@@ -53,7 +53,7 @@ class DepartureController extends Controller
         $toDate = $request->query('toDate');
         $groupMode = filter_var($request->query('groupMode', false), FILTER_VALIDATE_BOOLEAN);
 
-        $filename = 'departures_' . now()->format('Ymd_His') . '.xlsx';
+        $filename = 'salidas_' . now()->format('Ymd_His') . '.xlsx';
         return Excel::download(
             new DeparturesExport($searchType, $searchText, $fromDate, $toDate, $groupMode),
             $filename
