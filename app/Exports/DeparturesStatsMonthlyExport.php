@@ -11,7 +11,6 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
-use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
@@ -32,11 +31,15 @@ class DeparturesStatsMonthlyExport implements FromArray, WithHeadings, WithStyle
     protected int|float $grandMonto   = 0;
     protected array $sundayCols = [];       // índices de columnas (1-based) a pintar
 
+    /* ================= Headings / Data ================= */
+
     public function headings(): array
     {
         $this->prepare();
         $head = ['CONTROLADOR','PARADERO','TIPO'];
-        for ($d=1; $d <= $this->daysInMonth; $d++) $head[] = (string)$d;
+        for ($d=1; $d <= $this->daysInMonth; $d++) {
+            $head[] = (string)$d;
+        }
         $head[] = 'SALIDAS';
         $head[] = 'S/';
         return $head;
@@ -47,38 +50,60 @@ class DeparturesStatsMonthlyExport implements FromArray, WithHeadings, WithStyle
         $this->prepare();
 
         $data = [];
+
         foreach ($this->rows as $r) {
             $row = [
                 $r['controller'],
                 $r['stop'],
                 $r['type'],
             ];
-            for ($d=1; $d <= $this->daysInMonth; $d++) {
+
+            // Días
+            for ($d = 1; $d <= $this->daysInMonth; $d++) {
                 $val = $r['days'][$d] ?? 0;
-                $row[] = ($r['type'] === 'S/') ? (float)$val : (int)$val; // siempre número -> 0 visibles
+                if ($r['type'] === 'S/') {
+                    // Monto como texto con S/ condicional
+                    $row[] = $this->formatMoney($val);
+                } else {
+                    // Salidas como entero
+                    $row[] = (int)$val;
+                }
             }
-            $row[] = (int)   ($r['total_sal']   ?? 0);
-            $row[] = (float) ($r['total_soles'] ?? 0);
+
+            // Totales por fila
+            $row[] = (int)($r['total_sal'] ?? 0);                 // SALIDAS
+            $row[] = $this->formatMoney($r['total_soles'] ?? 0);  // S/ condicional
+
             $data[] = $row;
         }
 
-        // Totales (sin separador)
+        // Totales: "Salidas"
         $rowA = ['', '', 'Salidas'];
-        for ($d=1; $d <= $this->daysInMonth; $d++) $rowA[] = (int)($this->totalsSalidas[$d] ?? 0);
-        $rowA[] = (int)$this->grandSalidas;
-        $rowA[] = 0;
+        for ($d=1; $d <= $this->daysInMonth; $d++) {
+            $rowA[] = (int)($this->totalsSalidas[$d] ?? 0);
+        }
+        $rowA[] = (int)$this->grandSalidas; // total salidas
+        $rowA[] = '';                        // columna S/ vacía
         $data[] = $rowA;
 
+        // Totales: "S/"
         $rowB = ['', '', 'S/'];
-        for ($d=1; $d <= $this->daysInMonth; $d++) $rowB[] = (float)($this->totalsMonto[$d] ?? 0);
-        $rowB[] = 0;
-        $rowB[] = (float)$this->grandMonto;
+        for ($d=1; $d <= $this->daysInMonth; $d++) {
+            $rowB[] = $this->formatMoney($this->totalsMonto[$d] ?? 0);
+        }
+        $rowB[] = '';                            // SALIDAS no aplica
+        $rowB[] = $this->formatMoney($this->grandMonto); // total S/
         $data[] = $rowB;
 
         return $data;
     }
 
-    public function styles(Worksheet $sheet) { return []; }
+    public function styles(Worksheet $sheet)
+    {
+        return [];
+    }
+
+    /* ================= AfterSheet: diseño ================= */
 
     public function registerEvents(): array
     {
@@ -91,18 +116,19 @@ class DeparturesStatsMonthlyExport implements FromArray, WithHeadings, WithStyle
                 $footerFill = 'FFCEE7FF';
                 $fontW      = 'FFFFFFFF';
                 $fontB      = 'FF000000';
-                $borderC    = 'FFCFD8DC';
-                $sunRed     = 'FFEF4444';
-                $moneyRed   = 'FFCC0000';
+                $borderC    = '000000';
+                $sunRed     = 'F800000';
+                $moneyRed   = 'F80000';
 
-
-                // Fuente global 10pt
+                // Fuente global
                 $s->getParent()->getDefaultStyle()->getFont()->setSize(10);
 
-                // ===== Título
+                // ===== Título =====
                 $s->insertNewRowBefore(1, 1);
                 $lastCol    = $s->getHighestColumn();
                 $lastColIdx = Coordinate::columnIndexFromString($lastCol);
+                $lastRow    = (int)$s->getHighestRow();
+
                 $title = 'REPORTE ESTADÍSTICO DE SALIDAS – ' . mb_strtoupper($this->monthName()) . ' ' . $this->year;
                 $s->mergeCells("A1:{$lastCol}1");
                 $s->setCellValue('A1', $title);
@@ -110,21 +136,28 @@ class DeparturesStatsMonthlyExport implements FromArray, WithHeadings, WithStyle
                 $s->getStyle("A1:{$lastCol}1")->applyFromArray([
                     'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$fontW]],
                     'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$moneyRed]],
-                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
+                    'alignment' => [
+                        'horizontal'=>Alignment::HORIZONTAL_CENTER,
+                        'vertical'  =>Alignment::VERTICAL_CENTER,
+                    ],
                 ]);
 
-                // ===== Encabezado
+                // ===== Encabezado =====
                 $headerRow    = 2;
                 $dataStartRow = 3;
+
                 $s->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->applyFromArray([
                     'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blueDark]],
                     'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$fontW]],
-                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
+                    'alignment' => [
+                        'horizontal'=>Alignment::HORIZONTAL_CENTER,
+                        'vertical'  =>Alignment::VERTICAL_CENTER,
+                    ],
                 ]);
                 $s->getRowDimension($headerRow)->setRowHeight(18);
 
-                // Domingos (solo header)
-                $firstDayColIdx = 4; // D
+                // Domingos (solo header de días)
+                $firstDayColIdx = 4; // D = día 1
                 foreach ($this->sundayCols as $colIdx) {
                     $col = Coordinate::stringFromColumnIndex($colIdx);
                     $s->getStyle("{$col}{$headerRow}")->applyFromArray([
@@ -136,64 +169,62 @@ class DeparturesStatsMonthlyExport implements FromArray, WithHeadings, WithStyle
                 // Freeze
                 $s->freezePane('D3');
 
-                // ===== Bordes
+                // ===== Bordes a toda la grilla =====
                 $lastRow = (int)$s->getHighestRow();
                 $s->getStyle("A{$headerRow}:{$lastCol}{$lastRow}")
-                    ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+                    ->getBorders()->getAllBorders()
+                    ->setBorderStyle(Border::BORDER_THIN);
                 $s->getStyle("A{$headerRow}:{$lastCol}{$lastRow}")
-                    ->getBorders()->getAllBorders()->getColor()->setARGB($borderC);
+                    ->getBorders()->getAllBorders()
+                    ->getColor()->setARGB($borderC);
 
-                // ===== Anchos compactos
-                for ($c=1; $c <= $lastColIdx; $c++) {
+                // ===== Anchos compactos =====
+                for ($c = 1; $c <= $lastColIdx; $c++) {
                     $s->getColumnDimensionByColumn($c)->setAutoSize(false);
                 }
                 $s->getColumnDimension('A')->setWidth(14.5); // CONTROLADOR
                 $s->getColumnDimension('B')->setWidth(11);   // PARADERO
                 $s->getColumnDimension('C')->setWidth(6.5);  // TIPO
+
                 // D..(penúltima): días
-                for ($c=$firstDayColIdx; $c < $lastColIdx-1; $c++) {
-                    $s->getColumnDimensionByColumn($c)->setWidth(2.7);
+                for ($c = $firstDayColIdx; $c < $lastColIdx - 1; $c++) {
+                    $s->getColumnDimensionByColumn($c)->setWidth(4);
                 }
-                // Penúltima = SALIDAS, Última = S/
-                $s->getColumnDimensionByColumn($lastColIdx-1)->setWidth(7.0);
-                $s->getColumnDimensionByColumn($lastColIdx  )->setWidth(8.0);
+                // Penúltima = SALIDAS, última = S/
+                $s->getColumnDimensionByColumn($lastColIdx - 1)->setWidth(7.0);
+                $s->getColumnDimensionByColumn($lastColIdx    )->setWidth(8.0);
 
-                // === +1 punto de ancho D..AG (sin exceder la última col real)
-                $fromIdx = Coordinate::columnIndexFromString('D');
-                $toIdx   = Coordinate::columnIndexFromString('AG');
-                $endIdx  = min($toIdx, $lastColIdx);
-                for ($c = $fromIdx; $c <= $endIdx; $c++) {
-                    $dim = $s->getColumnDimensionByColumn($c);
-                    $current = (float) $dim->getWidth();
-                    if ($current <= 0.0) { $current = 3.0; }
-                    $dim->setWidth($current + 1.0);
-                }
-
-                // ===== Alineaciones
+                // ===== Alineaciones / cuerpo =====
                 $dataRows   = count($this->rows);
                 $dataEndRow = $dataRows > 0 ? ($dataStartRow + $dataRows - 1) : ($dataStartRow - 1);
                 $lastColL   = Coordinate::stringFromColumnIndex($lastColIdx);
+
                 if ($dataRows > 0) {
                     $s->getStyle("A{$dataStartRow}:A{$dataEndRow}")
                         ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
                     $s->getStyle("B{$dataStartRow}:B{$dataEndRow}")
                         ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-                    $s->getStyle("C{$dataStartRow}:{$lastColL}{$dataEndRow}")
+                    $s->getStyle("C{$dataStartRow}:C{$dataEndRow}")
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                    $s->getStyle("D{$dataStartRow}:{$lastColL}{$dataEndRow}")
                         ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 }
 
-                // ===== Columna C (TIPO) con fondo azul en todo el cuerpo
+                // Columna C (TIPO) badge azul
                 if ($dataRows > 0) {
                     $s->getStyle("C{$dataStartRow}:C{$dataEndRow}")->applyFromArray([
                         'fill'  => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blueDark]],
                         'font'  => ['bold'=>true,'color'=>['argb'=>$fontW],'size'=>10],
-                        'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
+                        'alignment' => [
+                            'horizontal'=>Alignment::HORIZONTAL_CENTER,
+                            'vertical'  =>Alignment::VERTICAL_CENTER,
+                        ],
                     ]);
                 }
 
-                // ===== Zebra vertical en días
+                // Zebra vertical en días
                 if ($dataRows > 0) {
-                    for ($c = $firstDayColIdx; $c < $lastColIdx-1; $c++) {
+                    for ($c = $firstDayColIdx; $c < $lastColIdx - 1; $c++) {
                         if ((($c - $firstDayColIdx) % 2) === 1) {
                             $col = Coordinate::stringFromColumnIndex($c);
                             $s->getStyle("{$col}{$dataStartRow}:{$col}{$dataEndRow}")
@@ -203,72 +234,45 @@ class DeparturesStatsMonthlyExport implements FromArray, WithHeadings, WithStyle
                     }
                 }
 
-                // ===== Formatos y ceros (datos) + fila S/ en rojo
-                if ($dataRows > 0) {
-                    $salidasColIdx = $lastColIdx - 1;
-                    $montoColIdx   = $lastColIdx;
-
-                    for ($r = $dataStartRow; $r <= $dataEndRow; $r++) {
-                        $from = Coordinate::stringFromColumnIndex($firstDayColIdx);
-                        $to   = Coordinate::stringFromColumnIndex($salidasColIdx - 1);
-
-                        // Días (ceros + formato "0")
-                        if ($salidasColIdx - 1 >= $firstDayColIdx) {
-                            for ($c=$firstDayColIdx; $c <= $salidasColIdx - 1; $c++) {
-                                $cell = $s->getCellByColumnAndRow($c, $r);
-                                if ($cell->getValue() === null || $cell->getValue() === '') {
-                                    $cell->setValueExplicit(0, DataType::TYPE_NUMERIC);
-                                }
-                            }
-                            $s->getStyle("{$from}{$r}:{$to}{$r}")
-                                ->getNumberFormat()->setFormatCode('0');
-                        }
-
-                        // Totales por fila (ambos como enteros según lineamientos)
-                        foreach ([$salidasColIdx, $montoColIdx] as $colIdx) {
-                            $cell = $s->getCellByColumnAndRow($colIdx, $r);
-                            if ($cell->getValue() === null || $cell->getValue() === '') {
-                                $cell->setValueExplicit(0, DataType::TYPE_NUMERIC);
-                            }
-                            $s->getStyle(Coordinate::stringFromColumnIndex($colIdx).$r)
-                                ->getNumberFormat()->setFormatCode('0');
-                        }
-
-                        // Fila tipo S/ en rojo
-                        $type = (string)$s->getCell("C{$r}")->getValue();
-                        if ($type === 'S/') {
-                            $s->getStyle("A{$r}:{$lastColL}{$r}")
-                                ->getFont()->getColor()->setARGB($fontW);
-                        }
-                    }
-                }
-
-                // ===== Merge Paradero (B) de 2 en 2 + badge azul
+                // ===== Merge Paradero (B) de 2 en 2 + badge azul =====
                 $i = 0;
                 while ($i < $dataRows) {
                     $row1 = $dataStartRow + $i;
                     $row2 = $row1;
+
                     if ($i + 1 < $dataRows) {
                         $r1 = $this->rows[$i];
                         $r2 = $this->rows[$i+1];
                         if ($r2['controller'] === $r1['controller'] && $r2['stop'] === $r1['stop']) {
-                            $row2 = $row1 + 1; $i += 2;
-                        } else { $i += 1; }
-                    } else { $i += 1; }
+                            $row2 = $row1 + 1;
+                            $i += 2;
+                        } else {
+                            $i += 1;
+                        }
+                    } else {
+                        $i += 1;
+                    }
 
-                    if ($row2 > $row1) $s->mergeCells("B{$row1}:B{$row2}");
+                    if ($row2 > $row1) {
+                        $s->mergeCells("B{$row1}:B{$row2}");
+                    }
+
                     $s->getStyle("B{$row1}:B{$row2}")->applyFromArray([
                         'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blueDark]],
                         'font' => ['bold'=>true,'color'=>['argb'=>$fontW]],
-                        'alignment' => ['horizontal'=>Alignment::HORIZONTAL_LEFT,'vertical'=>Alignment::VERTICAL_CENTER],
+                        'alignment' => [
+                            'horizontal'=>Alignment::HORIZONTAL_LEFT,
+                            'vertical'  =>Alignment::VERTICAL_CENTER,
+                        ],
                     ]);
                 }
 
-                // ===== Merge Controlador (A) por bloque + badge azul
+                // ===== Merge Controlador (A) por bloque + badge azul =====
                 if ($dataRows > 0) {
                     $ctrlStart = $dataStartRow;
                     $prevCtrl  = $this->rows[0]['controller'];
-                    for ($k=1; $k < $dataRows; $k++) {
+
+                    for ($k = 1; $k < $dataRows; $k++) {
                         $curr = $this->rows[$k]['controller'];
                         if ($curr !== $prevCtrl) {
                             $ctrlEnd = $dataStartRow + $k - 1;
@@ -276,56 +280,64 @@ class DeparturesStatsMonthlyExport implements FromArray, WithHeadings, WithStyle
                             $s->getStyle("A{$ctrlStart}:A{$ctrlEnd}")->applyFromArray([
                                 'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blueDark]],
                                 'font' => ['bold'=>true,'color'=>['argb'=>$fontW]],
-                                'alignment' => ['horizontal'=>Alignment::HORIZONTAL_LEFT,'vertical'=>Alignment::VERTICAL_CENTER],
+                                'alignment' => [
+                                    'horizontal'=>Alignment::HORIZONTAL_LEFT,
+                                    'vertical'  =>Alignment::VERTICAL_CENTER,
+                                ],
                             ]);
                             $ctrlStart = $ctrlEnd + 1;
                             $prevCtrl  = $curr;
                         }
                     }
+
                     $ctrlEnd = $dataStartRow + $dataRows - 1;
                     $s->mergeCells("A{$ctrlStart}:A{$ctrlEnd}");
                     $s->getStyle("A{$ctrlStart}:A{$ctrlEnd}")->applyFromArray([
                         'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blueDark]],
                         'font' => ['bold'=>true,'color'=>['argb'=>$fontW]],
-                        'alignment' => ['horizontal'=>Alignment::HORIZONTAL_LEFT,'vertical'=>Alignment::VERTICAL_CENTER],
+                        'alignment' => [
+                            'horizontal'=>Alignment::HORIZONTAL_LEFT,
+                            'vertical'  =>Alignment::VERTICAL_CENTER,
+                        ],
                     ]);
                 }
 
-                // ===== Totales (últimas 2 filas) + TOTAL GENERAL
-                $lastRow = (int)$s->getHighestRow();
-                $footerS = $lastRow - 1; // Salidas
-                $footerM = $lastRow;     // S/
+                // ===== Totales (últimas 2 filas) + TOTAL GENERAL =====
+                $lastRow  = (int)$s->getHighestRow();
+                $footerS  = $lastRow - 1; // fila "Salidas"
+                $footerM  = $lastRow;     // fila "S/"
+                $lastColL = Coordinate::stringFromColumnIndex($lastColIdx);
+
                 foreach ([$footerS, $footerM] as $fr) {
-                    for ($c = $firstDayColIdx; $c <= $lastColIdx; $c++) {
-                        $cell = $s->getCellByColumnAndRow($c, $fr);
-                        if ($cell->getValue() === null || $cell->getValue() === '') {
-                            $cell->setValueExplicit(0, DataType::TYPE_NUMERIC);
-                        }
-                    }
                     $s->getStyle("A{$fr}:{$lastCol}{$fr}")->applyFromArray([
                         'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$footerFill]],
                         'font' => ['bold'=>true,'color'=>['argb'=>$fontB],'size'=>10],
-                        'borders' => ['outline' => ['borderStyle'=>Border::BORDER_MEDIUM,'color'=>['argb'=>$blueDark]]],
+                        'borders' => [
+                            'outline' => [
+                                'borderStyle'=>Border::BORDER_MEDIUM,
+                                'color'      => ['argb'=>$blueDark],
+                            ]
+                        ],
                         'alignment' => ['vertical'=>Alignment::VERTICAL_CENTER],
                     ]);
-                    $s->getStyle("D{$fr}:{$lastColL}{$fr}")->getNumberFormat()->setFormatCode('0');
-                    $s->getStyle("A{$fr}:B{$fr}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-                    $s->getStyle("C{$fr}:{$lastColL}{$fr}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                    $s->getStyle("A{$fr}:B{$fr}")
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+                    $s->getStyle("C{$fr}:{$lastColL}{$fr}")
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                     $s->getRowDimension($fr)->setRowHeight(18);
                 }
 
-                // TOTAL GENERAL en A (2 filas fusionadas)
+                // TOTAL GENERAL merge en A
                 $s->mergeCells("A{$footerS}:A{$footerM}");
                 $s->setCellValue("A{$footerS}", 'TOTAL GENERAL');
                 $s->getStyle("A{$footerS}:A{$footerM}")->applyFromArray([
                     'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blueDark]],
                     'font' => ['bold'=>true,'color'=>['argb'=>$fontW]],
-                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_LEFT,'vertical'=>Alignment::VERTICAL_CENTER],
+                    'alignment' => [
+                        'horizontal'=>Alignment::HORIZONTAL_LEFT,
+                        'vertical'  =>Alignment::VERTICAL_CENTER,
+                    ],
                 ]);
-                $s->getStyle("B{$footerS}:B{$footerM}")
-                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-                $s->getStyle("C{$footerS}:C{$footerM}")
-                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             }
         ];
     }
@@ -342,7 +354,7 @@ class DeparturesStatsMonthlyExport implements FromArray, WithHeadings, WithStyle
 
         // Índices de domingos: A=1,B=2,C=3, días desde D=4
         $firstDayColIdx = 4;
-        for ($d=1; $d <= $this->daysInMonth; $d++) {
+        for ($d = 1; $d <= $this->daysInMonth; $d++) {
             if ($start->day($d)->isSunday()) {
                 $this->sundayCols[] = $firstDayColIdx + ($d - 1);
             }
@@ -407,10 +419,11 @@ SQL;
             'end_ts'     => $end->toDateTimeString(),
         ]));
 
-        $this->rows = [];
+        $this->rows          = [];
         $this->totalsSalidas = array_fill(1, $this->daysInMonth, 0);
         $this->totalsMonto   = array_fill(1, $this->daysInMonth, 0);
-        $this->grandSalidas = $this->grandMonto = 0;
+        $this->grandSalidas  = 0;
+        $this->grandMonto    = 0;
 
         if ($raw->isEmpty()) return;
 
@@ -460,7 +473,37 @@ SQL;
 
     protected function monthName(): string
     {
-        $m = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',7=>'Julio',8=>'Agosto',9=>'Septiembre',10=>'Octubre',11=>'Noviembre',12=>'Diciembre'];
+        $m = [
+            1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',
+            5=>'Mayo',6=>'Junio',7=>'Julio',8=>'Agosto',
+            9=>'Septiembre',10=>'Octubre',11=>'Noviembre',12=>'Diciembre'
+        ];
         return $m[$this->month] ?? '';
+    }
+
+    /**
+     * Formatea montos:
+     * - 0      => "0"
+     * - 10     => "S/ 10"
+     * - 10.25  => "S/ 10.25"
+     */
+    protected function formatMoney(float|int|null $value): string
+    {
+        $value = (float) ($value ?? 0);
+
+        // Cero explícito
+        if (abs($value) < 0.0000001) {
+            return '0';
+        }
+
+        // Si es entero → sin decimales
+        if (fmod($value, 1.0) == 0.0) {
+            return number_format($value, 0, '.', '');
+        }
+
+        // Con decimales pero sin .00 de más
+        // number_format a 2 decimales y luego recortamos ceros y punto si sobra
+        $str = number_format($value, 2, '.', '');
+        return rtrim(rtrim($str, '0'), '.');
     }
 }

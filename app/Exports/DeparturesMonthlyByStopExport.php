@@ -100,8 +100,8 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
                 $footerFill = 'FFCEE7FF'; // pies (totales)
                 $fontW      = 'FFFFFFFF';
                 $fontB      = 'FF000000';
-                $borderC    = 'FFCFD8DC';
-                $sunRed     = 'FFEF4444'; // domingos (header de días)
+                $borderC    = '000000';
+                $sunRed     = 'F80000'; // domingos (header de días)
                 $white = 'FFFFFF';
 
                 // Tipografía compacta
@@ -286,7 +286,7 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
                     $s->getStyle("A{$fr}:{$lastCol}{$fr}")->applyFromArray([
                         'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$footerFill]],
                         'font' => ['bold'=>true, 'color'=>['argb'=>$fontB], 'size'=>10],
-                        'borders' => ['outline' => ['borderStyle'=>Border::BORDER_MEDIUM, 'color'=>['argb'=>$blueDark]]],
+                        'borders' => ['outline' => ['borderStyle'=>Border::BORDER_THIN, 'color'=>['argb'=>$borderC]]],
                         'alignment' => ['vertical'=>Alignment::VERTICAL_CENTER],
                     ]);
                     $s->getStyle("D{$fr}:{$lastCol}{$fr}")
