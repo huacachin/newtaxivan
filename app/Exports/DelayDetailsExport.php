@@ -11,13 +11,14 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
-class DelayDetailsExport implements FromArray, ShouldAutoSize, WithHeadings, WithEvents, WithStyles
+class DelayDetailsExport implements FromArray, ShouldAutoSize, WithHeadings, WithEvents, WithStyles, WithTitle
 {
     public function __construct(
         protected string  $monthDate,
@@ -131,6 +132,11 @@ class DelayDetailsExport implements FromArray, ShouldAutoSize, WithHeadings, Wit
         return [2 => ['font' => ['bold' => true]]];
     }
 
+    public function title(): string
+    {
+        return "Deuda Detalle";
+    }
+
     public function registerEvents(): array
     {
         return [
@@ -155,7 +161,7 @@ class DelayDetailsExport implements FromArray, ShouldAutoSize, WithHeadings, Wit
                 $ws->mergeCells("A1:{$lastColLetter}1");
                 $ws->getRowDimension(1)->setRowHeight(22);
                 $ws->getStyle('A1')->applyFromArray([
-                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['rgb' => 'FFCC0000']],
+                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['rgb' => 'F80000']],
                     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
                     'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFFFFF']],
                 ]);
@@ -197,7 +203,7 @@ class DelayDetailsExport implements FromArray, ShouldAutoSize, WithHeadings, Wit
                 // Bordes finos
                 $ws->getStyle("A{$headerRow}:{$lastColLetter}" . max($headerRow, $lastRow))
                     ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)
-                    ->getColor()->setRGB('CFD8DC');
+                    ->getColor()->setRGB('000000');
 
                 // Centrar todas las columnas
                 $ws->getStyle("A{$dataStartRow}:{$lastColLetter}" . ($lastRow >= $dataStartRow ? $lastRow : $headerRow))
@@ -230,7 +236,8 @@ class DelayDetailsExport implements FromArray, ShouldAutoSize, WithHeadings, Wit
                     'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'CEE7FF']],
                 ]);
                 $ws->getStyle("A{$totalRow}:{$lastColLetter}{$totalRow}")
-                    ->getBorders()->getTop()->setBorderStyle(Border::BORDER_MEDIUM);
+                    ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)
+                    ->getColor()->setRGB('000000');
                 $ws->getStyle("E{$totalRow}")->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
             },
         ];

@@ -257,7 +257,7 @@ class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTi
                 }
 
                 // Freeze después de D y debajo del thead
-                $ws->freezePane("E{$dataStartRow}");
+                //$ws->freezePane("E{$dataStartRow}");
 
                 // Rango de datos
                 $lastDataRow = $dataStartRow + max(0, $this->rowCount) - 1;
@@ -390,8 +390,8 @@ class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTi
                         'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$footerBg]],
                     ]);
                     $ws->getStyle("A{$totalRow}:{$lastColLetter}{$totalRow}")
-                        ->getBorders()->getTop()->setBorderStyle(Border::BORDER_MEDIUM)
-                        ->getColor()->setARGB($blue);
+                        ->getBorders()->getTop()->setBorderStyle(Border::BORDER_THIN)
+                        ->getColor()->setARGB($borderC);
                     $ws->getStyle("{$paidAmtColLetter}{$totalRow}")->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
                     $ws->getStyle("{$debtAmtColLetter}{$totalRow}")->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
                     $ws->getStyle("{$paidDaysColLetter}{$totalRow}:{$debtDaysColLetter}{$totalRow}")

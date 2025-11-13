@@ -153,7 +153,7 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
                 // Bordes + zebra
                 $ws->getStyle("A{$headerRow}:{$lastCol}" . max($headerRow, $lastRow))
                     ->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN)
-                    ->getColor()->setRGB('CFD8DC');
+                    ->getColor()->setRGB('0000');
 
                 if ($lastRow >= $dataStartRow) {
                     $cond = new \PhpOffice\PhpSpreadsheet\Style\Conditional();
@@ -254,7 +254,8 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
                     'fill'      => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => 'CEE7FF']],
                 ]);
                 $ws->getStyle("A{$totalRow}:{$lastCol}{$totalRow}")
-                    ->getBorders()->getTop()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM);
+                    ->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN)
+                    ->getColor()->setRGB('0000');
 
                 foreach (['F','G','H','I','J'] as $c) {
                     $ws->getStyle("{$c}{$totalRow}")
