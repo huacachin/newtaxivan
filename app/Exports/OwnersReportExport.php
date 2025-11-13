@@ -25,13 +25,11 @@ class OwnersReportExport implements
 {
     public function __construct(
         protected ?string $search = null,
-        protected string  $filter = 'plate' // plate|name|code
+        protected string  $filter = 'plate'
     ) {}
 
-    /** Correlativo para el primer cuadro (activos) */
     private int $rowNum = 0;
 
-    /* ==================== PRIMER CUADRO (ACTIVOS) ==================== */
     public function query(): Builder
     {
         $s    = trim((string)$this->search);
@@ -47,43 +45,30 @@ class OwnersReportExport implements
                 if ($this->filter === 'code')  $q->where('o.id','like',$like);
                 if ($this->filter === 'plate') $q->where('v.plate','like',$like);
             })
-            ->select([
-                'o.id',
-                'o.name',
-                'v.plate',
-                'o.document_number',
-                'o.phone',
-                'v.sort_order',
-            ])
+            ->select(['o.id','o.name','v.plate','o.document_number','o.phone','v.sort_order'])
             ->orderByRaw('v.sort_order IS NULL, v.sort_order ASC')
             ->orderBy('v.plate');
     }
 
     public function headings(): array
     {
-        // Orden nuevo: A..E
         return ['ID','Placa','Nombre','N° Documento','Teléfono'];
     }
 
     public function map($r): array
     {
-        // Orden nuevo: ID, Placa, Nombre, Documento, Teléfono
         return [
-            ++$this->rowNum,                       // ID correlativo
-            strtoupper((string)$r->plate),         // Placa (B)
-            (string)$r->name,                      // Nombre (C)
-            (string)$r->document_number,           // N° Documento (D) - texto
-            (string)$r->phone,                     // Teléfono (E) - texto
+            ++$this->rowNum,
+            strtoupper((string)$r->plate),
+            (string)$r->name,
+            (string)$r->document_number,
+            (string)$r->phone,
         ];
     }
 
     public function columnFormats(): array
     {
-        // D: N° Documento (texto), E: Teléfono (texto)
-        return [
-            'D' => '@',
-            'E' => '@',
-        ];
+        return ['D' => '@','E' => '@'];
     }
 
     public function styles(Worksheet $sheet)
@@ -91,63 +76,54 @@ class OwnersReportExport implements
         return [1 => ['font' => ['bold' => true]]];
     }
 
-    /* ==================== DISEÑO: 2 CUADROS EN UNA HOJA ==================== */
     public function registerEvents(): array
     {
         return [
             AfterSheet::class => function (AfterSheet $e) {
+                $e->sheet->getDelegate()->setTitle('Propietarios');
                 $ws = $e->sheet->getDelegate();
 
-                // Fuente global 10pt
                 $ws->getParent()->getDefaultStyle()->getFont()->setSize(10);
 
-                // Paleta
-                $blue     = 'FF2874A6'; // #2874A6
-                $footerBg = 'FFCEE7FF'; // #CEE7FF
+                $blue     = 'FF2874A6';
+                $footerBg = 'FFCEE7FF';
                 $white    = 'FFFFFFFF';
                 $borderC  = 'FFCFD8DC';
-                $black    = '000000';
+                $red    = 'F80000';
 
-                /* ---------- Título (sin subtítulo) ---------- */
-                $ws->insertNewRowBefore(1, 2);
+                // Solo 1 fila de título (se eliminó fila 2)
+                $ws->insertNewRowBefore(1, 1);
 
-                // Índices de tabla 1
-                $head1  = 3;  // THEAD
-                $start1 = 4;  // datos
+                $head1  = 2; // encabezado principal ahora en fila 2
+                $start1 = 3; // datos empiezan en 3
                 $last   = (int)$ws->getHighestRow();
 
-                // Título con placeholder (actualizamos al final)
+                // === Título ===
                 $ws->setCellValue('A1','LISTADO GENERAL DE PROPIETARIO ( 0 )');
                 $ws->mergeCells('A1:E1');
                 $ws->getStyle('A1:E1')->applyFromArray([
-                    'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$black]],
-                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
+                    'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$red]],
+                    'alignment' => [
+                        'horizontal'=>Alignment::HORIZONTAL_CENTER,
+                        'vertical'=>Alignment::VERTICAL_CENTER
+                    ],
                     'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$white]],
                 ]);
                 $ws->getRowDimension(1)->setRowHeight(18);
 
-                // Fila 2 vacía (subtítulo retirado)
-                $ws->mergeCells('A2:E2');
-                $ws->setCellValue('A2', '');
-                $ws->getRowDimension(2)->setRowHeight(4);
-
-                /* ---------- Encabezado + cuerpo del PRIMER cuadro (ACTIVOS) ---------- */
-                // THEAD azul
+                // === Encabezado del primer cuadro ===
                 $ws->getStyle("A{$head1}:E{$head1}")->applyFromArray([
                     'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$white]],
                     'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
                     'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blue]],
                 ]);
                 $ws->getRowDimension($head1)->setRowHeight(16);
-
-                // Congelar encabezado
-                $ws->freezePane("A{$start1}");
+                //$ws->freezePane("A{$start1}");
 
                 $last = (int)$ws->getHighestRow();
                 $hasData1 = $last >= $start1;
                 $end1     = $hasData1 ? $last : ($start1 - 1);
 
-                // Sin AutoFilter (pediste quitar filtros automáticos SOLO aquí)
                 if ($hasData1) {
                     $ws->getStyle("A{$head1}:E{$end1}")
                         ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)
@@ -163,18 +139,13 @@ class OwnersReportExport implements
                     $styles1[] = $z1;
                     $ws->getStyle($range1)->setConditionalStyles($styles1);
 
-                    // Alineaciones con nuevo orden
-                    $ws->getStyle("A{$start1}:A{$end1}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // ID
-                    $ws->getStyle("B{$start1}:B{$end1}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setWrapText(false); // Placa
-                    $ws->getStyle("C{$start1}:C{$end1}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT)->setWrapText(false);   // Nombre
-                    $ws->getStyle("D{$start1}:E{$end1}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT)->setWrapText(false);   // Doc / Tel
+                    $ws->getStyle("A{$start1}:A{$end1}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                    $ws->getStyle("B{$start1}:B{$end1}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                    $ws->getStyle("C{$start1}:C{$end1}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+                    $ws->getStyle("D{$start1}:E{$end1}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
                 }
 
-                // Pie (TOTAL ACTIVOS)
+                // === Pie totales activos ===
                 $foot1 = $end1 + 1;
                 $countActive = $hasData1 ? ($end1 - $start1 + 1) : 0;
                 $ws->mergeCells("A{$foot1}:D{$foot1}");
@@ -185,21 +156,16 @@ class OwnersReportExport implements
                     'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$footerBg]],
                     'borders' => ['outline' => ['borderStyle'=>Border::BORDER_MEDIUM,'color'=>['argb'=>$blue]]],
                 ]);
-                $ws->getStyle("A{$foot1}:D{$foot1}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-                $ws->getStyle("E{$foot1}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-                /* ---------- SEGUNDO cuadro (LIBRES) ---------- */
+                // === Segundo cuadro ===
                 $title2 = $foot1 + 2;
                 $ws->setCellValue("A{$title2}", 'PROPIETARIOS LIBRES');
                 $ws->mergeCells("A{$title2}:E{$title2}");
                 $ws->getStyle("A{$title2}:E{$title2}")->applyFromArray([
-                    'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$white]],
+                    'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$red]],
                     'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
-                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blue]],
+                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$white]],
                 ]);
-                $ws->getRowDimension($title2)->setRowHeight(16);
-
-                // Header 2
                 $head2  = $title2 + 1;
                 $ws->fromArray($this->headings(), null, "A{$head2}");
                 $ws->getStyle("A{$head2}:E{$head2}")->applyFromArray([
@@ -207,43 +173,17 @@ class OwnersReportExport implements
                     'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
                     'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blue]],
                 ]);
-                $ws->getRowDimension($head2)->setRowHeight(16);
 
-                // Data libres
                 $start2 = $head2 + 1;
-                $freeRows = $this->fetchFreeOwners(); // ya con nuevo orden
+                $freeRows = $this->fetchFreeOwners();
                 $countFree = count($freeRows);
 
                 if ($countFree > 0) {
                     $ws->fromArray($freeRows, null, "A{$start2}");
                     $end2 = $start2 + $countFree - 1;
-
-                    // Bordes + gris suave
                     $ws->getStyle("A{$head2}:E{$end2}")
                         ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)
                         ->getColor()->setARGB($borderC);
-                    $ws->getStyle("A{$start2}:E{$end2}")
-                        ->getFill()->setFillType(Fill::FILL_SOLID)
-                        ->getStartColor()->setARGB('FFE5E7EB');
-
-                    // Alineaciones (nuevo orden)
-                    $ws->getStyle("A{$start2}:A{$end2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // ID
-                    $ws->getStyle("B{$start2}:B{$end2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setWrapText(false); // Placa (—)
-                    $ws->getStyle("C{$start2}:C{$end2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT)->setWrapText(false); // Nombre
-                    $ws->getStyle("D{$start2}:E{$end2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT)->setWrapText(false); // Doc/Tel
-
-                    // Totales 2
-                    $foot2 = $end2 + 1;
-                    $ws->mergeCells("A{$foot2}:D{$foot2}");
-                    $ws->setCellValue("A{$foot2}", 'TOTAL LIBRES');
-                    $ws->setCellValue("E{$foot2}", $countFree);
-                    $ws->getStyle("A{$foot2}:E{$foot2}")->applyFromArray([
-                        'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>'FF000000']],
-                        'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$footerBg]],
-                        'borders' => ['outline' => ['borderStyle'=>Border::BORDER_MEDIUM,'color'=>['argb'=>$blue]]],
-                    ]);
-                    $ws->getStyle("A{$foot2}:D{$foot2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-                    $ws->getStyle("E{$foot2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 } else {
                     $msgRow = $start2;
                     $ws->mergeCells("A{$msgRow}:E{$msgRow}");
@@ -251,30 +191,32 @@ class OwnersReportExport implements
                     $ws->getStyle("A{$msgRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 }
 
-                // === Actualizar título con cantidad total (activos + libres) ===
+                // Actualizar total
                 $totalOwners = $countActive + $countFree;
                 $ws->setCellValue('A1', "LISTADO GENERAL DE PROPIETARIO ( {$totalOwners} )");
 
-                /* ---------- Anchos mínimos (compacto real, sin shrink) ---------- */
+                // Ajustes finales
                 foreach (['A','B','C','D','E'] as $col) {
                     $ws->getColumnDimension($col)->setAutoSize(false);
                 }
-                // A:ID  B:Placa  C:Nombre  D:N° Documento  E:Teléfono
                 $ws->getColumnDimension('A')->setWidth(4.2);
                 $ws->getColumnDimension('B')->setWidth(9.5);
                 $ws->getColumnDimension('C')->setWidth(20.0);
                 $ws->getColumnDimension('D')->setWidth(12.0);
                 $ws->getColumnDimension('E')->setWidth(11.0);
 
-                // Evitar aire extra
-                $lastRow = (int) $ws->getHighestRow();
-                $ws->getStyle("A1:E{$lastRow}")
-                    ->getAlignment()->setWrapText(false)->setIndent(0);
+                $lastRow = (int)$ws->getHighestRow();
+                $ws->getStyle("A1:E{$lastRow}")->getAlignment()->setWrapText(false);
+
+                // 🟩 Bordes globales
+                $fullRange = "A1:E{$lastRow}";
+                $ws->getStyle($fullRange)->getBorders()->getAllBorders()
+                    ->setBorderStyle(Border::BORDER_THIN)
+                    ->getColor()->setARGB('FF9E9E9E');
             },
         ];
     }
 
-    /** “Propietarios libres” mapeados a las 5 columnas pedidas, con ID correlativo propio. */
     private function fetchFreeOwners(): array
     {
         $s    = trim((string)$this->search);
@@ -293,14 +235,10 @@ class OwnersReportExport implements
             ->get();
 
         $out = [];
-        $i = 1; // correlativo del segundo cuadro
+        $i = 1;
         foreach ($rows as $r) {
             $out[] = [
-                $i++,                        // A: ID correlativo
-                '—',                         // B: Placa (libre)
-                (string)$r->name,            // C: Nombre
-                (string)$r->document_number, // D: N° Documento
-                (string)$r->phone,           // E: Teléfono
+                $i++, '—', (string)$r->name, (string)$r->document_number, (string)$r->phone,
             ];
         }
         return $out;

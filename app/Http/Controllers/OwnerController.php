@@ -30,7 +30,7 @@ class OwnerController extends Controller
         $search = $request->query('search');
         $filter = $request->query('filter', 'plate');
 
-        $filename = 'owners_' . now()->format('Ymd_His') . '.xlsx';
+        $filename = 'propietarios_' . now()->format('Ymd_His') . '.xlsx';
 
         return Excel::download(
             new OwnersReportExport($search, $filter),

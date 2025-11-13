@@ -30,7 +30,7 @@ class DriverController extends Controller
         $search = $request->query('search');
         $filter = $request->query('filter', 'plate');
 
-        $filename = 'drivers_' . now()->format('Ymd_His') . '.xlsx';
+        $filename = 'conductores_' . now()->format('Ymd_His') . '.xlsx';
 
         return Excel::download(
             new DriversReportExport($search, $filter),
