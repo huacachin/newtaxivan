@@ -13,6 +13,7 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
@@ -20,7 +21,7 @@ use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 
 class ExpensesExport implements
     FromQuery, ShouldAutoSize, WithHeadings, WithMapping,
-    WithColumnFormatting, WithStyles, WithEvents
+    WithColumnFormatting, WithStyles, WithEvents, WithTitle
 {
     /** contador de item (1..n) */
     private int $i = 0;
@@ -116,6 +117,11 @@ class ExpensesExport implements
         return [1 => ['font' => ['bold' => true]]];
     }
 
+    public function title(): string
+    {
+        return 'Egresos';
+    }
+
     /* ========================= ESTILOS AVANZADOS ========================= */
     public function registerEvents(): array
     {
@@ -125,7 +131,7 @@ class ExpensesExport implements
 
                 $BLUE   = 'FF2874A6';
                 $FOOT   = 'FFCEE7FF';
-                $BORDER = 'FFCFD8DC';
+                $BORDER = '000000';
 
                 $ws->getParent()->getDefaultStyle()->getFont()->setSize(10);
                 $ws->getDefaultRowDimension()->setRowHeight(13);
@@ -136,7 +142,7 @@ class ExpensesExport implements
                 $ws->mergeCells('A1:G1');
                 $ws->getRowDimension(1)->setRowHeight(16);
                 $ws->getStyle('A1')->applyFromArray([
-                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['rgb' => '2874A6']],
+                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['rgb' => 'F80000']],
                     'alignment' => [
                         'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
                         'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,

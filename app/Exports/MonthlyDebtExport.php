@@ -9,10 +9,11 @@ use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyles
+class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyles, WithTitle
 {
     public function __construct(
         protected string $monthDate,
@@ -115,6 +116,12 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
             'Amort.',
             'Pend.',
         ];
+    }
+
+
+    public function title(): string
+    {
+        return 'Deuda Mensual';
     }
 
     public function styles(Worksheet $sheet)

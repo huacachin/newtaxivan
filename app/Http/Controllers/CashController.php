@@ -71,7 +71,7 @@ class CashController extends Controller
         $date_start = $request->query('date_start');
         $date_end   = $request->query('date_end');
 
-        $filename = 'incomes_' . now()->format('Ymd_His') . '.xlsx';
+        $filename = 'ingresos_' . now()->format('Ymd_His') . '.xlsx';
 
         return Excel::download(
             new IncomesExport($search, $filterType, $date_start, $date_end),
@@ -85,7 +85,7 @@ class CashController extends Controller
         $date_start = $request->query('date_start');
         $date_end   = $request->query('date_end');
 
-        $filename = 'expenses_' . now()->format('Ymd_His') . '.xlsx';
+        $filename = 'egresos_' . now()->format('Ymd_His') . '.xlsx';
 
         return Excel::download(
             new ExpensesExport($search, $filterType, $date_start, $date_end),

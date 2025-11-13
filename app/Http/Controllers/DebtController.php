@@ -48,7 +48,7 @@ class DebtController extends Controller
         $onlyActive = filter_var($request->query('onlyActive', true), FILTER_VALIDATE_BOOLEAN);
         $condition  = (string) $request->query('condition', '');
 
-        $filename = 'debt_per_days_' . now()->format('Ymd_His') . '.xlsx';
+        $filename = 'deuda_por_dias_' . now()->format('Ymd_His') . '.xlsx';
 
         return Excel::download(
             new DebtsPerDaysExport($monthDate, $onlyActive, $condition),

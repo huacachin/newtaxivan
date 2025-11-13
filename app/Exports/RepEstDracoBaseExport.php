@@ -10,13 +10,14 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
-class RepEstDracoBaseExport implements FromArray, ShouldAutoSize, WithHeadings, WithEvents, WithStyles
+class RepEstDracoBaseExport implements FromArray, ShouldAutoSize, WithHeadings, WithEvents, WithStyles, WithTitle
 {
     public function __construct(protected int $year) {}
 
@@ -220,6 +221,11 @@ class RepEstDracoBaseExport implements FromArray, ShouldAutoSize, WithHeadings, 
 
     public function styles(Worksheet $sheet){ return [1=>['font'=>['bold'=>true]]]; }
 
+    public function title(): string
+    {
+        return 'Rep Est Draco';
+    }
+
     public function registerEvents(): array
     {
         return [
@@ -229,7 +235,7 @@ class RepEstDracoBaseExport implements FromArray, ShouldAutoSize, WithHeadings, 
                 $BLUE = 'FF2874A6';
                 $FOOT = 'FFCEE7FF';
                 $WHITE= 'FFFFFFFF';
-                $BORD = 'FFCBD5E1';
+                $BORD = '000000';
 
                 // Fuente base y alto compacto
                 $ws->getParent()->getDefaultStyle()->getFont()->setSize(10);
@@ -247,7 +253,7 @@ class RepEstDracoBaseExport implements FromArray, ShouldAutoSize, WithHeadings, 
                 $ws->mergeCells("A1:{$lastCol}1");
                 $ws->getRowDimension(1)->setRowHeight(18);
                 $ws->getStyle('A1')->applyFromArray([
-                    'font'      => ['bold' => true, 'size' => 11, 'color' => ['argb' => 'FFE11D48']],
+                    'font'      => ['bold' => true, 'size' => 11, 'color' => ['argb' => 'F80000']],
                     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
                 ]);
 

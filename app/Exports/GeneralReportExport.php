@@ -15,6 +15,7 @@ use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Shared\Font as SharedFont;
@@ -24,7 +25,7 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class GeneralReportExport implements FromArray, ShouldAutoSize, WithEvents, WithColumnFormatting
+class GeneralReportExport implements FromArray, ShouldAutoSize, WithEvents, WithColumnFormatting, WithTitle
 {
     /** Colores */
     private const COLOR_TITLE = '2874A6'; // #2874A6
@@ -205,6 +206,11 @@ class GeneralReportExport implements FromArray, ShouldAutoSize, WithEvents, With
         return [$payments, $departures, $incomes, $expenses];
     }
 
+    public function title(): string
+    {
+        return 'Reporte General';
+    }
+
     public function registerEvents(): array
     {
         return [
@@ -221,9 +227,13 @@ class GeneralReportExport implements FromArray, ShouldAutoSize, WithEvents, With
                 // Título (A1:F1)
                 $sheet->mergeCells('A1:F1');
                 $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
-                $sheet->getStyle('A1')->getAlignment()
-                    ->setHorizontal(Alignment::HORIZONTAL_CENTER)
-                    ->setVertical(Alignment::VERTICAL_CENTER);
+                $sheet->getStyle('A1')->applyFromArray([
+                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['rgb' => 'F80000']],
+                    'alignment' => [
+                        'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                        'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                    ],
+                ]);
 
                 // Encabezado (fila 2) — #2874A6
                 $sheet->getStyle('A2:F2')->getFill()->setFillType(Fill::FILL_SOLID)
@@ -233,7 +243,7 @@ class GeneralReportExport implements FromArray, ShouldAutoSize, WithEvents, With
                 $sheet->getStyle('A2:F2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
                 // Congelar desde fila 3
-                $sheet->freezePane('A3');
+                //$sheet->freezePane('A3');
 
                 // Footers diarios — #CEE7FF
                 foreach ($this->dailyFooterRows as $r) {

@@ -7,6 +7,7 @@ use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -14,7 +15,7 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
-class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray, Responsable
+class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray, Responsable, WithTitle
 {
     use Exportable;
 
@@ -65,6 +66,12 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
         return $formats;
     }
 
+    public function title(): string
+    {
+        return 'Rep Salidas y Pagos';
+    }
+
+
     public function registerEvents(): array
     {
         return [
@@ -80,7 +87,7 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
 
                 // Colores
                 $blueHeader  = 'FF2874A6'; // encabezados
-                $red         = 'C0392B'; // diferencias/ceros
+                $red         = 'F80000'; // diferencias/ceros
 
                 // Estilos helper
                 $thin = ['borders'=>['allBorders'=>['borderStyle'=>Border::BORDER_THIN,'color'=>['rgb'=>$red]]]];

@@ -13,6 +13,7 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
@@ -20,7 +21,7 @@ use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 
 class IncomesExport implements
     FromQuery, ShouldAutoSize, WithHeadings, WithMapping,
-    WithColumnFormatting, WithStyles, WithEvents
+    WithColumnFormatting, WithStyles, WithEvents,WithTitle
 {
     /** contador de item (1..n) */
     private int $i = 0;
@@ -100,6 +101,11 @@ class IncomesExport implements
         ];
     }
 
+    public function title(): string
+    {
+        return 'Ingresos';
+    }
+
     public function styles(Worksheet $sheet)
     {
         // Header en negrita (fila que quedará en 2 tras insertar el título)
@@ -116,7 +122,7 @@ class IncomesExport implements
                 // Paleta
                 $BLUE   = 'FF2874A6';
                 $FOOT   = 'FFCEE7FF';
-                $BORDER = 'FFCFD8DC';
+                $BORDER = '000000';
 
                 // Fuente base y altura compacta (sin reducción automática del texto)
                 $ws->getParent()->getDefaultStyle()->getFont()->setSize(10);
@@ -128,7 +134,7 @@ class IncomesExport implements
                 $ws->mergeCells('A1:F1');
                 $ws->getRowDimension(1)->setRowHeight(16);
                 $ws->getStyle('A1')->applyFromArray([
-                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['rgb' => 'FFEF4444']],
+                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['rgb' => 'F80000']],
                     'alignment' => [
                         'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
                         'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,

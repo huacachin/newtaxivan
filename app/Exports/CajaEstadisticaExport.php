@@ -47,7 +47,7 @@ class CajaEstadisticaExport implements WithEvents
     /* ===== Estilos / colores ===== */
     private const BLUE_DARK  = '2874A6';
     private const BLUE_LIGHT = 'CEE7FF';
-    private const RED_TITLE  = 'D32F2F';
+    private const RED_TITLE  = 'F80000';
     private const NUM_FMT    = '#,##0.00';
 
     public function __construct(int $year, int $month, ?int $headquarterId = null)
@@ -108,7 +108,7 @@ class CajaEstadisticaExport implements WithEvents
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => Border::BORDER_THIN,
-                            'color' => ['rgb' => 'BBBBBB'],
+                            'color' => ['rgb' => '000000'],
                         ],
                     ],
                 ]);
@@ -131,6 +131,12 @@ class CajaEstadisticaExport implements WithEvents
             },
         ];
     }
+
+    public function title(): string
+    {
+        return 'Caja Estadística';
+    }
+
 
     /* ============================
      *  Bloque 1: tabla mensual (diaria)
