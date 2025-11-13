@@ -303,7 +303,7 @@ class PaymentsExport implements
                 $ws->getColumnDimension('G')->setWidth(8.5);
                 $ws->getColumnDimension('H')->setWidth(8.0);
                 $ws->getColumnDimension('I')->setWidth(6.5);
-                $ws->getColumnDimension('J')->setWidth(10.0);
+                $ws->getColumnDimension('J')->setWidth(12.0);
             },
         ];
     }
