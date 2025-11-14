@@ -139,13 +139,13 @@
 
                         {{-- Fecha Inicio --}}
                         <div class="col-auto">
-                            <label class="form-label d-none d-lg-block mb-1">Fecha Inicio</label>
+                            <label class="form-label mb-1">Fecha Inicio</label>
                             <input type="text" id="uiFromDate" class="form-control form-control-sm" wire:model.defer="uiFromDate">
                         </div>
 
                         {{-- Fecha Fin --}}
                         <div class="col-auto">
-                            <label class="form-label d-none d-lg-block mb-1">Fecha Fin</label>
+                            <label class="form-label mb-1">Fecha Fin</label>
                             <input type="text" id="uiToDate" class="form-control form-control-sm" wire:model.defer="uiToDate">
                         </div>
 
@@ -315,7 +315,7 @@
 
                     <h4 class="my-2 title-modules text-center">VEHÍCULOS DE APOYO</h4>
                     <div class="table-responsive mb-3">
-                        <table class=" table table-bordered table-striped   p-0">
+                        <table class=" table table-bordered table-striped   p-0 table-hover">
                             <thead class="text-center bg-primary">
                             <tr>
                                 @if(!$groupMode)

@@ -65,14 +65,14 @@
             <div class="card">
                 <div class="card-body">
 
-                        <h5 class="mb-1">Total vehículos: {{ $vehicles->count() }}</h5>
+                        <h5 class="mb-1">Total vehículos: <span class="title-modules">{{ $vehicles->count() }}</span></h5>
                         <p class="mb-0">
-                            <strong>D2:</strong> {{ $vehicles->where('fuel','D2')->count() }} ·
+                            <strong class="title-modules">D2:</strong> <span class="title-modules">{{ $vehicles->where('fuel','D2')->count() }}</span> ·
                             <strong>Gas:</strong> {{ $vehicles->where('fuel','GAS')->count() }} ·
-                            <strong>V.T:</strong> {{ $vehicles->whereIn('fuel', ['GAS','D2'])->count() }} ·
-                            <strong>V.Q.N.T:</strong> {{ $vehicles->whereNotIn('fuel', ['GAS','D2'])->count() }} ·
+                            <strong class="title-modules">V.T:</strong> <span class="title-modules">{{ $vehicles->whereIn('fuel', ['GAS','D2'])->count() }}</span> ·
+                            <strong>V.Q.N.T:</strong> <span class="title-modules">{{ $vehicles->whereNotIn('fuel', ['GAS','D2'])->count() }}</span> ·
                             <strong>Propietario:</strong> {{ $owners }} ·
-                            <strong>Conductor:</strong> {{ $drivers }}
+                            <strong>Conductor:</strong> <span class="title-modules">{{ $drivers }}</span>
                         </p>
                         <div class="row my-2">
                             <div class="col-12">
