@@ -78,7 +78,7 @@
         font-weight: 600;
     }
 
-    .btn-nuevo{
+    .btn-search{
         background: #2d2f39 !important;
         color: #fff !important;
     }

@@ -151,7 +151,7 @@
 
                         {{-- Botón aplicar (pegado a los inputs) --}}
                         <div class="col-auto d-flex align-items-end">
-                            <button class="btn btn-primary btn-sm"
+                            <button class="btn btn-search btn-sm"
                                     wire:click="applyDateRange"
                                     wire:loading.attr="disabled"
                                     wire:target="applyDateRange">
@@ -162,7 +162,7 @@
 
                     {{-- ===== Acciones (dejas tu bloque actual) ===== --}}
                     <div class="d-flex flex-wrap gap-2 justify-content-start mb-2">
-                        <button class="btn btn-sm btn-nuevo" wire:click="openAddWindow">
+                        <button class="btn btn-sm btn-success" wire:click="openAddWindow">
                             <i class="ti ti-square-plus f-s-12"></i> Nuevo
                         </button>
                         @role('admin')
