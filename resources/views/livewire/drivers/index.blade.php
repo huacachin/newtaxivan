@@ -109,7 +109,8 @@
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">
                             <tr>
-                                <th>Id</th>
+                                <th>Item</th>
+                                <th>Cod</th>
                                 <th>Placa</th>
                                 <th>Nombre</th>
                                 <th>DNI</th>
@@ -125,6 +126,7 @@
                                 @foreach($drivers as $driver)
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
+                                        <td>{{$driver->vehicles->first()->sort_order}}</td>
                                         <td>{{ $driver->vehicles->first()->plate ?? '—' }}</td>
                                         <td>{{ $driver->name }}</td>
                                         <td>{{ $driver->document_number }}</td>

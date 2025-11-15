@@ -108,7 +108,8 @@
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">
                             <tr>
-                                <th>Id</th>
+                                <th>Item</th>
+                                <th>Cod</th>
                                 <th scope="col">Placa</th>
                                 <th scope="col">Nombre/Empresa</th>
                                 <th scope="col">DNI/RUC</th>
@@ -121,6 +122,7 @@
                                 @foreach ($owners as $owner)
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
+                                        <td>{{$owner->sort_order}}</td>
                                         <td>{{ $owner->plate }}</td>
                                         <td>{{ $owner->name }}</td>
                                         <td>{{ $owner->document_number }}</td>

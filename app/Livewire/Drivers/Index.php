@@ -3,6 +3,7 @@
 namespace App\Livewire\Drivers;
 
 use App\Models\Driver;
+use App\Models\Vehicle;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
@@ -102,29 +103,50 @@ class Index extends Component
         $search = $this->search;
 
         $this->drivers = Driver::query()
-            ->whereHas('vehicles', fn($q) => $q->whereRaw("LOWER(TRIM(status)) = 'active'") // o 'activo'
-            )
-            ->with(['vehicles' => fn($q) => $q->whereRaw("LOWER(TRIM(status)) = 'active'")
-                ->select('id', 'driver_id', 'plate', 'status')
+            // columnas del driver
+            ->select('id', 'name', 'document_number', 'phone', 'contract_start', 'contract_end', 'condition')
+
+            // subquery para obtener el sort_order del vehículo activo
+            ->addSelect([
+                'vehicle_sort_order' => Vehicle::select('sort_order')
+                    ->whereColumn('vehicles.driver_id', 'drivers.id')
+                    ->whereRaw("LOWER(TRIM(status)) = 'active'")
+                    ->orderBy('sort_order')   // por si hay más de un vehículo activo
+                    ->limit(1),
             ])
+
+            // solo drivers con vehículos activos
+            ->whereHas('vehicles', fn ($q) =>
+            $q->whereRaw("LOWER(TRIM(status)) = 'active'")
+            )
+
+            // eager load de vehículos activos
+            ->with([
+                'vehicles' => fn ($q) => $q->whereRaw("LOWER(TRIM(status)) = 'active'")
+                    ->select('id', 'driver_id', 'plate', 'status', 'sort_order')
+                    ->orderBy('sort_order', 'asc'),
+            ])
+
+            // filtros
             ->when($filter && $search, function ($query) use ($filter, $search) {
                 $search = trim($search);
 
                 if ($filter === 'plate') {
-                    // Buscar por placa en la relación
-                    $query->whereHas('vehicles', fn($q) => $q->where('plate', 'like', "%{$search}%")
+                    $query->whereHas('vehicles', fn ($q) =>
+                    $q->where('plate', 'like', "%{$search}%")
                     );
                 } elseif ($filter === 'name') {
-                    // Buscar por nombre del driver
                     $query->where('name', 'like', "%{$search}%");
                 } elseif ($filter === 'code') {
-                    // Buscar por nombre del driver
-                    $query->whereHas('vehicles', fn($q) => $q->where('id', $search)
+                    $query->whereHas('vehicles', fn ($q) =>
+                    $q->where('id', $search)
                     );
                 }
             })
-            ->orderBy('name')
-            ->get(['id', 'name', 'document_number', 'phone', 'contract_start', 'contract_end', 'condition']);
+
+            // ordenar por el sort_order del vehículo activo
+            ->orderBy('vehicle_sort_order', 'asc')
+            ->get();
 
         $this->driversFree = Driver::whereDoesntHave('vehicles', function ($q) {
             $q->whereRaw("LOWER(TRIM(status)) = 'active'"); // o 'activo'

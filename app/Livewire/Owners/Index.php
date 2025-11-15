@@ -64,12 +64,13 @@ class Index extends Component
             )
             ->select(
                 'o.id',
+                'v.sort_order',
                 'o.name',
                 'o.document_number',
                 'o.phone',
                 'v.plate' // puede venir NULL si el owner no tiene placa activa (LEFT JOIN)
             )
-            ->orderBy('o.name')
+            ->orderBy('v.sort_order','asc')
             ->orderByRaw('v.plate IS NULL, v.plate') // NULLs al final y luego ordena por placa
             ->get();
 
