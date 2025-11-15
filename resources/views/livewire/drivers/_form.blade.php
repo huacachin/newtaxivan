@@ -114,16 +114,40 @@
         @error('condition') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
-    <div class="col-12"><div class="app-divider-v justify-content-center"><p>Credencial de Educación y Seguridad Vial</p></div></div>
+    <div class="col-12"><div class="app-divider-v justify-content-center"><p>CONSTANCIA DE EDUCACION DE VIAL</p></div></div>
 
     <div class="col-auto">
-        <label class="form-label">Fecha Expedición (Cred.)</label>
+        <label class="form-label">Fecha Expedición</label>
+        <input type="text" id="road_education" class="form-control form-control-sm" wire:model="road_education">
+        @error('road_education') <span class="title-modules">{{ $message }}</span> @enderror
+    </div>
+
+    <div class="col-auto">
+        <label class="form-label">Fecha Vencimiento</label>
+        <input type="text" id="road_education_expiration_date" class="form-control form-control-sm" wire:model="road_education_expiration_date">
+        @error('road_education_expiration_date') <span class="title-modules">{{ $message }}</span> @enderror
+    </div>
+
+    <div class="col-12 col-md-4">
+        <label class="form-label">Municipalidad</label>
+        <select class="form-select form-select-sm" wire:model="road_education_municipality">
+            <option value="">Seleccionar</option>
+            <option value="Lima">Lima</option>
+            <option value="Callao">Callao</option>
+        </select>
+        @error('road_education_municipality') <span class="title-modules">{{ $message }}</span> @enderror
+    </div>
+
+    <div class="col-12"><div class="app-divider-v justify-content-center"><p>CREDENCIAL</p></div></div>
+
+    <div class="col-auto">
+        <label class="form-label">Fecha Expedición</label>
         <input type="text" id="credential" class="form-control form-control-sm" wire:model="credential">
         @error('credential') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
     <div class="col-auto">
-        <label class="form-label">Fecha Vencimiento (Cred.)</label>
+        <label class="form-label">Fecha Vencimiento</label>
         <input type="text" id="credential_expiration_date" class="form-control form-control-sm" wire:model="credential_expiration_date">
         @error('credential_expiration_date') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
@@ -132,8 +156,8 @@
         <label class="form-label">Municipalidad</label>
         <select class="form-select form-select-sm" wire:model="credential_municipality">
             <option value="">Seleccionar</option>
-            <option value="lima">Lima</option>
-            <option value="callao">Callao</option>
+            <option value="Lima">Lima</option>
+            <option value="Callao">Callao</option>
         </select>
         @error('credential_municipality') <span class="title-modules">{{ $message }}</span> @enderror
     </div>

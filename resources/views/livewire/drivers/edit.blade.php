@@ -6,7 +6,8 @@
 @endpush
 @push('styles')
     <style>
-        #birthdate,#document_expiration_date,#license_issue_date,#license_revalidation_date,#contract_start,#contract_end,#credential,#credential_expiration_date{
+        #birthdate,#document_expiration_date,#license_issue_date,#license_revalidation_date,#contract_start,#contract_end,
+        #credential,#credential_expiration_date,#road_education,#road_education_expiration_date{
             background: url({{asset('images/calen.png')}}) #fff no-repeat right;
             background-size: 21px 16px;
             padding-right: 2rem;
@@ -101,6 +102,24 @@
                 dateFormat: 'yy-mm-dd',
                 onSelect: function (dateText, inst) {
                     @this.set('contract_end', dateText);
+                }
+            });
+
+            $( "#road_education" ).datepicker({
+                changeMonth: true,
+                changeYear: true,
+                dateFormat: 'yy-mm-dd',
+                onSelect: function (dateText, inst) {
+                    @this.set('road_education', dateText);
+                }
+            });
+
+            $( "#road_education_expiration_date" ).datepicker({
+                changeMonth: true,
+                changeYear: true,
+                dateFormat: 'yy-mm-dd',
+                onSelect: function (dateText, inst) {
+                    @this.set('road_education_expiration_date', dateText);
                 }
             });
 

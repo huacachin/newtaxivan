@@ -29,6 +29,9 @@ class Edit extends Component
     public $contract_end;
     public $condition;
     public $score;
+    public $road_education;
+    public $road_education_expiration_date;
+    public $road_education_municipality;
     public $credential; // fecha
     public $credential_expiration_date;
     public $credential_municipality;
@@ -54,6 +57,9 @@ class Edit extends Component
         $this->contract_end = optional($this->driver->contract_end)?->format('Y-m-d');
         $this->condition = $this->driver->condition;
         $this->score = $this->driver->score;
+        $this->road_education = optional($this->driver->road_education)?->format('Y-m-d');
+        $this->road_education_expiration_date = optional($this->driver->road_education_expiration_date)?->format('Y-m-d');
+        $this->road_education_municipality = $this->driver->road_education_municipality;
         $this->credential = optional($this->driver->credential)?->format('Y-m-d');
         $this->credential_expiration_date = optional($this->driver->credential_expiration_date)?->format('Y-m-d');
         $this->credential_municipality = $this->driver->credential_municipality;
@@ -79,6 +85,9 @@ class Edit extends Component
             'contract_end' => 'nullable|date',
             'condition' => 'nullable|string|max:255',
             'score' => 'nullable|numeric|between:0,100',
+            'road_education' => 'nullable|date',
+            'road_education_expiration_date' => 'nullable|date',
+            'road_education_municipality' => 'nullable|string|max:255',
             'credential' => 'nullable|date',
             'credential_expiration_date' => 'nullable|date',
             'credential_municipality' => 'nullable|string|max:255',
@@ -107,6 +116,9 @@ class Edit extends Component
             "contract_end" => $this->contract_end,
             "condition" => $this->condition,
             "score" => $this->score ?? 0,
+            "road_education" => $this->road_education,
+            "road_education_expiration_date" => $this->road_education_expiration_date,
+            "road_education_municipality" => $this->road_education_municipality,
             "credential" => $this->credential,
             "credential_expiration_date" => $this->credential_expiration_date,
             "credential_municipality" => $this->credential_municipality,
