@@ -77,7 +77,7 @@
         <label for="brand" class="form-label">Marca</label>
         <select id="brand" class="form-select form-select-sm" wire:model="brand">
             <option value="">Seleccione</option>
-            <option value="Hyundai">Hyundai</option>
+            <option value="Hyunday">Hyunday</option>
             <option value="Jac">Jac</option>
             <option value="Changan">Changan</option>
             <option value="DFSK">DFSK</option>
