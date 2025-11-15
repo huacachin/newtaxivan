@@ -145,6 +145,7 @@ class AddPayment extends Component
         $this->date_register = $today;
         $this->date_payment  = $today;
         $this->hour          = $now->format('H:i');
+        $this->type_form     = 'PAGO';
 
         // Cargar sedes y ordenar con primaria primero + seleccionar por defecto
         $this->loadUserHeadquarters();

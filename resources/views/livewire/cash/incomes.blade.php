@@ -37,7 +37,7 @@
             pointer-events: all; /* bloquea clics */
         }
 
-        #date_start, #date_end{
+        #date_start, #date_end,#dateAdd,#dateEdit{
             background: url({{asset('images/calen.png')}}) #fff no-repeat right;
             background-size: 21px 16px;
             padding-right: 2rem;
@@ -254,7 +254,7 @@
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label class="form-label">Fecha</label>
-                            <input type="date" class="form-control" wire:model.live="date">
+                            <input id="dateAdd" type="text" class="form-control" wire:model.live="date">
                             @error('date') <span class="title-modules">{{ $message }}</span> @enderror
                         </div>
 
@@ -346,7 +346,7 @@
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label class="form-label">Fecha</label>
-                            <input type="date" class="form-control" wire:model.live="date">
+                            <input id="dateEdit" type="text" class="form-control" wire:model.live="date">
                             @error('date') <span class="title-modules">{{ $message }}</span> @enderror
                         </div>
 
@@ -449,6 +449,24 @@
                 dateFormat: 'yy-mm-dd',
                 onSelect: function (dateText, inst) {
                     @this.set('ui_date_end', dateText);
+                }
+            });
+
+            $( "#dateAdd" ).datepicker({
+                changeMonth: true,
+                changeYear: true,
+                dateFormat: 'yy-mm-dd',
+                onSelect: function (dateText, inst) {
+                    @this.set('date', dateText);
+                }
+            });
+
+            $( "#dateEdit" ).datepicker({
+                changeMonth: true,
+                changeYear: true,
+                dateFormat: 'yy-mm-dd',
+                onSelect: function (dateText, inst) {
+                    @this.set('date', dateText);
                 }
             });
         });

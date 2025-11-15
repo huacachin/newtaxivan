@@ -6,6 +6,7 @@ use App\Models\Driver;
 use App\Models\Headquarter;
 use App\Models\Owner;
 use App\Models\Vehicle;
+use Carbon\Carbon;
 use Livewire\Component;
 
 class Create extends Component
@@ -46,6 +47,12 @@ class Create extends Component
 
     public function mount()
     {
+        $today = Carbon::today()->toDateString();
+        $this->entry_date = $today;
+        $this->termination_date = $today;
+        $this->certificate_date = $today;
+        $this->soat_date = $today;
+        $this->technical_review = $today;
         $this->listOwners = Owner::all();
         $this->listDrivers = Driver::all();
         $this->listHeadquarters = Headquarter::all();

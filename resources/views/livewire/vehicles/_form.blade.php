@@ -44,14 +44,14 @@
     {{-- F. Ingreso --}}
     <div class="col-6 col-md-2">
         <label for="entry_date" class="form-label">F. Ingreso</label>
-        <input id="entry_date" type="date" class="form-control form-control-sm" wire:model="entry_date">
+        <input id="entry_date" type="text" class="form-control form-control-sm" wire:model="entry_date">
         @error('entry_date') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
     {{-- Fecha Cese --}}
     <div class="col-6 col-md-2">
         <label for="termination_date" class="form-label">Fecha Cese</label>
-        <input id="termination_date" type="date" class="form-control form-control-sm" wire:model="termination_date">
+        <input id="termination_date" type="text" class="form-control form-control-sm" wire:model="termination_date">
         @error('termination_date') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
@@ -246,21 +246,21 @@
     {{-- Soat F.V --}}
     <div class="col-6 col-md-2">
         <label for="soat_date" class="form-label">Soat F.V</label>
-        <input id="soat_date" type="date" class="form-control form-control-sm" wire:model="soat_date">
+        <input id="soat_date" type="text" class="form-control form-control-sm" wire:model="soat_date">
         @error('soat_date') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
     {{-- Certificado F.V --}}
     <div class="col-6 col-md-2">
         <label for="certificate_date" class="form-label">Certificado F.V</label>
-        <input id="certificate_date" type="date" class="form-control form-control-sm" wire:model="certificate_date">
+        <input id="certificate_date" type="text" class="form-control form-control-sm" wire:model="certificate_date">
         @error('certificate_date') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
     {{-- Revisión Técnica F.V --}}
     <div class="col-6 col-md-2">
         <label for="technical_review" class="form-label">Revisión Técnica F.V</label>
-        <input id="technical_review" type="date" class="form-control form-control-sm" wire:model="technical_review">
+        <input id="technical_review" type="text" class="form-control form-control-sm" wire:model="technical_review">
         @error('technical_review') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 

@@ -3,6 +3,7 @@
 namespace App\Livewire\Drivers;
 
 use App\Models\Driver;
+use Carbon\Carbon;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -51,6 +52,18 @@ class Create extends Component
         'credential_expiration_date' => 'nullable|date',
         'credential_municipality' => 'nullable|string|max:255',
     ];
+
+    public function mount(){
+        $today = Carbon::today()->toDateString();
+        $this->birthdate = $today;
+        $this->document_expiration_date = $today;
+        $this->license_issue_date = $today;
+        $this->license_revalidation_date = $today;
+        $this->contract_start = $today;
+        $this->contract_end = $today;
+        $this->credential = $today;
+        $this->credential_expiration_date = $today;
+    }
 
     public function save()
     {

@@ -67,7 +67,7 @@
                         <div class="col-md-2 col-6">
                             <div class="mb-3">
                                 <label class="form-label">Sucursal</label>
-                                <select class="form-control form-control-sm" wire:model.defer="headquarter_id">
+                                <select class="form-select form-select-sm" wire:model.defer="headquarter_id">
                                     <option value="">Seleccionar</option>
                                     @foreach($listHeadquarters as $hq)
                                         <option value="{{ $hq->id }}">{{ $hq->name }}</option>

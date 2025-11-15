@@ -3,6 +3,7 @@
 namespace App\Livewire\Owners;
 
 use App\Models\Owner;
+use Carbon\Carbon;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -29,6 +30,12 @@ class Create extends Component
         'email' => 'nullable|string|email|max:255',
         'phone' => 'nullable|string|max:255',
     ];
+
+    public function mount(){
+        $today = Carbon::today()->toDateString();
+        $this->birthdate = $today;
+        $this->document_expiration_date = $today;
+    }
 
     public function save():void
     {

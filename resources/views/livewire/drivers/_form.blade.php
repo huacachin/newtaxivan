@@ -14,13 +14,13 @@
 
     <div class="col-auto">
         <label class="form-label">Doc F.Vencimiento</label>
-        <input type="date" class="form-control form-control-sm" wire:model="document_expiration_date">
+        <input id="document_expiration_date" type="text" class="form-control form-control-sm" wire:model="document_expiration_date">
         @error('document_expiration_date') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
     <div class="col-auto">
         <label class="form-label">Fecha Nacimiento</label>
-        <input type="date" class="form-control form-control-sm" wire:model="birthdate">
+        <input id="birthdate" type="text" class="form-control form-control-sm" wire:model="birthdate">
         @error('birthdate') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
@@ -56,13 +56,13 @@
 
     <div class="col-auto">
         <label class="form-label">Fecha Expedición</label>
-        <input type="date" class="form-control form-control-sm" wire:model="license_issue_date">
+        <input type="text" id="license_issue_date" class="form-control form-control-sm" wire:model="license_issue_date">
         @error('license_issue_date') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
     <div class="col-auto">
         <label class="form-label">Fecha Revalidación</label>
-        <input type="date" class="form-control form-control-sm" wire:model="license_revalidation_date">
+        <input id="license_revalidation_date" type="text" class="form-control form-control-sm" wire:model="license_revalidation_date">
         @error('license_revalidation_date') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
@@ -74,7 +74,7 @@
 
     <div class="col-auto">
         <label class="form-label">Categoría</label>
-        <select class="form-control form-control-sm" wire:model="category">
+        <select class="form-select form-select-sm" wire:model="category">
             <option value="">Seleccionar</option>
             <option value="A A1">A1</option>
             <option value="A 2A">A 2A</option>
@@ -94,13 +94,13 @@
 
     <div class="col-auto">
         <label class="form-label">F.Inicio Contrato</label>
-        <input type="date" class="form-control form-control-sm" wire:model="contract_start">
+        <input type="text" id="contract_start" class="form-control form-control-sm" wire:model="contract_start">
         @error('contract_start') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
     <div class="col-auto">
         <label class="form-label">F.Fin Contrato</label>
-        <input type="date" class="form-control form-control-sm" wire:model="contract_end">
+        <input type="text" id="contract_end" class="form-control form-control-sm" wire:model="contract_end">
         @error('contract_end') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
@@ -108,19 +108,19 @@
 
     <div class="col-auto">
         <label class="form-label">Fecha Expedición (Cred.)</label>
-        <input type="date" class="form-control form-control-sm" wire:model="credential">
+        <input type="text" id="credential" class="form-control form-control-sm" wire:model="credential">
         @error('credential') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
     <div class="col-auto">
         <label class="form-label">Fecha Vencimiento (Cred.)</label>
-        <input type="date" class="form-control form-control-sm" wire:model="credential_expiration_date">
+        <input type="text" id="credential_expiration_date" class="form-control form-control-sm" wire:model="credential_expiration_date">
         @error('credential_expiration_date') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
     <div class="col-12 col-md-4">
         <label class="form-label">Municipalidad</label>
-        <select class="form-control form-control-sm" wire:model="credential_municipality">
+        <select class="form-select form-select-sm" wire:model="credential_municipality">
             <option value="">Seleccionar</option>
             <option value="lima">Lima</option>
             <option value="callao">Callao</option>

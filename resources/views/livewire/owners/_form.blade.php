@@ -8,7 +8,7 @@
 
     <div class="col-auto">
         <label for="document_type" class="form-label">Tipo de documento</label>
-        <select id="document_type" class="form-control form-control-sm" wire:model="document_type">
+        <select id="document_type" class="form-select form-select-sm" wire:model="document_type">
             <option value="">Seleccionar</option>
             <option value="dni">DNI</option>
             <option value="ruc">RUC</option>
@@ -24,13 +24,13 @@
 
     <div class="col-auto">
         <label for="document_expiration_date" class="form-label">Doc F.Vencimiento</label>
-        <input id="document_expiration_date" type="date" class="form-control form-control-sm" wire:model="document_expiration_date">
+        <input id="document_expiration_date" type="text" class="form-control form-control-sm" wire:model="document_expiration_date">
         @error('document_expiration_date') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
     <div class="col-auto">
         <label for="birthdate" class="form-label">Fecha Nacimiento</label>
-        <input id="birthdate" type="date" class="form-control form-control-sm" wire:model="birthdate">
+        <input id="birthdate" type="text" class="form-control form-control-sm" wire:model="birthdate">
         @error('birthdate') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 

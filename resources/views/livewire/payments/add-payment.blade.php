@@ -65,7 +65,7 @@
                         <div class="col-auto">
                             <div class="mb-3">
                                 <label class="form-label">Sucursal</label>
-                                <select class="form-control form-control-sm" wire:model.live="headquarter_id_form">
+                                <select class="form-select form-select-sm" wire:model.live="headquarter_id_form">
                                     <option value="">Seleccionar</option>
                                     @foreach($headquarters as $hq)
                                         <option value="{{ $hq->id }}">{{ $hq->name }}</option>
@@ -110,7 +110,7 @@
                         <div class="col-auto">
                             <div class="mb-3">
                                 <label class="form-label">Tipo</label>
-                                <select class="form-control form-control-sm" wire:model.live="type_form">
+                                <select class="form-select form-select-sm" wire:model.live="type_form">
                                     <option value="">Seleccionar</option>
                                     <option value="PAGO">Pago</option>
                                     <option value="DEUDA">Deuda</option>

@@ -5,7 +5,14 @@
     'departures.index',
     'payments.index',
     'cash.incomes',
-    'cash.expenses'
+    'cash.expenses',
+    'settings.owners.create',
+    'settings.owners.edit',
+    'settings.drivers.create',
+    'settings.drivers.edit',
+    'settings.vehicles.create',
+    'settings.vehicles.edit',
+    'departures.edit'
 ]))
     <script src="{{ asset('assets/js/jquery-3.6.3.min.js') }}"></script>
 @endif
