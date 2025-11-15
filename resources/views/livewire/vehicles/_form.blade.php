@@ -170,7 +170,7 @@
     </div>
 
     {{-- Empresa Afiliada --}}
-    <div class="col-6 col-md-2">
+    <div class="col-6 col-md-3">
         <label for="affiliated_company" class="form-label">Empresa Afiliada</label>
         <input id="affiliated_company" type="text" class="form-control form-control-sm" placeholder="Ingresar empresa afiliada" wire:model="affiliated_company">
         @error('affiliated_company') <span class="title-modules">{{ $message }}</span> @enderror
@@ -179,7 +179,7 @@
 
 
     {{-- Propietario --}}
-    <div class="col-6 col-md-2">
+    <div class="col-6 col-md-3">
         <label for="owner_id" class="form-label">Propietario</label>
         <select id="owner_id" class="form-select form-select-sm" wire:model="owner_id">
             <option value="">Seleccionar</option>
@@ -191,7 +191,7 @@
     </div>
 
     {{-- Conductor --}}
-    <div class="col-6 col-md-2">
+    <div class="col-6 col-md-3">
         <label for="driver_id" class="form-label">Conductor</label>
         <select id="driver_id" class="form-select form-select-sm" wire:model="driver_id">
             <option value="">Seleccionar</option>
@@ -228,18 +228,13 @@
     </div>
 
     {{-- Sort Order --}}
-    <div class="col-6 col-md-2">
+    <div class="col-6 col-md-1">
         <label for="sort_order" class="form-label">Orden</label>
         <input id="sort_order" type="number" inputmode="numeric" class="form-control form-control-sm"  wire:model="sort_order" min="1" step="1">
         @error('sort_order') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
-    {{-- Detalle (ocupa ancho completo en md) --}}
-    <div class="col-12">
-        <label for="detail" class="form-label">Detalle</label>
-        <textarea id="detail" rows="2" class="form-select form-select-sm" placeholder="Observaciones..." wire:model="detail"></textarea>
-        @error('detail') <span class="title-modules">{{ $message }}</span> @enderror
-    </div>
+
 
 
 
@@ -252,7 +247,7 @@
 
     {{-- Certificado F.V --}}
     <div class="col-6 col-md-2">
-        <label for="certificate_date" class="form-label">Certificado F.V</label>
+        <label for="certificate_date" class="form-label">Certificado Op.F.V</label>
         <input id="certificate_date" type="text" class="form-control form-control-sm" wire:model="certificate_date">
         @error('certificate_date') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
@@ -262,6 +257,13 @@
         <label for="technical_review" class="form-label">Revisión Técnica F.V</label>
         <input id="technical_review" type="text" class="form-control form-control-sm" wire:model="technical_review">
         @error('technical_review') <span class="title-modules">{{ $message }}</span> @enderror
+    </div>
+
+    {{-- Detalle (ocupa ancho completo en md) --}}
+    <div class="col-12">
+        <label for="detail" class="form-label">Detalle</label>
+        <textarea id="detail" rows="2" class="form-select form-select-sm" placeholder="Observaciones..." wire:model="detail"></textarea>
+        @error('detail') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
 

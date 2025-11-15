@@ -104,6 +104,16 @@
         @error('contract_end') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
+    <div class="col-auto">
+        <label class="form-label">Condición</label>
+        <select class="form-select form-select-sm" wire:model="condition">
+            <option value="">Seleccionar</option>
+            <option value="Propietario">Propietario</option>
+            <option value="Alquilado">Alquilado</option>
+        </select>
+        @error('condition') <span class="title-modules">{{ $message }}</span> @enderror
+    </div>
+
     <div class="col-12"><div class="app-divider-v justify-content-center"><p>Credencial de Educación y Seguridad Vial</p></div></div>
 
     <div class="col-auto">

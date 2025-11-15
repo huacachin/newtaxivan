@@ -46,7 +46,7 @@ class Create extends Component
         'license_revalidation_date' => 'nullable|date',
         'contract_start' => 'nullable|date',
         'contract_end' => 'nullable|date',
-        'condition' => 'nullable|string|max:255',
+        'condition' => 'required|string|max:255',
         'score' => 'nullable|numeric|between:0,100',
         'credential' => 'nullable|date',
         'credential_expiration_date' => 'nullable|date',
