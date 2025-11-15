@@ -104,7 +104,7 @@ class Index extends Component
 
         $this->drivers = Driver::query()
             // columnas del driver
-            ->select('id', 'name', 'document_number', 'phone', 'contract_start', 'contract_end', 'condition')
+            ->select('id', 'name', 'document_number', 'phone', 'contract_start', 'contract_end', 'condition', 'document_expiration_date')
 
             // subquery para obtener el sort_order del vehículo activo
             ->addSelect([

@@ -128,7 +128,36 @@
                                         <td>{{ $loop->iteration }}</td>
                                         <td>{{$driver->vehicles->first()->sort_order}}</td>
                                         <td>{{ $driver->vehicles->first()->plate ?? '—' }}</td>
-                                        <td>{{ $driver->name }}</td>
+                                        <td>
+                                            {{ $driver->name }}
+
+                                            @php
+                                                $flag = null;
+                                                $expRaw = $driver->document_expiration_date ?? null;
+
+                                                if ($expRaw && $expRaw !== '0000-00-00') {
+                                                    $expDate = \Illuminate\Support\Carbon::parse($expRaw);
+                                                    $today   = \Illuminate\Support\Carbon::today();
+
+                                                    // diffInDays con $absolute = false para saber si está en pasado/futuro
+                                                    $daysDiff = $today->diffInDays($expDate, false);
+
+                                                    if ($daysDiff < 0) {
+                                                        // ya pasó la fecha
+                                                        $flag = 'expired';
+                                                    } elseif ($daysDiff <= 10) {
+                                                        // faltan 10 días o menos
+                                                        $flag = 'soon';
+                                                    }
+                                                }
+                                            @endphp
+
+                                            @if($flag === 'soon')
+                                                <span class="badge bg-warning text-dark ms-1">Por vencer</span>
+                                            @elseif($flag === 'expired')
+                                                <span class="badge bg-danger ms-1">Vencido</span>
+                                            @endif
+                                        </td>
                                         <td>{{ $driver->document_number }}</td>
                                         <td>
                                             {{ ($driver->contract_start && $driver->contract_start !== '0000-00-00')
@@ -176,7 +205,36 @@
                                 @forelse($driversFree as $driver)
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
-                                        <td>{{ $driver->name }}</td>
+                                        <td>
+                                            {{ $driver->name }}
+
+                                            @php
+                                                $flag = null;
+                                                $expRaw = $driver->document_expiration_date ?? null;
+
+                                                if ($expRaw && $expRaw !== '0000-00-00') {
+                                                    $expDate = \Illuminate\Support\Carbon::parse($expRaw);
+                                                    $today   = \Illuminate\Support\Carbon::today();
+
+                                                    // diffInDays con $absolute = false para saber si está en pasado/futuro
+                                                    $daysDiff = $today->diffInDays($expDate, false);
+
+                                                    if ($daysDiff < 0) {
+                                                        // ya pasó la fecha
+                                                        $flag = 'expired';
+                                                    } elseif ($daysDiff <= 10) {
+                                                        // faltan 10 días o menos
+                                                        $flag = 'soon';
+                                                    }
+                                                }
+                                            @endphp
+
+                                            @if($flag === 'soon')
+                                                <span class="badge bg-warning text-dark ms-1">Por vencer</span>
+                                            @elseif($flag === 'expired')
+                                                <span class="badge bg-danger ms-1">Vencido</span>
+                                            @endif
+                                        </td>
                                         <td>{{ $driver->document_number }}</td>
                                         <td>
                                             {{ ($driver->contract_start && $driver->contract_start !== '0000-00-00')
