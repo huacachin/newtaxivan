@@ -29,6 +29,10 @@
             z-index: 2000;            /* sobre modals/backdrops de Bootstrap */
             pointer-events: all;      /* bloquea clics */
         }
+
+        .striped-cond {
+            background: #d0cdcd !important;
+        }
     </style>
 @endpush
 
@@ -126,24 +130,59 @@
                             </thead>
 
                             <tbody>
-                            @forelse($rows as $r)
-                                <tr class="text-center">
-                                    <td class="bg-primary text-white">{{ $r['controller'] }}</td>
-                                    <td class="bg-primary text-white">{{ $r['stop'] }}</td>
-                                    <td class="bg-primary text-white">{{ $r['type'] }}</td>
+                            @php
+                                // Agrupamos por controller|stop para calcular el rowspan
+                                $rowsCollection = collect($rows);
+                                $grouped = $rowsCollection->groupBy(fn ($r) => $r['controller'].'|'.$r['stop']);
 
+                                $rowspans = [];
+                                foreach ($grouped as $key => $group) {
+                                    $rowspans[$key] = $group->count();
+                                }
+
+                                // Para saber si ya pintamos las celdas combinadas de cada grupo
+                                $printed = [];
+                            @endphp
+
+                            @forelse($rows as $r)
+                                @php
+                                    $groupKey = $r['controller'].'|'.$r['stop'];
+                                @endphp
+                                <tr class="text-center">
+                                    {{-- Solo pinto CONTROLLER y PARADERO la primera vez para ese grupo --}}
+                                    @if (!isset($printed[$groupKey]))
+                                        @php $printed[$groupKey] = true; @endphp
+                                        <td rowspan="{{ $rowspans[$groupKey] }}" class="bg-primary text-white align-middle">
+                                            {{ $r['controller'] }}
+                                        </td>
+                                        <td rowspan="{{ $rowspans[$groupKey] }}" class="bg-primary text-white align-middle">
+                                            {{ $r['stop'] }}
+                                        </td>
+                                    @endif
+
+                                    {{-- TIPO (se muestra en cada fila) --}}
+                                    <td class="bg-primary text-white">
+                                        {{ $r['type'] }}
+                                    </td>
+
+                                    {{-- Días --}}
                                     @foreach($days as $d)
                                         @php $val = $r['days'][$d] ?? 0; @endphp
-                                        <td>
-                                            {{ $r['type']==='S/' ? number_format($val,2) : number_format($val) }}
-                                        </td>
+                                        @if($r['type'] === 'S/')
+                                            <td class="title-modules f-w-600">{{number_format($val, 2)}} </td>
+                                        @else
+                                            <td>
+                                                {{   number_format($val) }}
+                                            </td>
+                                        @endif
                                     @endforeach
 
+                                    {{-- Totales por fila --}}
                                     <td>
                                         {{ $r['total_sal'] !== null ? number_format($r['total_sal']) : '' }}
                                     </td>
                                     <td>
-                                        {{ $r['total_soles'] !== null ? number_format($r['total_soles'],2) : '' }}
+                                        {{ $r['total_soles'] !== null ? number_format($r['total_soles'], 2) : '' }}
                                     </td>
                                 </tr>
                             @empty
@@ -156,21 +195,21 @@
                             </tbody>
 
                             @if($daysInMonth>0)
-                                <tfoot class="fw-semibold bg-primary">
+                                <tfoot class="fw-semibold table-striped">
                                 <tr>
                                     <td></td>
-                                    <td>TOTAL GENERAL — Salidas</td>
-                                    <td></td>
+                                    <td>TOTAL GENERAL</td>
+                                    <td>Salidas</td>
                                     @foreach($days as $d)
-                                        <td>{{ number_format($totalsSalidas[$d] ?? 0) }}</td>
+                                        <td class="striped-cond">{{ number_format($totalsSalidas[$d] ?? 0) }}</td>
                                     @endforeach
-                                    <td>{{ number_format($grandSalidas) }}</td>
-                                    <td></td>
+                                    <td class="striped-cond">{{ number_format($grandSalidas) }}</td>
+                                    <td class="striped-cond"></td>
                                 </tr>
                                 <tr>
                                     <td></td>
-                                    <td>TOTAL GENERAL — S/</td>
-                                    <td></td>
+                                    <td>TOTAL GENERAL</td>
+                                    <td>S/</td>
                                     @foreach($days as $d)
                                         <td>{{ number_format($totalsMonto[$d] ?? 0, 2) }}</td>
                                     @endforeach

@@ -211,7 +211,9 @@
                                 <th class="text-center " rowspan="2">Usuario</th>
                                 <th class="text-center " colspan="3">Empresa</th>
                                 <th class="text-center " colspan="3">Vehiculo</th>
+                                    @if(!$groupMode)
                                 <th class="text-center " rowspan="2">Map</th>
+                                    @endif
                             </tr>
                             <tr>
                                 <th class="ta-center ">Sal.</th>
@@ -286,8 +288,7 @@
                                                     -
                                                 @endif
                                             </td>
-                                        @else
-                                            <td>-</td>
+
                                         @endif
                                     </tr>
                                 @endforeach
@@ -300,14 +301,16 @@
 
                             <tfoot class="text-center f-w-600 bg-primary">
                             <tr>
-                                <td colspan="8">TOTAL</td>
+                                <td colspan="{{(!$groupMode) ? '8':'7'}}">TOTAL</td>
                                 <td>{{ number_format($totals->times_total ?? 0) }}</td>
                                 <td>{{ number_format($totals->times_total ?? 0) }}</td>
                                 <td>{{ number_format($totals->price_total ?? 0, 2) }}</td>
                                 <td>{{ number_format($totals->passengers_total ?? 0) }}</td>
                                 <td>{{ number_format($totals->passage_total ?? 0, 2) }}</td>
                                 <td>{{ number_format($totals->total_pasaje_total ?? 0, 2) }}</td>
+                                @if(!$groupMode)
                                 <td>-</td>
+                                @endif
                             </tr>
                             </tfoot>
                         </table>
@@ -329,7 +332,9 @@
                                 <th rowspan="2">Usuario</th>
                                 <th colspan="3">Empresa</th>
                                 <th colspan="3">Vehiculo</th>
+                                    @if(!$groupMode)
                                 <th rowspan="2">Map</th>
+                                        @endif
                             </tr>
                             <tr>
                                 <th>Sal.</th>
@@ -399,8 +404,7 @@
                                                 -
                                             @endif
                                         </td>
-                                    @else
-                                        <td class="title-modules">-</td>
+
                                     @endif
                                 </tr>
                             @empty
@@ -413,7 +417,7 @@
                             <tfoot class="text-center f-w-600  bg-primary"
                                    wire:key="dep-support-tfoot-{{ $groupMode ? 'g' : 'd' }}">
                             <tr>
-                                <td colspan="8">TOTAL</td>
+                                <td colspan="{{(!$groupMode) ? '8':'6'}}">TOTAL</td>
                                 <td>{{ number_format((float) data_get($supportTotals, 'times_total', 0)) }}</td>
                                 <td>{{ number_format((float) data_get($supportTotals, 'times_total', 0)) }}</td>
                                 <td>{{ number_format((float) data_get($supportTotals, 'price_total', 0), 2) }}</td>

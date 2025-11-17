@@ -227,12 +227,7 @@
         @error('passengers') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
-    {{-- Sort Order --}}
-    <div class="col-6 col-md-1">
-        <label for="sort_order" class="form-label">Orden</label>
-        <input id="sort_order" type="number" inputmode="numeric" class="form-control form-control-sm"  wire:model="sort_order" min="1" step="1">
-        @error('sort_order') <span class="title-modules">{{ $message }}</span> @enderror
-    </div>
+
 
 
 
@@ -257,6 +252,13 @@
         <label for="technical_review" class="form-label">Revisión Técnica F.V</label>
         <input id="technical_review" type="text" class="form-control form-control-sm" wire:model="technical_review">
         @error('technical_review') <span class="title-modules">{{ $message }}</span> @enderror
+    </div>
+
+    {{-- Sort Order --}}
+    <div class="col-6 col-md-1">
+        <label for="sort_order" class="form-label">Orden</label>
+        <input id="sort_order" type="number" inputmode="numeric" class="form-control form-control-sm"  wire:model="sort_order" min="1" step="1">
+        @error('sort_order') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
     {{-- Detalle (ocupa ancho completo en md) --}}

@@ -39,7 +39,6 @@ class Index extends Component
 
     public function mount()
     {
-
         $search = trim($this->search);
         // escapamos caracteres especiales de LIKE
         $like = $search === ''
@@ -60,17 +59,17 @@ class Index extends Component
             })
             // Si el filtro es plate y NO hay término de búsqueda,
             // tiene sentido listar solo owners que tengan al menos una placa activa:
-            ->when($this->filter === 'plate' && $like === null, fn($q) => $q->whereNotNull('v.id')
-            )
+            ->when($this->filter === 'plate' && $like === null, fn($q) => $q->whereNotNull('v.id'))
             ->select(
                 'o.id',
                 'v.sort_order',
                 'o.name',
                 'o.document_number',
+                'o.document_expiration_date', // <-- NUEVO
                 'o.phone',
                 'v.plate' // puede venir NULL si el owner no tiene placa activa (LEFT JOIN)
             )
-            ->orderBy('v.sort_order','asc')
+            ->orderBy('v.sort_order', 'asc')
             ->orderByRaw('v.plate IS NULL, v.plate') // NULLs al final y luego ordena por placa
             ->get();
 
@@ -80,7 +79,13 @@ class Index extends Component
                     ->where('v.status', 'active');
             })
             ->whereNull('v.owner_id')
-            ->select('o.id as id', 'o.name as name', 'o.document_number as document_number', 'o.phone as phone')
+            ->select(
+                'o.id as id',
+                'o.name as name',
+                'o.document_number as document_number',
+                'o.document_expiration_date as document_expiration_date', // <-- NUEVO
+                'o.phone as phone'
+            )
             ->orderBy('o.name')
             ->get();
     }

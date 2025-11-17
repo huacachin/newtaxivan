@@ -125,7 +125,29 @@
                                         <td>{{$owner->sort_order}}</td>
                                         <td>{{ $owner->plate }}</td>
                                         <td>{{ $owner->name }}</td>
-                                        <td>{{ $owner->document_number }}</td>
+                                        <td>
+                                            {{ $owner->document_number }}
+
+                                            @if(!empty($owner->document_expiration_date))
+                                                @php
+                                                    $exp   = \Carbon\Carbon::parse($owner->document_expiration_date)->startOfDay();
+                                                    $today = now()->startOfDay();
+                                                    $diff  = $today->diffInDays($exp, false); // puede ser negativo si ya venció
+                                                @endphp
+
+                                                @if($diff <= 0)
+                                                    {{-- Vencido: fecha igual o menor a hoy --}}
+                                                    <span class="badge bg-danger ms-1">
+                Vencido
+            </span>
+                                                @elseif($diff > 0 && $diff <= 10)
+                                                    {{-- Por vencer: faltan 1 a 10 días --}}
+                                                    <span class="badge bg-warning text-dark ms-1">
+                Por vencer
+            </span>
+                                                @endif
+                                            @endif
+                                        </td>
                                         <td>{{ $owner->phone }}</td>
                                         <td>
                                             <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
@@ -163,7 +185,28 @@
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
                                     <td>{{ $owner->name }}</td>
-                                    <td>{{ $owner->document_number }}</td>
+                                    <td>
+                                        {{ $owner->document_number }}
+
+                                        @if(!empty($owner->document_expiration_date))
+                                            @php
+                                                $exp   = \Carbon\Carbon::parse($owner->document_expiration_date)->startOfDay();
+                                                $today = now()->startOfDay();
+                                                $diff  = $today->diffInDays($exp, false);
+                                            @endphp
+
+                                            @if($diff <= 0)
+                                                <span class="badge bg-danger ms-1">
+                Vencido
+            </span>
+                                            @elseif($diff > 0 && $diff <= 10)
+                                                <span class="badge bg-warning text-dark ms-1">
+                Por vencer
+            </span>
+                                            @endif
+                                        @endif
+                                    </td>
+
                                     <td>{{ $owner->phone }}</td>
                                     <td width="10">
                                         <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
