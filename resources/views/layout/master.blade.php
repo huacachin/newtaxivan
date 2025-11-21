@@ -154,7 +154,7 @@
     function questionGenerate() {
         Swal.fire({
             title: "Generar costo por placa",
-            text: "Se eliminaran regsitros del mes actual y se generar el costo por placa, esto es de solo contingencia esta de acuerdo?",
+            text: "Se eliminaran registros del mes actual y se generar el costo por placa, esto es de solo contingencia esta de acuerdo?",
             icon: "warning",
             showCancelButton: true,
             confirmButtonColor: "#3085d6",
