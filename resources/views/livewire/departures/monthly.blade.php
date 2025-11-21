@@ -122,6 +122,7 @@
                             <thead class="bg-primary">
                             <tr>
                                 <th>Item</th>
+                                <th>COD</th>
                                 <th>Placa</th>
                                 @foreach($days as $d)
                                     @php $isSun = \Carbon\Carbon::create($year, $month, $d)->isSunday(); @endphp
@@ -137,6 +138,7 @@
                                 @php $i++; @endphp
                                 <tr class="text-center">
                                     <td>{{ $i }}</td>
+                                    <td>{{ $row['sort_order'] }}</td>
                                     <td class="text-start">{{ $row['plate'] }}</td>
                                     @foreach($days as $d)
                                         <td>{{ $row['daily'][$d] ?? 0 }}</td>

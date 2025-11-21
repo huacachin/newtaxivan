@@ -96,7 +96,7 @@ class Monthly extends Component
         // Vehículos
         if (Schema::hasColumn('vehicles', 'sort_order')) {
             $vehicles = DB::table('vehicles')
-                ->select('id', 'plate')
+                ->select('id', 'plate','sort_order')
                 ->where('status','active')
                 ->orderByRaw('sort_order IS NULL, sort_order ASC')
                 ->orderBy('plate') // desempate
@@ -108,7 +108,7 @@ class Monthly extends Component
                 : (Schema::hasColumn('vehicles', 'orden') ? 'orden' : 'plate');
 
             $vehicles = DB::table('vehicles')
-                ->select('id', 'plate')
+                ->select('id', 'plate','sort_order')
                 ->orderBy($orderCol)
                 ->orderBy('plate') // desempate
                 ->get();
@@ -116,6 +116,7 @@ class Monthly extends Component
 
         foreach ($vehicles as $v) {
             $this->rows[(int)$v->id] = [
+                'sort_order' => (string)($v->sort_order ?? ''),
                 'plate' => (string)$v->plate,
                 'daily' => array_fill(1, $this->daysInMonth, 0),
                 'total' => 0,
