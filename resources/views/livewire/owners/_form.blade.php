@@ -1,7 +1,7 @@
 {{-- resources/views/livewire/owners/_form.blade.php --}}
 <div class="row g-3">
     <div class="col-12 col-md-6">
-        <label for="name" class="form-label">Nombres</label>
+        <label for="name" class="form-label">Empresa/Nombre</label>
         <input id="name" type="text" class="form-control form-control-sm" placeholder="Ingresar nombres y apellidos" wire:model="name" autocomplete="off">
         @error('name') <span class="title-modules">{{ $message }}</span> @enderror
     </div>

@@ -137,23 +137,23 @@
                             @php
                                 $isSunday = \Carbon\Carbon::createFromFormat('d/m/Y',$r['fecha'])->isSunday();
                             @endphp
-                            <tr @if($isSunday) class="bg-danger" @endif>
-                                <td @if($isSunday) class="text-white" @endif >{{ $r['fecha'] }}</td>
+                            <tr @if($isSunday) @endif>
+                                <td @if($isSunday) class="bg-danger text-white" @endif >{{ $r['fecha'] }}</td>
 
-                                <td @if($isSunday) class="text-white" @endif >{{ number_format($r['cotizacion'],2,'.',',') }}</td>
-                                <td @if($isSunday) class="text-white" @endif >{{ number_format($r['retraso'],2,'.',',') }}</td>
-                                <td @if($isSunday) class="text-white" @endif >{{ number_format($r['deuda'],2,'.',',') }}</td>
-                                <td @if($isSunday) class="text-white" @endif >{{ number_format($r['pago_total'],2,'.',',') }}</td>
+                                <td>{{ number_format($r['cotizacion'],2,'.',',') }}</td>
+                                <td>{{ number_format($r['retraso'],2,'.',',') }}</td>
+                                <td>{{ number_format($r['deuda'],2,'.',',') }}</td>
+                                <td>{{ number_format($r['pago_total'],2,'.',',') }}</td>
 
-                                <td @if($isSunday) class="text-white" @endif >{{ number_format($r['empresa'],2,'.',',') }}</td>
-                                <td @if($isSunday) class="text-white" @endif >{{ number_format($r['apoyo'],2,'.',',') }}</td>
-                                <td @if($isSunday) class="text-white" @endif >{{ number_format($r['salidas_total'],2,'.',',') }}</td>
+                                <td>{{ number_format($r['empresa'],2,'.',',') }}</td>
+                                <td>{{ number_format($r['apoyo'],2,'.',',') }}</td>
+                                <td>{{ number_format($r['salidas_total'],2,'.',',') }}</td>
 
-                                <td @if($isSunday) class="text-white" @endif >{{ number_format($r['otros'],2,'.',',') }}</td>
-                                <td @if($isSunday) class="title-modules" @endif >{{ number_format($r['ingresos_total'],2,'.',',') }}</td>
+                                <td>{{ number_format($r['otros'],2,'.',',') }}</td>
+                                <td class="title-modules" >{{ number_format($r['ingresos_total'],2,'.',',') }}</td>
 
-                                <td @if($isSunday) class="text-white" @endif >{{ number_format($r['egreso'],2,'.',',') }}</td>
-                                <td @if($isSunday) class="title-modules" @endif >{{ number_format($r['utilidad'],2,'.',',') }}</td>
+                                <td>{{ number_format($r['egreso'],2,'.',',') }}</td>
+                                <td class="title-modules">{{ number_format($r['utilidad'],2,'.',',') }}</td>
                             </tr>
                         @empty
                             <tr>
@@ -177,10 +177,10 @@
                                 <td>{{ number_format($totales['salidas_total'],2,'.',',') }}</td>
 
                                 <td>{{ number_format($totales['otros'],2,'.',',') }}</td>
-                                <td>{{ number_format($totales['ingresos_total'],2,'.',',') }}</td>
+                                <td class="title-modules">{{ number_format($totales['ingresos_total'],2,'.',',') }}</td>
 
                                 <td>{{ number_format($totales['egreso'],2,'.',',') }}</td>
-                                <td>{{ number_format($totales['utilidad'],2,'.',',') }}</td>
+                                <td class="title-modules">{{ number_format($totales['utilidad'],2,'.',',') }}</td>
                             </tr>
                         @endif
                         </tbody>

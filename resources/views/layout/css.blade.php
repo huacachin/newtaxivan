@@ -74,6 +74,10 @@
         color: red !important;
     }
 
+    .report-blue{
+        color: blue !important;
+    }
+
     label{
         font-weight: 600;
     }

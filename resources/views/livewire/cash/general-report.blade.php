@@ -131,8 +131,8 @@
                                     <td>{{ $r['date'] }}</td>
                                     <td>{{ $r['cliente'] ?? '—' }}</td>  {{-- DATOS CLIENTE --}}
                                     <td>{{ $r['glosa'] }}</td>
-                                    <td>{{ $r['ingreso'] ? number_format($r['ingreso'],2) : '0.00' }}</td>
-                                    <td>{{ $r['egreso'] ? number_format($r['egreso'],2) : '0.00' }}</td>
+                                    <td class="report-blue">{{ $r['ingreso'] ? number_format($r['ingreso'],2) : '0.00' }}</td>
+                                    <td class="title-modules">{{ $r['egreso'] ? number_format($r['egreso'],2) : '0.00' }}</td>
                                 </tr>
                             @endforeach
 
@@ -152,8 +152,8 @@
                                     </td>
 
                                     {{-- Totales del día --}}
-                                    <td>{{ number_format($sumI, 2) }}</td>
-                                    <td>{{ number_format($sumE, 2) }}</td>
+                                    <td class="report-blue">{{ number_format($sumI, 2) }}</td>
+                                    <td class="title-modules">{{ number_format($sumE, 2) }}</td>
                                 </tr>
                             @endif
                         @endforeach

@@ -131,31 +131,43 @@
 
                             <tbody>
                             @php
-                                // Agrupamos por controller|stop para calcular el rowspan
                                 $rowsCollection = collect($rows);
-                                $grouped = $rowsCollection->groupBy(fn ($r) => $r['controller'].'|'.$r['stop']);
 
-                                $rowspans = [];
-                                foreach ($grouped as $key => $group) {
-                                    $rowspans[$key] = $group->count();
-                                }
+                                // 1) Rowspan por CONTROLLER (abarca todos sus paraderos y tipos)
+                                $controllerRowspans = $rowsCollection
+                                    ->groupBy(fn ($r) => $r['controller'])
+                                    ->map->count()
+                                    ->toArray();
 
-                                // Para saber si ya pintamos las celdas combinadas de cada grupo
-                                $printed = [];
+                                // 2) Rowspan por CONTROLLER|STOP (como lo tenías antes)
+                                $stopRowspans = $rowsCollection
+                                    ->groupBy(fn ($r) => $r['controller'].'|'.$r['stop'])
+                                    ->map->count()
+                                    ->toArray();
+
+                                // Para saber si ya pintamos las celdas combinadas de cada nivel
+                                $printedControllers = [];
+                                $printedStops       = [];
                             @endphp
 
                             @forelse($rows as $r)
                                 @php
-                                    $groupKey = $r['controller'].'|'.$r['stop'];
+                                    $controllerKey = $r['controller'];
+                                    $stopKey       = $r['controller'].'|'.$r['stop'];
                                 @endphp
                                 <tr class="text-center">
-                                    {{-- Solo pinto CONTROLLER y PARADERO la primera vez para ese grupo --}}
-                                    @if (!isset($printed[$groupKey]))
-                                        @php $printed[$groupKey] = true; @endphp
-                                        <td rowspan="{{ $rowspans[$groupKey] }}" class="bg-primary text-white align-middle">
+                                    {{-- CONTROLLER: solo una vez por controller --}}
+                                    @if (!isset($printedControllers[$controllerKey]))
+                                        @php $printedControllers[$controllerKey] = true; @endphp
+                                        <td rowspan="{{ $controllerRowspans[$controllerKey] }}" class="bg-primary text-white align-middle">
                                             {{ $r['controller'] }}
                                         </td>
-                                        <td rowspan="{{ $rowspans[$groupKey] }}" class="bg-primary text-white align-middle">
+                                    @endif
+
+                                    {{-- PARADERO: una vez por controller|stop --}}
+                                    @if (!isset($printedStops[$stopKey]))
+                                        @php $printedStops[$stopKey] = true; @endphp
+                                        <td rowspan="{{ $stopRowspans[$stopKey] }}" class="bg-primary text-white align-middle">
                                             {{ $r['stop'] }}
                                         </td>
                                     @endif
@@ -169,11 +181,9 @@
                                     @foreach($days as $d)
                                         @php $val = $r['days'][$d] ?? 0; @endphp
                                         @if($r['type'] === 'S/')
-                                            <td class="title-modules f-w-600">{{number_format($val, 2)}} </td>
+                                            <td class="title-modules f-w-600">{{ number_format($val, 2) }}</td>
                                         @else
-                                            <td>
-                                                {{   number_format($val) }}
-                                            </td>
+                                            <td>{{ number_format($val) }}</td>
                                         @endif
                                     @endforeach
 
@@ -194,27 +204,35 @@
                             @endforelse
                             </tbody>
 
-                            @if($daysInMonth>0)
+                            @if($daysInMonth > 0)
                                 <tfoot class="fw-semibold table-striped">
                                 <tr>
-                                    <td></td>
-                                    <td>TOTAL GENERAL</td>
+                                    {{-- Columna CONTROLLER (vacía) agrupada en 2 filas --}}
+                                    <td rowspan="2"></td>
+
+                                    {{-- TOTAL GENERAL agrupado en 2 filas --}}
+                                    <td rowspan="2">TOTAL GENERAL</td>
+
+                                    {{-- Fila 1: Salidas --}}
                                     <td>Salidas</td>
+
                                     @foreach($days as $d)
                                         <td class="striped-cond">{{ number_format($totalsSalidas[$d] ?? 0) }}</td>
                                     @endforeach
+
                                     <td class="striped-cond">{{ number_format($grandSalidas) }}</td>
                                     <td class="striped-cond"></td>
                                 </tr>
                                 <tr>
-                                    <td></td>
-                                    <td>TOTAL GENERAL</td>
+                                    {{-- Fila 2: S/ (monto) --}}
                                     <td>S/</td>
+
                                     @foreach($days as $d)
                                         <td>{{ number_format($totalsMonto[$d] ?? 0, 2) }}</td>
                                     @endforeach
+
                                     <td></td>
-                                    <td>{{ number_format($grandMonto,2) }}</td>
+                                    <td>{{ number_format($grandMonto, 2) }}</td>
                                 </tr>
                                 </tfoot>
                             @endif

@@ -25,8 +25,15 @@
     </div>
 
     <div class="col-auto">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-control form-control-sm" placeholder="correo@dominio.com" wire:model="email" autocomplete="off">
+        @error('email') <span class="title-modules">{{ $message }}</span> @enderror
+    </div>
+    <div class="col-auto">
         <label class="form-label">Distrito</label>
-        <input type="text" class="form-control form-control-sm" placeholder="Distrito" wire:model="district">
+        <select class="form-select form-select-sm" wire:model="district">
+            <option value="">Seleccionar</option><option value="Ancon">Ancon</option><option value="Ate">Ate</option><option value="Barranco">Barranco</option><option value="Breña">Breña</option><option value="Carabayllo">Carabayllo</option><option value="Chaclacayo">Chaclacayo</option><option value="Chorrillos">Chorrillos</option><option value="Cieneguilla">Cieneguilla</option><option value="Comas">Comas</option><option value="El Agustino">El Agustino</option><option value="Independencia">Independencia</option><option value="Jesus Maria">Jesus Maria</option><option value="La Molina">La Molina</option><option value="La Victoria">La Victoria</option><option value="Lima">Lima</option><option value="Lince">Lince</option><option value="Los Olivos">Los Olivos</option><option value="Lurigancho">Lurigancho</option><option value="Lurin">Lurin</option><option value="Magdalena del Mar">Magdalena del Mar</option><option value="Magdalena Vieja">Magdalena Vieja</option><option value="Miraflores">Miraflores</option><option value="Pachacamac">Pachacamac</option><option value="Pucusana">Pucusana</option><option value="Puente Piedra">Puente Piedra</option><option value="Punta Hermosa">Punta Hermosa</option><option value="Punta Negra">Punta Negra</option><option value="Rimac">Rimac</option><option value="San Bartolo">San Bartolo</option><option value="San Borja">San Borja</option><option value="San Isidro">San Isidro</option><option value="San Juan de Lurigancho">San Juan de Lurigancho</option><option value="San Juan de Miraflores">San Juan de Miraflores</option><option value="San Luis">San Luis</option><option value="San Martin de Porres">San Martin de Porres</option><option value="San Miguel">San Miguel</option><option value="Santa Anita">Santa Anita</option><option value="Santa Maria del Mar">Santa Maria del Mar</option><option value="Santa Rosa">Santa Rosa</option><option value="Santiago de Surco">Santiago de Surco</option><option value="Surquillo">Surquillo</option><option value="Villa el Salvador">Villa el Salvador</option><option value="Villa Maria del Triunfo">Villa Maria del Triunfo</option>
+        </select>
         @error('district') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
@@ -42,11 +49,7 @@
         @error('phone') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
-    <div class="col-auto">
-        <label class="form-label">Email</label>
-        <input type="email" class="form-control form-control-sm" placeholder="correo@dominio.com" wire:model="email" autocomplete="off">
-        @error('email') <span class="title-modules">{{ $message }}</span> @enderror
-    </div>
+
 
     <div class="col-auto">
         <label class="form-label">Licencia</label>

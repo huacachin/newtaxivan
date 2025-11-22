@@ -76,7 +76,7 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithColumnWidths, Wi
             'G' => 6,
             'H' => 6,
             'I' => 4,
-            'J' => 3,
+            'J' => 5,
             'K' => 4,
             'L' => 4,
             'M' => 8,

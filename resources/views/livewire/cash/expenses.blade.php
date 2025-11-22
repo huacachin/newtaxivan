@@ -152,11 +152,11 @@
                     <div class="col-12">
                         <div class="d-flex flex-wrap gap-2 justify-content-start py-1">
 
-                            <button class="btn btn-sm btn-primary flex-shrink-0" wire:click="applyDate">
+                            <button class="btn btn-sm btn-search flex-shrink-0" wire:click="applyDate">
                                 <i class="ti ti-search f-s-12"></i> Buscar
                             </button>
 
-                            <button class="btn btn-sm btn-primary flex-shrink-0" wire:click="openCreateModal">
+                            <button class="btn btn-sm btn-success flex-shrink-0" wire:click="openCreateModal">
                                 <i class="ti ti-square-plus f-s-12"></i> Nuevo
                             </button>
 

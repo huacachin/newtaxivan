@@ -91,10 +91,10 @@
                             </thead>
 
                             <tbody>
-                            {{-- Oficina / Base --}}
+                            {{-- Oficina / Base (queda como una fila normal) --}}
                             <tr>
-                                <td><strong>OFICINA</strong></td>
-                                <td><strong>BASE</strong></td>
+                                <td class="bg-primary text-white align-middle"<strong>OFICINA</strong></td>
+                                <td class="bg-primary text-white align-middle"><strong>BASE</strong></td>
                                 @php $tBase = 0; @endphp
                                 @foreach($baseMonthly as $val)
                                     @php $tBase += $val; @endphp
@@ -103,32 +103,88 @@
                                 <td><strong>{{ number_format($tBase, 2) }}</strong></td>
                             </tr>
 
-                            {{-- Grupos DRACO: Usuario -> HQs --}}
-                            @forelse($groups as $g)
-                                <tr>
-                                    <td><strong>{{ strtoupper($g['user']) }}</strong></td>
-                                    <td></td>
-                                    @foreach($months as $_) <td></td> @endforeach
-                                    <td></td>
-                                </tr>
-                                @foreach($g['hq_rows'] as $row)
-                                    <tr>
-                                        <td></td>
-                                        <td><strong>{{ $row['hq'] }}</strong></td>
-                                        @foreach($row['m'] as $val)
-                                            <td>{{ number_format($val, 2) }}</td>
-                                        @endforeach
-                                        <td><strong>{{ number_format($row['total'], 2) }}</strong></td>
-                                    </tr>
-                                @endforeach
-                            @empty
+                            @php
+                                use Illuminate\Support\Collection;
+
+                                // Aplanamos $groups en una sola colección de filas:
+                                // cada fila tiene: user (controller), hq (sucursal/paradero), m (meses), total
+                                $allRows = collect();
+
+                                foreach ($groups as $g) {
+                                    foreach ($g['hq_rows'] as $row) {
+                                        $allRows->push([
+                                            'user'  => $g['user'],
+                                            'hq'    => $row['hq'],
+                                            'm'     => $row['m'],      // array de montos por mes
+                                            'total' => $row['total'],  // total anual de esa hq
+                                        ]);
+                                    }
+                                }
+
+                                // Rowspan por controller
+                                $controllerRowspans = $allRows
+                                    ->groupBy('user')
+                                    ->map
+                                    ->count()
+                                    ->toArray();
+
+                                // Rowspan por controller + hq (por si en el futuro hay más de una fila por hq)
+                                $hqRowspans = $allRows
+                                    ->groupBy(function ($r) {
+                                        return $r['user'].'|'.$r['hq'];
+                                    })
+                                    ->map
+                                    ->count()
+                                    ->toArray();
+
+                                // Flags para saber cuándo ya se pintó la celda combinada
+                                $printedControllers = [];
+                                $printedHqs = [];
+                            @endphp
+
+                            @if($allRows->isEmpty())
                                 <tr>
                                     <td colspan="{{ 2 + count($months) + 1 }}">
                                         No hay registros DRACO para {{ $year }}.
                                     </td>
                                 </tr>
-                            @endforelse
+                            @else
+                                @foreach($allRows as $r)
+                                    @php
+                                        $controllerKey = $r['user'];
+                                        $hqKey = $r['user'].'|'.$r['hq'];
+                                    @endphp
+                                    <tr>
+                                        {{-- CONTROLLER (agrupado, mismo fondo que thead) --}}
+                                        @if (!isset($printedControllers[$controllerKey]))
+                                            @php $printedControllers[$controllerKey] = true; @endphp
+                                            <td rowspan="{{ $controllerRowspans[$controllerKey] }}"
+                                                class="bg-primary text-white align-middle">
+                                                <strong>{{ strtoupper($r['user']) }}</strong>
+                                            </td>
+                                        @endif
+
+                                        {{-- HQ / PARADERO (agrupado por controller+hq, mismo fondo que thead) --}}
+                                        @if (!isset($printedHqs[$hqKey]))
+                                            @php $printedHqs[$hqKey] = true; @endphp
+                                            <td rowspan="{{ $hqRowspans[$hqKey] }}"
+                                                class="bg-primary text-white align-middle">
+                                                <strong>{{ $r['hq'] }}</strong>
+                                            </td>
+                                        @endif
+
+                                        {{-- Meses --}}
+                                        @foreach($r['m'] as $val)
+                                            <td>{{ number_format($val, 2) }}</td>
+                                        @endforeach
+
+                                        {{-- Total por HQ --}}
+                                        <td><strong>{{ number_format($r['total'], 2) }}</strong></td>
+                                    </tr>
+                                @endforeach
+                            @endif
                             </tbody>
+
 
                             <tfoot class="bg-primary">
                             {{-- Si quieres fila de SOLO DRACO, descomenta:
