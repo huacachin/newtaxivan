@@ -29,6 +29,14 @@
             z-index: 2000;            /* sobre modals/backdrops de Bootstrap */
             pointer-events: all;      /* bloquea clics */
         }
+
+        .striped-cond {
+            background: #d0cdcd !important;
+        }
+
+        .green_modules{
+            color: #4D8A7C !important;
+        }
     </style>
 @endpush
 
@@ -135,7 +143,7 @@
                                     <td class="bg-primary text-white">{{ $r['type'] === 'Emp' ? 'Emp.' : 'Apoyo.' }}</td>
 
                                     @for($d=1; $d<=$daysInMonth; $d++)
-                                        <td>{{ $r['days'][$d] ?? 0 }}</td>
+                                        <td class="green_modules">{{ $r['days'][$d] ?? 0 }}</td>
                                     @endfor
 
                                     <td>{{ $r['total'] }}</td>
@@ -149,23 +157,24 @@
                             @endforelse
                             </tbody>
 
-                            <tfoot class="text-center fw-semibold bg-primary">
+                            <tfoot class="text-center fw-semibold">
                             <tr>
-                                <td colspan="3">T.E</td>
+                                <td rowspan="3" colspan="2">TOTAL GENERAL</td>
+                                <td>T.E</td>
                                 @for($d=1; $d<=$daysInMonth; $d++)
                                     <td>{{ $totalsTE[$d] }}</td>
                                 @endfor
                                 <td>{{ $grandTE }}</td>
                             </tr>
-                            <tr>
-                                <td  colspan="3">T.A</td>
+                            <tr class="striped-cond">
+                                <td >T.A</td>
                                 @for($d=1; $d<=$daysInMonth; $d++)
                                     <td class="day-col">{{ $totalsTA[$d] }}</td>
                                 @endfor
                                 <td>{{ $grandTA }}</td>
                             </tr>
                             <tr>
-                                <td  colspan="3">V.T</td>
+                                <td>V.T</td>
                                 @for($d=1; $d<=$daysInMonth; $d++)
                                     <td class="day-col">{{ $totalsVT[$d] }}</td>
                                 @endfor

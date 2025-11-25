@@ -31,6 +31,10 @@
             z-index: 2000;            /* sobre modals/backdrops de Bootstrap */
             pointer-events: all;      /* bloquea clics */
         }
+
+        .bg-modules{
+            background-color:red !important;
+        }
     </style>
 @endpush
 
@@ -156,16 +160,16 @@
 
                             <tfoot class="text-center f-w-600 bg-primary">
                             <tr>
-                                <th colspan="2" class="text-start">Total Salidas</th>
+                                <th colspan="3" class="text-center">Total Vueltas</th>
                                 @foreach($days as $d)
-                                    <th>{{ $totalPerDay[$d] ?? 0 }}</th>
+                                    <th class="bg-modules">{{ $totalPerDay[$d] ?? 0 }}</th>
                                 @endforeach
                                 <th>{{ array_sum($totalPerDay) }}</th>
                             </tr>
                             <tr>
-                                <th colspan="2" class="text-start">Total V.T. (vehículos con salida)</th>
+                                <th colspan="3" class="text-center">Total V.T</th>
                                 @foreach($days as $d)
-                                    <th>{{ $vehiclesWorkedPerDay[$d] ?? 0 }}</th>
+                                    <th class="bg-modules">{{ $vehiclesWorkedPerDay[$d] ?? 0 }}</th>
                                 @endforeach
                                 <th>{{ array_sum($vehiclesWorkedPerDay) }}</th>
                             </tr>

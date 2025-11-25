@@ -76,15 +76,7 @@
     <div class="col-6 col-md-2">
         <label for="brand" class="form-label">Marca</label>
         <select id="brand" class="form-select form-select-sm" wire:model="brand">
-            <option value="">Seleccione</option>
-            <option value="Hyunday">Hyunday</option>
-            <option value="Jac">Jac</option>
-            <option value="Changan">Changan</option>
-            <option value="DFSK">DFSK</option>
-            <option value="Change">Change</option>
-            <option value="Mitsubishi">Mitsubishi</option>
-            <option value="Faw">Faw</option>
-            <option value="Volkswagen">Volkswagen</option>
+            <option value="">Seleccione</option><option value="Changan">Changan</option><option value="Changhe">Changhe</option><option value="Chevrolet">Chevrolet</option><option value="County ">County </option><option value="DFSK">DFSK</option><option value="Faw">Faw</option><option value="Hyunday">Hyunday</option><option value="Jac">Jac</option><option value="Mercedes Benz">Mercedes Benz</option><option value="Mitsubishi">Mitsubishi</option><option value="Nissan">Nissan</option><option value="Scama">Scama</option><option value="Suzuki">Suzuki</option><option value="Toyota">Toyota</option><option value="Volkswagen">Volkswagen</option>
         </select>
         @error('brand') <span class="title-modules">{{ $message }}</span> @enderror
     </div>

@@ -33,6 +33,10 @@
         .striped-cond {
             background: #d0cdcd !important;
         }
+
+        .green_modules{
+            color: #4D8A7C !important;
+        }
     </style>
 @endpush
 
@@ -183,7 +187,7 @@
                                         @if($r['type'] === 'S/')
                                             <td class="title-modules f-w-600">{{ number_format($val, 2) }}</td>
                                         @else
-                                            <td>{{ number_format($val) }}</td>
+                                            <td class="green_modules">{{ number_format($val) }}</td>
                                         @endif
                                     @endforeach
 
@@ -191,7 +195,7 @@
                                     <td>
                                         {{ $r['total_sal'] !== null ? number_format($r['total_sal']) : '' }}
                                     </td>
-                                    <td>
+                                    <td class="title-modules">
                                         {{ $r['total_soles'] !== null ? number_format($r['total_soles'], 2) : '' }}
                                     </td>
                                 </tr>
@@ -207,11 +211,8 @@
                             @if($daysInMonth > 0)
                                 <tfoot class="fw-semibold table-striped">
                                 <tr>
-                                    {{-- Columna CONTROLLER (vacía) agrupada en 2 filas --}}
-                                    <td rowspan="2"></td>
-
-                                    {{-- TOTAL GENERAL agrupado en 2 filas --}}
-                                    <td rowspan="2">TOTAL GENERAL</td>
+                                    {{-- Columna CONTROLADOR/PARADERO agrupada en 2 filas --}}
+                                    <td colspan="2" rowspan="2">TOTAL GENERAL</td>
 
                                     {{-- Fila 1: Salidas --}}
                                     <td>Salidas</td>
@@ -220,9 +221,17 @@
                                         <td class="striped-cond">{{ number_format($totalsSalidas[$d] ?? 0) }}</td>
                                     @endforeach
 
-                                    <td class="striped-cond">{{ number_format($grandSalidas) }}</td>
-                                    <td class="striped-cond"></td>
+                                    {{-- 🔹 Total Salidas (rowspan 2) --}}
+                                    <td  rowspan="2">
+                                        {{ number_format($grandSalidas) }}
+                                    </td>
+
+                                    {{-- 🔹 Total S/ (rowspan 2) --}}
+                                    <td  rowspan="2">
+                                        {{ number_format($grandMonto, 2) }}
+                                    </td>
                                 </tr>
+
                                 <tr>
                                     {{-- Fila 2: S/ (monto) --}}
                                     <td>S/</td>
@@ -230,9 +239,7 @@
                                     @foreach($days as $d)
                                         <td>{{ number_format($totalsMonto[$d] ?? 0, 2) }}</td>
                                     @endforeach
-
-                                    <td></td>
-                                    <td>{{ number_format($grandMonto, 2) }}</td>
+                                    {{-- OJO: aquí ya NO agregamos celdas al final porque las de arriba están con rowspan --}}
                                 </tr>
                                 </tfoot>
                             @endif

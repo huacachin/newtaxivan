@@ -62,7 +62,7 @@ class DeparturesStatsMonthlyExport implements FromArray, WithHeadings, WithStyle
             for ($d = 1; $d <= $this->daysInMonth; $d++) {
                 $val = $r['days'][$d] ?? 0;
                 if ($r['type'] === 'S/') {
-                    // Monto como texto con S/ condicional
+                    // Monto como texto sin S/
                     $row[] = $this->formatMoney($val);
                 } else {
                     // Salidas como entero
@@ -72,7 +72,7 @@ class DeparturesStatsMonthlyExport implements FromArray, WithHeadings, WithStyle
 
             // Totales por fila
             $row[] = (int)($r['total_sal'] ?? 0);                 // SALIDAS
-            $row[] = $this->formatMoney($r['total_soles'] ?? 0);  // S/ condicional
+            $row[] = $this->formatMoney($r['total_soles'] ?? 0);  // S/
 
             $data[] = $row;
         }
@@ -308,6 +308,10 @@ class DeparturesStatsMonthlyExport implements FromArray, WithHeadings, WithStyle
                 $footerM  = $lastRow;     // fila "S/"
                 $lastColL = Coordinate::stringFromColumnIndex($lastColIdx);
 
+                // 🔴 Columnas de totales (penúltima = SALIDAS, última = S/)
+                $salidasColL = Coordinate::stringFromColumnIndex($lastColIdx - 1);
+                $montoColL   = Coordinate::stringFromColumnIndex($lastColIdx);
+
                 foreach ([$footerS, $footerM] as $fr) {
                     $s->getStyle("A{$fr}:{$lastCol}{$fr}")->applyFromArray([
                         'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$footerFill]],
@@ -327,10 +331,17 @@ class DeparturesStatsMonthlyExport implements FromArray, WithHeadings, WithStyle
                     $s->getRowDimension($fr)->setRowHeight(18);
                 }
 
-                // TOTAL GENERAL merge en A
-                $s->mergeCells("A{$footerS}:A{$footerM}");
+                // Merge SALIDAS y S/ (simular rowspan=2 en las últimas dos columnas)
+                $s->mergeCells("{$salidasColL}{$footerS}:{$salidasColL}{$footerM}");
+                $s->mergeCells("{$montoColL}{$footerS}:{$montoColL}{$footerM}");
+
+// 🔹 Forzamos que el total S/ se vea en la celda superior del merged
+                $s->setCellValue("{$montoColL}{$footerS}", $this->formatMoney($this->grandMonto));
+
+                // 🔴 TOTAL GENERAL merge en A:B con rowspan=2 (colspan=2, rowspan=2)
+                $s->mergeCells("A{$footerS}:B{$footerM}");
                 $s->setCellValue("A{$footerS}", 'TOTAL GENERAL');
-                $s->getStyle("A{$footerS}:A{$footerM}")->applyFromArray([
+                $s->getStyle("A{$footerS}:B{$footerM}")->applyFromArray([
                     'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blueDark]],
                     'font' => ['bold'=>true,'color'=>['argb'=>$fontW]],
                     'alignment' => [
@@ -484,8 +495,8 @@ SQL;
     /**
      * Formatea montos:
      * - 0      => "0"
-     * - 10     => "S/ 10"
-     * - 10.25  => "S/ 10.25"
+     * - 10     => "10"
+     * - 10.25  => "10.25"
      */
     protected function formatMoney(float|int|null $value): string
     {
@@ -502,7 +513,6 @@ SQL;
         }
 
         // Con decimales pero sin .00 de más
-        // number_format a 2 decimales y luego recortamos ceros y punto si sobra
         $str = number_format($value, 2, '.', '');
         return rtrim(rtrim($str, '0'), '.');
     }

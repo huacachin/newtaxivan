@@ -294,14 +294,13 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
                 }
 
                 // “TOTAL GENERAL” fusionado en A (3 filas) con azul
-                $s->mergeCells("A{$footerTE}:A{$footerVT}");
+                $s->mergeCells("A{$footerTE}:B{$footerVT}");
                 $s->setCellValue("A{$footerTE}", 'TOTAL GENERAL');
-                $s->getStyle("A{$footerTE}:A{$footerVT}")->applyFromArray([
+                $s->getStyle("A{$footerTE}:B{$footerVT}")->applyFromArray([
                     'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
                     'font' => ['bold'=>true, 'color'=>['argb'=>$fontW]],
                     'alignment' => ['horizontal'=>Alignment::HORIZONTAL_LEFT, 'vertical'=>Alignment::VERTICAL_CENTER],
                 ]);
-
                 // Ajuste de alineación en totales
                 $s->getStyle("B{$footerTE}:B{$footerVT}")
                     ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
