@@ -36,6 +36,8 @@ class Edit extends Component
     public $credential_expiration_date;
     public $credential_municipality;
 
+    public $age;
+
     public function mount(int $id)
     {
         $this->driver = Driver::find($id);
@@ -44,6 +46,7 @@ class Edit extends Component
         $this->document_number = $this->driver->document_number;
         $this->document_expiration_date = optional($this->driver->document_expiration_date)?->format('Y-m-d');
         $this->birthdate = optional($this->driver->birthdate)?->format('Y-m-d');
+        $this->age = $this->calculateAge($this->birthdate);
         $this->address = $this->driver->address;
         $this->district = $this->driver->district;
         $this->email = $this->driver->email;
@@ -93,6 +96,26 @@ class Edit extends Component
             'credential_municipality' => 'nullable|string|max:255',
         ];
     }
+
+    protected function calculateAge(?string $date): ?int
+    {
+        if (empty($date)) {
+            return null;
+        }
+
+        try {
+            $dob = \Carbon\Carbon::parse($date);
+            return $dob->age; // Carbon te da la edad al vuelo
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    public function updatedBirthdate($value)
+    {
+        $this->age = $this->calculateAge($value);
+    }
+
 
     public function update()
     {

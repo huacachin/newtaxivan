@@ -33,6 +33,8 @@ class Create extends Component
     public $credential_expiration_date;
     public $credential_municipality;
 
+    public $age;
+
     protected $rules = [
         'name' => 'required|string|max:255',
         'document_number' => 'required|string|max:255|unique:drivers,document_number',
@@ -62,6 +64,7 @@ class Create extends Component
     public function mount(){
         $today = Carbon::today()->toDateString();
         $this->birthdate = $today;
+        $this->age = $this->calculateAge($this->birthdate);
         $this->document_expiration_date = $today;
         $this->license_issue_date = $today;
         $this->license_revalidation_date = $today;
@@ -104,6 +107,25 @@ class Create extends Component
         $this->reset('name','document_number','document_expiration_date','birthdate','address','district','email','phone','license','class','category','license_issue_date','license_revalidation_date','contract_start','contract_end','condition','score','road_education','road_education_expiration_date','road_education_municipality','credential','credential_expiration_date','credential_municipality');
 
         $this->dispatch('successAlert',["message" => "Conductor creado correctamente"]);
+    }
+
+    protected function calculateAge(?string $date): ?int
+    {
+        if (empty($date)) {
+            return null;
+        }
+
+        try {
+            $dob = \Carbon\Carbon::parse($date);
+            return $dob->age; // Carbon te da la edad al vuelo
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    public function updatedBirthdate($value)
+    {
+        $this->age = $this->calculateAge($value);
     }
 
     public function render()

@@ -67,19 +67,19 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithColumnWidths, Wi
     public function columnWidths(): array
     {
         return [
-            'A' => 3,
-            'B' => 7,
-            'C' => 10,
-            'D' => 8,
-            'E' => 7,
-            'F' => 9,
-            'G' => 6,
-            'H' => 6,
-            'I' => 4,
-            'J' => 5,
-            'K' => 4,
-            'L' => 4,
-            'M' => 8,
+            'A' => 4,
+            'B' => 8,
+            'C' => 11,
+            'D' => 9,
+            'E' => 8,
+            'F' => 10,
+            'G' => 7,
+            'H' => 7,
+            'I' => 5,
+            'J' => 6,
+            'K' => 5,
+            'L' => 5,
+            'M' => 9,
         ];
     }
 
@@ -254,9 +254,16 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithColumnWidths, Wi
                         ],
                     ],
                 ]);
+
+                // 🔹 Forzar tamaño de fuente 10 en TODO el rango usado (A..M)
+                $s->getStyle("A1:M{$lastRow}")
+                    ->getFont()
+                    ->setSize(10);
             },
         ];
     }
+
+
 
 
     // =====================  QUERIES  =====================

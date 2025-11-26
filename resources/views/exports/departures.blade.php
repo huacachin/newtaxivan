@@ -6,7 +6,7 @@
     $groupMode = (bool) ($filters['groupMode'] ?? false);
 @endphp
 
-<table border="1" style="border-collapse: collapse;">
+<table border="1" style="border-collapse: collapse;font-size:10px;">
     {{-- Fila 1: Título + rango (mismo renglón) --}}
     <tr>
         <td colspan="13" align="center"

@@ -186,6 +186,7 @@ class PaymentsExport implements
             AfterSheet::class => function (AfterSheet $e) {
                 $ws = $e->sheet->getDelegate();
 
+                // Default global
                 $ws->getParent()->getDefaultStyle()->getFont()->setSize(10);
 
                 $blueDark   = 'FF2874A6';
@@ -193,18 +194,25 @@ class PaymentsExport implements
                 $white      = 'FFFFFFFF';
                 $fontBlack  = 'FF000000';
                 $borderSoft = '000000';
-                $red      = 'F80000';
+                $red        = 'F80000';
 
                 // ===== Título (fila 1)
                 $ws->insertNewRowBefore(1, 1);
                 $ws->mergeCells('A1:J1');
                 $ws->setCellValue('A1', 'REPORTE DE PAGOS');
                 $ws->getStyle('A1:J1')->applyFromArray([
-                    'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$white]],
-                    'font' => ['bold'=>true, 'color'=>['argb'=>$red], 'size'=>10],
+                    'fill' => [
+                        'fillType'   => Fill::FILL_SOLID,
+                        'startColor' => ['argb' => $white],
+                    ],
+                    'font' => [
+                        'bold'  => true,
+                        'color' => ['argb' => $red],
+                        'size'  => 10,
+                    ],
                     'alignment' => [
-                        'horizontal'=>Alignment::HORIZONTAL_CENTER,
-                        'vertical'  =>Alignment::VERTICAL_CENTER,
+                        'horizontal' => Alignment::HORIZONTAL_CENTER,
+                        'vertical'   => Alignment::VERTICAL_CENTER,
                     ],
                 ]);
                 $ws->getRowDimension(1)->setRowHeight(18);
@@ -215,33 +223,45 @@ class PaymentsExport implements
                 $last         = (int) $ws->getHighestRow();
 
                 $ws->getStyle("A{$headerRow}:J{$headerRow}")->applyFromArray([
-                    'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
-                    'font' => ['bold'=>true, 'color'=>['argb'=>$white], 'size'=>10],
+                    'fill' => [
+                        'fillType'   => Fill::FILL_SOLID,
+                        'startColor' => ['argb' => $blueDark],
+                    ],
+                    'font' => [
+                        'bold'  => true,
+                        'color' => ['argb' => $white],
+                        'size'  => 10,
+                    ],
                     'alignment' => [
-                        'horizontal'=>Alignment::HORIZONTAL_CENTER,
-                        'vertical'  =>Alignment::VERTICAL_CENTER,
+                        'horizontal' => Alignment::HORIZONTAL_CENTER,
+                        'vertical'   => Alignment::VERTICAL_CENTER,
                     ],
                 ]);
                 $ws->getRowDimension($headerRow)->setRowHeight(18);
 
-                // Congelar encabezado
-                //$ws->freezePane("A{$dataStartRow}");
+                // //$ws->freezePane("A{$dataStartRow}");
 
                 if ($last < $dataStartRow) {
-                    return; // sin datos
+                    // No hay filas de datos
+                    $fullRange = "A1:J{$last}";
+                    $ws->getStyle($fullRange)->getFont()->setSize(10);
+                    return;
                 }
 
                 // ===== Bordes + zebra
                 $ws->getStyle("A{$headerRow}:J{$last}")
-                    ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+                    ->getBorders()->getAllBorders()
+                    ->setBorderStyle(Border::BORDER_THIN);
                 $ws->getStyle("A{$headerRow}:J{$last}")
-                    ->getBorders()->getAllBorders()->getColor()->setARGB($borderSoft);
+                    ->getBorders()->getAllBorders()
+                    ->getColor()->setARGB($borderSoft);
 
                 $rangeData = "A{$dataStartRow}:J{$last}";
                 $cond = new Conditional();
                 $cond->setConditionType(Conditional::CONDITION_EXPRESSION);
                 $cond->setConditions(['MOD(ROW(),2)=0']);
-                $cond->getStyle()->getFill()->setFillType(Fill::FILL_SOLID)
+                $cond->getStyle()->getFill()
+                    ->setFillType(Fill::FILL_SOLID)
                     ->getStartColor()->setARGB('FFF9FAFB');
                 $styles = $ws->getStyle($rangeData)->getConditionalStyles();
                 $styles[] = $cond;
@@ -270,15 +290,24 @@ class PaymentsExport implements
                 $ws->setCellValue("J{$totalRow}", "=SUM(J{$dataStartRow}:J{$last})");
 
                 $ws->getStyle("A{$totalRow}:J{$totalRow}")->applyFromArray([
-                    'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$footerFill]],
-                    'font' => ['bold'=>true, 'color'=>['argb'=>$fontBlack], 'size'=>10],
+                    'fill' => [
+                        'fillType'   => Fill::FILL_SOLID,
+                        'startColor' => ['argb' => $footerFill],
+                    ],
+                    'font' => [
+                        'bold'  => true,
+                        'color' => ['argb' => $fontBlack],
+                        'size'  => 10,
+                    ],
                     'borders' => [
                         'outline' => [
-                            'borderStyle'=>Border::BORDER_MEDIUM,
-                            'color'      => ['argb'=>$blueDark],
-                        ]
+                            'borderStyle' => Border::BORDER_MEDIUM,
+                            'color'       => ['argb' => $blueDark],
+                        ],
                     ],
-                    'alignment' => ['vertical'=>Alignment::VERTICAL_CENTER],
+                    'alignment' => [
+                        'vertical'   => Alignment::VERTICAL_CENTER,
+                    ],
                 ]);
                 $ws->getStyle("A{$totalRow}:I{$totalRow}")
                     ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
@@ -288,7 +317,9 @@ class PaymentsExport implements
 
                 // ===== Compactación SIN reducir fuente =====
                 $ws->getStyle("A{$headerRow}:J{$totalRow}")
-                    ->getAlignment()->setWrapText(false)->setIndent(0);
+                    ->getAlignment()
+                    ->setWrapText(false)
+                    ->setIndent(0);
 
                 foreach (range('A','J') as $col) {
                     $ws->getColumnDimension($col)->setAutoSize(false);
@@ -297,15 +328,20 @@ class PaymentsExport implements
                 $ws->getColumnDimension('A')->setWidth(5);
                 $ws->getColumnDimension('B')->setWidth(9.5);
                 $ws->getColumnDimension('C')->setWidth(8);
-                $ws->getColumnDimension('D')->setWidth(11.0);
-                $ws->getColumnDimension('E')->setWidth(11.0);
+                $ws->getColumnDimension('D')->setWidth(13.0);
+                $ws->getColumnDimension('E')->setWidth(13.0);
                 $ws->getColumnDimension('F')->setWidth(7.5);
                 $ws->getColumnDimension('G')->setWidth(8.5);
                 $ws->getColumnDimension('H')->setWidth(8.0);
                 $ws->getColumnDimension('I')->setWidth(6.5);
-                $ws->getColumnDimension('J')->setWidth(12.0);
+                $ws->getColumnDimension('J')->setWidth(13.0);
+
+                // 🔨 Martillazo final: TODO en tamaño 10
+                $fullRange = "A1:J{$totalRow}";
+                $ws->getStyle($fullRange)->getFont()->setSize(10);
             },
         ];
     }
+
 
 }

@@ -417,7 +417,7 @@
                             <tfoot class="text-center f-w-600  bg-primary"
                                    wire:key="dep-support-tfoot-{{ $groupMode ? 'g' : 'd' }}">
                             <tr>
-                                <td colspan="{{(!$groupMode) ? '8':'6'}}">TOTAL</td>
+                                <td class="text-end pa-e-6" colspan="{{(!$groupMode) ? '8':'6'}}">TOTAL</td>
                                 <td>{{ number_format((float) data_get($supportTotals, 'times_total', 0)) }}</td>
                                 <td>{{ number_format((float) data_get($supportTotals, 'times_total', 0)) }}</td>
                                 <td>{{ number_format((float) data_get($supportTotals, 'price_total', 0), 2) }}</td>
@@ -426,27 +426,8 @@
                                 <td>{{ number_format((float) data_get($supportTotals, 'total_pasaje_total', 0), 2) }}</td>
                                 <td>-</td>
                             </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-
-                    {{-- TOTAL GENERAL dentro del mismo card --}}
-                    <div class="table-responsive ">
-                        <table class="table table-bordered  p-0">
-                            <thead class="text-center p-0 bg-primary">
                             <tr>
-                                <th colspan="8">TOTAL GENERAL</th>
-                                <th>Salida</th>
-                                <th>T. S</th>
-                                <th>S/</th>
-                                <th>P.</th>
-                                <th>PJ</th>
-                                <th>S/</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr class="text-center f-w-600 ">
-                                <td colspan="8">TOTAL GENERAL</td>
+                                <td class="text-end pa-e-6" colspan="{{(!$groupMode) ? '8':'6'}}">TOTAL GENERAL</td>
                                 {{-- Empresa --}}
                                 <td>{{ number_format($grandTotals->times_total ?? 0) }}</td>
                                 <td>{{ number_format($grandTotals->times_total ?? 0) }}</td>
@@ -455,10 +436,12 @@
                                 <td>{{ number_format($grandTotals->passengers_total ?? 0) }}</td>
                                 <td>{{ number_format($grandTotals->passage_total ?? 0, 2) }}</td>
                                 <td>{{ number_format($grandTotals->total_pasaje_total ?? 0, 2) }}</td>
+                                <td>-</td>
                             </tr>
-                            </tbody>
+                            </tfoot>
                         </table>
                     </div>
+
                 </div>
 
             </div>

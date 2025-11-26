@@ -1,4 +1,40 @@
 {{-- resources/views/livewire/drivers/_form.blade.php --}}
+@push('styles')
+    <style>
+        .age-badge-label {
+            display: inline-flex;
+            align-items: center;
+            padding: 0 6px;
+            border-radius: 999px;
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            background: #e3f2fd;
+            color: #0d47a1;
+            border: 1px solid rgba(13,71,161,.15);
+        }
+
+        .age-pill {
+            min-width: 64px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 11px;
+            background: linear-gradient(135deg, #e8f5e9, #f1f8e9);
+            color: #1b5e20;
+            border: 1px solid rgba(27,94,32,.2);
+            box-shadow: 0 1px 2px rgba(0,0,0,.04);
+        }
+
+        .age-pill-number {
+            font-variant-numeric: tabular-nums;
+        }
+    </style>
+@endpush
+
 <div class="row g-3">
     <div class="col-12 col-md-4">
         <label for="drv_name" class="form-label">Nombres</label>
@@ -20,8 +56,21 @@
 
     <div class="col-auto">
         <label class="form-label">Fecha Nacimiento</label>
-        <input id="birthdate" type="text" class="form-control form-control-sm" wire:model="birthdate">
+        <input id="birthdate" type="text" class="form-control form-control-sm" wire:model="birthdate" autocomplete="off">
         @error('birthdate') <span class="title-modules">{{ $message }}</span> @enderror
+    </div>
+
+    <div class="col-auto">
+        <label class="form-label d-flex align-items-center gap-1">
+            Edad
+            <span class="age-badge-label">Años</span>
+        </label>
+
+        <div class="age-pill">
+        <span class="age-pill-number">
+            {{ $age !== null && $age !== '' ? $age : '—' }}
+        </span>
+        </div>
     </div>
 
     <div class="col-auto">

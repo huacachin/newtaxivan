@@ -31,7 +31,7 @@ class DriversReportExport implements FromArray, WithColumnFormatting, WithEvents
     protected function headings(): array
     {
         return [
-            'ID', 'Placa', 'Nombre', 'N° Documento',
+            'Item', 'Cod', 'Placa', 'Nombre', 'N° Documento',
             'I.Contrato', 'F.Contrato', 'Teléfono', 'Condición',
         ];
     }
@@ -59,15 +59,18 @@ class DriversReportExport implements FromArray, WithColumnFormatting, WithEvents
                     ->pluck('plate')->filter()->unique()->values()->implode(', ')
                 : '';
 
+            $cod = $d->sort_order_min ?? $d->id;
+
             $rows[] = [
-                ++$this->rowNumActive,
-                $plates ?: '',
-                (string)$d->name,
-                (string)$d->document_number,
-                optional($d->contract_start)?->format('Y-m-d') ?: null,
-                optional($d->contract_end)?->format('Y-m-d') ?: null,
-                (string)$d->phone,
-                (string)$d->condition,
+                ++$this->rowNumActive,                          // Item
+                $cod,                                           // Cod
+                $plates ?: '',                                  // Placa
+                (string)$d->name,                               // Nombre
+                (string)$d->document_number,                    // N° Documento
+                optional($d->contract_start)?->format('Y-m-d') ?: null, // I.Contrato
+                optional($d->contract_end)?->format('Y-m-d') ?: null,   // F.Contrato
+                (string)$d->phone,                              // Teléfono
+                (string)$d->condition,                          // Condición
             ];
         }
 
@@ -75,8 +78,9 @@ class DriversReportExport implements FromArray, WithColumnFormatting, WithEvents
         $rows[] = $head;
         foreach ($free as $d) {
             $rows[] = [
-                ++$this->rowNumFree,
-                '—',
+                ++$this->rowNumFree,                            // Item
+                '—',                                            // Cod
+                '—',                                            // Placa
                 (string)$d->name,
                 (string)$d->document_number,
                 optional($d->contract_start)?->format('Y-m-d') ?: null,
@@ -89,25 +93,28 @@ class DriversReportExport implements FromArray, WithColumnFormatting, WithEvents
         return $rows;
     }
 
+
     public function columnFormats(): array
     {
         return [
-            'D' => '@',
-            'E' => NumberFormat::FORMAT_DATE_YYYYMMDD2,
+            'E' => '@',
             'F' => NumberFormat::FORMAT_DATE_YYYYMMDD2,
-            'G' => '@',
+            'G' => NumberFormat::FORMAT_DATE_YYYYMMDD2,
+            'H' => '@',
         ];
     }
+
 
     public function columnWidths(): array
     {
         return [
-            'A' => 4.2,
-            'D' => 12.0,
-            'E' => 9.0,
-            'F' => 9.0,
-            'G' => 11.0,
-            'H' => 7.0,
+            'A' => 4.2,  // Item
+            'B' => 5.2,  // Cod
+            'E' => 12.0, // N° Documento
+            'F' => 9.0,  // I.Contrato
+            'G' => 9.0,  // F.Contrato
+            'H' => 11.0, // Teléfono
+            'I' => 7.0,  // Condición
         ];
     }
 
@@ -124,13 +131,14 @@ class DriversReportExport implements FromArray, WithColumnFormatting, WithEvents
                 $white    = 'FFFFFFFF';
                 $borderC  = 'FFCFD8DC';
                 $black    = '000000';
-                $red       = 'F80000';
+                $red      = 'F80000';
 
+                // Default a 10 (y luego martillazo al final)
                 $ws->getParent()->getDefaultStyle()->getFont()->setSize(10);
 
                 // Solo 1 fila para título
                 $ws->insertNewRowBefore(1, 1);
-                $lastCol = 'H';
+                $lastCol = 'I'; // ahora 9 columnas
 
                 // ======= Título =======
                 $total = $this->totalActive + $this->totalFree;
@@ -151,10 +159,18 @@ class DriversReportExport implements FromArray, WithColumnFormatting, WithEvents
                 $dataStart1 = 3;
                 $rowsTotal  = (int)$ws->getHighestRow();
                 $header2    = null;
+
+                $firstHeadingLabel = $this->headings()[0] ?? 'Item';
+
                 for ($r = $dataStart1; $r <= $rowsTotal; $r++) {
-                    if ((string)$ws->getCell("A{$r}")->getValue() === 'ID') { $header2 = $r; break; }
+                    if ((string)$ws->getCell("A{$r}")->getValue() === $firstHeadingLabel) {
+                        $header2 = $r;
+                        break;
+                    }
                 }
-                if (!$header2) { $header2 = $rowsTotal; }
+                if (!$header2) {
+                    $header2 = $rowsTotal;
+                }
 
                 $total1     = $header2 - 2;
                 $dataEnd1   = max($dataStart1, $total1 - 1);
@@ -167,13 +183,13 @@ class DriversReportExport implements FromArray, WithColumnFormatting, WithEvents
                     if ($hr < 2) continue;
                     $ws->getStyle("A{$hr}:{$lastCol}{$hr}")->applyFromArray([
                         'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$white]],
-                        'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
+                        'alignment' => [
+                            'horizontal'=>Alignment::HORIZONTAL_CENTER,
+                            'vertical'=>Alignment::VERTICAL_CENTER
+                        ],
                         'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blue]],
                     ]);
                 }
-
-                // Freeze encabezado principal
-                //$ws->freezePane('A3');
 
                 // Zebra
                 $zebra = function (string $range) use ($ws) {
@@ -189,13 +205,16 @@ class DriversReportExport implements FromArray, WithColumnFormatting, WithEvents
                 if ($dataEnd1 >= $dataStart1) $zebra("A{$dataStart1}:{$lastCol}{$dataEnd1}");
                 if ($dataEnd2 >= $dataStart2) $zebra("A{$dataStart2}:{$lastCol}{$dataEnd2}");
 
-                // ======= Insertar título azul “CONDUCTORES LIBRES” =======
+                // ======= Título “CONDUCTORES LIBRES” =======
                 $title2 = $header2 - 1; // justo encima del header 2
                 $ws->mergeCells("A{$title2}:{$lastCol}{$title2}");
                 $ws->setCellValue("A{$title2}", 'CONDUCTORES LIBRES');
                 $ws->getStyle("A{$title2}:{$lastCol}{$title2}")->applyFromArray([
                     'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$red]],
-                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
+                    'alignment' => [
+                        'horizontal'=>Alignment::HORIZONTAL_CENTER,
+                        'vertical'=>Alignment::VERTICAL_CENTER
+                    ],
                     'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$white]],
                 ]);
                 $ws->getRowDimension($title2)->setRowHeight(16);
@@ -203,34 +222,64 @@ class DriversReportExport implements FromArray, WithColumnFormatting, WithEvents
                 // ======= Alineaciones =======
                 foreach ([[$dataStart1,$dataEnd1],[$dataStart2,$dataEnd2]] as [$r1,$r2]) {
                     if ($r2 < $r1) continue;
-                    $ws->getStyle("A{$r1}:A{$r2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                    $ws->getStyle("B{$r1}:B{$r2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setWrapText(false);
-                    $ws->getStyle("C{$r1}:C{$r2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT)->setWrapText(false);
-                    $ws->getStyle("D{$r1}:D{$r2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT)->setShrinkToFit(true);
-                    $ws->getStyle("E{$r1}:F{$r2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                    $ws->getStyle("G{$r1}:G{$r2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT)->setShrinkToFit(true);
-                    $ws->getStyle("H{$r1}:H{$r2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+                    // Item, Cod
+                    $ws->getStyle("A{$r1}:B{$r2}")
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+                    // Placa
+                    $ws->getStyle("C{$r1}:C{$r2}")
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)
+                        ->setWrapText(false);
+
+                    // Nombre
+                    $ws->getStyle("D{$r1}:D{$r2}")
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT)
+                        ->setWrapText(false);
+
+                    // Documento
+                    $ws->getStyle("E{$r1}:E{$r2}")
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT)
+                        ->setWrapText(false);
+
+                    // Fechas
+                    $ws->getStyle("F{$r1}:G{$r2}")
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+                    // Teléfono
+                    $ws->getStyle("H{$r1}:H{$r2}")
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT)
+                        ->setWrapText(false);
+
+                    // Condición
+                    $ws->getStyle("I{$r1}:I{$r2}")
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 }
 
                 // ======= Anchos =======
-                $ws->getColumnDimension('A')->setWidth(4.2);
-                $ws->getColumnDimension('B')->setAutoSize(true);
-                $ws->getColumnDimension('C')->setAutoSize(true);
-                $ws->getColumnDimension('D')->setWidth(12.0);
-                $ws->getColumnDimension('E')->setWidth(11.0);
-                $ws->getColumnDimension('F')->setWidth(11.0);
-                $ws->getColumnDimension('G')->setWidth(11.0);
-                $ws->getColumnDimension('H')->setWidth(10.0);
+                $ws->getColumnDimension('A')->setWidth(4.2);   // Item
+                $ws->getColumnDimension('B')->setWidth(5.2);   // Cod
+                $ws->getColumnDimension('C')->setAutoSize(true); // Placa
+                $ws->getColumnDimension('D')->setAutoSize(true); // Nombre
+                $ws->getColumnDimension('E')->setWidth(12.0);  // Documento
+                $ws->getColumnDimension('F')->setWidth(11.0);  // I.Contrato
+                $ws->getColumnDimension('G')->setWidth(11.0);  // F.Contrato
+                $ws->getColumnDimension('H')->setWidth(11.0);  // Teléfono
+                $ws->getColumnDimension('I')->setWidth(10.0);  // Condición
 
-                // ======= Bordes finos globales =======
-                $lastRow = (int)$ws->getHighestRow();
+                // ======= Bordes finos globales + fuente 10 =======
+                $lastRow  = (int)$ws->getHighestRow();
                 $fullRange = "A1:{$lastCol}{$lastRow}";
                 $ws->getStyle($fullRange)->getBorders()->getAllBorders()
                     ->setBorderStyle(Border::BORDER_THIN)
                     ->getColor()->setARGB('FF9E9E9E');
+
+                // 🔨 Martillazo final: TODO en tamaño 10
+                $ws->getStyle($fullRange)->getFont()->setSize(10);
             },
         ];
     }
+
 
     protected function fetchData(): array
     {

@@ -97,8 +97,8 @@ class VehiclesReportExport implements
     {
         return [
             'A' => 4.2,'B' => 5.2,'C' => 9.2,'D' => 10.0,'E' => 5.8,
-            'F' => 10.6,'G' => 22.0,'H' => 22.0,'I' => 12.5,'J' => 6.0,
-            'K' => 7.0,'L' => 20.0,
+            'F' => 10.6,'G' => 29.0,'H' => 29.0,'I' => 12.5,'J' => 6.0,
+            'K' => 7.0,'L' => 29.0,
         ];
     }
 
@@ -138,33 +138,57 @@ class VehiclesReportExport implements
                 $footerBg = 'FFCEE7FF';
                 $white    = 'FFFFFFFF';
                 $borderC  = 'FFCFD8DC';
-                $red    = 'F80000';
-                $black = '000000';
+                $red      = 'F80000';
+                $black    = '000000';
 
+                // Default font 10
                 $ws->getParent()->getDefaultStyle()->getFont()->setSize(10);
                 $ws->getDefaultRowDimension()->setRowHeight(15);
 
+                // Insertamos dos filas al inicio para título y resumen
                 $ws->insertNewRowBefore(1, 2);
+
+                // Stats
+                $s = $this->stats();
+
+                // Fila 1: Vehículos + D2/Gas/V.T/V.Q.N.T
+                $title = sprintf(
+                    'VEHÍCULOS %d · D2: %d · Gas: %d · V.T: %d · V.Q.N.T: %d',
+                    $s['total'],$s['d2'], $s['gas'], $s['vt'], $s['vqnt']
+                );
                 $ws->mergeCells('A1:L1');
-                $ws->setCellValue('A1', 'VEHÍCULOS');
+                $ws->setCellValue('A1', $title);
                 $ws->getStyle('A1:L1')->applyFromArray([
                     'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$red]],
-                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
-                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$white]],
+                    'alignment' => [
+                        'horizontal'=>Alignment::HORIZONTAL_CENTER,
+                        'vertical'=>Alignment::VERTICAL_CENTER
+                    ],
+                    'fill' => [
+                        'fillType'=>Fill::FILL_SOLID,
+                        'startColor'=>['argb'=>$white]
+                    ],
                 ]);
                 $ws->getRowDimension(1)->setRowHeight(18);
 
-                $s = $this->stats();
+                // Fila 2: Total vehículos + Propietario + Conductor
                 $resume = sprintf(
-                    'Total vehículos: %d · D2: %d · Gas: %d · V.T: %d · V.Q.N.T: %d · Propietario: %d · Conductor: %d',
-                    $s['total'], $s['d2'], $s['gas'], $s['vt'], $s['vqnt'], $s['prop'], $s['cond']
+                    'Propietario: %d · Conductor: %d',
+                    $s['prop'], $s['cond']
                 );
                 $ws->mergeCells('A2:L2');
                 $ws->setCellValue('A2', $resume);
                 $ws->getStyle('A2:L2')->applyFromArray([
                     'font' => ['italic'=>true,'size'=>10,'color'=>['argb'=>$black]],
-                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER,'wrapText'=>true],
-                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$white]],
+                    'alignment' => [
+                        'horizontal'=>Alignment::HORIZONTAL_CENTER,
+                        'vertical'=>Alignment::VERTICAL_CENTER,
+                        'wrapText'=>true,
+                    ],
+                    'fill' => [
+                        'fillType'=>Fill::FILL_SOLID,
+                        'startColor'=>['argb'=>$white]
+                    ],
                 ]);
                 $ws->getRowDimension(2)->setRowHeight(16);
 
@@ -172,60 +196,95 @@ class VehiclesReportExport implements
                 $dataStartRow = 4;
                 $lastCol      = 'L';
 
+                // Encabezado
                 $ws->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->applyFromArray([
                     'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$white]],
-                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
-                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blue]],
+                    'alignment' => [
+                        'horizontal'=>Alignment::HORIZONTAL_CENTER,
+                        'vertical'=>Alignment::VERTICAL_CENTER,
+                    ],
+                    'fill' => [
+                        'fillType'=>Fill::FILL_SOLID,
+                        'startColor'=>['argb'=>$blue]
+                    ],
                 ]);
                 $ws->getRowDimension($headerRow)->setRowHeight(17);
 
-                $last = (int)$ws->getHighestRow();
+                $last = (int) $ws->getHighestRow();
+
+                // Bordes para datos + encabezado
                 $ws->getStyle("A{$headerRow}:{$lastCol}{$last}")
                     ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)
                     ->getColor()->setARGB($borderC);
 
                 if ($last >= $dataStartRow) {
-                    $ws->getStyle("A{$dataStartRow}:{$lastCol}{$last}")->getFont()->setSize(10);
-
                     // Zebra
                     $rangeData = "A{$dataStartRow}:{$lastCol}{$last}";
                     $cond = new Conditional();
                     $cond->setConditionType(Conditional::CONDITION_EXPRESSION);
                     $cond->setConditions(['MOD(ROW(),2)=0']);
-                    $cond->getStyle()->getFill()->setFillType(Fill::FILL_SOLID)
+                    $cond->getStyle()->getFill()
+                        ->setFillType(Fill::FILL_SOLID)
                         ->getStartColor()->setARGB('FFF3F4F6');
                     $styles = $ws->getStyle($rangeData)->getConditionalStyles();
                     $styles[] = $cond;
                     $ws->getStyle($rangeData)->setConditionalStyles($styles);
                 }
 
-                // Alineaciones
-                $ws->getStyle("A{$dataStartRow}:B{$last}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                $ws->getStyle("C{$dataStartRow}:F{$last}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                $ws->getStyle("G{$dataStartRow}:H{$last}")->getAlignment()
-                    ->setHorizontal(Alignment::HORIZONTAL_LEFT)->setShrinkToFit(true);
-                $ws->getStyle("I{$dataStartRow}:K{$last}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                $ws->getStyle("L{$dataStartRow}:L{$last}")->getAlignment()
-                    ->setHorizontal(Alignment::HORIZONTAL_LEFT)->setShrinkToFit(true);
+                // Alineaciones (sin shrinkToFit)
+                $ws->getStyle("A{$dataStartRow}:B{$last}")
+                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
+                $ws->getStyle("C{$dataStartRow}:F{$last}")
+                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+                $ws->getStyle("G{$dataStartRow}:H{$last}")
+                    ->getAlignment()
+                    ->setHorizontal(Alignment::HORIZONTAL_LEFT)
+                    ->setWrapText(true);
+
+                $ws->getStyle("I{$dataStartRow}:K{$last}")
+                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+                $ws->getStyle("L{$dataStartRow}:L{$last}")
+                    ->getAlignment()
+                    ->setHorizontal(Alignment::HORIZONTAL_LEFT)
+                    ->setWrapText(true);
+
+                // Fila TOTAL VEHÍCULOS
                 $totalRow = $last + 1;
                 $ws->mergeCells("A{$totalRow}:K{$totalRow}");
                 $ws->setCellValue("A{$totalRow}", 'TOTAL VEHÍCULOS');
                 $ws->setCellValue("L{$totalRow}", "=COUNT(A{$dataStartRow}:A{$last})");
                 $ws->getStyle("A{$totalRow}:L{$totalRow}")->applyFromArray([
-                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$footerBg]],
+                    'fill' => [
+                        'fillType'=>Fill::FILL_SOLID,
+                        'startColor'=>['argb'=>$footerBg]
+                    ],
                     'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>'FF000000']],
-                    'borders' => ['outline' => ['borderStyle'=>Border::BORDER_MEDIUM,'color'=>['argb'=>$blue]]],
+                    'borders' => [
+                        'outline' => [
+                            'borderStyle'=>Border::BORDER_MEDIUM,
+                            'color'=>['argb'=>$blue]
+                        ]
+                    ],
                 ]);
-                $ws->getStyle("A{$totalRow}:K{$totalRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-                $ws->getStyle("L{$totalRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $ws->getStyle("A{$totalRow}:K{$totalRow}")
+                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+                $ws->getStyle("L{$totalRow}")
+                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-                // 🟩 Bordes completos (todo el rango)
+                // Bordes completos (todo el rango)
                 $fullRange = "A1:L{$totalRow}";
                 $ws->getStyle($fullRange)->getBorders()->getAllBorders()
                     ->setBorderStyle(Border::BORDER_THIN)
                     ->getColor()->setARGB('FF9E9E9E');
+
+                // Martillazo final: TODO en tamaño 10
+                $ws->getStyle($fullRange)->getFont()->setSize(10);
             },
         ];
     }
+
+
 }
