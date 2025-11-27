@@ -92,7 +92,7 @@ class Index extends Component
         $this->reset();
         $this->mount();
         $this->dispatch('modal-close',["name" => "modalAddDriver"]);
-        $this->dispatch('successAlert',["message" => "Conductor creado correctamente"]);
+        $this->dispatch('successAlert',["message" => "Conductor creado correctamente."]);
 
     }
 
