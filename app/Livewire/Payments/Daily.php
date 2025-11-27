@@ -19,14 +19,20 @@ class Daily extends Component
     public int $daysInMonth = 30;
 
     // Por fila
-    public array $rows = [];             // order, plate, cond, days[1..N], total, days_paid, debt_days, debt_amount, real_debt_amount
+    // order, plate, cond,
+    // days[1..N], total, days_paid,
+    // debt_days, debt_amount,
+    // real_debt_days, real_debt_amount
+    public array $rows = [];
+
     // Totales
     public array $totalsPerDay = [];     // suma por día (S/)
     public float|int $grandTotal = 0;    // suma total del mes (S/)
-    public int $sumDaysPaid = 0;         // footer: Total Pagos (conteo de días)
-    public int $sumDebtDays = 0;         // footer: deuda días
-    public float $sumDebtAmount = 0.0;   // footer: deuda S/
-    public float $sumRealDebtAmount = 0.0; // footer: deuda real S/
+    public int $sumDaysPaid = 0;         // Total Pagos (días)
+    public int $sumDebtDays = 0;         // Total Deuda (días)
+    public float $sumDebtAmount = 0.0;   // Total Deuda (S/)
+    public int $sumRealDebtDays = 0;     // Total D. Real (días)
+    public float $sumRealDebtAmount = 0.0; // Total D. Real (S/)
 
     // Config
     protected string $amountCol = 'amount';
@@ -58,22 +64,23 @@ class Daily extends Component
     }
 
     public function export(){
-        $route = route('exports.payments-daily',
-            [   "year" => $this->year,
-                "month" => $this->month,
-            ]);
+        $route = route('exports.payments-daily', [
+            "year"  => $this->year,
+            "month" => $this->month,
+        ]);
 
         $this->dispatch('url-open',["url" => $route]);
     }
 
     protected function loadData(): void
     {
-        $this->rows = [];
-        $this->totalsPerDay = [];
-        $this->grandTotal = 0;
-        $this->sumDaysPaid = 0;
-        $this->sumDebtDays = 0;
-        $this->sumDebtAmount = 0.0;
+        $this->rows              = [];
+        $this->totalsPerDay      = [];
+        $this->grandTotal        = 0;
+        $this->sumDaysPaid       = 0;
+        $this->sumDebtDays       = 0;
+        $this->sumDebtAmount     = 0.0;
+        $this->sumRealDebtDays   = 0;
         $this->sumRealDebtAmount = 0.0;
 
         if (!Schema::hasTable('vehicles') || !Schema::hasTable('payments')) return;
@@ -99,15 +106,16 @@ class Daily extends Component
 
         foreach ($vehicles as $v) {
             $this->rows[(int)$v->id] = [
-                'order'     => (string)($v->sort_order ?? ''),
-                'plate'     => (string)$v->plate,
-                'cond'      => (string)($v->condition ?? ''),
-                'days'      => array_fill(1, $this->daysInMonth, 0.0),
-                'total'     => 0.0,
-                'days_paid' => 0,
-                'debt_days' => 0,
-                'debt_amount' => 0.0,        // Total Deuda (costos por días sin pago, sin domingos; EX=0)
-                'real_debt_amount' => 0.0,   // Deuda real según condición
+                'order'           => (string)($v->sort_order ?? ''),
+                'plate'           => (string)$v->plate,
+                'cond'            => (string)($v->condition ?? ''),
+                'days'            => array_fill(1, $this->daysInMonth, 0.0),
+                'total'           => 0.0,
+                'days_paid'       => 0,
+                'debt_days'       => 0,
+                'debt_amount'     => 0.0,  // Total Deuda (S/)
+                'real_debt_days'  => 0,    // Deuda real (días)
+                'real_debt_amount'=> 0.0,  // Deuda real (S/)
             ];
         }
 
@@ -159,7 +167,7 @@ class Daily extends Component
             $this->rows[$vid]['days'][$day] = $sum;
         }
 
-        // ===== DÍAS pagados (PAGO/RETRASO) sin domingos, para "Dias Pag" =====
+        // ===== DÍAS pagados (PAGO/RETRASO) sin domingos, para "Días Pag." =====
         $paidDateCol = $this->mode === 'Pago' ? 'date_payment' : 'date_register';
         $paidDaysAgg = DB::table('payments as p')
             ->leftJoin('vehicles as v2', function ($join) {
@@ -220,7 +228,9 @@ class Daily extends Component
         }
 
         // ===== Totales por fila + deudas =====
-        for ($d=1; $d <= $this->daysInMonth; $d++) $this->totalsPerDay[$d] = 0;
+        for ($d=1; $d <= $this->daysInMonth; $d++) {
+            $this->totalsPerDay[$d] = 0;
+        }
 
         foreach ($this->rows as $vid => &$row) {
             // total mensual mostrado (suma de celdas de la tabla)
@@ -229,18 +239,20 @@ class Daily extends Component
             // condición
             $cond = strtoupper(trim($row['cond'] ?? ''));
             $isEx = str_starts_with($cond, 'EX');
-            $isDt = ($cond === 'DT');   // puedes ajustar si hay variantes "DT " etc.
+            $isDt = ($cond === 'DT');
             $isGn = ($cond === 'GN');
 
-            // días pagados (para "Dias Pag")
-            $row['days_paid'] = isset($paidDaysByVehicle[$vid]) ? count($paidDaysByVehicle[$vid]) : 0;
+            // días pagados
+            $row['days_paid'] = isset($paidDaysByVehicle[$vid])
+                ? count($paidDaysByVehicle[$vid])
+                : 0;
 
             // Total Deuda: suma costos de días SIN pago (sin domingos). EX => 0.
             $debtDays   = 0;
             $debtAmount = 0.0;
             if (isset($costsByVehicle[$vid])) {
                 foreach ($costsByVehicle[$vid] as $day => $amt) {
-                    $isPaidDay = isset($paidDaysByVehicle[$vid][$day]); // hubo pago PAGO/RETRASO ese día
+                    $isPaidDay = isset($paidDaysByVehicle[$vid][$day]); // hubo pago ese día
                     if (!$isPaidDay) {
                         $debtDays++;
                         $debtAmount += (float)$amt;
@@ -255,36 +267,47 @@ class Daily extends Component
                 $row['debt_amount'] = round($debtAmount, 2);
             }
 
-            // Suma de pagos del mes (PAGO/RETRASO), sin excluir domingos
+            // Suma de pagos del mes (PAGO/RETRASO)
             $paidSum = $paidSumByVehicle[$vid] ?? 0.0;
 
-            // === Deuda REAL por condición ===
+            // === Deuda REAL por condición (monto + días) ===
+            $real      = 0.0;
+            $realDays  = 0;
 
-            $real = 0.0;
             if ($isEx) {
-                Log::info("Deuda EX: $vid");
-                $real = 0.0;
+                // EX: nunca genera deuda
+                $real     = 0.0;
+                $realDays = 0;
             } elseif ($isGn) {
                 // GN: (Total pagos (tabla) + Total deuda) - sumaPagosSinDeuda
                 Log::info("Deuda GN: $vid => " . $row['total'] . " + " . $row['debt_amount'] . " - " . $paidSum );
-                $real = ($row['total'] + $row['debt_amount']) - $paidSum;
+                $real     = ($row['total'] + $row['debt_amount']) - $paidSum;
+                $realDays = $row['debt_days'];   // por ahora usamos los mismos días de deuda
             } elseif ($isDt) {
-                Log::info("Deuda DT: $vid => " . $row['total'] . " - " . $paidSum );
                 // DT: Total pagos (tabla) - sumaPagosSinDeuda
-                $real = $row['total'] - $paidSum;
+                Log::info("Deuda DT: $vid => " . $row['total'] . " - " . $paidSum );
+                $real     = $row['total'] - $paidSum;
+                $realDays = $row['debt_days'];   // ajustable si la regla cambia
             } else {
-                // Otras condiciones (si las hubiera), mantenemos comportamiento previo: deuda - pagos.
-                $real = $row['debt_amount'] - $paidSum;
+                // Otras condiciones: deuda - pagos
+                $real     = $row['debt_amount'] - $paidSum;
+                $realDays = $row['debt_days'];
                 Log::info("Deuda OT: $vid => " . $row['debt_amount'] . " - " . $paidSum );
             }
-            if ($real < 0) $real = 0.0;
+
+            if ($real <= 0) {
+                $real     = 0.0;
+                $realDays = 0;
+            }
 
             $row['real_debt_amount'] = round($real, 2);
+            $row['real_debt_days']   = (int)$realDays;
 
             // acumulados
             $this->sumDaysPaid       += (int)$row['days_paid'];
             $this->sumDebtDays       += (int)$row['debt_days'];
             $this->sumDebtAmount     += (float)$row['debt_amount'];
+            $this->sumRealDebtDays   += (int)$row['real_debt_days'];
             $this->sumRealDebtAmount += (float)$row['real_debt_amount'];
 
             // totales por día (importes)

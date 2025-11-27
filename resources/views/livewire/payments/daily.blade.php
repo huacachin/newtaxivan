@@ -1,8 +1,7 @@
 @push('styles')
     <style>
-
         table {
-            border-collapse: collapse; /* opcional */
+            border-collapse: collapse;
             width: 100%;
         }
 
@@ -10,7 +9,7 @@
             padding: 1px !important;
             font-size: 10px !important;
             text-align: center !important;
-            vertical-align: middle;   /* <-- clave */
+            vertical-align: middle;
         }
 
         .btn, input,select {
@@ -19,32 +18,42 @@
 
         .screen-overlay {
             position: fixed;
-            inset: 0;                 /* full viewport */
-            display: none;            /* Livewire lo pondrá en flex */
+            inset: 0;
+            display: none;
             align-items: center;
             justify-content: center;
             background: rgba(0,0,0,.35);
             backdrop-filter: blur(2px);
-            z-index: 2000;            /* sobre modals/backdrops de Bootstrap */
-            pointer-events: all;      /* bloquea clics */
+            z-index: 2000;
+            pointer-events: all;
+        }
+
+        .sunday {
+            background: #ffcccc !important;
         }
     </style>
-
 @endpush
+
 <div class="container-fluid">
 
     {{-- Encabezado --}}
     <div class="row align-items-center mb-3">
         <div class="col-sm-6">
-            <h4 class="main-title mb-0 title-modules">REPORTE DIARIO DE PAGO {{ mb_strtoupper(\Carbon\Carbon::create($year,$month,1)->translatedFormat('F Y'), 'UTF-8') }} DEL {{$year}}</h4>
+            <h4 class="main-title mb-0 title-modules">
+                REPORTE DIARIO DE PAGO {{ mb_strtoupper(\Carbon\Carbon::create($year,$month,1)->translatedFormat('F Y'), 'UTF-8') }} DEL {{$year}}
+            </h4>
         </div>
         <div class="col-sm-6 mt-2 mt-sm-0">
             <ul class="breadcrumb breadcrumb-start float-sm-end mb-0">
                 <li class="d-flex">
                     <i class="ti ti-cash f-s-16"></i>
-                    <a href="#" class="f-s-14 d-flex gap-2"><span class="d-none d-md-block">Pagos</span></a>
+                    <a href="#" class="f-s-14 d-flex gap-2">
+                        <span class="d-none d-md-block">Pagos</span>
+                    </a>
                 </li>
-                <li class="d-flex active"><a href="#" class="f-s-14">Reporte diario</a></li>
+                <li class="d-flex active">
+                    <a href="#" class="f-s-14">Reporte diario</a>
+                </li>
             </ul>
         </div>
     </div>
@@ -95,7 +104,6 @@
         {{-- Tabla --}}
         <div class="col-12">
             <div class="card shadow-sm">
-
                 <div class="card-body">
                     <div class="row mb-2">
                         <div class="col-12">
@@ -146,37 +154,54 @@
                             </div>
                         </div>
                     </div>
+
                     @php
                         $days = range(1, $daysInMonth);
-                        $baseCols  = 3 /* item+placa+cond */ + $daysInMonth + 1 /* Total (S/) */;
-                        $extraCols = ($mode === 'Pago') ? 4 : 1; // Pago: 4 extra; Caja: 1 (Días Pag.)
+                        // Columnas:
+                        // 3 (item, placa, cond) + días + 2 (Total Pagos: días + S/)
+                        $baseCols  = 3 + $daysInMonth + 2;
+                        // En modo Pago: +2 (Deuda) +2 (Deuda Real) => 4
+                        $extraCols = ($mode === 'Pago') ? 4 : 0;
                         $totalCols = $baseCols + $extraCols;
                     @endphp
 
                     <div class="table-responsive">
                         <table class="table table-bordered table-hover">
-                            <thead class="bg-primary">
+                            <thead class="bg-primary text-white">
+                            {{-- Fila 1 de encabezados (agrupadores) --}}
                             <tr>
-                                <th>Item</th>
-                                <th>Placa</th>
-                                <th>Cond.</th>
+                                <th rowspan="2">Item</th>
+                                <th rowspan="2">Placa</th>
+                                <th rowspan="2">Cond.</th>
 
                                 @foreach($days as $d)
                                     @php
                                         $date = \Carbon\Carbon::create($year, $month, $d);
                                         $isSun = $date->isSunday();
                                     @endphp
-                                    <th class="{{ $isSun ? 'sunday' : '' }}">{{ $d }}</th>
+                                    <th rowspan="2" class="{{ $isSun ? 'sunday' : '' }}">
+                                        {{ $d }}
+                                    </th>
                                 @endforeach
 
-                                <th>Total (S/)</th>
+                                <th colspan="2">TOTAL PAGOS</th>
 
-                                {{-- Columnas extra según modo --}}
-                                <!--th>Días Pag.</th-->
                                 @if($mode === 'Pago')
-                                    <th>Deuda (días)</th>
-                                    <th>Deuda (S/)</th>
-                                    <th>Deuda Real (S/)</th>
+                                    <th colspan="2">TOTAL DEUDA</th>
+                                    <th colspan="2">TOTAL D. REAL</th>
+                                @endif
+                            </tr>
+
+                            {{-- Fila 2 de encabezados (subcolumnas) --}}
+                            <tr>
+                                <th>Días</th>
+                                <th>S/</th>
+
+                                @if($mode === 'Pago')
+                                    <th>Días</th>
+                                    <th>S/</th>
+                                    <th>Días</th>
+                                    <th>S/</th>
                                 @endif
                             </tr>
                             </thead>
@@ -188,9 +213,13 @@
                                     $i++;
                                     $cond = strtoupper($r['cond'] ?? '');
                                     $condClass = 'cond-badge ';
-                                    if (str_starts_with($cond, 'EX')) { $condClass .= 'cond-EX'; }
-                                    elseif ($cond === 'GN') { $condClass .= 'cond-GN'; }
-                                    elseif ($cond === 'DT') { $condClass .= 'cond-DT'; }
+                                    if (str_starts_with($cond, 'EX')) {
+                                        $condClass .= 'cond-EX';
+                                    } elseif ($cond === 'GN') {
+                                        $condClass .= 'cond-GN';
+                                    } elseif ($cond === 'DT') {
+                                        $condClass .= 'cond-DT';
+                                    }
                                 @endphp
                                 <tr>
                                     <td>{{ $i }}</td>
@@ -200,17 +229,22 @@
                                     </td>
 
                                     @foreach($days as $d)
-                                        <td class="{{(number_format($r['days'][$d] ?? 0, 2) == 0.00) ? 'bg-danger':'bg-success'}} text-end">{{ number_format($r['days'][$d] ?? 0, 2) }}</td>
+                                        <td class="{{ (number_format($r['days'][$d] ?? 0, 2) == 0.00) ? 'bg-danger' : 'bg-success' }} text-end">
+                                            {{ number_format($r['days'][$d] ?? 0, 2) }}
+                                        </td>
                                     @endforeach
 
+                                    {{-- TOTAL PAGOS --}}
+                                    <td>{{ number_format($r['days_paid']) }}</td>
                                     <td>{{ number_format($r['total'], 2) }}</td>
 
-                                    {{-- Extra según modo --}}
-                                    <!--td>{{ number_format($r['days_paid']) }} </td-->
-
                                     @if($mode === 'Pago')
+                                        {{-- TOTAL DEUDA --}}
                                         <td>{{ number_format($r['debt_days']) }}</td>
                                         <td>{{ number_format($r['debt_amount'], 2) }}</td>
+
+                                        {{-- TOTAL D. REAL --}}
+                                        <td>{{ number_format($r['real_debt_days']) }}</td>
                                         <td>{{ number_format($r['real_debt_amount'], 2) }}</td>
                                     @endif
                                 </tr>
@@ -223,7 +257,7 @@
                             @endforelse
                             </tbody>
 
-                            <tfoot class="bg-primary fw-semibold">
+                            <tfoot class="bg-primary fw-semibold text-white">
                             <tr>
                                 <td colspan="3">Totales por día (S/)</td>
 
@@ -231,39 +265,28 @@
                                     <td>{{ number_format($totalsPerDay[$d] ?? 0, 2) }}</td>
                                 @endforeach
 
+                                {{-- TOTAL PAGOS --}}
+                                <td>{{ number_format($sumDaysPaid) }}</td>
                                 <td>{{ number_format($grandTotal, 2) }}</td>
 
-                                {{-- Footer de columnas extra --}}
-                                {{--<td>{{ number_format($sumDaysPaid) }}</td>--}}
-
                                 @if($mode === 'Pago')
+                                    {{-- TOTAL DEUDA --}}
                                     <td>{{ number_format($sumDebtDays) }}</td>
                                     <td>{{ number_format($sumDebtAmount, 2) }}</td>
+
+                                    {{-- TOTAL D. REAL --}}
+                                    <td>{{ number_format($sumRealDebtDays) }}</td>
                                     <td>{{ number_format($sumRealDebtAmount, 2) }}</td>
                                 @endif
                             </tr>
-
-                            {{--<tr>
-                                <td colspan="{{ 3 + $daysInMonth + 1 }}" class="text-end pe-3"></td>
-                                @if($mode === 'Pago')
-                                    <td colspan="4">
-                                        <span class="me-2">Total Pagos (días):</span>
-                                        <strong>{{ number_format($sumDaysPaid) }}</strong>
-                                    </td>
-                                @else
-                                    <td>
-                                        <span class="me-2">Total Pagos (días):</span>
-                                        <strong>{{ number_format($sumDaysPaid) }}</strong>
-                                    </td>
-                                @endif
-                            </tr>--}}
                             </tfoot>
                         </table>
                     </div>
 
                     <small class="text-muted">
                         * Días Pag. cuenta PAGO/RETRASO ({{ $mode === 'Pago' ? 'date_payment' : 'date_register' }}) excluyendo domingos.<br>
-                        * En modo <strong>Pago</strong> se muestran columnas de deuda; en <strong>Caja</strong> sólo se muestra “Días Pag.”.<br>
+                        * TOTAL PAGOS muestra días trabajados y monto del mes.<br>
+                        * TOTAL DEUDA y TOTAL D. REAL muestran días y montos según las reglas de condición (EX, GN, DT, etc.).<br>
                         * Domingos resaltados en rojo no computan para deuda ni días pagados.
                     </small>
                 </div>
