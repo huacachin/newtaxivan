@@ -39,6 +39,10 @@
             z-index: 2000;            /* sobre modals/backdrops de Bootstrap */
             pointer-events: all;      /* bloquea clics */
         }
+
+        .green_modules{
+            color: #4D8A7C !important;
+        }
     </style>
 @endpush
 @php
@@ -130,16 +134,13 @@
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">
                             <tr>
-                                <th>Item</th>
-                                <th>Cod</th>
-                                <th>Placa</th>
+                                <th rowspan="2">Item</th>
+                                <th rowspan="2">Cod</th>
+                                <th rowspan="2">Placa</th>
                                 <th colspan="3">Deuda del mes anterior</th>
                                 <th colspan="6">Pagos</th>
                             </tr>
                             <tr>
-                                <th></th>
-                                <th> </th>
-                                <th></th>
 
                                 <th>Deuda</th>
                                 <th>Exonerado</th>
@@ -166,7 +167,7 @@
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
                                     <td>{{ $r['order'] ?: '-' }}</td>
-                                    <td>{{ $r['plate'] }}</td>
+                                    <td class="green_modules">{{ $r['plate'] }}</td>
 
                                     {{-- Deuda anterior (debt_days) --}}
                                     <td>{{ number_format($r['prev_debt'], 2) }}</td>
@@ -174,7 +175,7 @@
                                     <td>{{ number_format($r['prev_paid_debt'], 2) }}</td>
 
                                     {{-- Mes actual --}}
-                                    <td>{{ number_format($r['month_amount'], 2) }}</td>
+                                    <td class="green_modules">{{ number_format($r['month_amount'], 2) }}</td>
                                     <td>{{ $laborableDays }}</td>
                                     <td>{{ $r['dt_days'] }}</td>
                                     <td>{{ $r['dnt_days'] }}</td>

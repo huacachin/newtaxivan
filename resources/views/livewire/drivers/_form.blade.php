@@ -32,8 +32,19 @@
         .age-pill-number {
             font-variant-numeric: tabular-nums;
         }
+
+        .label-expired {
+            background: #c62828;
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
     </style>
 @endpush
+
+@php
+    $highlightExpiration = $highlightExpiration ?? false;
+@endphp
 
 <div class="row g-3">
     <div class="col-12 col-md-4">
@@ -49,10 +60,15 @@
     </div>
 
     <div class="col-auto">
-        <label class="form-label">Doc F.Vencimiento</label>
-        <input id="document_expiration_date" type="text" class="form-control form-control-sm" wire:model="document_expiration_date">
+        <label class="form-label {{ $highlightExpiration && $this->documentExpirationExpired ? 'label-expired' : '' }}">
+            Doc F.Vencimiento
+        </label>
+        <input id="document_expiration_date" type="text"
+               class="form-control form-control-sm"
+               wire:model="document_expiration_date">
         @error('document_expiration_date') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
+
 
     <div class="col-auto">
         <label class="form-label">Fecha Nacimiento</label>
@@ -113,10 +129,15 @@
     </div>
 
     <div class="col-auto">
-        <label class="form-label">Fecha Revalidación</label>
-        <input id="license_revalidation_date" type="text" class="form-control form-control-sm" wire:model="license_revalidation_date">
+        <label class="form-label {{ $highlightExpiration && $this->licenseRevalidationExpired ? 'label-expired' : '' }}">
+            Fecha Revalidación
+        </label>
+        <input id="license_revalidation_date" type="text"
+               class="form-control form-control-sm"
+               wire:model="license_revalidation_date">
         @error('license_revalidation_date') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
+
 
     <div class="col-auto">
         <label class="form-label">Clase</label>
@@ -175,10 +196,15 @@
     </div>
 
     <div class="col-auto">
-        <label class="form-label">Fecha Vencimiento</label>
-        <input type="text" id="road_education_expiration_date" class="form-control form-control-sm" wire:model="road_education_expiration_date">
+        <label class="form-label {{ $highlightExpiration && $this->roadEducationExpirationExpired ? 'label-expired' : '' }}">
+            Fecha Vencimiento
+        </label>
+        <input type="text" id="road_education_expiration_date"
+               class="form-control form-control-sm"
+               wire:model="road_education_expiration_date">
         @error('road_education_expiration_date') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
+
 
     <div class="col-12 col-md-4">
         <label class="form-label">Municipalidad</label>
@@ -199,10 +225,15 @@
     </div>
 
     <div class="col-auto">
-        <label class="form-label">Fecha Vencimiento</label>
-        <input type="text" id="credential_expiration_date" class="form-control form-control-sm" wire:model="credential_expiration_date">
+        <label class="form-label {{ $highlightExpiration && $this->credentialExpirationExpired ? 'label-expired' : '' }}">
+            Fecha Vencimiento
+        </label>
+        <input type="text" id="credential_expiration_date"
+               class="form-control form-control-sm"
+               wire:model="credential_expiration_date">
         @error('credential_expiration_date') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
+
 
     <div class="col-12 col-md-4">
         <label class="form-label">Municipalidad</label>

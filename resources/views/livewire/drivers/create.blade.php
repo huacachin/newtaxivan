@@ -41,7 +41,7 @@
     <div class="card">
         <div class="card-body">
 
-        @include('livewire.drivers._form')
+            @include('livewire.drivers._form')
 
             <div class="mt-3 d-flex gap-2 justify-content-end">
                 <button type="button" class="btn btn-sm btn-primary" wire:click="save">Guardar</button>

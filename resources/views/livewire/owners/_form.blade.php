@@ -1,4 +1,21 @@
 {{-- resources/views/livewire/owners/_form.blade.php --}}
+
+@push('styles')
+    <style>
+        .label-expired {
+            background: #c62828;
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+    </style>
+@endpush
+
+@php
+    // Si no viene inyectada, por defecto no resaltamos expiraciones (Create)
+    $highlightExpiration = $highlightExpiration ?? false;
+@endphp
+
 <div class="row g-3">
     <div class="col-12 col-md-6">
         <label for="name" class="form-label">Empresa/Nombre</label>
@@ -23,10 +40,16 @@
     </div>
 
     <div class="col-auto">
-        <label for="document_expiration_date" class="form-label">Doc F.Vencimiento</label>
-        <input id="document_expiration_date" type="text" class="form-control form-control-sm" wire:model="document_expiration_date">
+        <label for="document_expiration_date"
+               class="form-label {{ $highlightExpiration && $this->documentExpirationExpired ? 'label-expired' : '' }}">
+            Doc F.Vencimiento
+        </label>
+        <input id="document_expiration_date" type="text"
+               class="form-control form-control-sm"
+               wire:model="document_expiration_date">
         @error('document_expiration_date') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
+
 
     <div class="col-auto">
         <label for="birthdate" class="form-label">Fecha Nacimiento</label>

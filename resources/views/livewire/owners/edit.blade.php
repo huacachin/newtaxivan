@@ -34,7 +34,7 @@
     <div class="card">
         <div class="card-body">
 
-                @include('livewire.owners._form')
+            @include('livewire.owners._form', ['highlightExpiration' => true])
 
             <div class="mt-3 d-flex gap-2 justify-content-end">
                 <button type="button" class="btn btn-sm btn-primary" wire:click="update">Guardar</button>
