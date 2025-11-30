@@ -176,9 +176,9 @@ class Index extends Component
             'plate'          => ['required','string','max:20'],
             'date'           => ['required','date'],
             'headquarter_id' => ['required','integer','exists:headquarters,id'],
-            'price'          => ['required','numeric','gt:0'],
-            'passenger'      => ['required','integer','gt:0'],
-            'passage'        => ['required','numeric','gt:0'],
+            'price'          => ['required','numeric'],
+            'passenger'      => ['required','integer'],
+            'passage'        => ['required','numeric'],
         ];
     }
 
@@ -195,15 +195,12 @@ class Index extends Component
 
             'price.required'            => 'El precio es obligatorio.',
             'price.numeric'             => 'El precio debe ser numérico.',
-            'price.gt'                  => 'El precio debe ser mayor a 0.',
 
             'passenger.required'        => 'El número de pasajeros es obligatorio.',
             'passenger.integer'         => 'Los pasajeros deben ser un número entero.',
-            'passenger.gt'              => 'Los pasajeros deben ser mayores a 0.',
 
             'passage.required'          => 'El pasaje es obligatorio.',
             'passage.numeric'           => 'El pasaje debe ser numérico.',
-            'passage.gt'                => 'El pasaje debe ser mayor a 0.',
         ];
     }
 
@@ -546,47 +543,7 @@ class Index extends Component
      *
      * @return \Illuminate\Database\Query\Builder
      */
-    private function baseQuery(): Builder
-    {
-        $q = DB::table('departures as d')
-            ->leftJoin('vehicles as v', 'v.id', '=', 'd.vehicle_id')
-            ->leftJoin('users as u', 'u.id', '=', 'd.user_id')
-            ->leftJoin('headquarters as h', 'h.id', '=', 'd.headquarter_id')
-            ->whereNotNull('d.date')
-            ->where('v.status', '=', 'active'); // sólo vehículos activos
 
-        // Fecha: rango (por defecto ya viene hoy–hoy)
-        if ($this->fromDate && $this->toDate) {
-            $q->whereBetween('d.date', [$this->fromDate, $this->toDate]);
-        } elseif ($this->fromDate) {
-            $q->whereDate('d.date', '>=', $this->fromDate);
-        } elseif ($this->toDate) {
-            $q->whereDate('d.date', '<=', $this->toDate);
-        }
-
-        // Buscador por tipo (placa/usuario/sede)
-        $term = trim((string)($this->searchText ?? ''));
-        if ($term !== '') {
-            switch ($this->searchType) {
-                case 1: // Placa
-                    $q->where('v.plate', 'like', '%'.strtoupper($term).'%');
-                    break;
-                case 2: // Usuario
-                    $q->where('u.name', 'like', '%'.$term.'%');
-                    break;
-                case 3: // Sucursal
-                    $q->where('h.id', $term);
-                    break;
-            }
-        }
-
-        // === INTEGRACIÓN ROLES/SEDES: admin ve todo; controller solo lo suyo
-        if (!$this->isAdmin()) {
-            $q->where('d.user_id', Auth::id());
-        }
-
-        return $q;
-    }
 
     /**
      * Calcula totales (conteo y sumas) del dataset filtrado por baseQuery().
@@ -658,7 +615,7 @@ class Index extends Component
             $rows = DB::query()
                 ->fromSub($innerE, 'x')
                 ->selectRaw("x.*, SEC_TO_TIME(TIMESTAMPDIFF(SECOND, x.prev_dt, x.curr_dt)) as freq")
-                ->orderBy('x.date')->orderBy('x.hour')
+                ->orderBy('x.id')
                 ->get();
         }
         $totals = $this->totalsFor($this->existingBase());
@@ -703,7 +660,7 @@ class Index extends Component
             $supportRows = DB::query()
                 ->fromSub($innerS, 'x')
                 ->selectRaw("x.*, SEC_TO_TIME(TIMESTAMPDIFF(SECOND, x.prev_dt, x.curr_dt)) as freq")
-                ->orderBy('x.date')->orderBy('x.hour')
+                ->orderBy('x.id')
                 ->get();
         }
         $supportTotals = $this->totalsFor($this->supportBase());

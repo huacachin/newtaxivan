@@ -44,9 +44,9 @@ class AddDeparture extends Component
             'plate'          => ['required','string','max:20'],
             'date'           => ['required','date'],
             'headquarter_id' => ['required','integer','exists:headquarters,id'],
-            'price'          => ['required','numeric','gt:0'],
-            'passenger'      => ['required','integer','gt:0'],
-            'passage'        => ['required','numeric','gt:0'],
+            'price'          => ['required','numeric'],
+            'passenger'      => ['required','integer'],
+            'passage'        => ['required','numeric'],
         ];
     }
 
@@ -59,15 +59,12 @@ class AddDeparture extends Component
 
             'price.required'            => 'El precio es obligatorio.',
             'price.numeric'             => 'El precio debe ser numérico.',
-            'price.gt'                  => 'El precio debe ser mayor a 0.',
 
             'passenger.required'        => 'El número de pasajeros es obligatorio.',
             'passenger.integer'         => 'Los pasajeros deben ser un número entero.',
-            'passenger.gt'              => 'Los pasajeros deben ser mayores a 0.',
 
             'passage.required'          => 'El pasaje es obligatorio.',
             'passage.numeric'           => 'El pasaje debe ser numérico.',
-            'passage.gt'                => 'El pasaje debe ser mayor a 0.',
         ];
     }
 
