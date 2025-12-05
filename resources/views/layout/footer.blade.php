@@ -1,7 +1,7 @@
 
 
 <!-- Footer Section starts-->
-<footer>
+<footer class="d-none d-sm-none d-md-block">
       <div class="container-fluid">
         <div class="row">
           <div class="col-sm-9 col-12">
