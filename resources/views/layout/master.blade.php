@@ -56,6 +56,35 @@
     <!-- Footer Section end -->
 </div>
 
+<script>
+    $(function(){
+        if (!$.datepicker.regional['es']) {
+            $.datepicker.regional['es'] = {
+                closeText: 'Cerrar',
+                prevText: 'Anterior',
+                nextText: 'Siguiente',
+                currentText: 'Hoy',
+                monthNames: [
+                    'enero','febrero','marzo','abril','mayo','junio',
+                    'julio','agosto','septiembre','octubre','noviembre','diciembre'
+                ],
+                monthNamesShort: ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'],
+                dayNames: ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],
+                dayNamesShort: ['dom','lun','mar','mié','jue','vie','sáb'],
+                dayNamesMin: ['Do','Lu','Ma','Mi','Ju','Vi','Sa'],
+                weekHeader: 'Sm',
+                dateFormat: 'yy-mm-dd',   // importante para que coincida con tu backend
+                firstDay: 1,
+                isRTL: false,
+                showMonthAfterYear: false,
+                yearSuffix: ''
+            };
+        }
+
+        // Establecer español como idioma por defecto
+        $.datepicker.setDefaults($.datepicker.regional['es']);
+    })
+</script>
 @stack('datepicker_js')
 </body>
 
