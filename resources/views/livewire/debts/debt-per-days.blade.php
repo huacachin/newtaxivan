@@ -126,7 +126,7 @@
                                 </button>
 
                                 <button class="btn btn-sm btn-primary" id="down" title="Bajar">
-                                    <i class="ti ti-square-chevrons-down f-s-12"></i>
+                                    <i class="fa-solid fa-angle-down"></i>
                                 </button>
 
                             </div>

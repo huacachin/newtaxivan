@@ -125,7 +125,7 @@
 
                                     <button id="down"
                                             class="btn btn-sm btn-primary flex-shrink-0">
-                                        <i class="ti ti-square-chevrons-down f-s-12"></i>
+                                        <i class="fa-solid fa-angle-down"></i>
                                     </button>
 
                                     <button class="btn btn-sm btn-primary flex-shrink-0"

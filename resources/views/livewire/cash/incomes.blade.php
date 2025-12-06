@@ -167,9 +167,8 @@
 
                                         <!-- Descargar último -->
                                         <button id="down"
-                                                class="btn btn-sm btn-primary flex-shrink-0"
-                                                wire:click="downloadLast" title="Descargar último">
-                                            <i class="ti ti-square-chevrons-down f-s-12"></i>
+                                                class="btn btn-sm btn-primary flex-shrink-0">
+                                            <i class="fa-solid fa-angle-down"></i>
                                         </button>
 
                                     </div>

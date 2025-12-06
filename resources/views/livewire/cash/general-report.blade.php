@@ -91,8 +91,8 @@
 
                                 <!-- Ir al final -->
                                 <button class="btn btn-sm btn-primary flex-shrink-0 align-self-end"
-                                        id="down" type="button" title="Ir al final">
-                                    <i class="ti ti-square-chevrons-down f-s-12"></i>
+                                        id="down" type="button">
+                                    <i class="fa-solid fa-angle-down"></i>
                                 </button>
 
                             </div>
