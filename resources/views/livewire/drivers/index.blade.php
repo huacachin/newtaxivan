@@ -109,6 +109,7 @@
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">
                             <tr>
+                                <th>Acción</th>
                                 <th>Item</th>
                                 <th>Cod</th>
                                 <th>Placa</th>
@@ -118,13 +119,17 @@
                                 <th>F.Contrato</th>
                                 <th>Celular</th>
                                 <th>Estado</th>
-                                <th>Acción</th>
+
                             </tr>
                             </thead>
                             <tbody>
                             @if($drivers->count() > 0)
                                 @foreach($drivers as $driver)
                                     <tr>
+                                        <td width="50">
+                                            <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
+                                               wire:click="openEditWindow({{ $driver->id }})"></i>
+                                        </td>
                                         <td>{{ $loop->iteration }}</td>
                                         <td>{{$driver->vehicles->first()->sort_order}}</td>
                                         <td>{{ $driver->vehicles->first()->plate ?? '—' }}</td>
@@ -169,10 +174,7 @@
                                         </td>
                                         <td>{{ $driver->phone }}</td>
                                         <td>{{ $driver->condition }}</td>
-                                        <td width="10">
-                                            <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
-                                               wire:click="openEditWindow({{ $driver->id }})"></i>
-                                        </td>
+
                                     </tr>
                                 @endforeach
                             @else
@@ -181,7 +183,7 @@
                             </tbody>
                             <tfoot class="bg-primary">
                             <tr>
-                                <td colspan="9" class="text-end f-w-600">TOTAL: {{ $drivers->count() }}</td>
+                                <td colspan="10" class="text-end f-w-600">TOTAL: {{ $drivers->count() }}</td>
                             </tr>
                             </tfoot>
                         </table>
@@ -191,6 +193,7 @@
                             <table class="table table-bordered table-striped table-hover">
                                 <thead class="bg-primary">
                                 <tr>
+                                    <th>Acción</th>
                                     <th>Id</th>
                                     <th>Nombre</th>
                                     <th>DNI</th>
@@ -198,12 +201,16 @@
                                     <th>F.Contrato</th>
                                     <th>Celular</th>
                                     <th>Estado</th>
-                                    <th>Acción</th>
+
                                 </tr>
                                 </thead>
                                 <tbody>
                                 @forelse($driversFree as $driver)
                                     <tr>
+                                        <td width="50">
+                                            <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
+                                               wire:click="openEditWindow({{ $driver->id }})"></i>
+                                        </td>
                                         <td>{{ $loop->iteration }}</td>
                                         <td>
                                             {{ $driver->name }}
@@ -246,10 +253,7 @@
                                         </td>
                                         <td>{{ $driver->phone }}</td>
                                         <td>{{ $driver->condition }}</td>
-                                        <td width="10">
-                                            <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
-                                               wire:click="openEditWindow({{ $driver->id }})"></i>
-                                        </td>
+
                                     </tr>
                                 @empty
                                     <tr><td colspan="8">No se encontrarón resultados</td></tr>

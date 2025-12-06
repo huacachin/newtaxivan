@@ -56,7 +56,7 @@
                     @endif
 
                     <div id="edit-departure-form" class="row">
-                        <div class="col-md-2 col-6">
+                        <div class="col-md-2 col-12">
                             <div class="mb-3">
                                 <label for="dep_plate_edit" class="form-label">Placa</label>
                                 <input id="dep_plate_edit"
@@ -71,7 +71,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-2 col-6">
+                        <div class="col-md-2 col-12">
                             <div class="mb-3">
                                 <label class="form-label">Fecha</label>
                                 <input id="date" type="text" class="form-control form-control-sm" wire:model.defer="date">
@@ -79,7 +79,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-2 col-6">
+                        <div class="col-md-2 col-12">
                             <div class="mb-3">
                                 <label class="form-label">Sucursal</label>
                                 <select class="form-select form-select-sm" wire:model.defer="headquarter_id">
@@ -92,7 +92,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-2 col-6">
+                        <div class="col-md-2 col-12">
                             <div class="mb-3">
                                 <label class="form-label">Salida (S/)</label>
                                 <input type="number" step="0.01" class="form-control form-control-sm"
@@ -101,7 +101,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-2 col-6">
+                        <div class="col-md-2 col-12">
                             <div class="mb-3">
                                 <label class="form-label">Pasajeros</label>
                                 <input type="number" class="form-control form-control-sm"
@@ -111,7 +111,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-2 col-6">
+                        <div class="col-md-2 col-12">
                             <div class="mb-3">
                                 <label class="form-label">Pasaje (S/)</label>
                                 <input type="number" step="0.01" class="form-control form-control-sm"

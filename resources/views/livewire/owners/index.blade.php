@@ -108,19 +108,24 @@
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">
                             <tr>
+                                <th scope="col">Acción</th>
                                 <th>Item</th>
                                 <th>Cod</th>
                                 <th scope="col">Placa</th>
                                 <th scope="col">Nombre/Empresa</th>
                                 <th scope="col">DNI/RUC</th>
                                 <th scope="col">Cel.</th>
-                                <th scope="col">Acción</th>
+
                             </tr>
                             </thead>
                             <tbody>
                             @if($owners->count() > 0)
                                 @foreach ($owners as $owner)
                                     <tr>
+                                        <td>
+                                            <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
+                                               wire:click="openEditWindow({{ $owner->id }})"></i>
+                                        </td>
                                         <td>{{ $loop->iteration }}</td>
                                         <td>{{$owner->sort_order}}</td>
                                         <td>{{ $owner->plate }}</td>
@@ -149,10 +154,7 @@
                                             @endif
                                         </td>
                                         <td>{{ $owner->phone }}</td>
-                                        <td>
-                                            <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
-                                               wire:click="openEditWindow({{ $owner->id }})"></i>
-                                        </td>
+
                                     </tr>
                                 @endforeach
                             @else
@@ -173,16 +175,21 @@
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">
                             <tr>
+                                <th scope="col">Acción</th>
                                 <th scope="col">Id</th>
                                 <th scope="col">Nombre/Empresa</th>
                                 <th scope="col">DNI/RUC</th>
                                 <th scope="col">Cel.</th>
-                                <th scope="col">Acción</th>
+
                             </tr>
                             </thead>
                             <tbody>
                             @forelse ($ownersFree as $owner)
                                 <tr>
+                                    <td width="50">
+                                        <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
+                                           wire:click="openEditWindow({{ $owner->id }})"></i>
+                                    </td>
                                     <td>{{ $loop->iteration }}</td>
                                     <td>{{ $owner->name }}</td>
                                     <td>
@@ -208,10 +215,7 @@
                                     </td>
 
                                     <td>{{ $owner->phone }}</td>
-                                    <td width="10">
-                                        <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
-                                           wire:click="openEditWindow({{ $owner->id }})"></i>
-                                    </td>
+
                                 </tr>
                             @empty
                                 <tr>

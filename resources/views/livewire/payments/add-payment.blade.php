@@ -42,7 +42,7 @@
                     @endif
 
                     <div id="add-payment-form" class="row">
-                        <div class="col-auto">
+                        <div class="col-md-auto col-sm-12">
                             <div class="mb-3">
                                 <label for="pay_plate" class="form-label">Placa</label>
                                 <input id="pay_plate" type="text" class="form-control form-control-sm" placeholder="ABC123"
@@ -54,7 +54,7 @@
                             </div>
                         </div>
 
-                        <div class="col-auto">
+                        <div class="col-md-auto">
                             <div class="mb-3">
                                 <label class="form-label">Serie</label>
                                 <input type="text" class="form-control form-control-sm" wire:model.defer="serie">
@@ -62,20 +62,9 @@
                             </div>
                         </div>
 
-                        <div class="col-auto">
-                            <div class="mb-3">
-                                <label class="form-label">Sucursal</label>
-                                <select class="form-select form-select-sm" wire:model.live="headquarter_id_form">
-                                    <option value="">Seleccionar</option>
-                                    @foreach($headquarters as $hq)
-                                        <option value="{{ $hq->id }}">{{ $hq->name }}</option>
-                                    @endforeach
-                                </select>
-                                @error('headquarter_id_form') <span class="title-modules">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
 
-                        <div class="col-auto">
+
+                        <div class="col-md-auto">
                             <div class="mb-3">
                                 <label class="form-label">Fecha Registro</label>
                                 <input type="date" class="form-control form-control-sm" wire:model.live="date_register" readonly>
@@ -83,7 +72,7 @@
                             </div>
                         </div>
 
-                        <div class="col-auto">
+                        <div class="col-md-auto">
                             <div class="mb-3">
                                 <label class="form-label">Fecha Pago</label>
                                 <input type="date" class="form-control form-control-sm"
@@ -99,15 +88,7 @@
                             </div>
                         </div>
 
-                        <div class="col-auto">
-                            <div class="mb-3">
-                                <label class="form-label">Hora</label>
-                                <input type="time" class="form-control form-control-sm" wire:model.defer="hour">
-                                @error('hour') <span class="title-modules">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
-
-                        <div class="col-auto">
+                        <div class="col-md-auto">
                             <div class="mb-3">
                                 <label class="form-label">Tipo</label>
                                 <select class="form-select form-select-sm" wire:model.live="type_form">
@@ -119,14 +100,25 @@
                                 @error('type_form') <span class="title-modules">{{ $message }}</span> @enderror
                             </div>
                         </div>
-
-                        <div class="col-auto">
+                        <div class="col-md-auto">
+                            <div class="mb-3">
+                                <label class="form-label">Sucursal</label>
+                                <select class="form-select form-select-sm" wire:model.live="headquarter_id_form">
+                                    <option value="">Seleccionar</option>
+                                    @foreach($headquarters as $hq)
+                                        <option value="{{ $hq->id }}">{{ $hq->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('headquarter_id_form') <span class="title-modules">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+                        <div class="col-md-auto">
                             <div class="mb-3">
                                 <label class="form-label">Monto (S/)</label>
                                 <input type="number" step="0.01" min="0.01" class="form-control form-control-sm"
                                        wire:model.defer="amount"
                                        @if($type_form !== 'DEUDA' && !is_null($detected_cost)) readonly @endif
-                                       inputmode="decimal">
+                                       inputmode="decimal" placeholder="0.00">
                                 @error('amount') <span class="title-modules">{{ $message }}</span> @enderror
 
                                 @if($type_form === 'DEUDA')

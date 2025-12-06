@@ -20,7 +20,7 @@ class AddPayment extends Component
     public ?string $serie = null;
     public string $date_register = '';
     public ?string $date_payment = null;
-    public string $hour = '';                 // HH:mm
+    protected string $hour = '';                 // HH:mm
     public string $type_form = '';            // PAGO | DEUDA | RETRASO
     public ?int $headquarter_id_form = null;  // FK
     public float|string $amount = '';
@@ -49,7 +49,6 @@ class AddPayment extends Component
             'serie'               => ['nullable','string','max:50'],
             'date_register'       => ['required','date'],
             'date_payment'        => ['nullable','date'],
-            'hour'                => ['required'],
             'type_form'           => ['required','in:PAGO,DEUDA,RETRASO'],
             'headquarter_id_form' => ['required','integer','exists:headquarters,id'],
             'amount'              => ['required','numeric','gt:0'],
@@ -90,7 +89,6 @@ class AddPayment extends Component
         return [
             'plate.required'               => 'La placa es obligatoria.',
             'date_register.required'       => 'La fecha de registro es obligatoria.',
-            'hour.required'                => 'La hora es obligatoria.',
             'type_form.required'           => 'El tipo es obligatorio.',
             'type_form.in'                 => 'Tipo inválido.',
             'headquarter_id_form.required' => 'La sucursal es obligatoria.',
@@ -144,7 +142,6 @@ class AddPayment extends Component
         // Inicializa formulario en hoy
         $this->date_register = $today;
         $this->date_payment  = $today;
-        $this->hour          = $now->format('H:i');
         $this->type_form     = 'PAGO';
 
         // Cargar sedes y ordenar con primaria primero + seleccionar por defecto
@@ -382,7 +379,6 @@ class AddPayment extends Component
         $this->serie = null;
         $this->date_register = $today;
         $this->date_payment  = $today;
-        $this->hour          = $now->format('H:i');
         // Sede primaria o primera disponible
         $primaryId = (int) (Auth::user()?->headquarter_id ?? 0);
         if ($this->headquarters instanceof \Illuminate\Support\Collection && $this->headquarters->isNotEmpty()) {
@@ -408,9 +404,13 @@ class AddPayment extends Component
     public function save(): void
     {
         $tz    = config('app.timezone','America/Lima');
-        $today = now($tz)->toDateString();
+        $now   = now($tz);
+        $today = $now->toDateString();
 
-        // Si es PAGO, forzamos hoy (igual que tu modal)
+        // 👉 Hora tomada en el momento de guardar (solo backend)
+        $this->hour = $now->format('H:i'); // o 'H:i:s' si tu columna lo requiere
+
+        // Si es PAGO, forzamos hoy
         if ($this->type_form === 'PAGO') {
             $this->date_register = $today;
             $this->date_payment  = $today;
@@ -432,13 +432,14 @@ class AddPayment extends Component
         $this->validate();
         $this->validateBusinessCommon();
 
-        // Duplicado exacto (por tipo/fecha/placa) si hay date_payment (como en tu Index)
+        // Duplicado exacto (por tipo/fecha/placa) si hay date_payment
         if ($this->date_payment) {
             $dupExact = Payment::query()
                 ->where('type', $this->type_form)
                 ->whereDate('date_payment', $this->date_payment)
                 ->whereRaw('REPLACE(UPPER(TRIM(legacy_plate)),"-","") = ?', [$this->plateNeedle()])
                 ->exists();
+
             if ($dupExact && $this->type_form !== 'DEUDA') {
                 throw ValidationException::withMessages([
                     'date_payment' => 'Ya existe un registro con el mismo Tipo y Fecha de Pago para esta placa.',
@@ -458,7 +459,7 @@ class AddPayment extends Component
                 'serie'          => $this->serie,
                 'date_register'  => $this->date_register,
                 'date_payment'   => $this->date_payment,
-                'hour'           => $this->hour,
+                'hour'           => $this->hour,        // 👉 siempre backend
                 'type'           => $this->type_form,
                 'headquarter_id' => $this->headquarter_id_form,
                 'user_id'        => Auth::id(),
@@ -468,16 +469,20 @@ class AddPayment extends Component
             ]);
 
             if ($this->type_form === 'DEUDA') {
-                $this->applyDebtAmortizations($vehicle, $this->normPlate(), (float)$this->amount, (int)$payment->id);
+                $this->applyDebtAmortizations(
+                    $vehicle,
+                    $this->normPlate(),
+                    (float)$this->amount,
+                    (int)$payment->id
+                );
             }
         });
 
-        // Alert en pantalla + autocierre (manejado en la vista)
         session()->flash('add_success', true);
-
-        // Limpiar formulario (misma UX que AddDeparture)
         $this->resetForm();
     }
+
+
 
     // ===== Amortización (idéntica a tu Index) =====
     private function applyDebtAmortizations(?Vehicle $vehicle, string $normPlate, float $amount, int $paymentId): void

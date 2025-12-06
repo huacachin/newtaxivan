@@ -17,9 +17,9 @@ class AddDeparture extends Component
     public ?string $plate = null;
     public ?string $date = null;
     public ?int    $headquarter_id = null;
-    public ?float  $price = 0;
-    public ?int    $passenger = 0;
-    public ?float  $passage = 0;
+    public ?float  $price;
+    public ?int    $passenger;
+    public ?float  $passage;
 
     public ?string $hour = null;
     public ?string $latitude = null;
@@ -163,10 +163,6 @@ class AddDeparture extends Component
             }
         }
 
-        // Montos iniciales
-        $this->price = 0;
-        $this->passenger = 0;
-        $this->passage = 0;
     }
 
     // ==============================

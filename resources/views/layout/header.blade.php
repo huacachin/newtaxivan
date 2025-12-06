@@ -184,13 +184,7 @@
                                                 </li>
                                                 <li class="app-divider-v dotted py-1"></li-->
                                                 <li class="btn-light-danger b-r-5">
-                                                    <form action="{{ route('logout') }}" method="POST">
-                                                        @csrf
-                                                        <button type="submit" class="dropdown-item mb-0 title-modules">
-                                                            <i class="ti ti-logout pe-1 f-s-18 title-modules"></i> Cerrar
-                                                            Sesión
-                                                        </button>
-                                                    </form>
+                                                    <livewire:auth.logout />
                                                 </li>
 
                                             </ul>
