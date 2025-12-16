@@ -14,7 +14,7 @@ class CashController extends Controller
 {
 
 
-
+    //CashController
     public function __construct(){
         $this->middleware(['auth','permission:cash.incomes'])->only([
             'incomes','exportIncomes'
