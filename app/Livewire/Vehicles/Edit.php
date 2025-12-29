@@ -59,21 +59,21 @@ class Edit extends Component
         return [
             "sort_order" => "nullable|integer",
             "plate" => "required|string|max:20|unique:vehicles,plate," . $this->vehicle->id,
-            "entry_date" => "required|date",
+            "entry_date" => "nullable|date",
             "termination_date" => "nullable|date",
-            "headquarter" => "required|string|max:255",
-            "class" => "required|string|max:255",
-            "brand" => "required|string|max:255",
-            "year" => "required|integer",
-            "model" => "required|string|max:255",
-            "bodywork" => "required|string|max:255",
-            "color" => "required|string|max:255",
-            "type"=>"required|string|max:255",
-            "affiliated_company" => "required|string|max:255",
+            "headquarter" => "nullable|string|max:255",
+            "class" => "nullable|string|max:255",
+            "brand" => "nullable|string|max:255",
+            "year" => "nullable|integer",
+            "model" => "nullable|string|max:255",
+            "bodywork" => "nullable|string|max:255",
+            "color" => "nullable|string|max:255",
+            "type"=>"nullable|string|max:255",
+            "affiliated_company" => "nullable|string|max:255",
             "condition" => "required|string|max:255",
-            "owner_id" => "required|exists:owners,id",
-            "driver_id" => "required|exists:drivers,id",
-            "fuel" => "required|string|max:255",
+            "owner_id" => "nullable|exists:owners,id",
+            "driver_id" => "nullable|exists:drivers,id",
+            "fuel" => "nullable|string|max:255",
             "soat_date" => "nullable|date",
             "technical_review" => "nullable|date",
             "certificate_date" => "nullable|date",
@@ -82,6 +82,22 @@ class Edit extends Component
             "passengers" => "nullable|integer"
         ];
     }
+
+    protected $validationAttributes = [
+        'plate' => 'placa',
+        'headquarter' => 'sede',
+        'class' => 'categoria',
+        'brand' => 'marca',
+        'model' => 'modelo',
+        'bodywork' => 'carrocería',
+        'tipo' => 'modalidad',
+        'condition' => 'condición',
+        'affiliated_company' => 'empresa asociada',
+        'owner_id' => 'propietario',
+        'driver_id' => 'conductor',
+        'fuel' => 'combustible',
+        'detail' => 'detalles',
+    ];
 
     public function update()
     {

@@ -15,7 +15,8 @@ class DatabaseSeeder extends Seeder
             PermissionCatalogSeeder::class,
             HeadquartersSeeder::class,
             UsersSeeder::class,
-            RoleSetupSeeder::class
+            RoleSetupSeeder::class,
+            GrantAdminToUserOneSeeder::class
         ]);
     }
 }

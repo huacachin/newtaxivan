@@ -43,6 +43,11 @@ class Create extends Component
         ];
     }
 
+    protected $validationAttributes = [
+        'document_number' => 'número de documento',
+        'pwd' => 'contraseña'
+    ];
+
     public function mount()
     {
         $this->headquartes = Headquarter::where('status','active')->get(['id','name']);

@@ -67,6 +67,11 @@ class Edit extends Component
         ];
     }
 
+    protected $validationAttributes = [
+        'document_number' => 'número de documento',
+        'pwd' => 'contraseña'
+    ];
+
     public function update()
     {
         $this->validate();

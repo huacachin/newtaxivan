@@ -214,6 +214,8 @@ class AddDeparture extends Component
 
         // Limpiar el formulario (igual que en el modal original)
         $this->resetForm();
+
+        redirect()->route('departures.index');
     }
 
     // ==============================

@@ -480,6 +480,8 @@ class AddPayment extends Component
 
         session()->flash('add_success', true);
         $this->resetForm();
+
+        redirect()->route('payments.index');
     }
 
 

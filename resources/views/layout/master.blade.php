@@ -201,6 +201,23 @@
         });
     }
 
+
+    function questionLogout() {
+        Swal.fire({
+            title: "Esta seguro que desea salir del sistema ?",
+            text: "La sesión actual se cerrará y abandonará el sistema",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Salir"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Livewire.dispatch('logout')
+            }
+        });
+    }
+
     document.addEventListener('open-modal', event => {
         openModal(event.detail[0]['name'], {focus:"#" + event.detail[0]['focus']});
     });
@@ -222,6 +239,11 @@
     //TODO: Homologar llamado con questionDelete
     window.addEventListener('questionGenerate', event => {
         questionGenerate();
+    });
+
+    //TODO: Homologar llamado con questionLogout
+    window.addEventListener('questionLogout', event => {
+        questionLogout();
     });
 
     window.addEventListener('alertError', event => {
