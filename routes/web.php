@@ -131,4 +131,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/exports/payments-stats', [PaymentController::class, 'exportStats'])
         ->name('exports.payments-stats');
 
+    Route::get('/exports/users', [UserController::class, 'export'])
+        ->name('exports.users');
+
 });

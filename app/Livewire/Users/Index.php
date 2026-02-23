@@ -341,6 +341,12 @@ class Index extends Component
         $this->dispatch('successAlert', ["message" => "Usuario actualizado correctamente"]);
     }
 
+    public function export(): void
+    {
+        $route = route('exports.users', ['search' => $this->search]);
+        $this->dispatch('url-open', ['url' => $route]);
+    }
+
     public function openAddWindow(): void
     {
 

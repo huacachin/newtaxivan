@@ -44,6 +44,11 @@
                                        <i class="ti ti-square-plus f-s-12"></i> Nuevo
                                    </button>
 
+                                   <button class="btn btn-sm btn-primary flex-shrink-0"
+                                           wire:click="export">
+                                       <i class="ti ti-file-analytics f-s-12"></i> Exportar
+                                   </button>
+
                                </div>
                            </div>
                        </div>
@@ -125,7 +130,7 @@
 
     <div class="screen-overlay"
          wire:loading.delay.flex
-         wire:target="save,update">
+         wire:target="save,update,export">
         <div class="text-center">
             <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
             <div class="mt-2 text-white fw-semibold">Cargando…</div>
