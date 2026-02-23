@@ -103,6 +103,9 @@ class Index extends Component
         $search = $this->search;
 
         $this->drivers = Driver::query()
+            // solo drivers activos
+            ->whereRaw("LOWER(TRIM(drivers.status)) = 'active'")
+
             // columnas del driver
             ->select('id', 'name', 'document_number', 'phone', 'contract_start', 'contract_end', 'condition', 'document_expiration_date')
 
@@ -111,13 +114,13 @@ class Index extends Component
                 'vehicle_sort_order' => Vehicle::select('sort_order')
                     ->whereColumn('vehicles.driver_id', 'drivers.id')
                     ->whereRaw("LOWER(TRIM(status)) = 'active'")
-                    ->orderBy('sort_order')   // por si hay más de un vehículo activo
+                    ->orderBy('sort_order')
                     ->limit(1),
             ])
 
             // solo drivers con vehículos activos
             ->whereHas('vehicles', fn ($q) =>
-            $q->whereRaw("LOWER(TRIM(status)) = 'active'")
+                $q->whereRaw("LOWER(TRIM(status)) = 'active'")
             )
 
             // eager load de vehículos activos
@@ -148,9 +151,10 @@ class Index extends Component
             ->orderBy('vehicle_sort_order', 'asc')
             ->get();
 
-        $this->driversFree = Driver::whereDoesntHave('vehicles', function ($q) {
-            $q->whereRaw("LOWER(TRIM(status)) = 'active'"); // o 'activo'
-        })->get();
+        $this->driversFree = Driver::whereRaw("LOWER(TRIM(status)) = 'active'")
+            ->whereDoesntHave('vehicles', function ($q) {
+                $q->whereRaw("LOWER(TRIM(status)) = 'active'");
+            })->get();
 
     }
 

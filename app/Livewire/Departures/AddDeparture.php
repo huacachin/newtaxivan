@@ -210,9 +210,7 @@ class AddDeparture extends Component
         ]);
 
         // Mostrar alert Bootstrap en la vista (sin redirección)
-        session()->flash('add_success', true);
-
-        // Limpiar el formulario (igual que en el modal original)
+        session()->flash('departure_success', 'Salida creada correctamente.');
         $this->resetForm();
 
         redirect()->route('departures.index');

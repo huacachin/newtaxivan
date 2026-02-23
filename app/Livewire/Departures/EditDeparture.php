@@ -2,11 +2,13 @@
 
 namespace App\Livewire\Departures;
 
+use App\Models\Departure;
 use App\Models\Headquarter;
 use App\Models\Vehicle;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 class EditDeparture extends Component
@@ -204,49 +206,68 @@ class EditDeparture extends Component
     // ==============================
     public function update(): void
     {
-        $this->validate();
-        if (!$this->depId) return;
+        try {
+            $this->validate();
+            if (!$this->depId) return;
 
-        // Validación de acceso a sede para no-admin (unificada)
-        if (!$this->isAdmin()) {
-            $allowed = $this->allowedHqIds();               // ints
-            $chosen  = (int) ($this->headquarter_id ?? 0);  // int
+            // Validación de acceso a sede para no-admin (unificada)
+            if (!$this->isAdmin()) {
+                $allowed = $this->allowedHqIds();               // ints
+                $chosen  = (int) ($this->headquarter_id ?? 0);  // int
 
-            if (!$chosen || !in_array($chosen, $allowed, true)) {
-                $this->addError('headquarter_id', 'No tienes acceso a esta sucursal.');
-                return;
+                if (!$chosen || !in_array($chosen, $allowed, true)) {
+                    $this->addError('headquarter_id', 'No tienes acceso a esta sucursal.');
+                    return;
+                }
             }
+
+            // Resolver vehículo según placa (idéntico a modal)
+            ['vehicle_id' => $vehicleId, 'is_support' => $isSupport, 'legacy_plate' => $legacyPlate]
+                = $this->resolveVehicleByPlate($this->plate);
+
+            $now  = now(config('app.timezone','America/Lima'));
+            $hour = $this->hour ?: $now->format('H:i');
+
+            DB::table('departures')->where('id', $this->depId)->update([
+                'is_support'     => $isSupport,
+                'date'           => $this->date,
+                'hour'           => $hour,
+                'vehicle_id'     => $vehicleId,
+                'legacy_plate'   => $legacyPlate,
+                'headquarter_id' => $this->headquarter_id,
+                'times'          => 1,
+                'price'          => $this->price,
+                'passenger'      => $this->passenger,
+                'passage'        => $this->passage,
+                'latitude'       => $this->latitude,
+                'longitude'      => $this->longitude,
+                'updated_at'     => now(),
+            ]);
+
+            session()->flash('departure_success', 'Salida actualizada correctamente.');
+            $this->redirectRoute('departures.index');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            session()->flash('departure_error', 'Error al actualizar: ' . $e->getMessage());
+            $this->redirectRoute('departures.index');
         }
+    }
 
-        // Resolver vehículo según placa (idéntico a modal)
-        ['vehicle_id' => $vehicleId, 'is_support' => $isSupport, 'legacy_plate' => $legacyPlate]
-            = $this->resolveVehicleByPlate($this->plate);
+    public function questionDelete(int $id): void
+    {
+        $this->dispatch('questionDelete', ['id' => $id]);
+    }
 
-        $now  = now(config('app.timezone','America/Lima'));
-        $hour = $this->hour ?: $now->format('H:i');
-
-        DB::table('departures')->where('id', $this->depId)->update([
-            'is_support'     => $isSupport,      // recalculado según placa
-            'date'           => $this->date,
-            'hour'           => $hour,
-            'vehicle_id'     => $vehicleId,
-            'legacy_plate'   => $legacyPlate,
-            'headquarter_id' => $this->headquarter_id,
-            // 'user_id'     => Auth::id(), // conservar histórico
-            'times'          => 1,
-            'price'          => $this->price,
-            'passenger'      => $this->passenger,
-            'passage'        => $this->passage,
-            'latitude'       => $this->latitude,
-            'longitude'      => $this->longitude,
-            'updated_at'     => now(),
-        ]);
-
-        // Alert de éxito para la vista (sin redirección)
-        session()->flash('edit_success', true);
-
-        // Volver a cargar el row para reflejar cualquier normalización (placa/soporte)
-        $this->loadRowOrAbort();
+    #[On('register_destroy')]
+    public function destroy(int $id): void
+    {
+        if (!$this->isAdmin()) {
+            abort(403);
+        }
+        Departure::findOrFail($id)->delete();
+        session()->flash('departure_success', 'Salida eliminada correctamente.');
+        $this->redirectRoute('departures.index');
     }
 
     // ==============================

@@ -241,6 +241,7 @@ class Index extends Component
 
         $vehicle = Vehicle::query()
             ->whereRaw('REPLACE(UPPER(TRIM(plate)),"-","") = ?', [$this->plateNeedle()])
+            ->where('status', 'active')
             ->first();
 
         if (!$vehicle) {
@@ -277,6 +278,7 @@ class Index extends Component
 
         $vehicle = Vehicle::query()
             ->whereRaw('REPLACE(UPPER(TRIM(plate)),"-","") = ?', [$this->plateNeedle()])
+            ->where('status', 'active')
             ->first();
 
         $q = DB::table('debt_days')
@@ -556,7 +558,7 @@ class Index extends Component
         $vehicle = Vehicle::whereRaw(
             'REPLACE(UPPER(TRIM(plate)),"-","") = ?',
             [$this->plateNeedle()]
-        )->first();
+        )->where('status', 'active')->first();
 
         DB::transaction(function () use ($vehicle) {
             $payment = Payment::create([
@@ -614,7 +616,7 @@ class Index extends Component
         $vehicle = Vehicle::whereRaw(
             'REPLACE(UPPER(TRIM(plate)),"-","") = ?',
             [$this->plateNeedle()]
-        )->first();
+        )->where('status', 'active')->first();
 
         DB::transaction(function () use ($p, $vehicle) {
             $oldType = $p->type;

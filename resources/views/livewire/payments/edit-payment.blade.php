@@ -1,8 +1,13 @@
+@push('datepicker_css')
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.14.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script src="https://code.jquery.com/ui/1.14.1/jquery-ui.js"></script>
+@endpush
 <div class="container-fluid">
     <!-- Header -->
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title title-modules">EDITAR PAGO</h4>
+            <h4 class="main-title title-modules">PAGOS : ACTUALIZAR</h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -24,13 +29,6 @@
             <div class="card">
                 <div class="card-body">
 
-                    {{-- Alert de éxito (autocierre 3s) --}}
-                    @if (session()->has('edit_success'))
-                        <div id="success-alert" class="alert alert-success">
-                            <strong>El pago se actualizó de forma exitosa.</strong>
-                        </div>
-                    @endif
-
                     {{-- Errores de validación --}}
                     @if ($errors->any())
                         <div class="alert alert-danger">
@@ -42,9 +40,11 @@
                     @endif
 
                     <div id="edit-payment-form" class="row">
-                        <div class="col-auto">
+
+                        {{-- Placa --}}
+                        <div class="col-md-auto col-sm-12">
                             <div class="mb-3">
-                                <label for="pay_plate_edit" class="form-label">Placa</label>
+                                <label for="pay_plate_edit" class="form-label">Placa (*)</label>
                                 <input id="pay_plate_edit" type="text" class="form-control form-control-sm input-uppercase" placeholder="ABC123"
                                        wire:model.live.debounce.300ms="plate"
                                        autocapitalize="characters"
@@ -53,62 +53,42 @@
                             </div>
                         </div>
 
-                        <div class="col-auto">
+                        {{-- Serie --}}
+                        <div class="col-md-auto">
                             <div class="mb-3">
-                                <label class="form-label">Serie</label>
+                                <label class="form-label">Serie (*)</label>
                                 <input type="text" class="form-control form-control-sm" wire:model.defer="serie">
                                 @error('serie') <span class="title-modules">{{ $message }}</span> @enderror
                             </div>
                         </div>
 
-                        <div class="col-auto">
+                        {{-- Fecha Registro --}}
+                        <div class="col-md-auto">
                             <div class="mb-3">
-                                <label class="form-label">Sucursal</label>
-                                <select class="form-control form-control-sm" wire:model.live="headquarter_id_form">
-                                    <option value="">Seleccionar</option>
-                                    @foreach($headquarters as $hq)
-                                        <option value="{{ $hq->id }}">{{ $hq->name }}</option>
-                                    @endforeach
-                                </select>
-                                @error('headquarter_id_form') <span class="title-modules">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
-
-                        <div class="col-auto">
-                            <div class="mb-3">
-                                <label class="form-label">Fecha Registro</label>
-                                <input type="date" class="form-control form-control-sm" wire:model.live="date_register" readonly>
+                                <label class="form-label">Fecha Reg. (*)</label>
+                                <input id="pay_date_register" type="text" class="form-control form-control-sm input-readonly"
+                                       wire:model.defer="date_register" readonly>
                                 @error('date_register') <span class="title-modules">{{ $message }}</span> @enderror
                             </div>
                         </div>
 
-                        <div class="col-auto">
+                        {{-- Fecha Pago --}}
+                        <div class="col-md-auto">
                             <div class="mb-3">
-                                <label class="form-label">Fecha Pago</label>
-                                <input type="date" class="form-control form-control-sm {{ $type_form === 'PAGO' ? 'input-readonly' : '' }}"
-                                       wire:model.live="date_payment"
-                                       @if($type_form === 'PAGO')
-                                           readonly
-                                           min="{{ now()->toDateString() }}"
-                                           max="{{ now()->toDateString() }}"
-                                       @endif
-                                >
+                                <label class="form-label">Fecha Pago (*)</label>
+                                <input id="pay_date_payment" type="text"
+                                       class="form-control form-control-sm {{ $type_form === 'PAGO' ? 'input-readonly' : '' }}"
+                                       wire:model.defer="date_payment"
+                                       @if($type_form === 'PAGO') readonly @endif>
                                 @error('date_payment') <span class="title-modules">{{ $message }}</span> @enderror
                             </div>
                         </div>
 
-                        <div class="col-auto">
+                        {{-- Tipo --}}
+                        <div class="col-md-auto">
                             <div class="mb-3">
-                                <label class="form-label">Hora</label>
-                                <input type="time" class="form-control form-control-sm" wire:model.defer="hour">
-                                @error('hour') <span class="title-modules">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
-
-                        <div class="col-auto">
-                            <div class="mb-3">
-                                <label class="form-label">Tipo</label>
-                                <select class="form-control form-control-sm" wire:model.live="type_form">
+                                <label class="form-label">Tipo (*)</label>
+                                <select class="form-select form-select-sm" wire:model.live="type_form">
                                     <option value="">Seleccionar</option>
                                     <option value="PAGO">Pago</option>
                                     <option value="DEUDA">Deuda</option>
@@ -118,9 +98,10 @@
                             </div>
                         </div>
 
-                        <div class="col-auto">
+                        {{-- Monto --}}
+                        <div class="col-md-auto">
                             <div class="mb-3">
-                                <label class="form-label">Monto (S/)</label>
+                                <label class="form-label">Monto (*)</label>
                                 <input type="number" step="0.01" min="0.01" class="form-control form-control-sm"
                                        wire:model.defer="amount"
                                        @if($type_form !== 'DEUDA' && !is_null($detected_cost)) readonly @endif
@@ -136,14 +117,41 @@
                                 @else
                                     @if(!is_null($detected_cost))
                                         <small class="text-muted">
-                                            Costo detectado: S/ {{ number_format($detected_cost, 2) }} — Fecha: {{ $date_register }}
+                                            Costo detectado: S/ {{ number_format($detected_cost, 2) }}
                                         </small>
                                     @else
                                         <small class="text-warning">
-                                            No hay costo configurado para {{ $date_register }} y placa “{{ $plate }}”.
+                                            Sin costo para {{ $date_register }} / "{{ $plate }}".
                                         </small>
                                     @endif
                                 @endif
+                            </div>
+                        </div>
+
+                        {{-- Sucursal --}}
+                        <div class="col-md-auto">
+                            <div class="mb-3">
+                                <label class="form-label">Sucursal (*)</label>
+                                <select class="form-select form-select-sm" wire:model.live="headquarter_id_form">
+                                    <option value="">Seleccionar</option>
+                                    @foreach($headquarters as $hq)
+                                        <option value="{{ $hq->id }}">{{ $hq->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('headquarter_id_form') <span class="title-modules">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+
+                        {{-- Hora (oculta, se envía al guardar) --}}
+                        <input type="hidden" wire:model.defer="hour">
+
+                        {{-- Usuario (solo lectura) --}}
+                        <div class="w-100"></div>
+                        <div class="col-md-auto">
+                            <div class="mb-3">
+                                <label class="form-label">Usuario (*)</label>
+                                <input type="text" class="form-control form-control-sm input-readonly"
+                                       value="{{ auth()->user()->name }}" readonly>
                             </div>
                         </div>
 
@@ -166,7 +174,10 @@
                         <button type="button" class="btn btn-sm btn-primary" wire:click="update" wire:loading.attr="disabled">
                             Guardar cambios
                         </button>
-                        <a href="{{ route('payments.index') }}" class="btn btn-sm btn-primary">Volver</a>
+                        @role('admin')
+                        <button type="button" class="btn btn-sm btn-danger" wire:click="questionDelete({{ $paymentId }})">Eliminar</button>
+                        @endrole
+                        <a href="{{ route('payments.index') }}" class="btn btn-sm btn-secondary">Volver</a>
                     </div>
                 </div>
             </div>
@@ -184,27 +195,21 @@
     </div>
 </div>
 
+@push('datepicker_js')
+    <script>
+        $( function() {
+            var wire = @this;
+            initLivewireDatepicker([
+                ['#pay_date_register', 'date_register'],
+                ['#pay_date_payment',  'date_payment'],
+            ], wire);
+        });
+    </script>
+@endpush
+
 @push('scripts')
     <script>
         (function () {
-            // ---- Alert autocierre a los 3s ----
-            let successTimer = null;
-            function armAutoHide() {
-                const alertBox = document.getElementById('success-alert');
-                if (!alertBox) return;
-                if (successTimer) { clearTimeout(successTimer); successTimer = null; }
-                successTimer = setTimeout(() => {
-                    alertBox.classList.add('d-none');
-                    alertBox.style.display = 'none';
-                    successTimer = null;
-                }, 3000);
-            }
-            document.addEventListener('DOMContentLoaded', armAutoHide);
-            const mo = new MutationObserver(() => {
-                if (document.getElementById('success-alert')) armAutoHide();
-            });
-            mo.observe(document.body, { childList: true, subtree: true });
-
             // ---- Forzar mayúsculas reales en placa ----
             function forceUppercase(el) {
                 if (!el) return;
@@ -224,7 +229,7 @@
                 el.addEventListener('paste', () => setTimeout(handler, 0));
                 el.addEventListener('blur', handler);
                 el.__upperBound = true;
-                handler(); // convertir de inmediato
+                handler();
             }
             function initUpper() {
                 document.querySelectorAll('[data-upper-plate]').forEach(bindUpperFor);

@@ -5,10 +5,9 @@ namespace App\Livewire\Drivers;
 use App\Models\Driver;
 use Carbon\Carbon;
 use Illuminate\Validation\Rule;
-use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
-#[Layout('layouts.app')]
 class Edit extends Component
 {
     public Driver $driver;
@@ -160,37 +159,61 @@ class Edit extends Component
 
     // ---------------------------------------------------------
 
+    public function questionDelete(int $id): void
+    {
+        $this->dispatch('questionDelete', ['id' => $id]);
+    }
+
+    #[On('register_destroy')]
+    public function destroy(int $id): void
+    {
+        if (!auth()->user()?->hasRole('admin')) {
+            abort(403);
+        }
+        Driver::findOrFail($id)->update(['status' => 'inactive']);
+        session()->flash('driver_success', 'Conductor eliminado correctamente.');
+        $this->redirectRoute('settings.drivers.index');
+    }
+
     public function update()
     {
-        $this->validate();
+        try {
+            $this->validate();
 
-        $this->driver->update([
-            "name"                           => $this->name,
-            "document_number"                => $this->document_number,
-            "document_expiration_date"       => $this->document_expiration_date,
-            "birthdate"                      => $this->birthdate,
-            "address"                        => $this->address,
-            "district"                       => $this->district,
-            "email"                          => $this->email,
-            "phone"                          => $this->phone,
-            "license"                        => $this->license,
-            "class"                          => $this->class,
-            "category"                       => $this->category,
-            "license_issue_date"             => $this->license_issue_date,
-            "license_revalidation_date"      => $this->license_revalidation_date,
-            "contract_start"                 => $this->contract_start,
-            "contract_end"                   => $this->contract_end,
-            "condition"                      => $this->condition,
-            "score"                          => $this->score ?? 0,
-            "road_education"                 => $this->road_education,
-            "road_education_expiration_date" => $this->road_education_expiration_date,
-            "road_education_municipality"    => $this->road_education_municipality,
-            "credential"                     => $this->credential,
-            "credential_expiration_date"     => $this->credential_expiration_date,
-            "credential_municipality"        => $this->credential_municipality,
-        ]);
+            $this->driver->update([
+                "name"                           => $this->name,
+                "document_number"                => $this->document_number,
+                "document_expiration_date"       => $this->document_expiration_date,
+                "birthdate"                      => $this->birthdate,
+                "address"                        => $this->address,
+                "district"                       => $this->district,
+                "email"                          => $this->email,
+                "phone"                          => $this->phone,
+                "license"                        => $this->license,
+                "class"                          => $this->class,
+                "category"                       => $this->category,
+                "license_issue_date"             => $this->license_issue_date,
+                "license_revalidation_date"      => $this->license_revalidation_date,
+                "contract_start"                 => $this->contract_start,
+                "contract_end"                   => $this->contract_end,
+                "condition"                      => $this->condition,
+                "score"                          => $this->score ?? 0,
+                "road_education"                 => $this->road_education,
+                "road_education_expiration_date" => $this->road_education_expiration_date,
+                "road_education_municipality"    => $this->road_education_municipality,
+                "credential"                     => $this->credential,
+                "credential_expiration_date"     => $this->credential_expiration_date,
+                "credential_municipality"        => $this->credential_municipality,
+            ]);
 
-        $this->dispatch('successAlert',["message" => "Conductor actualizado correctamente"]);
+            session()->flash('driver_success', 'Conductor actualizado correctamente.');
+            $this->redirectRoute('settings.drivers.index');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            session()->flash('driver_error', 'Error al actualizar: ' . $e->getMessage());
+            $this->redirectRoute('settings.drivers.index');
+        }
     }
 
     public function render()

@@ -83,6 +83,9 @@ class Edit extends Component
     #[On('register_destroy')]
     public function destroy(int $id): void
     {
+        if (!auth()->user()?->hasRole('admin')) {
+            abort(403);
+        }
         Owner::findOrFail($id)->update(['status' => 'inactive']);
         session()->flash('owner_success', 'Propietario eliminado correctamente.');
         $this->redirectRoute('settings.owners.index');

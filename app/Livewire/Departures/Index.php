@@ -859,7 +859,9 @@ class Index extends Component
         $plate = strtoupper(trim((string)$rawPlate));              // normaliza
         $plate = preg_replace('/\s+/','',$plate);                  // quita espacios internos
 
-        $vehicle = Vehicle::whereRaw('UPPER(TRIM(plate)) = ?', [$plate])->first();
+        $vehicle = Vehicle::whereRaw('UPPER(TRIM(plate)) = ?', [$plate])
+            ->where('status', 'active')
+            ->first();
 
         if ($vehicle) {
             return [

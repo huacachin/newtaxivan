@@ -478,7 +478,7 @@ class AddPayment extends Component
             }
         });
 
-        session()->flash('add_success', true);
+        session()->flash('payment_success', 'Pago registrado correctamente.');
         $this->resetForm();
 
         redirect()->route('payments.index');

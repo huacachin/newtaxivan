@@ -4,7 +4,6 @@ namespace App\Livewire\Drivers;
 
 use App\Models\Driver;
 use Carbon\Carbon;
-use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 class Create extends Component
@@ -76,9 +75,10 @@ class Create extends Component
 
     public function save()
     {
-        $this->validate();
+        try {
+            $this->validate();
 
-        Driver::create([
+            Driver::create([
             "name" => $this->name,
             "document_number" => $this->document_number,
             "document_expiration_date" => $this->document_expiration_date,
@@ -104,9 +104,20 @@ class Create extends Component
             "credential_municipality" => $this->credential_municipality
         ]);
 
-        $this->reset('name','document_number','document_expiration_date','birthdate','address','district','email','phone','license','class','category','license_issue_date','license_revalidation_date','contract_start','contract_end','condition','score','road_education','road_education_expiration_date','road_education_municipality','credential','credential_expiration_date','credential_municipality');
+            session()->flash('driver_success', 'Conductor creado correctamente.');
+            $this->redirectRoute('settings.drivers.index');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            session()->flash('driver_error', 'Error al guardar: ' . $e->getMessage());
+            $this->redirectRoute('settings.drivers.index');
+        }
+    }
 
-        $this->dispatch('successAlert',["message" => "Conductor creado correctamente"]);
+    public function clean(): void
+    {
+        $this->reset(['name','document_number','document_expiration_date','birthdate','address','district','email','phone','license','class','category','license_issue_date','license_revalidation_date','contract_start','contract_end','condition','score','road_education','road_education_expiration_date','road_education_municipality','credential','credential_expiration_date','credential_municipality']);
+        $this->mount();
     }
 
     protected function calculateAge(?string $date): ?int

@@ -25,6 +25,20 @@
         </div>
     </div>
 
+    @if(session('payment_success'))
+    <div class="alert alert-success alert-dismissible fade show py-2 mb-2" role="alert">
+        <i class="ti ti-circle-check me-1"></i> {{ session('payment_success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+    @endif
+
+    @if(session('payment_error'))
+    <div class="alert alert-danger alert-dismissible fade show py-2 mb-2" role="alert">
+        <i class="ti ti-alert-circle me-1"></i> {{ session('payment_error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+    @endif
+
     <div class="row table-section">
 
         <!-- Tabla -->
@@ -178,7 +192,7 @@
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="text-center bg-primary">
                             <tr>
-                                <th>Acción</th>
+                                @role('admin')<th>Acción</th>@endrole
                                 <th>Ítem</th>
                                 <th>Placa</th>
                                 <th>Serie</th>
@@ -196,10 +210,12 @@
                             <tbody>
                             @forelse($payments as $p)
                                 <tr>
-                                    <td>
+                                    @role('admin')
+                                    <td width="50">
                                         <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
                                            wire:click="openEditWindow({{ $p->id }})"></i>
                                     </td>
+                                    @endrole
                                     <td>{{ $loop->iteration }}</td>
                                     <td>{{ $p->legacy_plate }}</td>
                                     <td>{{ $p->serie }}</td>
@@ -221,14 +237,14 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="12" class="text-muted">No se encontraron resultados</td>
+                                    <td colspan="{{ auth()->user()->hasRole('admin') ? 12 : 11 }}" class="text-muted">No se encontraron resultados</td>
                                 </tr>
                             @endforelse
                             </tbody>
 
                             <tfoot class="fw-semibold bg-primary">
                             <tr>
-                                <th colspan="10">Total general:</th>
+                                <th colspan="{{ auth()->user()->hasRole('admin') ? 10 : 9 }}">Total general:</th>
                                 <th>{{ number_format($total_general, 2) }}</th>
                                 <th></th>
                             </tr>

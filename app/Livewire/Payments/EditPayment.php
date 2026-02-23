@@ -10,6 +10,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 class EditPayment extends Component
@@ -451,50 +452,68 @@ class EditPayment extends Component
             [$this->plateNeedle()]
         )->first();
 
-        DB::transaction(function () use ($p, $vehicle) {
-            $oldType = $p->type;
+        try {
+            DB::transaction(function () use ($p, $vehicle) {
+                $oldType = $p->type;
 
-            // Revertir amortizaciones previas si eran DEUDA
-            if ($oldType === 'DEUDA') {
-                $olds = DB::table('debt_days_detail')
-                    ->where('detail', 'like', 'payment:'.$p->id.'%')
-                    ->get();
+                // Revertir amortizaciones previas si eran DEUDA
+                if ($oldType === 'DEUDA') {
+                    $olds = DB::table('debt_days_detail')
+                        ->where('detail', 'like', 'payment:'.$p->id.'%')
+                        ->get();
 
-                foreach ($olds as $od) {
-                    $this->bumpDebtMonth((int)$od->debt_days_id, -1 * (float)$od->amortized);
-                    DB::table('debt_days_detail')->where('id', $od->id)->delete();
+                    foreach ($olds as $od) {
+                        $this->bumpDebtMonth((int)$od->debt_days_id, -1 * (float)$od->amortized);
+                        DB::table('debt_days_detail')->where('id', $od->id)->delete();
+                    }
                 }
-            }
 
-            // Actualizar pago
-            $p->update([
-                'vehicle_id'     => $vehicle?->id,
-                'legacy_plate'   => $this->normPlate(),
-                'serie'          => $this->serie,
-                'date_register'  => $this->date_register,
-                'date_payment'   => $this->date_payment,
-                'hour'           => $this->hour,
-                'type'           => $this->type_form,
-                'headquarter_id' => $this->headquarter_id_form,
-                'user_id'        => Auth::id(),
-                'amount'         => (float)$this->amount,
-                'latitude'       => $this->latitude,
-                'longitude'      => $this->longitude,
-            ]);
+                // Actualizar pago
+                $p->update([
+                    'vehicle_id'     => $vehicle?->id,
+                    'legacy_plate'   => $this->normPlate(),
+                    'serie'          => $this->serie,
+                    'date_register'  => $this->date_register,
+                    'date_payment'   => $this->date_payment,
+                    'hour'           => $this->hour,
+                    'type'           => $this->type_form,
+                    'headquarter_id' => $this->headquarter_id_form,
+                    'user_id'        => Auth::id(),
+                    'amount'         => (float)$this->amount,
+                    'latitude'       => $this->latitude,
+                    'longitude'      => $this->longitude,
+                ]);
 
-            // Aplicar amortizaciones si ahora es DEUDA
-            if ($this->type_form === 'DEUDA') {
-                $this->applyDebtAmortizations($vehicle, $this->normPlate(), (float)$this->amount, (int)$p->id);
-            }
-        });
+                // Aplicar amortizaciones si ahora es DEUDA
+                if ($this->type_form === 'DEUDA') {
+                    $this->applyDebtAmortizations($vehicle, $this->normPlate(), (float)$this->amount, (int)$p->id);
+                }
+            });
 
-        // Mostrar alert de éxito en esta pantalla
-        session()->flash('edit_success', true);
+            session()->flash('payment_success', 'Pago actualizado correctamente.');
+            $this->redirectRoute('payments.index');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            session()->flash('payment_error', 'Error al actualizar: ' . $e->getMessage());
+            $this->redirectRoute('payments.index');
+        }
+    }
 
-        // Recargar datos (para reflejar normalizaciones o cambios)
-        $this->loadRowOrAbort();
-        $this->recalcPendingDebt();
-        $this->prefillAmountFromCost();
+    public function questionDelete(int $id): void
+    {
+        $this->dispatch('questionDelete', ['id' => $id]);
+    }
+
+    #[On('register_destroy')]
+    public function destroy(int $id): void
+    {
+        if (!$this->isAdmin()) {
+            abort(403);
+        }
+        Payment::findOrFail($id)->delete();
+        session()->flash('payment_success', 'Pago eliminado correctamente.');
+        $this->redirectRoute('payments.index');
     }
 
     public function render(): View

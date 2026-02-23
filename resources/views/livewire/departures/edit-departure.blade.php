@@ -29,14 +29,7 @@
             <div class="card">
                 <div class="card-body">
 
-                    {{-- Alert de éxito (autocierre a los 3s) --}}
-                    @if (session()->has('edit_success'))
-                        <div id="success-alert" class="alert alert-success">
-                            <strong>La salida se actualizó de forma exitosa.</strong>
-                        </div>
-                    @endif
-
-                    {{-- Errores de validación --}}
+                                    {{-- Errores de validación --}}
                     @if ($errors->any())
                         <div class="alert alert-danger">
                             <strong>Revisa los siguientes errores:</strong>
@@ -129,7 +122,10 @@
                         <button type="button" class="btn btn-sm btn-primary" wire:click="update" wire:loading.attr="disabled">
                             Guardar
                         </button>
-                        <a href="{{ route('departures.index') }}" class="btn btn-sm btn-primary">Volver</a>
+                        @role('admin')
+                        <button type="button" class="btn btn-sm btn-danger" wire:click="questionDelete({{ $depId }})">Eliminar</button>
+                        @endrole
+                        <a href="{{ route('departures.index') }}" class="btn btn-sm btn-secondary">Volver</a>
                     </div>
                 </div>
             </div>
@@ -161,24 +157,6 @@
 @push('scripts')
     <script>
         (function () {
-            // ---- Alert autocierre a los 3s ----
-            let successTimer = null;
-            function armAutoHide() {
-                const alertBox = document.getElementById('success-alert');
-                if (!alertBox) return;
-                if (successTimer) { clearTimeout(successTimer); successTimer = null; }
-                successTimer = setTimeout(() => {
-                    alertBox.classList.add('d-none');
-                    alertBox.style.display = 'none';
-                    successTimer = null;
-                }, 3000);
-            }
-            document.addEventListener('DOMContentLoaded', armAutoHide);
-            const mo = new MutationObserver(() => {
-                if (document.getElementById('success-alert')) armAutoHide();
-            });
-            mo.observe(document.body, { childList: true, subtree: true });
-
             // ---- Forzar mayúsculas reales en placa ----
             function forceUppercase(el) {
                 if (!el) return;

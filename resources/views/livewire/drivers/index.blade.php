@@ -19,6 +19,20 @@
         </div>
     </div>
 
+    @if(session('driver_success'))
+    <div class="alert alert-success alert-dismissible fade show py-2 mb-2" role="alert">
+        <i class="ti ti-circle-check me-1"></i> {{ session('driver_success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+    @endif
+
+    @if(session('driver_error'))
+    <div class="alert alert-danger alert-dismissible fade show py-2 mb-2" role="alert">
+        <i class="ti ti-alert-circle me-1"></i> {{ session('driver_error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+    @endif
+
     <div class="row table-section">
         <!-- Tabla principal: Conductores -->
         <div class="col-12">
@@ -74,7 +88,7 @@
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">
                             <tr>
-                                <th>Acción</th>
+                                @role('admin')<th>Acción</th>@endrole
                                 <th>Item</th>
                                 <th>Cod</th>
                                 <th>Placa</th>
@@ -84,17 +98,18 @@
                                 <th>F.Contrato</th>
                                 <th>Celular</th>
                                 <th>Estado</th>
-
                             </tr>
                             </thead>
                             <tbody>
                             @if($drivers->count() > 0)
                                 @foreach($drivers as $driver)
                                     <tr>
+                                        @role('admin')
                                         <td width="50">
                                             <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
                                                wire:click="openEditWindow({{ $driver->id }})"></i>
                                         </td>
+                                        @endrole
                                         <td>{{ $loop->iteration }}</td>
                                         <td>{{$driver->vehicles->first()->sort_order}}</td>
                                         <td>{{ $driver->vehicles->first()->plate ?? '—' }}</td>
@@ -143,12 +158,12 @@
                                     </tr>
                                 @endforeach
                             @else
-                                <tr><td colspan="9">No se encontrarón resultados</td></tr>
+                                <tr><td colspan="{{ auth()->user()->hasRole('admin') ? 10 : 9 }}">No se encontrarón resultados</td></tr>
                             @endif
                             </tbody>
                             <tfoot class="bg-primary">
                             <tr>
-                                <td colspan="10" class="text-end f-w-600">TOTAL: {{ $drivers->count() }}</td>
+                                <td colspan="{{ auth()->user()->hasRole('admin') ? 10 : 9 }}" class="text-end f-w-600">TOTAL: {{ $drivers->count() }}</td>
                             </tr>
                             </tfoot>
                         </table>
@@ -158,7 +173,7 @@
                             <table class="table table-bordered table-striped table-hover">
                                 <thead class="bg-primary">
                                 <tr>
-                                    <th>Acción</th>
+                                    @role('admin')<th>Acción</th>@endrole
                                     <th>Id</th>
                                     <th>Nombre</th>
                                     <th>DNI</th>
@@ -166,16 +181,17 @@
                                     <th>F.Contrato</th>
                                     <th>Celular</th>
                                     <th>Estado</th>
-
                                 </tr>
                                 </thead>
                                 <tbody>
                                 @forelse($driversFree as $driver)
                                     <tr>
+                                        @role('admin')
                                         <td width="50">
                                             <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
                                                wire:click="openEditWindow({{ $driver->id }})"></i>
                                         </td>
+                                        @endrole
                                         <td>{{ $loop->iteration }}</td>
                                         <td>
                                             {{ $driver->name }}
@@ -221,12 +237,12 @@
 
                                     </tr>
                                 @empty
-                                    <tr><td colspan="8">No se encontrarón resultados</td></tr>
+                                    <tr><td colspan="{{ auth()->user()->hasRole('admin') ? 8 : 7 }}">No se encontrarón resultados</td></tr>
                                 @endforelse
                                 </tbody>
                                 <tfoot class="bg-primary">
                                 <tr>
-                                    <td colspan="8" class="text-end f-w-600">TOTAL: {{ $driversFree->count() }}</td>
+                                    <td colspan="{{ auth()->user()->hasRole('admin') ? 8 : 7 }}" class="text-end f-w-600">TOTAL: {{ $driversFree->count() }}</td>
                                 </tr>
                                 </tfoot>
                             </table>
