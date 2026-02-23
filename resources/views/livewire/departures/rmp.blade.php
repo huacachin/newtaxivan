@@ -1,44 +1,4 @@
 {{-- resources/views/livewire/reports/departures-monthly-by-stop.blade.php --}}
-@push('styles')
-    <style>
-        table {
-            border-collapse: collapse; /* opcional */
-            width: 100%;
-        }
-
-        th,td{
-            padding: 1px !important;
-            font-size: 10px !important;
-            text-align: center !important;
-            vertical-align: middle;   /* <-- clave */
-            overflow-wrap: anywhere;
-        }
-
-        .btn, input,select {
-            font-size: 10px !important;
-        }
-
-        .screen-overlay {
-            position: fixed;
-            inset: 0;                 /* full viewport */
-            display: none;            /* Livewire lo pondrá en flex */
-            align-items: center;
-            justify-content: center;
-            background: rgba(0,0,0,.35);
-            backdrop-filter: blur(2px);
-            z-index: 2000;            /* sobre modals/backdrops de Bootstrap */
-            pointer-events: all;      /* bloquea clics */
-        }
-
-        .striped-cond {
-            background: #d0cdcd !important;
-        }
-
-        .green_modules{
-            color: #4D8A7C !important;
-        }
-    </style>
-@endpush
 
 @php
     /** @var array $months, $years */

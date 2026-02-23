@@ -45,9 +45,8 @@
                         <div class="col-md-auto col-sm-12">
                             <div class="mb-3">
                                 <label for="pay_plate" class="form-label">Placa</label>
-                                <input id="pay_plate" type="text" class="form-control form-control-sm" placeholder="ABC123"
+                                <input id="pay_plate" type="text" class="form-control form-control-sm input-uppercase" placeholder="ABC123"
                                        wire:model.live.debounce.300ms="plate"
-                                       style="text-transform: uppercase;"
                                        autocapitalize="characters"
                                        data-upper-plate>
                                 @error('plate') <span class="title-modules">{{ $message }}</span> @enderror
@@ -75,14 +74,13 @@
                         <div class="col-md-auto">
                             <div class="mb-3">
                                 <label class="form-label">Fecha Pago</label>
-                                <input type="date" class="form-control form-control-sm"
+                                <input type="date" class="form-control form-control-sm {{ $type_form === 'PAGO' ? 'input-readonly' : '' }}"
                                        wire:model.live="date_payment"
                                        @if($type_form === 'PAGO')
                                            readonly
-                                       min="{{ now()->toDateString() }}"
-                                       max="{{ now()->toDateString() }}"
-                                       style="background:#eee; pointer-events:none;"
-                                    @endif
+                                           min="{{ now()->toDateString() }}"
+                                           max="{{ now()->toDateString() }}"
+                                       @endif
                                 >
                                 @error('date_payment') <span class="title-modules">{{ $message }}</span> @enderror
                             </div>
@@ -142,13 +140,13 @@
                         </div>
 
                         {{-- Geolocalización (oculto) --}}
-                        <div class="col-md-6" style="position:absolute; left:-9999px;">
+                        <div class="col-md-6 input-offscreen">
                             <div class="mb-3">
                                 <label class="form-label visually-hidden">Latitud</label>
                                 <input id="pay_lat_add" type="text" class="form-control form-control-sm" wire:model.defer="latitude" readonly>
                             </div>
                         </div>
-                        <div class="col-md-6" style="position:absolute; left:-9999px;">
+                        <div class="col-md-6 input-offscreen">
                             <div class="mb-3">
                                 <label class="form-label visually-hidden">Longitud</label>
                                 <input id="pay_lng_add" type="text" class="form-control form-control-sm" wire:model.defer="longitude" readonly>
@@ -177,21 +175,6 @@
         </div>
     </div>
 </div>
-
-@push('styles')
-    <style>
-        input,button{
-            font-size: 10px;
-        }
-
-        .screen-overlay {
-            position: fixed; inset: 0; display: none;
-            align-items: center; justify-content: center;
-            background: rgba(0,0,0,.35); backdrop-filter: blur(2px);
-            z-index: 2000; pointer-events: all;
-        }
-    </style>
-@endpush
 
 @push('scripts')
     <script>

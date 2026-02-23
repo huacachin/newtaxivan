@@ -1,39 +1,3 @@
-@push('styles')
-    <style>
-
-        table {
-            border-collapse: collapse; /* opcional */
-            width: 100%;
-        }
-
-        th, td {
-            padding: 1px !important;
-            font-size: 10px !important;
-            text-align: center !important;
-            vertical-align: middle; /* <-- clave */
-            white-space: normal !important;
-            word-break: break-word;
-            overflow-wrap: anywhere;
-        }
-
-        .btn, input, select {
-            font-size: 10px !important;
-        }
-
-        .screen-overlay {
-            position: fixed;
-            inset: 0;                 /* full viewport */
-            display: none;            /* Livewire lo pondrá en flex */
-            align-items: center;
-            justify-content: center;
-            background: rgba(0,0,0,.35);
-            backdrop-filter: blur(2px);
-            z-index: 2000;            /* sobre modals/backdrops de Bootstrap */
-            pointer-events: all;      /* bloquea clics */
-        }
-
-    </style>
-@endpush
 
 <div class="container-fluid">
 

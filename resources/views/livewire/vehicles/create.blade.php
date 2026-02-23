@@ -4,16 +4,6 @@
     <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
     <script src="https://code.jquery.com/ui/1.14.1/jquery-ui.js"></script>
 @endpush
-@push('styles')
-    <style>
-
-        #entry_date,#termination_date,#soat_date,#certificate_date,#technical_review{
-            background: url({{asset('images/calen.png')}}) #fff no-repeat right;
-            background-size: 21px 16px;
-            padding-right: 2rem;
-        }
-    </style>
-@endpush
 <div class="container-fluid">
     <div class="row">
         <div class="col-sm-6">
@@ -52,49 +42,14 @@
 @push('datepicker_js')
     <script>
         $( function() {
-            $( "#entry_date" ).datepicker({
-                changeMonth: true,
-                changeYear: true,
-                dateFormat: 'yy-mm-dd',
-                onSelect: function (dateText, inst) {
-                    @this.set('entry_date', dateText);
-                }
-            });
-            $( "#termination_date" ).datepicker({
-                changeMonth: true,
-                changeYear: true,
-                dateFormat: 'yy-mm-dd',
-                onSelect: function (dateText, inst) {
-                    @this.set('termination_date', dateText);
-                }
-            });
-            $( "#soat_date" ).datepicker({
-                changeMonth: true,
-                changeYear: true,
-                dateFormat: 'yy-mm-dd',
-                onSelect: function (dateText, inst) {
-                    @this.set('soat_date', dateText);
-                }
-            });
-
-            $( "#certificate_date" ).datepicker({
-                changeMonth: true,
-                changeYear: true,
-                dateFormat: 'yy-mm-dd',
-                onSelect: function (dateText, inst) {
-                    @this.set('certificate_date', dateText);
-                }
-            });
-
-            $( "#technical_review" ).datepicker({
-                changeMonth: true,
-                changeYear: true,
-                dateFormat: 'yy-mm-dd',
-                onSelect: function (dateText, inst) {
-                    @this.set('technical_review', dateText);
-                }
-            });
-
+            var wire = @this;
+            initLivewireDatepicker([
+                ['#entry_date',       'entry_date'],
+                ['#termination_date', 'termination_date'],
+                ['#soat_date',        'soat_date'],
+                ['#certificate_date', 'certificate_date'],
+                ['#technical_review', 'technical_review'],
+            ], wire);
         });
     </script>
 @endpush

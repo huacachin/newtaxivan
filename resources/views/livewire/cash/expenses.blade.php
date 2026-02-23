@@ -4,46 +4,6 @@
     <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
     <script src="https://code.jquery.com/ui/1.14.1/jquery-ui.js"></script>
 @endpush
-@push('styles')
-    <style>
-
-        table {
-            border-collapse: collapse; /* opcional */
-            width: 100%;
-        }
-
-        th, td {
-            padding: 1px !important;
-            font-size: 10px !important;
-            text-align: center !important;
-            vertical-align: middle; /* <-- clave */
-        }
-
-        .btn, input, select {
-            font-size: 10px !important;
-        }
-
-        .screen-overlay {
-            position: fixed;
-            inset: 0;                 /* full viewport */
-            display: none;            /* Livewire lo pondrá en flex */
-            align-items: center;
-            justify-content: center;
-            background: rgba(0,0,0,.35);
-            backdrop-filter: blur(2px);
-            z-index: 2000;            /* sobre modals/backdrops de Bootstrap */
-            pointer-events: all;      /* bloquea clics */
-        }
-
-        #date_start, #date_end{
-            background: url({{asset('images/calen.png')}}) #fff no-repeat right;
-            background-size: 21px 16px;
-            padding-right: 2rem;
-        }
-
-
-    </style>
-@endpush
 <div class="container-fluid">
 
     {{-- Header --}}
@@ -364,33 +324,14 @@
 
 </div>
 
-@push('styles')
-    <style>
-        /* Un toque más compacto para listas largas */
-        .table td, .table th { vertical-align: middle; }
-    </style>
-@endpush
-
 @push('datepicker_js')
     <script>
         $( function() {
-            $( "#date_start" ).datepicker({
-                changeMonth: true,
-                changeYear: true,
-                dateFormat: 'yy-mm-dd',
-                onSelect: function (dateText, inst) {
-                    @this.set('ui_date_start', dateText);
-                }
-            });
-
-            $( "#date_end" ).datepicker({
-                changeMonth: true,
-                changeYear: true,
-                dateFormat: 'yy-mm-dd',
-                onSelect: function (dateText, inst) {
-                    @this.set('ui_date_end', dateText);
-                }
-            });
+            var wire = @this;
+            initLivewireDatepicker([
+                ['#date_start', 'ui_date_start'],
+                ['#date_end',   'ui_date_end'],
+            ], wire);
         });
     </script>
 @endpush

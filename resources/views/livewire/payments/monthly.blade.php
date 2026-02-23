@@ -1,48 +1,12 @@
 @push('styles')
     <style>
-        table {
-            border-collapse: collapse; /* opcional */
-            width: 100%;
-        }
-
-        th,td{
-            padding: 1px !important;
-            font-size: 10px !important;
-            text-align: center !important;
-            vertical-align: middle;   /* <-- clave */
-            white-space: normal !important;
-            word-break: break-word;
-            overflow-wrap: anywhere;
-        }
-
-        .btn, input,select {
-            font-size: 10px !important;
-        }
-
-        /* Badges de condición (mismo esquema del Daily) */
         .cond-badge {
             display:inline-block; padding:.15rem .4rem; border-radius:.35rem;
             font-size:.75rem; font-weight:600; letter-spacing:.3px;
         }
-        .cond-EX  { background:#e2e8f0; color:#334155; } /* EX/EX5 gris */
-        .cond-GN  { background:#fef3c7; color:#92400e; } /* GN ámbar */
-        .cond-DT  { background:#dcfce7; color:#166534; } /* DT verde */
-
-        .screen-overlay {
-            position: fixed;
-            inset: 0;                 /* full viewport */
-            display: none;            /* Livewire lo pondrá en flex */
-            align-items: center;
-            justify-content: center;
-            background: rgba(0,0,0,.35);
-            backdrop-filter: blur(2px);
-            z-index: 2000;            /* sobre modals/backdrops de Bootstrap */
-            pointer-events: all;      /* bloquea clics */
-        }
-
-        .green_modules{
-            color: #4D8A7C !important;
-        }
+        .cond-EX  { background:#e2e8f0; color:#334155; }
+        .cond-GN  { background:#fef3c7; color:#92400e; }
+        .cond-DT  { background:#dcfce7; color:#166534; }
     </style>
 @endpush
 @php

@@ -1,36 +1,6 @@
 @push('styles')
     <style>
-        table {
-            border-collapse: collapse;
-            width: 100%;
-        }
-
-        th,td{
-            padding: 1px !important;
-            font-size: 10px !important;
-            text-align: center !important;
-            vertical-align: middle;
-        }
-
-        .btn, input,select {
-            font-size: 10px !important;
-        }
-
-        .screen-overlay {
-            position: fixed;
-            inset: 0;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            background: rgba(0,0,0,.35);
-            backdrop-filter: blur(2px);
-            z-index: 2000;
-            pointer-events: all;
-        }
-
-        .sunday {
-            background: #ffcccc !important;
-        }
+        .sunday { background: #ffcccc !important; }
     </style>
 @endpush
 

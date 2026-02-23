@@ -46,10 +46,9 @@
                                 <label for="dep_plate" class="form-label">Placa</label>
                                 <input id="dep_plate"
                                        type="text"
-                                       class="form-control form-control-sm"
+                                       class="form-control form-control-sm input-uppercase"
                                        placeholder="ABC123"
                                        wire:model.defer="plate"
-                                       style="text-transform: uppercase;"
                                        autocapitalize="characters"
                                        data-upper-plate>
                                 @error('plate') <span class="title-modules">{{ $message }}</span> @enderror
@@ -107,13 +106,13 @@
                         </div>
 
                         {{-- Geolocalización (igual que en el modal, oculto) --}}
-                        <div class="col-md-6" style="position:absolute; left:-9999px;">
+                        <div class="col-md-6 input-offscreen">
                             <div class="mb-3">
                                 <label class="form-label visually-hidden">Latitud</label>
                                 <input id="dep_lat_add" type="text" class="form-control form-control-sm" wire:model.defer="latitude" readonly>
                             </div>
                         </div>
-                        <div class="col-md-6" style="position:absolute; left:-9999px;">
+                        <div class="col-md-6 input-offscreen">
                             <div class="mb-3">
                                 <label class="form-label visually-hidden">Longitud</label>
                                 <input id="dep_lng_add" type="text" class="form-control form-control-sm" wire:model.defer="longitude" readonly>
@@ -142,20 +141,6 @@
         </div>
     </div>
 </div>
-
-@push('styles')
-    <style>
-        input,button{
-            font-size: 10px;
-        }
-        .screen-overlay {
-            position: fixed; inset: 0; display: none;
-            align-items: center; justify-content: center;
-            background: rgba(0,0,0,.35); backdrop-filter: blur(2px);
-            z-index: 2000; pointer-events: all;
-        }
-    </style>
-@endpush
 
 @push('scripts')
     <script>

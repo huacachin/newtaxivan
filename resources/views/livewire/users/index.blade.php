@@ -1,28 +1,4 @@
 {{-- resources/views/livewire/users/index.blade.php --}}
-@push('styles')
-    <style>
-        /* ====== Estilos base tabla / botones ====== */
-        table { border-collapse: collapse; width: 100%; }
-        th,td{
-            padding: 1px !important;
-            font-size: 10px !important;
-            text-align: center !important;
-            vertical-align: middle;
-            white-space: normal !important;
-            word-break: break-word;
-            overflow-wrap: anywhere;
-        }
-        .btn, input,select { font-size: 10px !important; }
-        .screen-overlay {
-            position: fixed; inset: 0;
-            display: none; align-items: center; justify-content: center;
-            background: rgba(0,0,0,.35); backdrop-filter: blur(2px);
-            z-index: 2000; pointer-events: all;
-        }
-
-    </style>
-@endpush
-
 <div class="container-fluid">
     <!-- Header -->
     <div class="row">

@@ -2,43 +2,8 @@
 
 @push('styles')
     <style>
-
-        table {
-            border-collapse: collapse; /* opcional */
-            width: 100%;
-        }
-
-        th,td{
-            padding: 1px !important;
-            font-size: 10px !important;
-            text-align: center !important;
-            vertical-align: middle;   /* <-- clave */
-        }
-
-        .btn, input,select {
-            font-size: 10px !important;
-        }
-
-        thead,tfoot{
-            font-weight: bold;
-        }
-
-        /* ===== Domingos en rojo (columna completa) ===== */
         .sun-head{ background:#ef4444 !important; color:#fff !important; }
-        .sun-col{  background:#fee2e2 !important; } /* cuerpo de la columna domingo */
-
-
-        .screen-overlay {
-            position: fixed;
-            inset: 0;                 /* full viewport */
-            display: none;            /* Livewire lo pondrá en flex */
-            align-items: center;
-            justify-content: center;
-            background: rgba(0,0,0,.35);
-            backdrop-filter: blur(2px);
-            z-index: 2000;            /* sobre modals/backdrops de Bootstrap */
-            pointer-events: all;      /* bloquea clics */
-        }
+        .sun-col{  background:#fee2e2 !important; }
     </style>
 @endpush
 

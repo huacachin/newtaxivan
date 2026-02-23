@@ -1,16 +1,3 @@
-@push('styles')
-    <style>
-        /* puedes reusar el mismo bloque de estilos de create */
-        .perm-grid{ display:flex; flex-direction:column; gap:6px; }
-        .perm-row{ display:grid; grid-template-columns:180px 1fr; gap:8px; align-items:center; padding:6px 8px; border-radius:8px; background:#fff; border:1px solid #eee; margin-bottom:6px; }
-        .perm-col-title{ font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .perm-col-controls{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
-        .perm-chips{ display:flex; gap:6px; flex-wrap:wrap; }
-        .chip-radio,.chip-check{ display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border:1px solid #e5e7eb; border-radius:999px; background:#fff; }
-        @media (max-width:576px){ .perm-row{ grid-template-columns:1fr; } }
-    </style>
-@endpush
-
 <div class="container-fluid">
     <div class="row">
         <div class="col-sm-6">

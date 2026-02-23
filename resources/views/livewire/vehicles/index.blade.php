@@ -1,42 +1,4 @@
 {{-- resources/views/livewire/vehicles/index.blade.php --}}
-@push('styles')
-
-
-
-    <style>
-        table {
-            border-collapse: collapse; /* opcional */
-            width: 100%;
-        }
-
-        th,td {
-            padding: 1px !important;
-            font-size: 10px !important;
-            text-align: center !important;
-            vertical-align: middle; /* <-- clave */
-            white-space: normal !important;
-            word-break: break-word;
-            overflow-wrap: anywhere;
-
-        }
-        .btn, input,select {
-            font-size: 10px !important;
-        }
-        .screen-overlay {
-            position: fixed;
-            inset: 0;                 /* full viewport */
-            display: none;            /* Livewire lo pondrá en flex */
-            align-items: center;
-            justify-content: center;
-            background: rgba(0,0,0,.35);
-            backdrop-filter: blur(2px);
-            z-index: 2000;            /* sobre modals/backdrops de Bootstrap */
-            pointer-events: all;      /* bloquea clics */
-        }
-
-    </style>
-@endpush
-
 <div class="container-fluid">
     <!-- Header -->
     <div class="row">
@@ -143,7 +105,9 @@
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">
                             <tr>
+                                @role('admin')
                                 <th class="sticky-col">Acción</th>
+                                @endrole
                                 <th>Item</th>
                                 <th>Cod</th>
                                 <th class="sticky-col-2">Placa</th>
@@ -173,11 +137,13 @@
                                         elseif ($cond === 'DT') { $condClass .= 'cond-DT'; }
                                     @endphp
                                     <tr>
+                                        @role('admin')
                                         <td>
                                             <i class="ti ti-edit f-s-18 text-success"
                                                style="cursor:pointer"
                                                wire:click="openEditWindow({{ $vehicle->id }})"></i>
                                         </td>
+                                        @endrole
 
                                         <td>{{ $loop->iteration }}</td>
                                         <td>{{ $vehicle->sort_order }}</td>

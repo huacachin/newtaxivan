@@ -5,6 +5,7 @@ use App\Models\Driver;
 use App\Models\Headquarter;
 use App\Models\Owner;
 use App\Models\Vehicle;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 class Edit extends Component
@@ -98,6 +99,18 @@ class Edit extends Component
         'fuel' => 'combustible',
         'detail' => 'detalles',
     ];
+
+    public function questionDelete($id): void
+    {
+        $this->dispatch('questionDelete',["id" => $id]);
+    }
+
+    #[On('register_destroy')]
+    public function delete(int $id): void
+    {
+        Vehicle::find($id)->update(['status' => "inactive"]);
+        $this->redirectRoute('settings.vehicles.index');
+    }
 
     public function update()
     {

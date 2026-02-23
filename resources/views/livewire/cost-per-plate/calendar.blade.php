@@ -1,31 +1,7 @@
 {{-- resources/views/livewire/cost-per-plate/calendar.blade.php --}}
 @push('styles')
     <style>
-
-
-        table {
-            border-collapse: collapse; /* opcional */
-            width: 100%;
-        }
-
-        th,td{
-            padding: 1px !important;
-            font-size: 10px !important;
-            text-align: center !important;
-            vertical-align: middle;   /* <-- clave */
-            white-space: normal !important;
-            word-break: break-word;
-            overflow-wrap: anywhere;
-        }
-
-        .btn, input,select {
-            font-size: 10px !important;
-        }
-
-        /* Domingos en rojo (sobre-escribe zebra) */
         .sunday{ background-color:#ef4444 !important; color:#fff !important; }
-
-
     </style>
 @endpush
 

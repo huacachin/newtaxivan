@@ -1,27 +1,4 @@
 {{-- resources/views/livewire/cost-per-plate/index.blade.php --}}
-@push('styles')
-    <style>
-        table {
-            border-collapse: collapse; /* opcional */
-            width: 100%;
-        }
-
-        th,td{
-            padding: 1px !important;
-            font-size: 10px !important;
-            text-align: center !important;
-            vertical-align: middle;   /* <-- clave */
-            white-space: normal !important;
-            word-break: break-word;
-            overflow-wrap: anywhere;
-        }
-
-        .btn, input,select {
-            font-size: 10px !important;
-        }
-    </style>
-@endpush
-
 <div class="container-fluid">
     <!-- Header -->
     <div class="row">

@@ -1,44 +1,3 @@
-@push('styles')
-    <style>
-
-        table {
-            border-collapse: collapse; /* opcional */
-            width: 100%;
-        }
-
-        th,td{
-            padding: 1px !important;
-            font-size: 10px !important;
-            text-align: center !important;
-            vertical-align: middle;   /* <-- clave */
-            white-space: normal !important;
-            word-break: break-word;
-            overflow-wrap: anywhere;
-        }
-
-        .btn, input,select {
-            font-size: 10px !important;
-        }
-
-        thead,tfoot{
-            font-weight: bold;
-        }
-
-
-        .screen-overlay {
-            position: fixed;
-            inset: 0;                 /* full viewport */
-            display: none;            /* Livewire lo pondrá en flex */
-            align-items: center;
-            justify-content: center;
-            background: rgba(0,0,0,.35);
-            backdrop-filter: blur(2px);
-            z-index: 2000;            /* sobre modals/backdrops de Bootstrap */
-            pointer-events: all;      /* bloquea clics */
-        }
-
-    </style>
-@endpush
 
 <div class="container-fluid">
     {{-- Header --}}
@@ -89,28 +48,28 @@
                       <div class="d-flex flex-wrap align-items-end gap-2 py-1">
 
                           {{-- Placa --}}
-                          <div class="flex-item" style="flex:1 1 180px; min-width:160px;">
+                          <div class="flex-item flex-item-md">
                               <label class="form-label mb-1">Placa</label>
-                              <input type="text" class="form-control form-control-sm"
-                                     value="{{ $plate }}" readonly style="background:#eee;">
+                              <input type="text" class="form-control form-control-sm input-readonly"
+                                     value="{{ $plate }}" readonly>
                           </div>
 
                           {{-- Fecha --}}
-                          <div class="flex-item" style="flex:1 1 160px; min-width:140px;">
+                          <div class="flex-item flex-item-sm">
                               <label class="form-label mb-1">Fecha</label>
                               <input type="text" class="form-control form-control-sm"
                                      value="{{ $date }}" readonly>
                           </div>
 
                           {{-- Días (no trabajados) --}}
-                          <div class="flex-item" style="flex:1 1 180px; min-width:160px;">
+                          <div class="flex-item flex-item-md">
                               <label class="form-label mb-1">Días (no trabajados)</label>
-                              <input type="text" class="form-control form-control-sm"
-                                     value="{{ $days }}" readonly style="background:#eee;">
+                              <input type="text" class="form-control form-control-sm input-readonly"
+                                     value="{{ $days }}" readonly>
                           </div>
 
                           {{-- Días no trabajados — detalle (más ancho, puede ir a otra fila) --}}
-                          <div class="flex-item" style="flex:2 1 420px; min-width:320px; max-width:100%;">
+                          <div class="flex-item flex-item-xl">
                               <label class="form-label mb-1">
                                   <b class="title-modules">Días no trabajados — detalle</b>
                               </label>
@@ -118,14 +77,14 @@
                           </div>
 
                           {{-- Deuda Total --}}
-                          <div class="flex-item" style="flex:1 1 180px; min-width:160px;">
+                          <div class="flex-item flex-item-md">
                               <label class="form-label mb-1">Deuda Total (S/)</label>
-                              <input type="text" class="form-control form-control-sm text-end"
-                                     value="{{ number_format($total,2) }}" readonly style="background:#eee;">
+                              <input type="text" class="form-control form-control-sm text-end input-readonly"
+                                     value="{{ number_format($total,2) }}" readonly>
                           </div>
 
                           {{-- Exonerado (input) --}}
-                          <div class="flex-item" style="flex:1 1 180px; min-width:160px;">
+                          <div class="flex-item flex-item-md">
                               <label class="form-label mb-1">Exonerado (S/)</label>
                               <input type="number" step="0.01"
                                      class="form-control form-control-sm text-end @error('exonerateInput') is-invalid @enderror"
@@ -147,7 +106,7 @@
                           </div>
 
                           {{-- Detalle exoneración --}}
-                          <div class="flex-item" style="flex:2 1 300px; min-width:240px;">
+                          <div class="flex-item flex-item-lg">
                               <label class="form-label mb-1">Detalle exoneración</label>
                               <input type="text"
                                      class="form-control form-control-sm @error('detailInput') is-invalid @enderror"

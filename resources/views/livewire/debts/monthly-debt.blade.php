@@ -1,60 +1,23 @@
 @push('styles')
     <style>
-
-        table {
-            border-collapse: collapse; /* opcional */
-            width: 100%;
-        }
-
-        th,td{
-            padding: 1px !important;
-            font-size: 10px !important;
-            text-align: center !important;
-            vertical-align: middle;   /* <-- clave */
-            white-space: normal !important;
-            word-break: break-word;
-            overflow-wrap: anywhere;
-        }
-
-        .btn, input,select {
-            font-size: 10px !important;
-        }
-
-        thead,tfoot{
-            font-weight: bold;
-        }
-
-        .screen-overlay {
-            position: fixed;
-            inset: 0;                 /* full viewport */
-            display: none;            /* Livewire lo pondrá en flex */
-            align-items: center;
-            justify-content: center;
-            background: rgba(0,0,0,.35);
-            backdrop-filter: blur(2px);
-            z-index: 2000;            /* sobre modals/backdrops de Bootstrap */
-            pointer-events: all;      /* bloquea clics */
-        }
-
         /* Overlay LOCAL solo dentro del card-body */
         .card-body { position: relative; }
         .screen-overlay-local{
             position: absolute;
             inset: 0;
-            display: none;              /* Livewire lo pone en flex */
+            display: none;
             align-items: center;
             justify-content: center;
-            background: rgba(255,255,255,.75);/* negro traslúcido */
-            backdrop-filter: none;      /* sin blur, fondo negro sólido */
+            background: rgba(255,255,255,.75);
+            backdrop-filter: none;
             z-index: 10;
             pointer-events: all;
         }
-
         .screen-overlay-local .loader-text{
             margin-top: .5rem;
             color: #000;
             font-weight: 600;
-            text-transform: none;       /* “Buscando…” tal cual */
+            text-transform: none;
         }
     </style>
 @endpush

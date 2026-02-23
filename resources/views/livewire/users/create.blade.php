@@ -1,36 +1,3 @@
-@push('styles')
-    <style>
-        table { border-collapse: collapse; width: 100%; }
-        th,td{ padding:1px !important; font-size:10px !important; text-align:center !important; vertical-align:middle; }
-        .btn, input,select { font-size:10px !important; }
-
-        .perm-grid { display:flex; flex-direction:column; gap:6px; }
-        .perm-row{
-            display:grid; grid-template-columns:180px 1fr; gap:8px; align-items:center;
-            padding:6px 8px; border-radius:8px; background:#fff; border:1px solid #eee; margin-bottom:6px;
-        }
-        .perm-col-title{ font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .perm-col-controls{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
-        .perm-chips{ display:flex; gap:6px; flex-wrap:wrap; }
-        .chip-radio,.chip-hq,.chip-check{
-            display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border:1px solid #e5e7eb; border-radius:999px; background:#fff; cursor:pointer;
-        }
-        .chip-hq .hq-primary{ display:inline-flex; align-items:center; gap:4px; padding-left:6px; margin-left:6px; border-left:1px dashed #e5e7eb; font-size:11px; }
-        .chip-hq.is-default{ border-color:#60a5fa; background:#f0f9ff; }
-        .chip-hq.is-selected{ border-color:#a7f3d0; background:#ecfdf5; }
-
-        /* 2 columnas en móvil */
-        .form-two-cols{ display:grid; grid-template-columns:1fr 1fr; gap:6px; }
-        .form-two-cols .span-2{ grid-column:1 / -1; }
-
-        @media (max-width:576px){
-            .perm-row{ grid-template-columns:1fr; padding:6px; }
-            .perm-col-title{ margin-bottom:2px; }
-            .chip-radio,.chip-hq,.chip-check{ padding:3px 6px; }
-        }
-    </style>
-@endpush
-
 <div class="container-fluid">
     <div class="row">
         <div class="col-sm-6"><h4 class="main-title title-modules">AGREGAR USUARIO</h4></div>

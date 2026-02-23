@@ -13,7 +13,6 @@
             color: #0d47a1;
             border: 1px solid rgba(13,71,161,.15);
         }
-
         .age-pill {
             min-width: 64px;
             padding: 4px 10px;
@@ -28,16 +27,8 @@
             border: 1px solid rgba(27,94,32,.2);
             box-shadow: 0 1px 2px rgba(0,0,0,.04);
         }
-
         .age-pill-number {
             font-variant-numeric: tabular-nums;
-        }
-
-        .label-expired {
-            background: #c62828;
-            color: #fff;
-            padding: 2px 8px;
-            border-radius: 4px;
         }
     </style>
 @endpush

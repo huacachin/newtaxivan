@@ -1,16 +1,5 @@
 {{-- resources/views/livewire/owners/_form.blade.php --}}
 
-@push('styles')
-    <style>
-        .label-expired {
-            background: #c62828;
-            color: #fff;
-            padding: 2px 8px;
-            border-radius: 4px;
-        }
-    </style>
-@endpush
-
 @php
     // Si no viene inyectada, por defecto no resaltamos expiraciones (Create)
     $highlightExpiration = $highlightExpiration ?? false;
