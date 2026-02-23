@@ -313,6 +313,11 @@ class Expenses extends Component
         $this->resetForm();
     }
 
+    public function openEditWindow(int $id): void
+    {
+        $this->dispatch('url-open', ['url' => route('cash.expenses.edit', $id)]);
+    }
+
     /** ====== Export ====== */
     public function export()
     {

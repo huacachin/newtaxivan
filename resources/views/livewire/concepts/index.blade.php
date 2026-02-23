@@ -20,6 +20,20 @@
         </div>
     </div>
 
+    {{-- Flash alerts --}}
+    @if(session('concept_success'))
+        <div class="alert alert-success alert-dismissible fade show py-2 mb-2" role="alert">
+            {{ session('concept_success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+    @if(session('concept_error'))
+        <div class="alert alert-danger alert-dismissible fade show py-2 mb-2" role="alert">
+            {{ session('concept_error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
     <div class="row table-section">
 
         <!-- Tabla -->
@@ -71,8 +85,10 @@
                                         <td>{{ $concept->name }}</td>
                                         <td>{{ ucfirst($concept->type) }}</td>
                                         <td>
+                                            @role('admin')
                                             <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
-                                               wire:click="openEditModal({{ $concept->id }})"></i>
+                                               wire:click="openEditWindow({{ $concept->id }})"></i>
+                                            @endrole
                                         </td>
                                     </tr>
                                 @endforeach
@@ -93,123 +109,6 @@
                             </tr>
                             </tfoot>
                         </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- MODAL: AGREGAR --}}
-        <div class="modal fade" id="modalAddConcept" aria-hidden="true" tabindex="-1" data-bs-backdrop="static"
-             wire:ignore.self>
-            <div class="modal-dialog modal-dialog-centered modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Agregar Concepto</h5>
-                        <button type="button" class="btn-close m-0 fs-5" data-bs-dismiss="modal"
-                                aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="code" class="form-label">Código</label>
-                                    <input id="code" type="text" class="form-control" placeholder="Ingresar Código"
-                                           wire:model="code">
-                                    @error('code') <span class="title-modules">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="name" class="form-label">Nombre del Concepto</label>
-                                    <input id="name" type="text" class="form-control"
-                                           placeholder="Ingresar Nombre del Concepto" wire:model="name">
-                                    @error('name') <span class="title-modules">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="status" class="form-label">Estado</label>
-                                    <select class="form-select" id="status" wire:model="status">
-                                        <option value="inactive">Cancelado</option>
-                                        <option value="active">Vigente</option>
-                                    </select>
-                                    @error('status') <span class="title-modules">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="type" class="form-label">Tipo</label>
-                                    <select class="form-select" id="type" wire:model="type">
-                                        <option value="ingreso">Ingreso</option>
-                                        <option value="egreso">Egreso</option>
-                                    </select>
-                                    @error('type') <span class="title-modules">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-light-primary" wire:click="save">Agregar</button>
-                        <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal">Cerrar</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- MODAL: EDITAR --}}
-        <div class="modal fade" id="modalEditConcept" aria-hidden="true" tabindex="-1" data-bs-backdrop="static"
-             wire:ignore.self>
-            <div class="modal-dialog modal-dialog-centered modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Editar Concepto</h5>
-                        <button type="button" class="btn-close m-0 fs-5" data-bs-dismiss="modal"
-                                aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="code_e" class="form-label">Código</label>
-                                    <input id="code_e" type="text" class="form-control" placeholder="Ingresar Código"
-                                           wire:model="code">
-                                    @error('code') <span class="title-modules">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="name_e" class="form-label">Nombre del Concepto</label>
-                                    <input id="name_e" type="text" class="form-control"
-                                           placeholder="Ingresar Nombre del Concepto" wire:model="name">
-                                    @error('name') <span class="title-modules">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="status_e" class="form-label">Estado</label>
-                                    <select class="form-select" id="status_e" wire:model="status">
-                                        <option value="inactive">Cancelado</option>
-                                        <option value="active">Vigente</option>
-                                    </select>
-                                    @error('status') <span class="title-modules">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="type_e" class="form-label">Tipo</label>
-                                    <select class="form-select" id="type_e" wire:model="type">
-                                        <option value="ingreso">Ingreso</option>
-                                        <option value="egreso">Egreso</option>
-                                    </select>
-                                    @error('type') <span class="title-modules">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        {{-- <button type="button" class="btn btn-light-primary" wire:click="update">Agregar</button> --}}
-                        <button type="button" class="btn btn-light-primary" wire:click="update">Actualizar</button>
-                        <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal">Cerrar</button>
                     </div>
                 </div>
             </div>

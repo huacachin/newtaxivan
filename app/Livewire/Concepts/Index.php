@@ -54,9 +54,14 @@ class Index extends Component
 
     }
 
-    public function openAddModal(){
-        $this->reset(['code','name','status','type']);
-        $this->dispatch('open-modal',["name" => "modalAddConcept","focus" => "code"]);
+    public function openAddModal(): void
+    {
+        $this->dispatch('url-open', ['url' => route('settings.concepts.create')]);
+    }
+
+    public function openEditWindow(int $id): void
+    {
+        $this->dispatch('url-open', ['url' => route('settings.concepts.edit', $id)]);
     }
 
     public function openEditModal($id){

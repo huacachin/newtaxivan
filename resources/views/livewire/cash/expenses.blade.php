@@ -26,6 +26,20 @@
         </div>
     </div>
 
+    {{-- Flash alerts --}}
+    @if(session('expense_success'))
+        <div class="alert alert-success alert-dismissible fade show py-2 mb-2" role="alert">
+            {{ session('expense_success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+    @if(session('expense_error'))
+        <div class="alert alert-danger alert-dismissible fade show py-2 mb-2" role="alert">
+            {{ session('expense_error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
     {{-- Tabla --}}
     <div class="col-xl-12">
         <div class="card">
@@ -147,7 +161,7 @@
                             <th class="text-end">Monto</th>
                             <th>T.Comp.</th>
                             <th>Respons.</th>
-
+                            <th class="text-center">Img</th>
                         </tr>
                         </thead>
 
@@ -157,9 +171,11 @@
                         @forelse($expenses as $e)
                             <tr  wire:key="exp-{{ $e->id }}">
                                 <td data-label="Opciones">
+                                    @role('admin')
                                     <i class="ti ti-edit f-s-18 text-success"
                                        style="cursor:pointer"
-                                       wire:click="openEditModal({{ $e->id }})"></i>
+                                       wire:click="openEditWindow({{ $e->id }})"></i>
+                                    @endrole
                                 </td>
                                 <td>{{ $expenses->firstItem() + $loop->index }}</td>
                                 <td>{{ \Carbon\Carbon::parse($e->date)->format('d/m/Y') }}</td>
@@ -169,18 +185,28 @@
                                 <td class="text-end">{{ number_format($e->total, 2) }}</td>
                                 <td>{{ $e->document_type }}</td>
                                 <td>{{ $e->in_charge }}</td>
-
+                                <td class="text-center">
+                                    @if($e->image_path)
+                                        <img src="{{ asset('storage/'.$e->image_path) }}"
+                                             alt="Ver comprobante"
+                                             class="img-thumbnail"
+                                             style="height:36px;width:36px;object-fit:cover;cursor:pointer;"
+                                             onclick="showLightbox('{{ asset('storage/'.$e->image_path) }}')">
+                                    @else
+                                        <span class="text-muted">—</span>
+                                    @endif
+                                </td>
                             </tr>
                         @empty
                             <tr  wire:key="exp-1">
-                                <td colspan="9">Sin resultados para los filtros seleccionados.</td>
+                                <td colspan="10">Sin resultados para los filtros seleccionados.</td>
                             </tr>
                         @endforelse
                         </tbody>
 
                         <tfoot class="bg-primary">
                         <tr>
-                            <td colspan="8" class="text-end f-fw-700">Total general</td>
+                            <td colspan="9" class="text-end f-fw-700">Total general</td>
                             <td class="text-end f-fw-700">{{ number_format($totalGeneral ?? 0, 2) }}</td>
                         </tr>
                         </tfoot>
@@ -313,6 +339,20 @@
         </div>
     </div>
 
+    {{-- Lightbox --}}
+    <div class="modal fade" id="modalImageLightbox" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content" style="background:rgba(0,0,0,0.85);">
+                <div class="modal-header border-0 pb-0">
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center p-2">
+                    <img id="lightboxImg" src="" alt="Comprobante" class="img-fluid rounded" style="max-height:80vh;">
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="screen-overlay"
          wire:loading.delay.flex
          wire:target="export,applyDate,filterType">
@@ -323,6 +363,15 @@
     </div>
 
 </div>
+
+@push('scripts')
+<script>
+function showLightbox(src) {
+    document.getElementById('lightboxImg').src = src;
+    new bootstrap.Modal(document.getElementById('modalImageLightbox')).show();
+}
+</script>
+@endpush
 
 @push('datepicker_js')
     <script>

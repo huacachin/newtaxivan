@@ -25,6 +25,20 @@
         </div>
     </div>
 
+    {{-- Flash alerts --}}
+    @if(session('income_success'))
+        <div class="alert alert-success alert-dismissible fade show py-2 mb-2" role="alert">
+            {{ session('income_success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+    @if(session('income_error'))
+        <div class="alert alert-danger alert-dismissible fade show py-2 mb-2" role="alert">
+            {{ session('income_error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
     <div class="row">
 
         {{-- ===== Table ===== --}}
@@ -147,6 +161,7 @@
                                 <th>A</th>
                                 <th>Motivo</th>
                                 <th class="text-end">Monto</th>
+                                <th class="text-center">Img</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -154,8 +169,10 @@
                             @forelse($incomes as $i)
                                 <tr wire:key="exp-{{ $i->id }}">
                                     <td data-label="Opciones">
-                                        <i wire:ignore class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
-                                           wire:click="openEditModal({{ $i->id }})"></i>
+                                        @role('admin')
+                                        <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
+                                           wire:click="openEditWindow({{ $i->id }})"></i>
+                                        @endrole
                                     </td>
                                     <td>{{ $incomes->firstItem() + $loop->index }}</td>
                                     <td data-label="Fecha">{{ \Carbon\Carbon::parse($i->date)->format('d/m/Y') }}</td>
@@ -163,16 +180,27 @@
                                     <td data-label="A">{{ $i->reason }}</td>
                                     <td data-label="Motivo">{{ $i->detail }}</td>
                                     <td class="text-end" data-label="S/">{{ number_format($i->total, 2) }}</td>
+                                    <td class="text-center">
+                                        @if($i->image_path)
+                                            <img src="{{ asset('storage/'.$i->image_path) }}"
+                                                 alt="Ver comprobante"
+                                                 class="img-thumbnail"
+                                                 style="height:36px;width:36px;object-fit:cover;cursor:pointer;"
+                                                 onclick="showLightbox('{{ asset('storage/'.$i->image_path) }}')">
+                                        @else
+                                            <span class="text-muted">—</span>
+                                        @endif
+                                    </td>
                                 </tr>
                             @empty
                                 <tr wire:key="inc-1">
-                                    <td colspan="7">Sin resultados para los filtros seleccionados.</td>
+                                    <td colspan="8">Sin resultados para los filtros seleccionados.</td>
                                 </tr>
                             @endforelse
                             </tbody>
                             <tfoot class="bg-primary">
                             <tr>
-                                <td colspan="6" class="f-fw-700 text-end">Total General</td>
+                                <td colspan="7" class="f-fw-700 text-end">Total General</td>
                                 <td>{{ number_format($totalGeneral, 2) }}</td>
                             </tr>
                             </tfoot>
@@ -278,106 +306,20 @@
         </div>
     </div>
 
-    {{-- ===== Modal: Editar Ingreso ===== --}}
-    <div class="modal fade" id="modalEditIncome" aria-hidden="true" tabindex="-1" data-bs-backdrop="static"
-         wire:ignore.self>
-        <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Editar ingreso</h5>
-                    <button type="button" class="btn-close btn-close-white m-0 fs-5" data-bs-dismiss="modal"
-                            aria-label="Close" wire:click="closeModal('modalEditIncome')"></button>
+    {{-- Lightbox --}}
+    <div class="modal fade" id="modalImageLightbox" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content" style="background:rgba(0,0,0,0.85);">
+                <div class="modal-header border-0 pb-0">
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-
-                <div class="modal-body">
-                    @if ($errors->any())
-                        <div class="alert alert-danger">
-                            <strong>Corrige los siguientes errores:</strong>
-                            <ul class="mb-0 mt-2 ps-3">
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @endif
-
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Fecha</label>
-                            <input id="dateEdit" type="text" class="form-control" wire:model.live="date">
-                            @error('date') <span class="title-modules">{{ $message }}</span> @enderror
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label">Moneda</label>
-                            <select class="form-select" wire:model.live="currency">
-                                <option value="Soles">Soles</option>
-                                <option value="Dolares">Dólares</option>
-                            </select>
-                            @error('currency') <span class="title-modules">{{ $message }}</span> @enderror
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label">Monto</label>
-                            <input type="number" step="0.01" min="0.01" class="form-control" placeholder="0.00"
-                                   wire:model.live="amount_input">
-                            @error('amount_input') <span class="title-modules">{{ $message }}</span> @enderror
-                            @if(!is_null($converted_total))
-                                <small class="text-muted">Total en S/: {{ number_format($converted_total, 2) }}</small>
-                            @endif
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label">A</label>
-                            <input type="text" class="form-control" placeholder="A quién / Área"
-                                   wire:model.defer="reason">
-                            @error('reason') <span class="title-modules">{{ $message }}</span> @enderror
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label">Motivo</label>
-                            <input type="text" class="form-control" placeholder="Detalle" wire:model.defer="detail">
-                            @error('detail') <span class="title-modules">{{ $message }}</span> @enderror
-                        </div>
-
-                        <div class="col-md-12">
-                            <label class="form-label">Comprobante (imagen)</label>
-                            <input type="file" class="form-control" wire:model="image_file" accept="image/*">
-                            @error('image_file') <span class="title-modules">{{ $message }}</span> @enderror
-
-                            <div class="mt-2">
-                                @if ($image_file)
-                                    {{-- Si el usuario acaba de seleccionar una nueva imagen, preview temporal --}}
-                                    <img src="{{ $image_file->temporaryUrl() }}" alt="Vista previa"
-                                         class="img-fluid rounded border" style="max-height: 220px;">
-                                @else
-                                    @php
-                                        // Usa el disco 'public' y arma la URL con asset('storage/...') para evitar problemas de APP_URL/subcarpetas
-                                        $path = $image_path;
-                                        $exists = $path && \Illuminate\Support\Facades\Storage::disk('public')->exists($path);
-                                        $url = $exists ? asset('storage/'.$path) : asset('images/placeholder-income.png');
-                                    @endphp
-                                    <img src="{{ $url }}" alt="Comprobante" class="img-fluid rounded border"
-                                         style="max-height: 220px;">
-                                @endif
-                            </div>
-                        </div>
-
-                        <div class="col-12">
-                            <div class="form-text">TC usado (MVP): 3.80</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-sm btn-light-secondary" data-bs-dismiss="modal"
-                            wire:click="closeModal('modalEditIncome')">Cerrar
-                    </button>
-                    <button type="button" class="btn btn-sm btn-light-primary" wire:click="update">Guardar cambios</button>
+                <div class="modal-body text-center p-2">
+                    <img id="lightboxImg" src="" alt="Comprobante" class="img-fluid rounded" style="max-height:80vh;">
                 </div>
             </div>
         </div>
     </div>
+
     <div class="screen-overlay"
          wire:loading.delay.flex
          wire:target="export,applyDate,filterType">
@@ -389,6 +331,15 @@
 
 </div>
 
+@push('scripts')
+<script>
+function showLightbox(src) {
+    document.getElementById('lightboxImg').src = src;
+    new bootstrap.Modal(document.getElementById('modalImageLightbox')).show();
+}
+</script>
+@endpush
+
 @push('datepicker_js')
     <script>
         $( function() {
@@ -397,7 +348,6 @@
                 ['#date_start', 'ui_date_start'],
                 ['#date_end',   'ui_date_end'],
                 ['#dateAdd',    'date'],
-                ['#dateEdit',   'date'],
             ], wire);
         });
     </script>

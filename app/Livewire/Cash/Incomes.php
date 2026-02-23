@@ -319,6 +319,11 @@ class Incomes extends Component
         ]);
     }
 
+    public function openEditWindow(int $id): void
+    {
+        $this->dispatch('url-open', ['url' => route('cash.incomes.edit', $id)]);
+    }
+
     // Export
     public function export()
     {
