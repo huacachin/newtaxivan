@@ -15,7 +15,6 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use PhpOffice\PhpSpreadsheet\Style\Conditional;
 
 class UsersReportExport implements
     FromQuery, WithHeadings, WithMapping, WithStyles, WithEvents, WithColumnWidths
@@ -146,18 +145,6 @@ class UsersReportExport implements
                     ->getColor()->setARGB($borderC);
 
                 if ($last >= $dataStartRow) {
-                    // Zebra
-                    $rangeData = "A{$dataStartRow}:{$lastCol}{$last}";
-                    $cond = new Conditional();
-                    $cond->setConditionType(Conditional::CONDITION_EXPRESSION);
-                    $cond->setConditions(['MOD(ROW(),2)=0']);
-                    $cond->getStyle()->getFill()
-                        ->setFillType(Fill::FILL_SOLID)
-                        ->getStartColor()->setARGB('FFF3F4F6');
-                    $styles = $ws->getStyle($rangeData)->getConditionalStyles();
-                    $styles[] = $cond;
-                    $ws->getStyle($rangeData)->setConditionalStyles($styles);
-
                     // Alineaciones
                     $ws->getStyle("A{$dataStartRow}:A{$last}")
                         ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);

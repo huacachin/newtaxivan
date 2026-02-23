@@ -51,6 +51,7 @@ class Index extends Component
                 $join->on('v.owner_id', '=', 'o.id')
                     ->whereIn(DB::raw("LOWER(TRIM(v.status))"), ['active', 'activo']);
             })
+            ->whereRaw("LOWER(TRIM(o.status)) = 'active'")
             // search selectivo según $filterBy
             ->when($like !== null, function ($q) use ($like) {
                 $q->when($this->filter === 'name', fn($qq) => $qq->where('o.name', 'like', $like))
@@ -78,6 +79,7 @@ class Index extends Component
                 $join->on('v.owner_id', '=', 'o.id')
                     ->where('v.status', 'active');
             })
+            ->whereRaw("LOWER(TRIM(o.status)) = 'active'")
             ->whereNull('v.owner_id')
             ->select(
                 'o.id as id',

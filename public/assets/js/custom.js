@@ -37,20 +37,44 @@ $(function () {
 //   var wire = @this;
 //   initLivewireDatepicker([['#selector', 'wire_prop'], ...], wire);
 // =========================================================
-function initLivewireDatepicker(pairs, wire) {
+// Registro global de datepickers para sobrevivir re-renders de Livewire
+var _dpRegistry = [];
+
+function _applyDatepickers(pairs, wire) {
     pairs.forEach(function (pair) {
-        var selector = pair[0];
-        var prop = pair[1];
-        $(selector).datepicker({
+        var $el = $(pair[0]);
+        if (!$el.length) return;
+        // Destruir siempre antes de reinicializar (evita doble binding)
+        try { $el.datepicker('destroy'); } catch (e) {}
+        $el.datepicker({
             changeMonth: true,
             changeYear: true,
             dateFormat: 'yy-mm-dd',
             onSelect: function (dateText) {
-                wire.set(prop, dateText);
+                wire.set(pair[1], dateText);
             }
         });
     });
 }
+
+function initLivewireDatepicker(pairs, wire) {
+    _dpRegistry.push({ pairs: pairs, wire: wire });
+    _applyDatepickers(pairs, wire);
+}
+
+// Hook de Livewire 3: reinicializar datepickers después de cada commit exitoso
+document.addEventListener('livewire:initialized', function () {
+    Livewire.hook('commit', function (_ref) {
+        var succeed = _ref.succeed;
+        succeed(function () {
+            requestAnimationFrame(function () {
+                _dpRegistry.forEach(function (cfg) {
+                    _applyDatepickers(cfg.pairs, cfg.wire);
+                });
+            });
+        });
+    });
+});
 
 // =========================================================
 // Modal helpers

@@ -19,6 +19,20 @@
         </div>
     </div>
 
+    @if(session('owner_success'))
+    <div class="alert alert-success alert-dismissible fade show py-2 mb-2" role="alert">
+        <i class="ti ti-circle-check me-1"></i> {{ session('owner_success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+    @endif
+
+    @if(session('owner_error'))
+    <div class="alert alert-danger alert-dismissible fade show py-2 mb-2" role="alert">
+        <i class="ti ti-alert-circle me-1"></i> {{ session('owner_error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+    @endif
+
     <div class="row table-section">
         <!-- Tabla principal: Propietarios -->
         <div class="col-xl-12">
@@ -71,24 +85,25 @@
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">
                             <tr>
-                                <th scope="col">Acción</th>
+                                @role('admin')<th scope="col">Acción</th>@endrole
                                 <th>Item</th>
                                 <th>Cod</th>
                                 <th scope="col">Placa</th>
                                 <th scope="col">Nombre/Empresa</th>
                                 <th scope="col">DNI/RUC</th>
                                 <th scope="col">Cel.</th>
-
                             </tr>
                             </thead>
                             <tbody>
                             @if($owners->count() > 0)
                                 @foreach ($owners as $owner)
                                     <tr>
+                                        @role('admin')
                                         <td>
                                             <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
                                                wire:click="openEditWindow({{ $owner->id }})"></i>
                                         </td>
+                                        @endrole
                                         <td>{{ $loop->iteration }}</td>
                                         <td>{{$owner->sort_order}}</td>
                                         <td>{{ $owner->plate }}</td>
@@ -122,13 +137,13 @@
                                 @endforeach
                             @else
                                 <tr>
-                                    <td colspan="6">No se encontrarón resultados</td>
+                                    <td colspan="{{ auth()->user()->hasRole('admin') ? 7 : 6 }}">No se encontrarón resultados</td>
                                 </tr>
                             @endif
                             </tbody>
                             <tfoot>
                             <tr>
-                                <td colspan="6">Propietarios: {{ $owners->count() }}</td>
+                                <td colspan="{{ auth()->user()->hasRole('admin') ? 7 : 6 }}">Propietarios: {{ $owners->count() }}</td>
                             </tr>
                             </tfoot>
                         </table>
@@ -138,21 +153,22 @@
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">
                             <tr>
-                                <th scope="col">Acción</th>
+                                @role('admin')<th scope="col">Acción</th>@endrole
                                 <th scope="col">Id</th>
                                 <th scope="col">Nombre/Empresa</th>
                                 <th scope="col">DNI/RUC</th>
                                 <th scope="col">Cel.</th>
-
                             </tr>
                             </thead>
                             <tbody>
                             @forelse ($ownersFree as $owner)
                                 <tr>
+                                    @role('admin')
                                     <td width="50">
                                         <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
                                            wire:click="openEditWindow({{ $owner->id }})"></i>
                                     </td>
+                                    @endrole
                                     <td>{{ $loop->iteration }}</td>
                                     <td>{{ $owner->name }}</td>
                                     <td>
@@ -182,13 +198,13 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5">No se encontrarón resultados</td>
+                                    <td colspan="{{ auth()->user()->hasRole('admin') ? 5 : 4 }}">No se encontrarón resultados</td>
                                 </tr>
                             @endforelse
                             </tbody>
                             <tfoot>
                             <tr>
-                                <td colspan="5">Libres: {{ $ownersFree->count() }}</td>
+                                <td colspan="{{ auth()->user()->hasRole('admin') ? 5 : 4 }}">Libres: {{ $ownersFree->count() }}</td>
                             </tr>
                             </tfoot>
                         </table>

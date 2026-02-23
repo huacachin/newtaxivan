@@ -4,7 +4,7 @@ namespace App\Livewire\Owners;
 
 use App\Models\Owner;
 use Carbon\Carbon;
-use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 class Edit extends Component
@@ -39,15 +39,15 @@ class Edit extends Component
     public function rules()
     {
         return [
-            'name'                    => 'required|string|max:255',
-            'document_type'           => 'required|string|max:255',
-            'document_number'         => 'required|string|max:255|unique:owners,document_number,' . $this->owner->id,
-            'document_expiration_date'=> 'nullable|date',
-            'birthdate'               => 'nullable|date',
-            'address'                 => 'nullable|string|max:255',
-            'district'                => 'nullable|string|max:255',
-            'email'                   => 'nullable|string|email|max:255',
-            'phone'                   => 'nullable|string|max:255',
+            'name'                     => 'required|string|max:255',
+            'document_type'            => 'nullable|string|max:255',
+            'document_number'          => 'nullable|string|max:255|unique:owners,document_number,' . $this->owner->id,
+            'document_expiration_date' => 'nullable|date',
+            'birthdate'                => 'nullable|date',
+            'address'                  => 'nullable|string|max:255',
+            'district'                 => 'nullable|string|max:255',
+            'email'                    => 'nullable|string|email|max:255',
+            'phone'                    => 'nullable|string|max:255',
         ];
     }
 
@@ -75,23 +75,44 @@ class Edit extends Component
         return $this->isExpired($this->document_expiration_date);
     }
 
+    public function questionDelete(int $id): void
+    {
+        $this->dispatch('questionDelete', ['id' => $id]);
+    }
+
+    #[On('register_destroy')]
+    public function destroy(int $id): void
+    {
+        Owner::findOrFail($id)->update(['status' => 'inactive']);
+        session()->flash('owner_success', 'Propietario eliminado correctamente.');
+        $this->redirectRoute('settings.owners.index');
+    }
+
     public function update()
     {
-        $this->validate();
+        try {
+            $this->validate();
 
-        $this->owner->update([
-            'name'                    => $this->name,
-            'document_type'           => $this->document_type,
-            'document_number'         => $this->document_number,
-            'document_expiration_date'=> $this->document_expiration_date,
-            'birthdate'               => $this->birthdate,
-            'address'                 => $this->address,
-            'district'                => $this->district,
-            'email'                   => $this->email,
-            'phone'                   => $this->phone,
-        ]);
+            $this->owner->update([
+                'name'                     => $this->name,
+                'document_type'            => $this->document_type,
+                'document_number'          => $this->document_number,
+                'document_expiration_date' => $this->document_expiration_date,
+                'birthdate'                => $this->birthdate,
+                'address'                  => $this->address,
+                'district'                 => $this->district,
+                'email'                    => $this->email,
+                'phone'                    => $this->phone,
+            ]);
 
-        $this->dispatch('successAlert', ['message' => 'Propietario actualizado correctamente.']);
+            session()->flash('owner_success', 'Propietario actualizado correctamente.');
+            $this->redirectRoute('settings.owners.index');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            session()->flash('owner_error', 'Error al actualizar: ' . $e->getMessage());
+            $this->redirectRoute('settings.owners.index');
+        }
     }
 
     public function render()

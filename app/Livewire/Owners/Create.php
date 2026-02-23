@@ -20,15 +20,15 @@ class Create extends Component
     public $phone;
 
     protected $rules = [
-        'name' => 'required|string|max:255',
-        'document_type' => 'required|string|max:255',
-        'document_number' => 'required|string|max:255|unique:owners,document_number',
+        'name'                     => 'required|string|max:255',
+        'document_type'            => 'nullable|string|max:255',
+        'document_number'          => 'nullable|string|max:255|unique:owners,document_number',
         'document_expiration_date' => 'nullable|date',
-        'birthdate' => 'nullable|date',
-        'address' => 'nullable|string|max:255',
-        'district' => 'nullable|string|max:255',
-        'email' => 'nullable|string|email|max:255',
-        'phone' => 'nullable|string|max:255',
+        'birthdate'                => 'nullable|date',
+        'address'                  => 'nullable|string|max:255',
+        'district'                 => 'nullable|string|max:255',
+        'email'                    => 'nullable|string|email|max:255',
+        'phone'                    => 'nullable|string|max:255',
     ];
 
     public function mount(){
@@ -37,26 +37,37 @@ class Create extends Component
         $this->document_expiration_date = $today;
     }
 
-    public function save():void
+    public function save(): void
     {
-        $this->validate();
+        try {
+            $this->validate();
 
-        Owner::create([
-            'name' => $this->name,
-            'document_type' => $this->document_type,
-            'document_number' => $this->document_number,
-            'document_expiration_date' => $this->document_expiration_date,
-            'birthdate' => $this->birthdate,
-            'address' => $this->address,
-            'district' => $this->district,
-            'email' => $this->email,
-            'phone' => $this->phone,
-        ]);
+            Owner::create([
+                'name'                     => $this->name,
+                'document_type'            => $this->document_type,
+                'document_number'          => $this->document_number,
+                'document_expiration_date' => $this->document_expiration_date,
+                'birthdate'                => $this->birthdate,
+                'address'                  => $this->address,
+                'district'                 => $this->district,
+                'email'                    => $this->email,
+                'phone'                    => $this->phone,
+            ]);
 
+            session()->flash('owner_success', 'Propietario creado correctamente.');
+            $this->redirectRoute('settings.owners.index');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            session()->flash('owner_error', 'Error al guardar: ' . $e->getMessage());
+            $this->redirectRoute('settings.owners.index');
+        }
+    }
 
+    public function clean(): void
+    {
         $this->reset(['name', 'document_type', 'document_number', 'document_expiration_date', 'birthdate', 'address', 'district', 'email', 'phone']);
-        $this->dispatch('successAlert', ['message' => 'Propietario creado correctamente.']);
-
+        $this->mount();
     }
 
     public function render()

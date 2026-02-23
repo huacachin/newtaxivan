@@ -108,41 +108,50 @@ class Edit extends Component
     #[On('register_destroy')]
     public function delete(int $id): void
     {
-        Vehicle::find($id)->update(['status' => "inactive"]);
+        Vehicle::find($id)->update(['status' => 'inactive']);
+        session()->flash('vehicle_success', 'Vehículo eliminado correctamente.');
         $this->redirectRoute('settings.vehicles.index');
     }
 
     public function update()
     {
-        $this->validate();
+        try {
+            $this->validate();
 
-        $this->vehicle->update([
-            "sort_order" => $this->sort_order,
-            "plate" => $this->plate,
-            "headquarters" => $this->headquarter,
-            "entry_date" => $this->entry_date,
-            "termination_date" => $this->termination_date,
-            "class" => $this->class,
-            "brand" => $this->brand,
-            "year" => $this->year,
-            "model" => $this->model,
-            "bodywork" => $this->bodywork,
-            "color" => $this->color,
-            "type" => $this->type,
-            "affiliated_company" => $this->affiliated_company,
-            "condition" => $this->condition,
-            "owner_id" => $this->owner_id,
-            "driver_id"=>$this->driver_id,
-            "fuel" => $this->fuel,
-            "soat_date" => $this->soat_date,
-            "certificate_date" => $this->certificate_date,
-            "technical_review" => $this->technical_review,
-            "detail" => $this->detail,
-            "seats" => $this->seats,
-            "passengers" => $this->passengers
-        ]);
+            $this->vehicle->update([
+                "sort_order" => $this->sort_order,
+                "plate" => $this->plate,
+                "headquarters" => $this->headquarter,
+                "entry_date" => $this->entry_date,
+                "termination_date" => $this->termination_date,
+                "class" => $this->class,
+                "brand" => $this->brand,
+                "year" => $this->year,
+                "model" => $this->model,
+                "bodywork" => $this->bodywork,
+                "color" => $this->color,
+                "type" => $this->type,
+                "affiliated_company" => $this->affiliated_company,
+                "condition" => $this->condition,
+                "owner_id" => $this->owner_id,
+                "driver_id" => $this->driver_id,
+                "fuel" => $this->fuel,
+                "soat_date" => $this->soat_date,
+                "certificate_date" => $this->certificate_date,
+                "technical_review" => $this->technical_review,
+                "detail" => $this->detail,
+                "seats" => $this->seats,
+                "passengers" => $this->passengers
+            ]);
 
-        $this->dispatch('successAlert', ['message' => 'Vehículo actualizado correctamente.']);
+            session()->flash('vehicle_success', 'Vehículo actualizado correctamente.');
+            $this->redirectRoute('settings.vehicles.index');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            session()->flash('vehicle_error', 'Error al actualizar: ' . $e->getMessage());
+            $this->redirectRoute('settings.vehicles.index');
+        }
     }
 
     public function render()

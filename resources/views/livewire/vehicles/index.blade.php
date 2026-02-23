@@ -20,6 +20,20 @@
         </div>
     </div>
 
+    @if(session('vehicle_success'))
+    <div class="alert alert-success alert-dismissible fade show py-2 mb-2" role="alert">
+        <i class="ti ti-circle-check me-1"></i> {{ session('vehicle_success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+    @endif
+
+    @if(session('vehicle_error'))
+    <div class="alert alert-danger alert-dismissible fade show py-2 mb-2" role="alert">
+        <i class="ti ti-alert-circle me-1"></i> {{ session('vehicle_error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+    @endif
+
     <div class="row table-section">
 
         <!-- Tabla -->

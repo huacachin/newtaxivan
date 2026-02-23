@@ -76,39 +76,43 @@ class Create extends Component
 
     public function save()
     {
-        $this->validate();
+        try {
+            $this->validate();
 
-        Vehicle::create([
-            "sort_order" => $this->sort_order,
-            "plate" => $this->plate,
-            "headquarters" => $this->headquarter,
-            "entry_date" => $this->entry_date,
-            "termination_date" => $this->termination_date,
-            "class" => $this->class,
-            "brand" => $this->brand,
-            "year" => $this->year,
-            "model" => $this->model,
-            "bodywork" => $this->bodywork,
-            "color" => $this->color,
-            "type" => $this->type,
-            "affiliated_company" => $this->affiliated_company,
-            "condition" => $this->condition,
-            "owner_id" => $this->owner_id,
-            "driver_id" => $this->driver_id,
-            "fuel" => $this->fuel,
-            "soat_date" => $this->soat_date,
-            "certificate_date" => $this->certificate_date,
-            "technical_review" => $this->technical_review,
-            "detail" => $this->detail,
-            "seats" => $this->seats,
-            "passengers" => $this->passengers
-        ]);
+            Vehicle::create([
+                "sort_order" => $this->sort_order,
+                "plate" => $this->plate,
+                "headquarters" => $this->headquarter,
+                "entry_date" => $this->entry_date,
+                "termination_date" => $this->termination_date,
+                "class" => $this->class,
+                "brand" => $this->brand,
+                "year" => $this->year,
+                "model" => $this->model,
+                "bodywork" => $this->bodywork,
+                "color" => $this->color,
+                "type" => $this->type,
+                "affiliated_company" => $this->affiliated_company,
+                "condition" => $this->condition,
+                "owner_id" => $this->owner_id,
+                "driver_id" => $this->driver_id,
+                "fuel" => $this->fuel,
+                "soat_date" => $this->soat_date,
+                "certificate_date" => $this->certificate_date,
+                "technical_review" => $this->technical_review,
+                "detail" => $this->detail,
+                "seats" => $this->seats,
+                "passengers" => $this->passengers
+            ]);
 
-        $this->reset(['plate','headquarter','entry_date','termination_date','class','brand','year','model','bodywork','color','type','affiliated_company','condition','owner_id','driver_id','fuel','soat_date','technical_review','certificate_date','detail','sort_order','seats','passengers']);
-        // Mostrar alert Bootstrap en la vista (sin redirección)
-        session()->flash('add_success', true);
-
-        redirect()->route('settings.vehicles.index');
+            session()->flash('vehicle_success', 'Vehículo creado correctamente.');
+            $this->redirectRoute('settings.vehicles.index');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            session()->flash('vehicle_error', 'Error al guardar: ' . $e->getMessage());
+            $this->redirectRoute('settings.vehicles.index');
+        }
     }
 
     public function clean(){
