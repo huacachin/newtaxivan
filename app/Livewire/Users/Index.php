@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Permission; // TU modelo (importante)
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Spatie\Permission\Models\Role;
 
@@ -339,6 +340,18 @@ class Index extends Component
         $this->resetForm();
         $this->dispatch('modal-close', ["name" => "modalEditUser"]);
         $this->dispatch('successAlert', ["message" => "Usuario actualizado correctamente"]);
+    }
+
+    public function questionDelete(int $id): void
+    {
+        $this->dispatch('questionDelete', ['id' => $id]);
+    }
+
+    #[On('register_destroy')]
+    public function destroy(int $id): void
+    {
+        User::findOrFail($id)->update(['status' => 'inactive']);
+        $this->dispatch('successAlert', ['message' => 'Usuario desactivado correctamente']);
     }
 
     public function export(): void
