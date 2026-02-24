@@ -6,7 +6,10 @@
       "Bash(head:*)",
       "Bash(echo no libs:*)",
       "Bash(pip3 install xlrd --quiet 2>&1 | tail -1 && python3 -c \"import xlrd; print\\('xlrd ready'\\)\" 2>&1)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(find /Users/antonyalfredoculquicarranza/Desktop -name \"*7.22*\" -print0 | xargs -0 ls -la 2>/dev/null)",
+      "Bash(find:*)",
+      "Bash(ls:*)"
     ]
   }
 }

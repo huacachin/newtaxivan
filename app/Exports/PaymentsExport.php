@@ -17,7 +17,6 @@ use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-use PhpOffice\PhpSpreadsheet\Style\Conditional;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -179,45 +178,44 @@ class PaymentsExport implements
         return "Pagos";
     }
 
-    /** === Estilos homologados + anchos al ras === */
+    /** === Estilos homologados con diseño de referencia === */
     public function registerEvents(): array
     {
         return [
             AfterSheet::class => function (AfterSheet $e) {
                 $ws = $e->sheet->getDelegate();
 
-                // Default global
-                $ws->getParent()->getDefaultStyle()->getFont()->setSize(10);
-
                 $blueDark   = 'FF2874A6';
                 $footerFill = 'FFCEE7FF';
                 $white      = 'FFFFFFFF';
-                $fontBlack  = 'FF000000';
-                $borderSoft = '000000';
-                $red        = 'F80000';
+                $black      = 'FF000000';
+                $gray       = 'FF808080';
+                $red        = 'FFF80000';
 
-                // ===== Título (fila 1)
+                // ===== Título (fila 1) =====
                 $ws->insertNewRowBefore(1, 1);
                 $ws->mergeCells('A1:J1');
-                $ws->setCellValue('A1', 'REPORTE DE PAGOS');
+                $ws->setCellValue('A1', 'PAGO');
                 $ws->getStyle('A1:J1')->applyFromArray([
-                    'fill' => [
-                        'fillType'   => Fill::FILL_SOLID,
-                        'startColor' => ['argb' => $white],
-                    ],
                     'font' => [
                         'bold'  => true,
                         'color' => ['argb' => $red],
-                        'size'  => 10,
+                        'size'  => 11,
                     ],
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
                         'vertical'   => Alignment::VERTICAL_CENTER,
                     ],
+                    'borders' => [
+                        'allBorders' => [
+                            'borderStyle' => Border::BORDER_THIN,
+                            'color'       => ['argb' => $black],
+                        ],
+                    ],
                 ]);
-                $ws->getRowDimension(1)->setRowHeight(18);
+                $ws->getRowDimension(1)->setRowHeight(20);
 
-                // ===== Header (fila 2) y datos desde 3
+                // ===== Header (fila 2), datos desde fila 3 =====
                 $headerRow    = 2;
                 $dataStartRow = 3;
                 $last         = (int) $ws->getHighestRow();
@@ -236,95 +234,98 @@ class PaymentsExport implements
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
                         'vertical'   => Alignment::VERTICAL_CENTER,
                     ],
+                    'borders' => [
+                        'allBorders' => [
+                            'borderStyle' => Border::BORDER_THIN,
+                            'color'       => ['argb' => $white],
+                        ],
+                        'outline' => [
+                            'borderStyle' => Border::BORDER_THIN,
+                            'color'       => ['argb' => $black],
+                        ],
+                    ],
                 ]);
                 $ws->getRowDimension($headerRow)->setRowHeight(18);
 
-                // //$ws->freezePane("A{$dataStartRow}");
+                // ===== Ocultar cuadrícula fuera de la tabla =====
+                $ws->setShowGridLines(false);
 
-                if ($last < $dataStartRow) {
-                    // No hay filas de datos
-                    $fullRange = "A1:J{$last}";
-                    $ws->getStyle($fullRange)->getFont()->setSize(10);
-                    return;
-                }
+                // ===== Altura base =====
+                $ws->getDefaultRowDimension()->setRowHeight(14);
 
-                // ===== Bordes + zebra
-                $ws->getStyle("A{$headerRow}:J{$last}")
-                    ->getBorders()->getAllBorders()
-                    ->setBorderStyle(Border::BORDER_THIN);
-                $ws->getStyle("A{$headerRow}:J{$last}")
-                    ->getBorders()->getAllBorders()
-                    ->getColor()->setARGB($borderSoft);
-
-                $rangeData = "A{$dataStartRow}:J{$last}";
-                $cond = new Conditional();
-                $cond->setConditionType(Conditional::CONDITION_EXPRESSION);
-                $cond->setConditions(['MOD(ROW(),2)=0']);
-                $cond->getStyle()->getFill()
-                    ->setFillType(Fill::FILL_SOLID)
-                    ->getStartColor()->setARGB('FFF9FAFB');
-                $styles = $ws->getStyle($rangeData)->getConditionalStyles();
-                $styles[] = $cond;
-                $ws->getStyle($rangeData)->setConditionalStyles($styles);
-
-                // ===== Alineaciones
-                $ws->getStyle("A{$dataStartRow}:A{$last}")
-                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // Item
-                $ws->getStyle("D{$dataStartRow}:D{$last}")
-                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // Fecha Registro
-                $ws->getStyle("E{$dataStartRow}:E{$last}")
-                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // Fecha Pago
-                $ws->getStyle("F{$dataStartRow}:F{$last}")
-                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // Hora
-                $ws->getStyle("J{$dataStartRow}:J{$last}")
-                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);  // S/
-
-                // Formato moneda "S/ "
-                $ws->getStyle("J{$dataStartRow}:J{$last}")
-                    ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
-
-                // ===== TOTAL (última fila + 1)
-                $totalRow = $last + 1;
-                $ws->mergeCells("A{$totalRow}:I{$totalRow}");
-                $ws->setCellValue("A{$totalRow}", 'TOTAL');
-                $ws->setCellValue("J{$totalRow}", "=SUM(J{$dataStartRow}:J{$last})");
-
-                $ws->getStyle("A{$totalRow}:J{$totalRow}")->applyFromArray([
-                    'fill' => [
-                        'fillType'   => Fill::FILL_SOLID,
-                        'startColor' => ['argb' => $footerFill],
-                    ],
-                    'font' => [
-                        'bold'  => true,
-                        'color' => ['argb' => $fontBlack],
-                        'size'  => 10,
-                    ],
-                    'borders' => [
-                        'outline' => [
-                            'borderStyle' => Border::BORDER_MEDIUM,
-                            'color'       => ['argb' => $blueDark],
+                if ($last >= $dataStartRow) {
+                    // ===== Bordes de datos: punteado horizontal, sólido vertical =====
+                    $ws->getStyle("A{$dataStartRow}:J{$last}")->applyFromArray([
+                        'borders' => [
+                            'allBorders' => [
+                                'borderStyle' => Border::BORDER_DOTTED,
+                                'color'       => ['argb' => $gray],
+                            ],
+                            'vertical' => [
+                                'borderStyle' => Border::BORDER_THIN,
+                                'color'       => ['argb' => $black],
+                            ],
+                            'left' => [
+                                'borderStyle' => Border::BORDER_THIN,
+                                'color'       => ['argb' => $black],
+                            ],
+                            'right' => [
+                                'borderStyle' => Border::BORDER_THIN,
+                                'color'       => ['argb' => $black],
+                            ],
                         ],
-                    ],
-                    'alignment' => [
-                        'vertical'   => Alignment::VERTICAL_CENTER,
-                    ],
-                ]);
-                $ws->getStyle("A{$totalRow}:I{$totalRow}")
-                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-                $ws->getStyle("J{$totalRow}")
-                    ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
-                $ws->getRowDimension($totalRow)->setRowHeight(18);
+                        'alignment' => [
+                            'vertical' => Alignment::VERTICAL_CENTER,
+                        ],
+                    ]);
 
-                // ===== Compactación SIN reducir fuente =====
-                $ws->getStyle("A{$headerRow}:J{$totalRow}")
-                    ->getAlignment()
-                    ->setWrapText(false)
-                    ->setIndent(0);
+                    // ===== Alineaciones =====
+                    foreach (['A', 'D', 'E', 'F', 'J'] as $col) {
+                        $ws->getStyle("{$col}{$dataStartRow}:{$col}{$last}")
+                            ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                    }
 
-                foreach (range('A','J') as $col) {
-                    $ws->getColumnDimension($col)->setAutoSize(false);
-                    $ws->getColumnDimension($col)->setWidth(3.0);
+                    // Formato moneda "S/ "
+                    $ws->getStyle("J{$dataStartRow}:J{$last}")
+                        ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
+
+                    // ===== Fila TOTAL =====
+                    $totalRow = $last + 1;
+                    $ws->mergeCells("A{$totalRow}:I{$totalRow}");
+                    $ws->setCellValue("A{$totalRow}", 'TOTAL');
+                    $ws->setCellValue("J{$totalRow}", "=SUM(J{$dataStartRow}:J{$last})");
+
+                    $ws->getStyle("A{$totalRow}:J{$totalRow}")->applyFromArray([
+                        'fill' => [
+                            'fillType'   => Fill::FILL_SOLID,
+                            'startColor' => ['argb' => $footerFill],
+                        ],
+                        'font' => [
+                            'bold'  => true,
+                            'color' => ['argb' => $black],
+                            'size'  => 10,
+                        ],
+                        'alignment' => [
+                            'vertical'   => Alignment::VERTICAL_CENTER,
+                            'horizontal' => Alignment::HORIZONTAL_RIGHT,
+                        ],
+                        'borders' => [
+                            'allBorders' => [
+                                'borderStyle' => Border::BORDER_THIN,
+                                'color'       => ['argb' => $black],
+                            ],
+                        ],
+                    ]);
+                    $ws->getStyle("J{$totalRow}")
+                        ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
+                    $ws->getRowDimension($totalRow)->setRowHeight(18);
+
+                    $lastRow = $totalRow;
+                } else {
+                    $lastRow = $last;
                 }
+
+                // ===== Anchos de columna =====
                 $ws->getColumnDimension('A')->setWidth(5);
                 $ws->getColumnDimension('B')->setWidth(9.5);
                 $ws->getColumnDimension('C')->setWidth(8);
@@ -336,9 +337,13 @@ class PaymentsExport implements
                 $ws->getColumnDimension('I')->setWidth(6.5);
                 $ws->getColumnDimension('J')->setWidth(13.0);
 
-                // 🔨 Martillazo final: TODO en tamaño 10
-                $fullRange = "A1:J{$totalRow}";
-                $ws->getStyle($fullRange)->getFont()->setSize(10);
+                // ===== Ocultar columnas vacías (K en adelante) =====
+                foreach (range('K', 'Z') as $col) {
+                    $ws->getColumnDimension($col)->setVisible(false);
+                }
+
+                // ===== Fuente 10 global =====
+                $ws->getStyle("A1:J{$lastRow}")->getFont()->setSize(10);
             },
         ];
     }
