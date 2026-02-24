@@ -126,8 +126,7 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
 
     public function styles(Worksheet $sheet)
     {
-        // Ahora el header real está en la fila 1 (sin título arriba)
-        return [1 => ['font' => ['bold' => true]]];
+        return [];
     }
 
     /* ================= ESTILOS / FORMATEO ================= */
@@ -137,89 +136,82 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
             AfterSheet::class => function (AfterSheet $e) {
                 $ws = $e->sheet->getDelegate();
 
-                // Fuente base + alturas comprimidas
-                $ws->getParent()->getDefaultStyle()->getFont()->setSize(9);
-                $ws->getDefaultRowDimension()->setRowHeight(12.5);
+                $blue     = 'FF2874A6';
+                $footerBg = 'FFCEE7FF';
+                $white    = 'FFFFFFFF';
+                $black    = 'FF000000';
+                $gray     = 'FF808080';
+                $red      = 'FFF80000';
 
-                // === Sin fila de título ===
-                $headerRow    = 1;                           // encabezados en fila 1
-                $dataStartRow = 2;                           // datos desde fila 2
-                $lastRow      = $dataStartRow + max(0, $this->rowCount) - 1;
-                $lastCol      = 'J';                         // A..J
+                $ws->getDefaultRowDimension()->setRowHeight(14);
 
-                // THEAD (azul)
-                $ws->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->applyFromArray([
-                    'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+                // ===== Insertar fila de título =====
+                $ws->insertNewRowBefore(1, 1);
+
+                $monthLabel = \Carbon\Carbon::parse($this->monthDate)->startOfMonth()->locale('es')->translatedFormat('F Y');
+                $title = 'DEUDA MENSUAL - ' . mb_strtoupper($monthLabel);
+                $lastCol = 'J';
+                $ws->mergeCells("A1:{$lastCol}1");
+                $ws->setCellValue('A1', $title);
+                $ws->getStyle("A1:{$lastCol}1")->applyFromArray([
+                    'font'      => ['bold' => true, 'size' => 11, 'color' => ['argb' => $red]],
                     'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER, 'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER],
-                    'fill'      => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => '2874A6']],
+                    'borders'   => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN, 'color' => ['argb' => $black]]],
                 ]);
-                $ws->getRowDimension($headerRow)->setRowHeight(13.5);
+                $ws->getRowDimension(1)->setRowHeight(20);
 
-                // SIN sticky head (no freezePane)
+                // ===== Ocultar cuadrícula =====
+                $ws->setShowGridLines(false);
 
-                // Bordes + zebra
-                $ws->getStyle("A{$headerRow}:{$lastCol}" . max($headerRow, $lastRow))
-                    ->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN)
-                    ->getColor()->setRGB('0000');
+                // ===== Encabezado (fila 2) =====
+                $headerRow    = 2;
+                $dataStartRow = 3;
+                $lastRow      = $dataStartRow + max(0, $this->rowCount) - 1;
 
+                $ws->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->applyFromArray([
+                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['argb' => $white]],
+                    'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER, 'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER],
+                    'fill'      => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['argb' => $blue]],
+                    'borders'   => [
+                        'allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN, 'color' => ['argb' => $white]],
+                        'outline'    => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN, 'color' => ['argb' => $black]],
+                    ],
+                ]);
+                $ws->getRowDimension($headerRow)->setRowHeight(17);
+
+                // ===== Bordes datos =====
                 if ($lastRow >= $dataStartRow) {
-                    $cond = new \PhpOffice\PhpSpreadsheet\Style\Conditional();
-                    $cond->setConditionType(\PhpOffice\PhpSpreadsheet\Style\Conditional::CONDITION_EXPRESSION);
-                    $cond->setConditions(['MOD(ROW(),2)=0']);
-                    $cond->getStyle()->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('F9FAFB');
-                    $range = "A{$dataStartRow}:{$lastCol}{$lastRow}";
-                    $styles = $ws->getStyle($range)->getConditionalStyles();
-                    $styles[] = $cond;
-                    $ws->getStyle($range)->setConditionalStyles($styles);
-                }
+                    $ws->getStyle("A{$dataStartRow}:{$lastCol}{$lastRow}")->applyFromArray([
+                        'borders' => [
+                            'allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_DOTTED, 'color' => ['argb' => $gray]],
+                            'vertical'   => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,   'color' => ['argb' => $black]],
+                            'left'       => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,   'color' => ['argb' => $black]],
+                            'right'      => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,   'color' => ['argb' => $black]],
+                        ],
+                        'alignment' => ['vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER],
+                    ]);
 
-                // Anchos (D más ancho)
-                $set = fn($col,$w)=>$ws->getColumnDimension($col)->setWidth($w);
-                $set('A', 4.2);   // Item
-                $set('B', 10.0);  // Placa
-                $set('C', 4.8);   // Cond.
-                $set('D', 25.8);  // No trabajados (más ancho)
-                $set('E', 6.2);   // D. deuda
-                foreach (['F','G','H','I','J'] as $c) $set($c, 10.8); // Montos
+                    // Alineaciones
+                    $ws->getStyle("A{$dataStartRow}:C{$lastRow}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                    $ws->getStyle("D{$dataStartRow}:D{$lastRow}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT)->setWrapText(true);
+                    $ws->getStyle("E{$dataStartRow}:J{$lastRow}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
-                // Apretar texto: shrink en todo, wrap solo en D
-                foreach (range('A','J') as $c) {
-                    $ws->getStyle("{$c}{$dataStartRow}:{$c}" . max($dataStartRow, $lastRow))
-                        ->getAlignment()->setShrinkToFit(true);
-                }
-                if ($lastRow >= $dataStartRow) {
-                    $ws->getStyle("D{$dataStartRow}:D{$lastRow}")->getAlignment()->setWrapText(true);
-                }
-
-                // Todo CENTRADO
-                $ws->getStyle("A{$headerRow}:{$lastCol}" . max($headerRow, $lastRow))
-                    ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
-                    ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
-
-                /* RELLENAR VACÍOS EN MONTOS CON 0 (F..J) */
-                if ($lastRow >= $dataStartRow) {
+                    /* Rellenar vacíos con 0 en montos (F..J) */
                     foreach (range('F','J') as $col) {
                         for ($r = $dataStartRow; $r <= $lastRow; $r++) {
                             $cell = $ws->getCell("{$col}{$r}");
-                            $val  = $cell->getValue();
-                            if ($val === null || $val === '') {
-                                $cell->setValue(0);
-                            }
+                            if ($cell->getValue() === null || $cell->getValue() === '') $cell->setValue(0);
                         }
                     }
-                }
 
-                // Formato moneda compacta
-                if ($lastRow >= $dataStartRow) {
+                    // Formato moneda
                     foreach (['F','G','H','I','J'] as $c) {
                         $ws->getStyle("{$c}{$dataStartRow}:{$c}{$lastRow}")
                             ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
                     }
-                }
 
-                // Pintado RichText en D (X1 en azul #2874A6)
-                if ($lastRow >= $dataStartRow) {
-                    $blue = '2874A6';
+                    // RichText en D (días X1 en azul oscuro + negrita)
+                    $darkBlue = '1A3A6C';
                     for ($r = $dataStartRow; $r <= $lastRow; $r++) {
                         $item = (int) $ws->getCell("A{$r}")->getCalculatedValue();
                         $sets = $this->daysPerRow[$item] ?? null;
@@ -233,48 +225,62 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
                         $rt = new \PhpOffice\PhpSpreadsheet\RichText\RichText();
                         foreach ($union as $i => $day) {
                             $run = $rt->createTextRun((string)$day);
-                            if (in_array($day, $x1, true)) $run->getFont()->getColor()->setRGB($blue);
-                            if ($i < count($union)-1) $rt->createTextRun(',');
+                            if (in_array($day, $x1, true)) {
+                                $run->getFont()->getColor()->setRGB($darkBlue);
+                                $run->getFont()->setBold(true);
+                            }
+                            if ($i < count($union) - 1) $rt->createTextRun(',');
                         }
                         $ws->getCell("D{$r}")->setValue($rt);
                     }
                 }
 
-                // Footer celeste + totales
-                $totalRow = ($lastRow >= $dataStartRow) ? $lastRow + 1 : $headerRow + 1;
+                // ===== Fila TOTAL =====
+                $totalRow = ($lastRow >= $dataStartRow) ? $lastRow + 1 : $dataStartRow;
                 $ws->mergeCells("A{$totalRow}:E{$totalRow}");
-                $ws->setCellValue("A{$totalRow}", 'Total');
+                $ws->setCellValue("A{$totalRow}", 'TOTAL');
 
                 if ($lastRow >= $dataStartRow) {
-                    $ws->setCellValue("F{$totalRow}", "=SUM(F{$dataStartRow}:F{$lastRow})");
-                    $ws->setCellValue("G{$totalRow}", "=SUM(G{$dataStartRow}:G{$lastRow})");
-                    $ws->setCellValue("H{$totalRow}", "=SUM(H{$dataStartRow}:H{$lastRow})");
-                    $ws->setCellValue("I{$totalRow}", "=SUM(I{$dataStartRow}:I{$lastRow})");
-                    $ws->setCellValue("J{$totalRow}", "=SUM(J{$dataStartRow}:J{$lastRow})");
+                    foreach (['F','G','H','I','J'] as $c) {
+                        $ws->setCellValue("{$c}{$totalRow}", "=SUM({$c}{$dataStartRow}:{$c}{$lastRow})");
+                    }
                 } else {
                     foreach (['F','G','H','I','J'] as $c) $ws->setCellValue("{$c}{$totalRow}", 0);
                 }
 
                 $ws->getStyle("A{$totalRow}:{$lastCol}{$totalRow}")->applyFromArray([
-                    'font'      => ['bold' => true],
-                    'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER, 'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER],
-                    'fill'      => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => 'CEE7FF']],
+                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['argb' => $black]],
+                    'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT, 'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER],
+                    'fill'      => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['argb' => $footerBg]],
+                    'borders'   => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN, 'color' => ['argb' => $black]]],
                 ]);
-                $ws->getStyle("A{$totalRow}:{$lastCol}{$totalRow}")
-                    ->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN)
-                    ->getColor()->setRGB('0000');
-
                 foreach (['F','G','H','I','J'] as $c) {
-                    $ws->getStyle("{$c}{$totalRow}")
-                        ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
-                    $ws->getStyle("{$c}{$totalRow}")
-                        ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                    $ws->getStyle("{$c}{$totalRow}")->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
+                    $ws->getStyle("{$c}{$totalRow}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                }
+                $ws->getRowDimension($totalRow)->setRowHeight(17);
+
+                // ===== Anchos de columna =====
+                $ws->getColumnDimension('A')->setWidth(4.2);
+                $ws->getColumnDimension('B')->setWidth(10.0);
+                $ws->getColumnDimension('C')->setWidth(5.0);
+                $ws->getColumnDimension('D')->setWidth(26.0);
+                $ws->getColumnDimension('E')->setWidth(6.5);
+                foreach (['F','G','H','I','J'] as $c) $ws->getColumnDimension($c)->setWidth(10.8);
+
+                // ===== Ocultar columnas vacías (K en adelante) =====
+                foreach (range('K', 'Z') as $col) {
+                    $ws->getColumnDimension($col)->setVisible(false);
                 }
 
-                // Vista de impresión compacta
-                $ws->getPageSetup()->setFitToWidth(1)->setFitToHeight(0);
-                $m = $ws->getPageMargins();
-                $m->setTop(0.2)->setBottom(0.2)->setLeft(0.2)->setRight(0.2);
+                // ===== Fuente 10 global =====
+                $finalRow = (int) $ws->getHighestRow();
+                $ws->getStyle("A1:{$lastCol}{$finalRow}")->getFont()->setSize(10);
+                $ws->getStyle("A1:{$lastCol}{$finalRow}")->getAlignment()->setWrapText(false);
+                // Restaurar wrap en D para datos
+                if ($lastRow >= $dataStartRow) {
+                    $ws->getStyle("D{$dataStartRow}:D{$lastRow}")->getAlignment()->setWrapText(true);
+                }
             },
         ];
     }

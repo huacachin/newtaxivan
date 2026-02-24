@@ -315,7 +315,7 @@ class DeparturesStatsMonthlyExport implements FromArray, WithHeadings, WithStyle
                 foreach ([$footerS, $footerM] as $fr) {
                     $s->getStyle("A{$fr}:{$lastCol}{$fr}")->applyFromArray([
                         'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$footerFill]],
-                        'font' => ['bold'=>true,'color'=>['argb'=>$fontB],'size'=>10],
+                        'font' => ['bold'=>true,'color'=>['argb'=>$fontW],'size'=>10],
                         'borders' => [
                             'outline' => [
                                 'borderStyle'=>Border::BORDER_MEDIUM,

@@ -180,7 +180,7 @@ class PaymentsStatsExport implements FromArray, WithHeadings, WithEvents, WithTi
                 // ======= Pie (TOTAL GENERAL) en #CEE7FF =======
                 $sheet->getStyle("A{$footerExcelRow}:{$endCol}{$footerExcelRow}")->applyFromArray([
                     'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$footerBg]],
-                    'font' => ['bold'=>true,'color'=>['argb'=>$black]],
+                    'font' => ['bold'=>true,'color'=>['argb'=>$white]],
                     'borders' => ['outline'=>['borderStyle'=>Border::BORDER_THIN,'color'=>['argb'=>$borderC]]],
                 ]);
             },

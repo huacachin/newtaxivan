@@ -29,7 +29,7 @@ class GeneralReportExport implements FromArray, ShouldAutoSize, WithEvents, With
 {
     /** Colores */
     private const COLOR_TITLE = '2874A6'; // #2874A6
-    private const COLOR_FOOT  = 'CEE7FF'; // #CEE7FF
+    private const COLOR_FOOT  = 'CEE7FF'; // #2874A6
 
     /** Topes de ancho para mantener angosto */
     private const CAP_A = 6.0;   // ITEM
@@ -250,6 +250,7 @@ class GeneralReportExport implements FromArray, ShouldAutoSize, WithEvents, With
                     $sheet->getStyle("A{$r}:F{$r}")->getFill()->setFillType(Fill::FILL_SOLID)
                         ->getStartColor()->setRGB(self::COLOR_FOOT);
                     $sheet->getStyle("A{$r}:F{$r}")->getFont()->setBold(true);
+                    $sheet->getStyle("A{$r}:F{$r}")->getFont()->getColor()->setRGB('FFFFFF');
                 }
 
                 // Totales del mes — #CEE7FF
@@ -258,12 +259,14 @@ class GeneralReportExport implements FromArray, ShouldAutoSize, WithEvents, With
                         ->getFill()->setFillType(Fill::FILL_SOLID)
                         ->getStartColor()->setRGB(self::COLOR_FOOT);
                     $sheet->getStyle("A{$this->totalRow}:F{$this->totalRow}")->getFont()->setBold(true);
+                    $sheet->getStyle("A{$this->totalRow}:F{$this->totalRow}")->getFont()->getColor()->setRGB('FFFFFF');
                 }
                 if ($this->utilidadRow) {
                     $sheet->getStyle("A{$this->utilidadRow}:F{$this->utilidadRow}")
                         ->getFill()->setFillType(Fill::FILL_SOLID)
                         ->getStartColor()->setRGB(self::COLOR_FOOT);
                     $sheet->getStyle("A{$this->utilidadRow}:F{$this->utilidadRow}")->getFont()->setBold(true);
+                    $sheet->getStyle("A{$this->utilidadRow}:F{$this->utilidadRow}")->getFont()->getColor()->setRGB('FFFFFF');
                 }
 
                 // Bordes

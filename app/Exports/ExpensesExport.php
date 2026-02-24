@@ -130,7 +130,7 @@ class ExpensesExport implements
                 $ws = $e->sheet->getDelegate();
 
                 $BLUE   = 'FF2874A6';
-                $FOOT   = 'FFCEE7FF';
+                $FOOT   = 'CEE7FF';
                 $BORDER = '000000';
 
                 $ws->getParent()->getDefaultStyle()->getFont()->setSize(10);
@@ -219,7 +219,7 @@ class ExpensesExport implements
                 );
 
                 $ws->getStyle("A{$totalRow}:G{$totalRow}")->applyFromArray([
-                    'font'      => ['bold' => true, 'color' => ['rgb' => '000000']],
+                    'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
                     'alignment' => [
                         'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
                         'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,

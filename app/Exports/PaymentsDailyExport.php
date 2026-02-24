@@ -326,7 +326,7 @@ class PaymentsDailyExport implements FromArray, WithHeadings, WithEvents, WithTi
                 $footerRow = $lastDataRow; // última fila (totales)
                 $sheet->getStyle("A{$footerRow}:{$lastCol}{$footerRow}")
                     ->applyFromArray([
-                        'font'   => ['bold' => true, 'color' => ['argb' => $fontBlack]],
+                        'font'   => ['bold' => true, 'color' => ['argb' => $fontWhite]],
                         'fill'   => ['fillType' => 'solid', 'startColor' => ['argb' => $footerFill]],
                         'borders'=> ['outline' => ['borderStyle'=>\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM, 'color'=>['argb'=>$blueDark]]],
                     ]);

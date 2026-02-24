@@ -285,7 +285,7 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
                     // Estilo de pie (celeste + borde) y formato entero
                     $s->getStyle("A{$fr}:{$lastCol}{$fr}")->applyFromArray([
                         'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$footerFill]],
-                        'font' => ['bold'=>true, 'color'=>['argb'=>$fontB], 'size'=>10],
+                        'font' => ['bold'=>true, 'color'=>['argb'=>$fontW], 'size'=>10],
                         'borders' => ['outline' => ['borderStyle'=>Border::BORDER_THIN, 'color'=>['argb'=>$borderC]]],
                         'alignment' => ['vertical'=>Alignment::VERTICAL_CENTER],
                     ]);

@@ -611,7 +611,7 @@ class CajaEstadisticaExport implements WithEvents
                 'fillType'   => Fill::FILL_SOLID,
                 'startColor' => ['rgb' => self::BLUE_LIGHT],
             ],
-            'font' => ['bold' => true],
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
             'alignment' => [
                 'horizontal' => Alignment::HORIZONTAL_CENTER,
                 'vertical'   => Alignment::VERTICAL_CENTER,

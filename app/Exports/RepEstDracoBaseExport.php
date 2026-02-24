@@ -558,7 +558,7 @@ class RepEstDracoBaseExport implements FromArray, ShouldAutoSize, WithHeadings, 
                     // Pie TOTAL GENERAL (DRACO + BASE)
                     if ($a === 'TOTAL GENERAL (DRACO + BASE)') {
                         $ws->getStyle("A{$r}:{$lastCol}{$r}")->applyFromArray([
-                            'font' => ['bold' => true],
+                            'font' => ['bold' => true, 'color' => ['argb' => $WHITE]],
                             'fill' => [
                                 'fillType'   => Fill::FILL_SOLID,
                                 'startColor' => ['argb' => $FOOT],
@@ -584,7 +584,7 @@ class RepEstDracoBaseExport implements FromArray, ShouldAutoSize, WithHeadings, 
                         $ws->setCellValue("A{$r}", 'TOTAL');
 
                         $ws->getStyle("A{$r}:B{$r}")->applyFromArray([
-                            'font' => ['bold' => true],
+                            'font' => ['bold' => true, 'color' => ['argb' => $WHITE]],
                             'fill' => [
                                 'fillType'   => Fill::FILL_SOLID,
                                 'startColor' => ['argb' => $FOOT],

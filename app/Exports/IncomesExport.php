@@ -121,7 +121,7 @@ class IncomesExport implements
 
                 // Paleta
                 $BLUE   = 'FF2874A6';
-                $FOOT   = 'FFCEE7FF';
+                $FOOT   = 'CEE7FF';
                 $BORDER = '000000';
 
                 // Fuente base y altura compacta (sin reducción automática del texto)
@@ -215,7 +215,7 @@ class IncomesExport implements
                 );
 
                 $ws->getStyle("A{$totalRow}:F{$totalRow}")->applyFromArray([
-                    'font'      => ['bold' => true, 'color' => ['rgb' => '000000']],
+                    'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
                     'alignment' => [
                         'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT,
                         'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,

@@ -201,7 +201,7 @@ class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, With
                         ],
                         'font' => [
                             'bold'=>true,
-                            'color'=>['argb'=>$red],
+                            'color'=>['argb'=>$white],
                         ],
                         'borders' => [
                             'outline' => [

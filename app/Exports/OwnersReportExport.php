@@ -155,7 +155,7 @@ class OwnersReportExport implements
                 $ws->setCellValue("A{$foot1}", 'TOTAL ACTIVOS');
                 $ws->setCellValue("F{$foot1}", $countActive);
                 $ws->getStyle("A{$foot1}:F{$foot1}")->applyFromArray([
-                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['argb' => $black]],
+                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['argb' => $white]],
                     'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $footerBg]],
                     'alignment' => ['vertical' => Alignment::VERTICAL_CENTER, 'horizontal' => Alignment::HORIZONTAL_RIGHT],
                     'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]]],

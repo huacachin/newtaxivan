@@ -176,7 +176,7 @@ class UsersReportExport implements
                         'fillType'   => Fill::FILL_SOLID,
                         'startColor' => ['argb' => $footerBg],
                     ],
-                    'font'    => ['bold' => true, 'size' => 10],
+                    'font'    => ['bold' => true, 'size' => 10, 'color' => ['argb' => $white]],
                     'borders' => [
                         'outline' => [
                             'borderStyle' => Border::BORDER_MEDIUM,

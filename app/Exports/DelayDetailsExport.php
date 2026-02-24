@@ -231,9 +231,9 @@ class DelayDetailsExport implements FromArray, ShouldAutoSize, WithHeadings, Wit
                 $ws->setCellValue("E{$totalRow}", $lastRow >= $dataStartRow ? "=SUM(E{$dataStartRow}:E{$lastRow})" : 0);
 
                 $ws->getStyle("A{$totalRow}:{$lastColLetter}{$totalRow}")->applyFromArray([
-                    'font'      => ['bold' => true],
+                    'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
                     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
-                    'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'CEE7FF']],
+                    'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '2874A6']],
                 ]);
                 $ws->getStyle("A{$totalRow}:{$lastColLetter}{$totalRow}")
                     ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)

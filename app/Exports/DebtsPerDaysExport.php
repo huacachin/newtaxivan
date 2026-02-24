@@ -385,7 +385,7 @@ class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTi
 
                     // Estilo pie
                     $ws->getStyle("A{$totalRow}:{$lastColLetter}{$totalRow}")->applyFromArray([
-                        'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>'FF000000']],
+                        'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>'FFFFFFFF']],
                         'alignment' => ['horizontal'=>Alignment::HORIZONTAL_RIGHT,'vertical'=>Alignment::VERTICAL_CENTER],
                         'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$footerBg]],
                     ]);
