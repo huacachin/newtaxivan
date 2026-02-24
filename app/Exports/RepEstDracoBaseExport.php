@@ -6,7 +6,6 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Maatwebsite\Excel\Concerns\FromArray;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithStyles;
@@ -17,7 +16,7 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
-class RepEstDracoBaseExport implements FromArray, ShouldAutoSize, WithHeadings, WithEvents, WithStyles, WithTitle
+class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, WithStyles, WithTitle
 {
     public function __construct(protected int $year) {}
 
@@ -302,14 +301,18 @@ class RepEstDracoBaseExport implements FromArray, ShouldAutoSize, WithHeadings, 
             AfterSheet::class => function (AfterSheet $e) {
                 $ws = $e->sheet->getDelegate();
 
-                $BLUE = 'FF2874A6';
-                $FOOT = 'FFCEE7FF';
+                $BLUE  = 'FF2874A6';
+                $FOOT  = 'FFCEE7FF';
                 $WHITE = 'FFFFFFFF';
-                $BORD = '000000';
+                $black = 'FF000000';
+                $gray  = 'FF808080';
 
                 // Fuente base y alto compacto
                 $ws->getParent()->getDefaultStyle()->getFont()->setSize(10);
                 $ws->getDefaultRowDimension()->setRowHeight(13);
+
+                // ===== Ocultar cuadrícula =====
+                $ws->setShowGridLines(false);
 
                 // Insertar 1 fila para título
                 $ws->insertNewRowBefore(1, 1);
@@ -318,57 +321,61 @@ class RepEstDracoBaseExport implements FromArray, ShouldAutoSize, WithHeadings, 
                 $lastRow      = $dataStartRow + $this->summaryLastRow - 1;
                 $lastCol      = 'O'; // A..O (15 columnas)
 
-                // Título
+                // ===== Título =====
                 $ws->setCellValue('A1', "REPORTE ESTADÍSTICO DRACO {$this->year}");
                 $ws->mergeCells("A1:{$lastCol}1");
-                $ws->getRowDimension(1)->setRowHeight(18);
-                $ws->getStyle('A1')->applyFromArray([
-                    'font'      => ['bold' => true, 'size' => 11, 'color' => ['argb' => 'F80000']],
-                    'alignment' => [
-                        'horizontal' => Alignment::HORIZONTAL_CENTER,
-                        'vertical'   => Alignment::VERTICAL_CENTER,
-                    ],
+                $ws->getRowDimension(1)->setRowHeight(20);
+                $ws->getStyle("A1:{$lastCol}1")->applyFromArray([
+                    'font'      => ['bold' => true, 'size' => 11, 'color' => ['argb' => 'FFF80000']],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                    'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]]],
                 ]);
 
-                // Encabezado azul
+                // ===== Encabezado azul con bordes blancos + outline negro =====
                 $ws->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->applyFromArray([
-                    'font'      => ['bold' => true, 'color' => ['argb' => $WHITE]],
-                    'alignment' => [
-                        'horizontal' => Alignment::HORIZONTAL_CENTER,
-                        'vertical'   => Alignment::VERTICAL_CENTER,
-                    ],
-                    'fill'      => [
-                        'fillType'   => Fill::FILL_SOLID,
-                        'startColor' => ['argb' => $BLUE],
+                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['argb' => $WHITE]],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                    'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $BLUE]],
+                    'borders'   => [
+                        'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $WHITE]],
+                        'outline'    => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]],
                     ],
                 ]);
-                $ws->getRowDimension($headerRow)->setRowHeight(16);
+                $ws->getRowDimension($headerRow)->setRowHeight(17);
 
                 // Congelar bajo encabezado
                 $ws->freezePane("A{$dataStartRow}");
 
-                // ===== Anchos “fijos” (desactivar autosize) =====
+                // ===== Anchos fijos =====
                 foreach (range('A', 'O') as $c) {
                     $ws->getColumnDimension($c)->setAutoSize(false);
                 }
-
-                // A/B (texto)
-                $ws->getColumnDimension('A')->setWidth(18.0); // CONTROLADOR
-                $ws->getColumnDimension('B')->setWidth(18.0); // PARADERO
-
-                // Meses C..N
+                $ws->getColumnDimension('A')->setWidth(18.0);
+                $ws->getColumnDimension('B')->setWidth(18.0);
                 foreach (range('C', 'N') as $c) {
                     $ws->getColumnDimension($c)->setWidth(8.2);
                 }
-
-                // TOTAL (O)
                 $ws->getColumnDimension('O')->setWidth(10.5);
 
-                // ===== Bordes finos
-                $ws->getStyle("A{$headerRow}:{$lastCol}{$lastRow}")
-                    ->getBorders()->getAllBorders()
-                    ->setBorderStyle(Border::BORDER_THIN)
-                    ->getColor()->setARGB($BORD);
+                // ===== Ocultar columnas vacías (P en adelante) =====
+                foreach (range('P', 'Z') as $c) {
+                    $ws->getColumnDimension($c)->setVisible(false);
+                }
+
+                // ===== Bordes datos: dotted+solid para área numérica (C-O), thin para A-B =====
+                if ($lastRow >= $dataStartRow) {
+                    $ws->getStyle("A{$dataStartRow}:B{$lastRow}")->applyFromArray([
+                        'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]]],
+                    ]);
+                    $ws->getStyle("C{$dataStartRow}:O{$lastRow}")->applyFromArray([
+                        'borders' => [
+                            'allBorders' => ['borderStyle' => Border::BORDER_DOTTED, 'color' => ['argb' => $gray]],
+                            'vertical'   => ['borderStyle' => Border::BORDER_THIN,   'color' => ['argb' => $black]],
+                            'left'       => ['borderStyle' => Border::BORDER_THIN,   'color' => ['argb' => $black]],
+                            'right'      => ['borderStyle' => Border::BORDER_THIN,   'color' => ['argb' => $black]],
+                        ],
+                    ]);
+                }
 
                 // ===== Alineaciones básicas
                 if ($lastRow >= $dataStartRow) {
@@ -558,11 +565,9 @@ class RepEstDracoBaseExport implements FromArray, ShouldAutoSize, WithHeadings, 
                     // Pie TOTAL GENERAL (DRACO + BASE)
                     if ($a === 'TOTAL GENERAL (DRACO + BASE)') {
                         $ws->getStyle("A{$r}:{$lastCol}{$r}")->applyFromArray([
-                            'font' => ['bold' => true, 'color' => ['argb' => $WHITE]],
-                            'fill' => [
-                                'fillType'   => Fill::FILL_SOLID,
-                                'startColor' => ['argb' => $FOOT],
-                            ],
+                            'font'    => ['bold' => true, 'size' => 10, 'color' => ['argb' => $black]],
+                            'fill'    => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $FOOT]],
+                            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]]],
                         ]);
 
                         $ws->getStyle("A{$r}:B{$r}")
@@ -584,11 +589,9 @@ class RepEstDracoBaseExport implements FromArray, ShouldAutoSize, WithHeadings, 
                         $ws->setCellValue("A{$r}", 'TOTAL');
 
                         $ws->getStyle("A{$r}:B{$r}")->applyFromArray([
-                            'font' => ['bold' => true, 'color' => ['argb' => $WHITE]],
-                            'fill' => [
-                                'fillType'   => Fill::FILL_SOLID,
-                                'startColor' => ['argb' => $FOOT],
-                            ],
+                            'font'    => ['bold' => true, 'size' => 10, 'color' => ['argb' => $black]],
+                            'fill'    => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $FOOT]],
+                            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]]],
                         ]);
 
                         $ws->getStyle("B{$r}")

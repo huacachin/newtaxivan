@@ -12,20 +12,18 @@ use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromArray;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
-use PhpOffice\PhpSpreadsheet\Shared\Font as SharedFont;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class GeneralReportExport implements FromArray, ShouldAutoSize, WithEvents, WithColumnFormatting, WithTitle
+class GeneralReportExport implements FromArray, WithEvents, WithColumnFormatting, WithTitle
 {
     /** Colores */
     private const COLOR_TITLE = '2874A6'; // #2874A6
@@ -215,77 +213,104 @@ class GeneralReportExport implements FromArray, ShouldAutoSize, WithEvents, With
     {
         return [
             AfterSheet::class => function (AfterSheet $event) {
-
-                // AutoSize exacto (si está disponible)
-                if (method_exists(SharedFont::class, 'setAutoSizeMethod')) {
-                    SharedFont::setAutoSizeMethod(SharedFont::AUTOSIZE_METHOD_EXACT);
-                }
-
-                /** @var Worksheet $sheet */
                 $sheet = $event->sheet->getDelegate();
 
-                // Título (A1:F1)
+                $blue  = 'FF2874A6';
+                $foot  = 'FF' . self::COLOR_FOOT;
+                $white = 'FFFFFFFF';
+                $black = 'FF000000';
+                $gray  = 'FF808080';
+                $red   = 'FFF80000';
+
+                // ===== Ocultar cuadrícula =====
+                $sheet->setShowGridLines(false);
+
+                // ===== Título (fila 1) — ya viene del array() =====
                 $sheet->mergeCells('A1:F1');
-                $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
-                $sheet->getStyle('A1')->applyFromArray([
-                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['rgb' => 'F80000']],
-                    'alignment' => [
-                        'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
-                        'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                $sheet->getStyle('A1:F1')->applyFromArray([
+                    'font'      => ['bold' => true, 'size' => 11, 'color' => ['argb' => $red]],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                    'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]]],
+                ]);
+                $sheet->getRowDimension(1)->setRowHeight(20);
+
+                // ===== Encabezado (fila 2) — azul con bordes blancos internos + outline negro =====
+                $sheet->getStyle('A2:F2')->applyFromArray([
+                    'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $blue]],
+                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['argb' => $white]],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                    'borders'   => [
+                        'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $white]],
+                        'outline'    => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]],
                     ],
                 ]);
+                $sheet->getRowDimension(2)->setRowHeight(17);
 
-                // Encabezado (fila 2) — #2874A6
-                $sheet->getStyle('A2:F2')->getFill()->setFillType(Fill::FILL_SOLID)
-                    ->getStartColor()->setRGB(self::COLOR_TITLE);
-                $sheet->getStyle('A2:F2')->getFont()->getColor()->setRGB('FFFFFF');
-                $sheet->getStyle('A2:F2')->getFont()->setBold(true);
-                $sheet->getStyle('A2:F2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                // ===== Bordes datos (A3:F{lastRow}) =====
+                if ($this->lastRow >= 3) {
+                    $sheet->getStyle("A3:F{$this->lastRow}")->applyFromArray([
+                        'borders' => [
+                            'allBorders' => ['borderStyle' => Border::BORDER_DOTTED, 'color' => ['argb' => $gray]],
+                            'vertical'   => ['borderStyle' => Border::BORDER_THIN,   'color' => ['argb' => $black]],
+                            'left'       => ['borderStyle' => Border::BORDER_THIN,   'color' => ['argb' => $black]],
+                            'right'      => ['borderStyle' => Border::BORDER_THIN,   'color' => ['argb' => $black]],
+                        ],
+                        'alignment' => ['vertical' => Alignment::VERTICAL_CENTER],
+                    ]);
+                }
 
-                // Congelar desde fila 3
-                //$sheet->freezePane('A3');
+                // ===== Colores de texto: Ingreso=azul, Egreso=rojo =====
+                if ($this->lastRow >= 3) {
+                    $sheet->getStyle("E3:E{$this->lastRow}")->getFont()->getColor()->setARGB('FF0000FF');
+                    $sheet->getStyle("F3:F{$this->lastRow}")->getFont()->getColor()->setARGB('FFFF0000');
+                }
 
-                // Footers diarios — #CEE7FF
+                // ===== Footers diarios — celeste; C=RichText rojo/negro, D=azul =====
                 foreach ($this->dailyFooterRows as $r) {
-                    $sheet->getStyle("A{$r}:F{$r}")->getFill()->setFillType(Fill::FILL_SOLID)
-                        ->getStartColor()->setRGB(self::COLOR_FOOT);
-                    $sheet->getStyle("A{$r}:F{$r}")->getFont()->setBold(true);
-                    $sheet->getStyle("A{$r}:F{$r}")->getFont()->getColor()->setRGB('FFFFFF');
+                    $sheet->getStyle("A{$r}:F{$r}")->applyFromArray([
+                        'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $foot]],
+                        'font'      => ['bold' => true, 'size' => 10],
+                        'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]]],
+                        'alignment' => ['vertical' => Alignment::VERTICAL_CENTER],
+                    ]);
+                    // A y B quedan negros (están vacíos de todas formas)
+                    $sheet->getStyle("A{$r}:B{$r}")->getFont()->getColor()->setARGB($black);
+                    // D (saldo acumulado) en azul
+                    $sheet->getStyle("D{$r}")->getFont()->getColor()->setARGB('FF0000FF');
+                    // C: RichText — "SALDO " negro + "FINAL–INICIAL" rojo
+                    $rt = new \PhpOffice\PhpSpreadsheet\RichText\RichText();
+                    $runSaldo = $rt->createTextRun('SALDO ');
+                    $runSaldo->getFont()->getColor()->setARGB($black);
+                    $runFinal = $rt->createTextRun('FINAL–INICIAL');
+                    $runFinal->getFont()->getColor()->setARGB('FFFF0000');
+                    $runFinal->getFont()->setBold(true);
+                    $sheet->getCell("C{$r}")->setValue($rt);
                 }
 
-                // Totales del mes — #CEE7FF
-                if ($this->totalRow) {
-                    $sheet->getStyle("A{$this->totalRow}:F{$this->totalRow}")
-                        ->getFill()->setFillType(Fill::FILL_SOLID)
-                        ->getStartColor()->setRGB(self::COLOR_FOOT);
-                    $sheet->getStyle("A{$this->totalRow}:F{$this->totalRow}")->getFont()->setBold(true);
-                    $sheet->getStyle("A{$this->totalRow}:F{$this->totalRow}")->getFont()->getColor()->setRGB('FFFFFF');
-                }
-                if ($this->utilidadRow) {
-                    $sheet->getStyle("A{$this->utilidadRow}:F{$this->utilidadRow}")
-                        ->getFill()->setFillType(Fill::FILL_SOLID)
-                        ->getStartColor()->setRGB(self::COLOR_FOOT);
-                    $sheet->getStyle("A{$this->utilidadRow}:F{$this->utilidadRow}")->getFont()->setBold(true);
-                    $sheet->getStyle("A{$this->utilidadRow}:F{$this->utilidadRow}")->getFont()->getColor()->setRGB('FFFFFF');
+                // ===== Total General + Utilidad =====
+                foreach (array_filter([$this->totalRow, $this->utilidadRow]) as $r) {
+                    $sheet->getStyle("A{$r}:F{$r}")->applyFromArray([
+                        'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $foot]],
+                        'font'      => ['bold' => true, 'size' => 10],
+                        'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]]],
+                        'alignment' => ['vertical' => Alignment::VERTICAL_CENTER],
+                    ]);
+                    $sheet->getStyle("A{$r}:D{$r}")->getFont()->getColor()->setARGB($black);
                 }
 
-                // Bordes
-                $sheet->getStyle("A1:F{$this->lastRow}")
-                    ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-
-                // Alineaciones
-                $sheet->getStyle("E3:F{$this->lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-                $sheet->getStyle("C3:D{$this->lastRow}")->getAlignment()->setWrapText(true);
-
-                // AutoSize estándar
-                $highestColumn = $sheet->getHighestColumn();
-                $lastColIndex  = Coordinate::columnIndexFromString($highestColumn);
-                for ($col = 1; $col <= $lastColIndex; $col++) {
-                    $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($col))->setAutoSize(true);
+                // ===== Alineaciones =====
+                if ($this->lastRow >= 3) {
+                    $sheet->getStyle("E3:F{$this->lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+                    $sheet->getStyle("C3:D{$this->lastRow}")->getAlignment()->setWrapText(true);
                 }
 
-                // Fallback con topes para mantener angosto
+                // ===== Anchos =====
                 $this->capNarrowWidths($sheet);
+
+                // ===== Ocultar columnas vacías (G en adelante) =====
+                foreach (range('G', 'Z') as $col) {
+                    $sheet->getColumnDimension($col)->setVisible(false);
+                }
             },
         ];
     }
