@@ -12,19 +12,7 @@
 </head>
 
 <body text="small-text">
-<!-- Loader start-->
 <div class="app-wrapper">
-
-    <div class="loader-wrapper">
-        <div class="app-loader">
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
-    </div>
-    <!-- Loader end-->
 
     <!-- Menu Navigation start -->
 @include('layout.sidebar')

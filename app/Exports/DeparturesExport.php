@@ -116,13 +116,13 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithColumnWidths, Wi
                 $n1 = max(1, $this->countExisting);
                 $n2 = max(1, $this->countSupport);
 
-                // ===== Mapeo de filas (sin fila de título) =====
-                // Sección 1
-                $rSec1Hdr1  = 1;               // encabezado fila 1
-                $rSec1Hdr2  = 2;               // encabezado fila 2
-                $rSec1Body1 = 3;               // primer body
-                $rSec1BodyN = 2 + $n1;         // último body
-                $rSec1Total = 3 + $n1;         // TOTAL sección 1
+                // ===== Mapeo de filas =====
+                $rTitle     = 1;               // LISTADO GENERAL DE SALIDA
+                $rSec1Hdr1  = 2;               // encabezado fila 1
+                $rSec1Hdr2  = 3;               // encabezado fila 2
+                $rSec1Body1 = 4;               // primer body
+                $rSec1BodyN = 3 + $n1;         // último body
+                $rSec1Total = 4 + $n1;         // TOTAL sección 1
 
                 // Sección 2
                 $rSec2Title = $rSec1Total + 1; // "V.APOYO"
@@ -136,8 +136,32 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithColumnWidths, Wi
                 $rGrand  = $rSec2Total + 1;
                 $lastRow = $rGrand;
 
+                // ===== Ocultar cuadrícula fuera de la tabla =====
+                $s->setShowGridLines(false);
+
                 // ===== Altura base =====
                 $s->getDefaultRowDimension()->setRowHeight(14);
+
+                // ===== Título fila 1 =====
+                $s->mergeCells("A{$rTitle}:M{$rTitle}");
+                $s->getStyle("A{$rTitle}:M{$rTitle}")->applyFromArray([
+                    'font' => [
+                        'bold'  => true,
+                        'color' => ['argb' => $red],
+                        'size'  => 11,
+                    ],
+                    'alignment' => [
+                        'horizontal' => Alignment::HORIZONTAL_CENTER,
+                        'vertical'   => Alignment::VERTICAL_CENTER,
+                    ],
+                    'borders' => [
+                        'allBorders' => [
+                            'borderStyle' => Border::BORDER_THIN,
+                            'color'       => ['argb' => $black],
+                        ],
+                    ],
+                ]);
+                $s->getRowDimension($rTitle)->setRowHeight(20);
 
                 // ===== Encabezados azules (sección 1 y 2) =====
                 foreach ([[$rSec1Hdr1, $rSec1Hdr2], [$rSec2Hdr1, $rSec2Hdr2]] as [$h1, $h2]) {
@@ -286,6 +310,11 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithColumnWidths, Wi
 
                 // ===== Fuente 10 global =====
                 $s->getStyle("A1:M{$lastRow}")->getFont()->setSize(10);
+
+                // ===== Ocultar columnas vacías más allá de la tabla (N en adelante) =====
+                foreach (range('N', 'Z') as $col) {
+                    $s->getColumnDimension($col)->setVisible(false);
+                }
             },
         ];
     }

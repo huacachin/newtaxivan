@@ -9,6 +9,14 @@
 
 <table style="border-collapse:collapse;font-size:10px;">
 
+    {{-- Título --}}
+    <tr>
+        <td colspan="13" align="center"
+            style="font-weight:bold;color:#F80000;font-size:11px;">
+            LISTADO GENERAL DE SALIDA
+        </td>
+    </tr>
+
     {{-- ================== SECCIÓN 1: VEHÍCULOS REGISTRADOS ================== --}}
 
     {{-- Encabezado fila 1 --}}
