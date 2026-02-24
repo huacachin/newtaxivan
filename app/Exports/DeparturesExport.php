@@ -97,7 +97,7 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithColumnWidths, Wi
         return mb_substr('SALIDAS ' . $dateLabel, 0, 31);
     }
 
-    /* ========= Colores y estilos (sin merges) ========= */
+    /* ========= Colores y estilos ========= */
     public function registerEvents(): array
     {
         return [
@@ -108,49 +108,38 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithColumnWidths, Wi
                 $blueDark   = 'FF2874A6';
                 $footerFill = 'FFCEE7FF';
                 $white      = 'FFFFFFFF';
-                $red        = 'F80000';
+                $red        = 'FFF80000';
                 $black      = 'FF000000';
-                $borderSoft = '000000'; // gris suave para bordes
+                $gray       = 'FF808080';
 
-                // n1/n2: cantidad de filas de cuerpo por sección (mínimo 1 por "Sin datos")
+                // n1/n2: filas de cuerpo por sección (mínimo 1 para la fila "Sin datos")
                 $n1 = max(1, $this->countExisting);
                 $n2 = max(1, $this->countSupport);
 
-                // ===== Mapeo de filas según el Blade =====
-                // Row 1: título
+                // ===== Mapeo de filas (sin fila de título) =====
                 // Sección 1
-                $rSec1Hdr1  = 2;                  // header 1
-                $rSec1Hdr2  = 3;                  // header 2
-                $rSec1Body1 = 4;                  // primer body
-                $rSec1BodyN = 3 + $n1;            // 4 + n1 - 1
-                $rSec1Total = 4 + $n1;            // fila TOTAL sección 1
+                $rSec1Hdr1  = 1;               // encabezado fila 1
+                $rSec1Hdr2  = 2;               // encabezado fila 2
+                $rSec1Body1 = 3;               // primer body
+                $rSec1BodyN = 2 + $n1;         // último body
+                $rSec1Total = 3 + $n1;         // TOTAL sección 1
 
                 // Sección 2
-                $rSec2Title = $rSec1Total + 1;    // "V.APOYO"
-                $rSec2Hdr1  = $rSec2Title + 1;    // header 1
-                $rSec2Hdr2  = $rSec2Title + 2;    // header 2
-                $rSec2Body1 = $rSec2Hdr2 + 1;     // primer body
+                $rSec2Title = $rSec1Total + 1; // "V.APOYO"
+                $rSec2Hdr1  = $rSec2Title + 1;
+                $rSec2Hdr2  = $rSec2Title + 2;
+                $rSec2Body1 = $rSec2Hdr2  + 1;
                 $rSec2BodyN = $rSec2Body1 + $n2 - 1;
-                $rSec2Total = $rSec2BodyN + 1;    // TOTAL sección 2
+                $rSec2Total = $rSec2BodyN + 1;
 
-                // TOTAL GENERAL
-                $rGrand     = $rSec2Total + 1;
-                $lastRow    = $rGrand;
+                // Total general
+                $rGrand  = $rSec2Total + 1;
+                $lastRow = $rGrand;
 
-                // ===== Título (fila 1) =====
-                $s->getStyle('A1:M1')->applyFromArray([
-                    'font' => [
-                        'bold' => true,
-                        'color' => ['argb' => $red],
-                        'size' => 10,
-                    ],
-                    'alignment' => [
-                        'horizontal' => Alignment::HORIZONTAL_CENTER,
-                        'vertical'   => Alignment::VERTICAL_CENTER,
-                    ],
-                ]);
+                // ===== Altura base =====
+                $s->getDefaultRowDimension()->setRowHeight(14);
 
-                // ===== Encabezados (sección 1 y 2) =====
+                // ===== Encabezados azules (sección 1 y 2) =====
                 foreach ([[$rSec1Hdr1, $rSec1Hdr2], [$rSec2Hdr1, $rSec2Hdr2]] as [$h1, $h2]) {
                     $s->getStyle("A{$h1}:M{$h2}")->applyFromArray([
                         'fill' => [
@@ -167,6 +156,16 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithColumnWidths, Wi
                             'vertical'   => Alignment::VERTICAL_CENTER,
                             'wrapText'   => true,
                         ],
+                        'borders' => [
+                            'allBorders' => [
+                                'borderStyle' => Border::BORDER_THIN,
+                                'color'       => ['argb' => $white],
+                            ],
+                            'outline' => [
+                                'borderStyle' => Border::BORDER_THIN,
+                                'color'       => ['argb' => $black],
+                            ],
+                        ],
                     ]);
                     $s->getRowDimension($h1)->setRowHeight(18);
                     $s->getRowDimension($h2)->setRowHeight(16);
@@ -175,24 +174,79 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithColumnWidths, Wi
                 // ===== Título V.APOYO =====
                 $s->getStyle("A{$rSec2Title}:M{$rSec2Title}")->applyFromArray([
                     'font' => [
-                        'bold' => true,
-                        'size' => 10,
+                        'bold'  => true,
+                        'size'  => 10,
                         'color' => ['argb' => $red],
                     ],
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
                         'vertical'   => Alignment::VERTICAL_CENTER,
                     ],
+                    'borders' => [
+                        'allBorders' => [
+                            'borderStyle' => Border::BORDER_THIN,
+                            'color'       => ['argb' => $black],
+                        ],
+                    ],
                 ]);
 
-                // ===== Cuerpo de V.APOYO en rojo =====
+                // ===== Cuerpo sección 1: bordes punteados horizontal, sólidos vertical =====
+                $s->getStyle("A{$rSec1Body1}:M{$rSec1BodyN}")->applyFromArray([
+                    'borders' => [
+                        'allBorders' => [
+                            'borderStyle' => Border::BORDER_DOTTED,
+                            'color'       => ['argb' => $gray],
+                        ],
+                        'vertical' => [
+                            'borderStyle' => Border::BORDER_THIN,
+                            'color'       => ['argb' => $black],
+                        ],
+                        'left' => [
+                            'borderStyle' => Border::BORDER_THIN,
+                            'color'       => ['argb' => $black],
+                        ],
+                        'right' => [
+                            'borderStyle' => Border::BORDER_THIN,
+                            'color'       => ['argb' => $black],
+                        ],
+                    ],
+                    'alignment' => [
+                        'vertical' => Alignment::VERTICAL_CENTER,
+                    ],
+                ]);
+
+                // ===== Cuerpo sección 2: ídem + texto rojo =====
+                $s->getStyle("A{$rSec2Body1}:M{$rSec2BodyN}")->applyFromArray([
+                    'borders' => [
+                        'allBorders' => [
+                            'borderStyle' => Border::BORDER_DOTTED,
+                            'color'       => ['argb' => $gray],
+                        ],
+                        'vertical' => [
+                            'borderStyle' => Border::BORDER_THIN,
+                            'color'       => ['argb' => $black],
+                        ],
+                        'left' => [
+                            'borderStyle' => Border::BORDER_THIN,
+                            'color'       => ['argb' => $black],
+                        ],
+                        'right' => [
+                            'borderStyle' => Border::BORDER_THIN,
+                            'color'       => ['argb' => $black],
+                        ],
+                    ],
+                    'alignment' => [
+                        'vertical' => Alignment::VERTICAL_CENTER,
+                    ],
+                ]);
+
                 if ($this->countSupport > 0) {
                     $s->getStyle("A{$rSec2Body1}:M{$rSec2BodyN}")
                         ->getFont()->getColor()->setARGB($red);
                 }
 
-                // ===== Totales (sección 1, sección 2) =====
-                foreach ([$rSec1Total, $rSec2Total] as $ft) {
+                // ===== Totales y total general =====
+                foreach ([$rSec1Total, $rSec2Total, $rGrand] as $ft) {
                     $s->getStyle("A{$ft}:M{$ft}")->applyFromArray([
                         'fill' => [
                             'fillType'   => Fill::FILL_SOLID,
@@ -207,58 +261,31 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithColumnWidths, Wi
                             'horizontal' => Alignment::HORIZONTAL_CENTER,
                             'vertical'   => Alignment::VERTICAL_CENTER,
                         ],
+                        'borders' => [
+                            'allBorders' => [
+                                'borderStyle' => Border::BORDER_THIN,
+                                'color'       => ['argb' => $black],
+                            ],
+                        ],
                     ]);
                 }
 
-                // ===== TOTAL GENERAL =====
-                $s->getStyle("A{$rGrand}:M{$rGrand}")->applyFromArray([
-                    'fill' => [
-                        'fillType'   => Fill::FILL_SOLID,
-                        'startColor' => ['argb' => $footerFill],
-                    ],
-                    'font' => [
-                        'bold'  => true,
-                        'color' => ['argb' => $black],
-                        'size'  => 10,
-                    ],
-                    'alignment' => [
-                        'horizontal' => Alignment::HORIZONTAL_CENTER,
-                        'vertical'   => Alignment::VERTICAL_CENTER,
-                    ],
-                ]);
-
-                // ===== Números a la derecha (H..M) =====
+                // ===== Números a la derecha en columnas H..M =====
                 foreach (['H', 'I', 'J', 'K', 'L', 'M'] as $col) {
-                    // sección 1: body + total
-                    $s->getStyle("{$col}{$rSec1Body1}:{$col}{$rSec1Total}")
+                    $s->getStyle("{$col}{$rSec1Body1}:{$col}{$rSec1BodyN}")
                         ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-
-                    // sección 2: body + total
-                    $s->getStyle("{$col}{$rSec2Body1}:{$col}{$rSec2Total}")
+                    $s->getStyle("{$col}{$rSec1Total}")
                         ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-
-                    // total general
+                    $s->getStyle("{$col}{$rSec2Body1}:{$col}{$rSec2BodyN}")
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+                    $s->getStyle("{$col}{$rSec2Total}")
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
                     $s->getStyle("{$col}{$rGrand}")
                         ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
                 }
 
-                // Altura base
-                $s->getDefaultRowDimension()->setRowHeight(14);
-
-                // ===== BORDES a toda la grilla =====
-                $s->getStyle("A1:M{$lastRow}")->applyFromArray([
-                    'borders' => [
-                        'allBorders' => [
-                            'borderStyle' => Border::BORDER_THIN,
-                            'color'       => ['argb' => $borderSoft],
-                        ],
-                    ],
-                ]);
-
-                // 🔹 Forzar tamaño de fuente 10 en TODO el rango usado (A..M)
-                $s->getStyle("A1:M{$lastRow}")
-                    ->getFont()
-                    ->setSize(10);
+                // ===== Fuente 10 global =====
+                $s->getStyle("A1:M{$lastRow}")->getFont()->setSize(10);
             },
         ];
     }

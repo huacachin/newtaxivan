@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(git:*)",
-      "Bash(tail:*)"
+      "Bash(tail:*)",
+      "Bash(head:*)",
+      "Bash(echo no libs:*)",
+      "Bash(pip3 install xlrd --quiet 2>&1 | tail -1 && python3 -c \"import xlrd; print\\('xlrd ready'\\)\" 2>&1)",
+      "Bash(python3:*)"
     ]
   }
 }
