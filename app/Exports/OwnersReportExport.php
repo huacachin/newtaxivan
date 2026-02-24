@@ -17,7 +17,6 @@ use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use PhpOffice\PhpSpreadsheet\Style\Conditional;
 
 class OwnersReportExport implements
     FromQuery, ShouldAutoSize, WithHeadings, WithMapping,
@@ -87,174 +86,163 @@ class OwnersReportExport implements
                 $e->sheet->getDelegate()->setTitle('Propietarios');
                 $ws = $e->sheet->getDelegate();
 
-                $ws->getParent()->getDefaultStyle()->getFont()->setSize(10);
-
                 $blue     = 'FF2874A6';
                 $footerBg = 'FFCEE7FF';
                 $white    = 'FFFFFFFF';
-                $borderC  = 'FFCFD8DC';
-                $red      = 'F80000';
+                $black    = 'FF000000';
+                $gray     = 'FF808080';
+                $red      = 'FFF80000';
 
-                // Solo 1 fila de título
+                $ws->getDefaultRowDimension()->setRowHeight(15);
+
+                // ===== Insertar fila de título =====
                 $ws->insertNewRowBefore(1, 1);
 
-                $head1  = 2; // encabezado principal ahora en fila 2
-                $start1 = 3; // datos empiezan en 3
-                $last   = (int)$ws->getHighestRow();
+                $head1  = 2;
+                $start1 = 3;
 
-                // === Título ===
-                $ws->setCellValue('A1','LISTADO GENERAL DE PROPIETARIO ( 0 )');
+                // ===== Título (placeholder, se actualiza al final) =====
+                $ws->setCellValue('A1', 'LISTADO GENERAL DE PROPIETARIO ( 0 )');
                 $ws->mergeCells('A1:F1');
                 $ws->getStyle('A1:F1')->applyFromArray([
-                    'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$red]],
-                    'alignment' => [
-                        'horizontal'=>Alignment::HORIZONTAL_CENTER,
-                        'vertical'=>Alignment::VERTICAL_CENTER
-                    ],
-                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$white]],
+                    'font'      => ['bold' => true, 'size' => 11, 'color' => ['argb' => $red]],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                    'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]]],
                 ]);
-                $ws->getRowDimension(1)->setRowHeight(18);
+                $ws->getRowDimension(1)->setRowHeight(20);
 
-                // === Encabezado del primer cuadro ===
+                // ===== Ocultar cuadrícula =====
+                $ws->setShowGridLines(false);
+
+                // ===== Encabezado sección 1 =====
                 $ws->getStyle("A{$head1}:F{$head1}")->applyFromArray([
-                    'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$white]],
-                    'alignment' => [
-                        'horizontal'=>Alignment::HORIZONTAL_CENTER,
-                        'vertical'=>Alignment::VERTICAL_CENTER
+                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['argb' => $white]],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                    'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $blue]],
+                    'borders'   => [
+                        'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $white]],
+                        'outline'    => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]],
                     ],
-                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blue]],
                 ]);
                 $ws->getRowDimension($head1)->setRowHeight(16);
-                //$ws->freezePane("A{$start1}");
 
-                $last     = (int)$ws->getHighestRow();
+                $last     = (int) $ws->getHighestRow();
                 $hasData1 = $last >= $start1;
                 $end1     = $hasData1 ? $last : ($start1 - 1);
 
                 if ($hasData1) {
-                    $ws->getStyle("A{$head1}:F{$end1}")
-                        ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)
-                        ->getColor()->setARGB($borderC);
+                    // Bordes datos sección 1
+                    $ws->getStyle("A{$start1}:F{$end1}")->applyFromArray([
+                        'borders' => [
+                            'allBorders' => ['borderStyle' => Border::BORDER_DOTTED, 'color' => ['argb' => $gray]],
+                            'vertical'   => ['borderStyle' => Border::BORDER_THIN,   'color' => ['argb' => $black]],
+                            'left'       => ['borderStyle' => Border::BORDER_THIN,   'color' => ['argb' => $black]],
+                            'right'      => ['borderStyle' => Border::BORDER_THIN,   'color' => ['argb' => $black]],
+                        ],
+                        'alignment' => ['vertical' => Alignment::VERTICAL_CENTER],
+                    ]);
 
-                    $range1 = "A{$start1}:F{$end1}";
-                    $z1 = new Conditional();
-                    $z1->setConditionType(Conditional::CONDITION_EXPRESSION);
-                    $z1->setConditions(['MOD(ROW(),2)=0']);
-                    $z1->getStyle()->getFill()->setFillType(Fill::FILL_SOLID)
-                        ->getStartColor()->setARGB('FFF3F4F6');
-                    $styles1 = $ws->getStyle($range1)->getConditionalStyles();
-                    $styles1[] = $z1;
-                    $ws->getStyle($range1)->setConditionalStyles($styles1);
-
-                    // Alineaciones
-                    $ws->getStyle("A{$start1}:B{$end1}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // Item, Cod
-
-                    $ws->getStyle("C{$start1}:C{$end1}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // Placa
-
-                    $ws->getStyle("D{$start1}:D{$end1}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);   // Nombre
-
-                    $ws->getStyle("E{$start1}:F{$end1}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);   // Doc, Tel
+                    $ws->getStyle("A{$start1}:B{$end1}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                    $ws->getStyle("C{$start1}:C{$end1}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                    $ws->getStyle("D{$start1}:D{$end1}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+                    $ws->getStyle("E{$start1}:F{$end1}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
                 }
 
-                // === Pie totales activos ===
-                $foot1      = $end1 + 1;
+                // ===== TOTAL ACTIVOS =====
+                $foot1       = $end1 + 1;
                 $countActive = $hasData1 ? ($end1 - $start1 + 1) : 0;
                 $ws->mergeCells("A{$foot1}:E{$foot1}");
                 $ws->setCellValue("A{$foot1}", 'TOTAL ACTIVOS');
                 $ws->setCellValue("F{$foot1}", $countActive);
                 $ws->getStyle("A{$foot1}:F{$foot1}")->applyFromArray([
-                    'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>'FF000000']],
-                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$footerBg]],
-                    'borders' => [
-                        'outline' => [
-                            'borderStyle'=>Border::BORDER_MEDIUM,
-                            'color'=>['argb'=>$blue]
-                        ]
-                    ],
+                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['argb' => $black]],
+                    'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $footerBg]],
+                    'alignment' => ['vertical' => Alignment::VERTICAL_CENTER, 'horizontal' => Alignment::HORIZONTAL_RIGHT],
+                    'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]]],
                 ]);
+                $ws->getRowDimension($foot1)->setRowHeight(16);
 
-                // === Segundo cuadro ===
+                // ===== Sección 2: PROPIETARIOS LIBRES =====
                 $title2 = $foot1 + 2;
-                $ws->setCellValue("A{$title2}", 'PROPIETARIOS LIBRES');
                 $ws->mergeCells("A{$title2}:F{$title2}");
+                $ws->setCellValue("A{$title2}", 'PROPIETARIOS LIBRES');
                 $ws->getStyle("A{$title2}:F{$title2}")->applyFromArray([
-                    'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$red]],
-                    'alignment' => [
-                        'horizontal'=>Alignment::HORIZONTAL_CENTER,
-                        'vertical'=>Alignment::VERTICAL_CENTER
-                    ],
-                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$white]],
+                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['argb' => $red]],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                    'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]]],
                 ]);
+                $ws->getRowDimension($title2)->setRowHeight(16);
 
+                // ===== Encabezado sección 2 =====
                 $head2 = $title2 + 1;
                 $ws->fromArray($this->headings(), null, "A{$head2}");
                 $ws->getStyle("A{$head2}:F{$head2}")->applyFromArray([
-                    'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$white]],
-                    'alignment' => [
-                        'horizontal'=>Alignment::HORIZONTAL_CENTER,
-                        'vertical'=>Alignment::VERTICAL_CENTER
+                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['argb' => $white]],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                    'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $blue]],
+                    'borders'   => [
+                        'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $white]],
+                        'outline'    => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]],
                     ],
-                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blue]],
                 ]);
+                $ws->getRowDimension($head2)->setRowHeight(16);
 
-                $start2   = $head2 + 1;
-                $freeRows = $this->fetchFreeOwners();
+                // ===== Datos sección 2 =====
+                $start2    = $head2 + 1;
+                $freeRows  = $this->fetchFreeOwners();
                 $countFree = count($freeRows);
 
                 if ($countFree > 0) {
                     $ws->fromArray($freeRows, null, "A{$start2}");
                     $end2 = $start2 + $countFree - 1;
-                    $ws->getStyle("A{$head2}:F{$end2}")
-                        ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)
-                        ->getColor()->setARGB($borderC);
 
-                    // Alineaciones segundo cuadro
-                    $ws->getStyle("A{$start2}:B{$end2}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // Item, Cod
-                    $ws->getStyle("C{$start2}:C{$end2}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // Placa
-                    $ws->getStyle("D{$start2}:D{$end2}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);   // Nombre
-                    $ws->getStyle("E{$start2}:F{$end2}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);   // Doc, Tel
+                    $ws->getStyle("A{$start2}:F{$end2}")->applyFromArray([
+                        'borders' => [
+                            'allBorders' => ['borderStyle' => Border::BORDER_DOTTED, 'color' => ['argb' => $gray]],
+                            'vertical'   => ['borderStyle' => Border::BORDER_THIN,   'color' => ['argb' => $black]],
+                            'left'       => ['borderStyle' => Border::BORDER_THIN,   'color' => ['argb' => $black]],
+                            'right'      => ['borderStyle' => Border::BORDER_THIN,   'color' => ['argb' => $black]],
+                        ],
+                        'alignment' => ['vertical' => Alignment::VERTICAL_CENTER],
+                    ]);
+
+                    $ws->getStyle("A{$start2}:B{$end2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                    $ws->getStyle("C{$start2}:C{$end2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                    $ws->getStyle("D{$start2}:D{$end2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+                    $ws->getStyle("E{$start2}:F{$end2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
                 } else {
-                    $msgRow = $start2;
-                    $ws->mergeCells("A{$msgRow}:F{$msgRow}");
-                    $ws->setCellValue("A{$msgRow}", 'No hay propietarios libres para los filtros actuales.');
-                    $ws->getStyle("A{$msgRow}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                    $ws->mergeCells("A{$start2}:F{$start2}");
+                    $ws->setCellValue("A{$start2}", 'No hay propietarios libres para los filtros actuales.');
+                    $ws->getStyle("A{$start2}:F{$start2}")->applyFromArray([
+                        'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+                        'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]]],
+                    ]);
                 }
 
-                // Actualizar total
+                // ===== Actualizar total en título =====
                 $totalOwners = $countActive + $countFree;
                 $ws->setCellValue('A1', "LISTADO GENERAL DE PROPIETARIO ( {$totalOwners} )");
 
-                // Ajustes finales de ancho
-                foreach (['A','B','C','D','E','F'] as $col) {
+                // ===== Anchos de columna =====
+                foreach (['A', 'B', 'C', 'D', 'E', 'F'] as $col) {
                     $ws->getColumnDimension($col)->setAutoSize(false);
                 }
-                $ws->getColumnDimension('A')->setWidth(4.2);   // Item
-                $ws->getColumnDimension('B')->setWidth(5.2);   // Cod
-                $ws->getColumnDimension('C')->setWidth(9.5);   // Placa
-                $ws->getColumnDimension('D')->setWidth(30.0);  // Nombre
-                $ws->getColumnDimension('E')->setWidth(12.0);  // N° Documento
-                $ws->getColumnDimension('F')->setWidth(11.0);  // Teléfono
+                $ws->getColumnDimension('A')->setWidth(4.2);
+                $ws->getColumnDimension('B')->setWidth(5.2);
+                $ws->getColumnDimension('C')->setWidth(9.5);
+                $ws->getColumnDimension('D')->setWidth(30.0);
+                $ws->getColumnDimension('E')->setWidth(12.0);
+                $ws->getColumnDimension('F')->setWidth(11.0);
 
-                $lastRow = (int)$ws->getHighestRow();
+                // ===== Ocultar columnas vacías (G en adelante) =====
+                foreach (range('G', 'Z') as $col) {
+                    $ws->getColumnDimension($col)->setVisible(false);
+                }
+
+                // ===== Fuente 10 global =====
+                $lastRow = (int) $ws->getHighestRow();
+                $ws->getStyle("A1:F{$lastRow}")->getFont()->setSize(10);
                 $ws->getStyle("A1:F{$lastRow}")->getAlignment()->setWrapText(false);
-
-                // 🟩 Bordes globales
-                $fullRange = "A1:F{$lastRow}";
-                $ws->getStyle($fullRange)->getBorders()->getAllBorders()
-                    ->setBorderStyle(Border::BORDER_THIN)
-                    ->getColor()->setARGB('FF9E9E9E');
-
-                // 🔨 Martillazo final: TODO en tamaño 10 (por si algún estilo metió otro tamaño)
-                $ws->getStyle($fullRange)->getFont()->setSize(10);
             },
         ];
     }
