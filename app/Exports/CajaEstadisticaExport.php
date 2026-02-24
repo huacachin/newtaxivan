@@ -50,6 +50,10 @@ class CajaEstadisticaExport implements WithEvents
     private const RED_TITLE  = 'F80000';
     private const NUM_FMT    = '#,##0.00';
 
+    private int   $dailyStart  = 0;
+    private int   $annualStart = 0;
+    private array $footerRows  = [];
+
     public function __construct(int $year, int $month, ?int $headquarterId = null)
     {
         $this->year = $year;
@@ -69,6 +73,7 @@ class CajaEstadisticaExport implements WithEvents
                 // Fuente global Calibri 10 y sin gridlines
                 $sheet->getParent()->getDefaultStyle()->getFont()->setName('Calibri')->setSize(10);
                 $sheet->setShowGridlines(false);
+                $sheet->getDefaultRowDimension()->setRowHeight(15);
 
                 $row = 1;
                 $lastMainCol = 'L'; // A..L (todo inicia desde A)
@@ -78,9 +83,11 @@ class CajaEstadisticaExport implements WithEvents
                 $sheet->setCellValue("A{$row}", $titulo1);
                 $sheet->mergeCells("A{$row}:{$lastMainCol}{$row}");
                 $sheet->getStyle("A{$row}:{$lastMainCol}{$row}")->applyFromArray([
-                    'font' => ['bold' => true, 'color' => ['rgb' => self::RED_TITLE], 'size' => 12],
+                    'font'      => ['bold' => true, 'color' => ['rgb' => self::RED_TITLE], 'size' => 11],
                     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                    'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']]],
                 ]);
+                $sheet->getRowDimension($row)->setRowHeight(20);
                 $row++;
 
                 // ===== Tabla diaria =====
@@ -94,39 +101,90 @@ class CajaEstadisticaExport implements WithEvents
                 $sheet->setCellValue("A{$row}", $titulo2);
                 $sheet->mergeCells("A{$row}:{$lastMainCol}{$row}");
                 $sheet->getStyle("A{$row}:{$lastMainCol}{$row}")->applyFromArray([
-                    'font' => ['bold' => true, 'color' => ['rgb' => self::RED_TITLE], 'size' => 12],
+                    'font'      => ['bold' => true, 'color' => ['rgb' => self::RED_TITLE], 'size' => 11],
                     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                    'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']]],
                 ]);
+                $sheet->getRowDimension($row)->setRowHeight(20);
                 $row++;
 
                 // ===== Tabla anual =====
                 $row = $this->drawAnnualTable($sheet, $row);
 
-                // ===== Bordes externos suaves (bloque completo) =====
-                $highest = $sheet->getHighestRow();
-                $sheet->getStyle("A1:{$lastMainCol}{$highest}")->applyFromArray([
-                    'borders' => [
-                        'allBorders' => [
-                            'borderStyle' => Border::BORDER_THIN,
-                            'color' => ['rgb' => '000000'],
+                // ===== Bordes datos: punteado horizontal + sólido vertical =====
+                // Tabla diaria: datos entre fin de headers y footer
+                $dailyDataStart = $this->dailyStart + 3;
+                $dailyFooter    = $this->footerRows[0] ?? 0;
+                if ($dailyFooter > 0 && $dailyDataStart < $dailyFooter) {
+                    $sheet->getStyle("A{$dailyDataStart}:L" . ($dailyFooter - 1))->applyFromArray([
+                        'borders' => [
+                            'allBorders' => ['borderStyle' => Border::BORDER_DOTTED, 'color' => ['rgb' => '808080']],
+                            'vertical'   => ['borderStyle' => Border::BORDER_THIN,   'color' => ['rgb' => '000000']],
+                            'left'       => ['borderStyle' => Border::BORDER_THIN,   'color' => ['rgb' => '000000']],
+                            'right'      => ['borderStyle' => Border::BORDER_THIN,   'color' => ['rgb' => '000000']],
                         ],
-                    ],
-                ]);
+                        'alignment' => ['vertical' => Alignment::VERTICAL_CENTER],
+                    ]);
+                }
+
+                // Tabla anual: datos entre fin de headers y primer footer
+                $annualDataStart = $this->annualStart + 3;
+                $annualFooter    = $this->footerRows[1] ?? 0;
+                if ($annualFooter > 0 && $annualDataStart < $annualFooter) {
+                    $sheet->getStyle("A{$annualDataStart}:L" . ($annualFooter - 1))->applyFromArray([
+                        'borders' => [
+                            'allBorders' => ['borderStyle' => Border::BORDER_DOTTED, 'color' => ['rgb' => '808080']],
+                            'vertical'   => ['borderStyle' => Border::BORDER_THIN,   'color' => ['rgb' => '000000']],
+                            'left'       => ['borderStyle' => Border::BORDER_THIN,   'color' => ['rgb' => '000000']],
+                            'right'      => ['borderStyle' => Border::BORDER_THIN,   'color' => ['rgb' => '000000']],
+                        ],
+                        'alignment' => ['vertical' => Alignment::VERTICAL_CENTER],
+                    ]);
+                }
+
+                // Footer rows: asegurar thin black + altura
+                foreach ($this->footerRows as $fr) {
+                    $sheet->getStyle("A{$fr}:L{$fr}")->applyFromArray([
+                        'borders' => [
+                            'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']],
+                        ],
+                    ]);
+                    $sheet->getRowDimension($fr)->setRowHeight(18);
+                }
+
+                // Re-aplicar outline negro en headers (para que no quede tapado)
+                if ($this->dailyStart > 0) {
+                    $dEnd = $this->dailyStart + 2;
+                    $sheet->getStyle("A{$this->dailyStart}:L{$dEnd}")->applyFromArray([
+                        'borders' => ['outline' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']]],
+                    ]);
+                }
+                if ($this->annualStart > 0) {
+                    $aEnd = $this->annualStart + 2;
+                    $sheet->getStyle("A{$this->annualStart}:L{$aEnd}")->applyFromArray([
+                        'borders' => ['outline' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']]],
+                    ]);
+                }
 
                 // ===== Anchos compactos (al ras) =====
-                // Diaria y anual comparten layout de columnas: A..L
                 $widths = [
-                    'A'=>10, // Fecha / Mes
-                    'B'=>10, 'C'=>10, 'D'=>10, 'E'=>10, // Pago
-                    'F'=>10, 'G'=>10, 'H'=>10,          // Salida
-                    'I'=>9,                              // Otros
-                    'J'=>10,                             // Total ingreso
-                    'K'=>10,                             // Egreso
-                    'L'=>10,                             // Utilidad
+                    'A'=>11,
+                    'B'=>13, 'C'=>13, 'D'=>13, 'E'=>13,
+                    'F'=>13, 'G'=>13, 'H'=>13,
+                    'I'=>13,
+                    'J'=>13,
+                    'K'=>13,
+                    'L'=>13,
                 ];
                 foreach ($widths as $col => $w) {
                     $sheet->getColumnDimension($col)->setAutoSize(false);
                     $sheet->getColumnDimension($col)->setWidth($w);
+                }
+
+                // ===== Ocultar columnas M en adelante =====
+                for ($c = 13; $c <= 50; $c++) {
+                    $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($c);
+                    $sheet->getColumnDimension($colLetter)->setVisible(false);
                 }
             },
         ];
@@ -144,6 +202,7 @@ class CajaEstadisticaExport implements WithEvents
     private function drawDailyTable(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet, int $startRow): int
     {
         $r = $startRow;
+        $this->dailyStart = $startRow;
 
         // -------- Encabezados multinivel (todo desde A) --------
         // Fila 1
@@ -214,6 +273,7 @@ class CajaEstadisticaExport implements WithEvents
         }
 
         // Fila Total
+        $this->footerRows[] = $row;
         $this->paintLightTotal($sheet, "A{$row}:L{$row}");
         $sheet->setCellValue("A{$row}", 'Total');
         $t = $data['totales'];
@@ -243,6 +303,7 @@ class CajaEstadisticaExport implements WithEvents
     private function drawAnnualTable(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet, int $startRow): int
     {
         $r = $startRow;
+        $this->annualStart = $startRow;
 
         // -------- Encabezados multinivel --------
         // Fila 1
@@ -299,6 +360,7 @@ class CajaEstadisticaExport implements WithEvents
         }
 
         // Totales
+        $this->footerRows[] = $row;
         $this->paintLightTotal($sheet, "A{$row}:L{$row}");
         $sheet->setCellValue("A{$row}", 'Total');
         $this->num($sheet, "B{$row}", $totales['pago'],           $numFmt);
@@ -315,6 +377,7 @@ class CajaEstadisticaExport implements WithEvents
 
         // Promedio
         $row++;
+        $this->footerRows[] = $row;
         $this->paintLightTotal($sheet, "A{$row}:L{$row}");
         $sheet->setCellValue("A{$row}", 'Promedio');
         $this->num($sheet, "B{$row}", $promedios['pago'],           $numFmt);
@@ -587,8 +650,12 @@ class CajaEstadisticaExport implements WithEvents
             'borders' => [
                 'allBorders' => [
                     'borderStyle' => Border::BORDER_THIN,
-                    'color' => ['rgb' => 'FFFFFF']
-                ]
+                    'color' => ['rgb' => 'FFFFFF'],
+                ],
+                'outline' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['rgb' => '000000'],
+                ],
             ],
             'alignment' => [
                 'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -611,10 +678,13 @@ class CajaEstadisticaExport implements WithEvents
                 'fillType'   => Fill::FILL_SOLID,
                 'startColor' => ['rgb' => self::BLUE_LIGHT],
             ],
-            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+            'font' => ['bold' => true, 'color' => ['rgb' => '000000']],
             'alignment' => [
                 'horizontal' => Alignment::HORIZONTAL_CENTER,
                 'vertical'   => Alignment::VERTICAL_CENTER,
+            ],
+            'borders' => [
+                'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']],
             ],
         ]);
     }

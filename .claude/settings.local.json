@@ -12,7 +12,8 @@
       "Bash(ls:*)",
       "Bash(php:*)",
       "Bash(sed:*)",
-      "Bash(perl:*)"
+      "Bash(perl:*)",
+      "Bash(pip3 install:*)"
     ]
   }
 }
