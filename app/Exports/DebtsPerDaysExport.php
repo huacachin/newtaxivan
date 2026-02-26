@@ -237,6 +237,7 @@ class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTi
                     'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$sunRed]],
                     'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
                     'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$white]],
+                    'borders' => ['allBorders' => ['borderStyle'=>Border::BORDER_THIN,'color'=>['argb'=>'FF000000']]],
                 ]);
 
                 // ===== THEAD (fila 2) azul =====
@@ -323,9 +324,9 @@ class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTi
                 $debtAmtColLetter = $this->colLetter($dayEndColIndex + 4);
                 if ($lastDataRow >= $dataStartRow) {
                     $ws->getStyle("{$paidAmtColLetter}{$dataStartRow}:{$paidAmtColLetter}{$lastDataRow}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                     $ws->getStyle("{$debtAmtColLetter}{$dataStartRow}:{$debtAmtColLetter}{$lastDataRow}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
                     $ws->getStyle("{$paidAmtColLetter}{$dataStartRow}:{$paidAmtColLetter}{$lastDataRow}")
                         ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
@@ -355,7 +356,7 @@ class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTi
                 if ($lastDataRow >= $dataStartRow) {
                     $ws->getStyle("A{$dataStartRow}:A{$lastDataRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                     $ws->getStyle("B{$dataStartRow}:B{$lastDataRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                    $ws->getStyle("C{$dataStartRow}:C{$lastDataRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT)->setShrinkToFit(true);
+                    $ws->getStyle("C{$dataStartRow}:C{$lastDataRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                     $ws->getStyle("D{$dataStartRow}:D{$lastDataRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
                     if ($this->dayCols > 0) {

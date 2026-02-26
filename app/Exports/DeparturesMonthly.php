@@ -161,7 +161,7 @@ class DeparturesMonthly implements FromArray, WithHeadings, WithStyles, WithEven
                     ]);
 
                     $ws->getStyle("A{$dataStartRow}:A{$dataEndRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                    $ws->getStyle("B{$dataStartRow}:B{$dataEndRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+                    $ws->getStyle("B{$dataStartRow}:B{$dataEndRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                     $ws->getStyle("C{$dataStartRow}:{$totalCol}{$dataEndRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                     $ws->getStyle("C{$dataStartRow}:{$totalCol}{$dataEndRow}")->getNumberFormat()->setFormatCode('0');
 
@@ -189,7 +189,7 @@ class DeparturesMonthly implements FromArray, WithHeadings, WithStyles, WithEven
                         'alignment' => ['vertical' => Alignment::VERTICAL_CENTER],
                         'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]]],
                     ]);
-                    $ws->getStyle("A{$fr}:B{$fr}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+                    $ws->getStyle("A{$fr}:B{$fr}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                     $ws->getStyle("C{$fr}:{$lastCol}{$fr}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                     $ws->getStyle("C{$fr}:{$lastCol}{$fr}")->getNumberFormat()->setFormatCode('0');
 

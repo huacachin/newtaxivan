@@ -193,7 +193,7 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
 
                     // Alineaciones
                     $ws->getStyle("A{$dataStartRow}:C{$lastRow}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-                    $ws->getStyle("D{$dataStartRow}:D{$lastRow}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT)->setWrapText(true);
+                    $ws->getStyle("D{$dataStartRow}:D{$lastRow}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
                     $ws->getStyle("E{$dataStartRow}:J{$lastRow}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
                     /* Rellenar vacíos con 0 en montos (F..J) */
@@ -250,7 +250,7 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
 
                 $ws->getStyle("A{$totalRow}:{$lastCol}{$totalRow}")->applyFromArray([
                     'font'      => ['bold' => true, 'size' => 10, 'color' => ['argb' => $black]],
-                    'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT, 'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER],
+                    'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER, 'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER],
                     'fill'      => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['argb' => $footerBg]],
                     'borders'   => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN, 'color' => ['argb' => $black]]],
                 ]);

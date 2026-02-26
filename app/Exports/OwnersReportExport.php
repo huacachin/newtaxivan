@@ -142,10 +142,7 @@ class OwnersReportExport implements
                         'alignment' => ['vertical' => Alignment::VERTICAL_CENTER],
                     ]);
 
-                    $ws->getStyle("A{$start1}:B{$end1}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                    $ws->getStyle("C{$start1}:C{$end1}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                    $ws->getStyle("D{$start1}:D{$end1}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-                    $ws->getStyle("E{$start1}:F{$end1}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+                    $ws->getStyle("A{$start1}:F{$end1}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 }
 
                 // ===== TOTAL ACTIVOS =====
@@ -157,7 +154,7 @@ class OwnersReportExport implements
                 $ws->getStyle("A{$foot1}:F{$foot1}")->applyFromArray([
                     'font'      => ['bold' => true, 'size' => 10, 'color' => ['argb' => $white]],
                     'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $footerBg]],
-                    'alignment' => ['vertical' => Alignment::VERTICAL_CENTER, 'horizontal' => Alignment::HORIZONTAL_RIGHT],
+                    'alignment' => ['vertical' => Alignment::VERTICAL_CENTER, 'horizontal' => Alignment::HORIZONTAL_CENTER],
                     'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]]],
                 ]);
                 $ws->getRowDimension($foot1)->setRowHeight(16);
@@ -206,10 +203,7 @@ class OwnersReportExport implements
                         'alignment' => ['vertical' => Alignment::VERTICAL_CENTER],
                     ]);
 
-                    $ws->getStyle("A{$start2}:B{$end2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                    $ws->getStyle("C{$start2}:C{$end2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                    $ws->getStyle("D{$start2}:D{$end2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-                    $ws->getStyle("E{$start2}:F{$end2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+                    $ws->getStyle("A{$start2}:F{$end2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 } else {
                     $ws->mergeCells("A{$start2}:F{$start2}");
                     $ws->setCellValue("A{$start2}", 'No hay propietarios libres para los filtros actuales.');

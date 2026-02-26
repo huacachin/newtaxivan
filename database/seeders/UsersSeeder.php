@@ -2,54 +2,209 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 use App\Models\User;
-use Faker\Factory as Faker;
+use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class UsersSeeder extends Seeder
 {
     public function run(): void
     {
-        $faker = Faker::create('es_PE');
+        // Roles
+        $admin      = Role::firstOrCreate(['name' => 'admin',      'guard_name' => 'web']);
+        $controller = Role::firstOrCreate(['name' => 'controller', 'guard_name' => 'web']);
 
-        // Ajusta este mapa como quieras
-        $map = [
-            'Guilmer' => 1,
-            'Elmer'   => 2,
-            'Felix'   => 1,
-            'Ivan'    => 1,
-            'Jhoseph' => 1,
-            'Luis'    => 5,
-            'Marko'   => 1,
-            'Nancy'   => 3, // vuelven a empezar
-            'Licet'   => 1, // vuelven a empezar
+        // Todos los permisos del rol admin
+        $adminPerms = [
+            'dashboard', 'departures', 'payments',
+            'configuracion.vehicles', 'configuracion.owners', 'configuracion.drivers',
+            'configuracion.cost-per-plate', 'configuracion.users', 'configuracion.concepts',
+            'debts.days', 'debts.monthly',
+            'cash.incomes', 'cash.expenses', 'cash.reports',
         ];
 
-        foreach ($map as $username => $headquarterId) {
-            $docType = $faker->randomElement(['DNI', 'CE']);
-            $docNumber = $docType === 'DNI'
-                ? str_pad((string)$faker->numberBetween(0, 99999999), 8, '0', STR_PAD_LEFT)
-                : str_pad((string)$faker->numberBetween(0, 999999999), 9, '0', STR_PAD_LEFT);
+        foreach ($adminPerms as $perm) {
+            Permission::firstOrCreate(['name' => $perm, 'guard_name' => 'web']);
+        }
 
-            $phone = '9' . str_pad((string)$faker->numberBetween(0, 99999999), 8, '0', STR_PAD_LEFT);
+        $admin->syncPermissions($adminPerms);
+        // El rol controller no tiene permisos propios; los usuarios tienen permisos directos.
 
-            User::updateOrCreate(
-                ['username' => $username], // idempotente por username
+        // ----------------------------------------------------------------
+        // Usuarios  (contraseñas: hashes reales de producción)
+        // ----------------------------------------------------------------
+        $users = [
+            [
+                'id'              => 1,
+                'name'            => 'Guilmer',
+                'username'        => 'Guilmer',
+                'email'           => 'guilmer@taxivan.local',
+                'password'        => '$2y$12$Sx0beico44HX4svmoMFlpON8iWV5KM2geCDIxLYxNB4VWnvY6Sv6m',
+                'document_type'   => 'CE',
+                'document_number' => '395754107',
+                'phone'           => '909532712',
+                'headquarter_id'  => 1,
+                'status'          => 'active',
+                'role'            => 'admin',
+                'direct_perms'    => $adminPerms,
+            ],
+            [
+                'id'              => 2,
+                'name'            => 'Elmer',
+                'username'        => 'Elmer',
+                'email'           => 'elmer@taxivan.local',
+                'password'        => '$2y$12$iJo4Kv8MY7eUz7cgLRZCLOkC1P0cGSEzyS9q.wWOLO/kj4bSIGNJy',
+                'document_type'   => 'CE',
+                'document_number' => '189887939',
+                'phone'           => '976347989',
+                'headquarter_id'  => 2,
+                'status'          => 'active',
+                'role'            => 'controller',
+                'direct_perms'    => [
+                    'departures', 'payments',
+                    'configuracion.vehicles', 'configuracion.owners', 'configuracion.drivers',
+                    'cash.expenses',
+                ],
+            ],
+            [
+                'id'              => 3,
+                'name'            => 'Felix',
+                'username'        => 'Felix',
+                'email'           => 'felix@taxivan.local',
+                'password'        => '$2y$12$hokOMqxW./F3j0h73pwNkez.3Sb2CagZnt63PYRdFtSPdgPrCiy6i',
+                'document_type'   => 'DNI',
+                'document_number' => '28627493',
+                'phone'           => '923531660',
+                'headquarter_id'  => 1,
+                'status'          => 'inactive',
+                'role'            => null,
+                'direct_perms'    => [],
+            ],
+            [
+                'id'              => 4,
+                'name'            => 'Ivan',
+                'username'        => 'Ivan',
+                'email'           => 'ivan@taxivan.local',
+                'password'        => '$2y$12$ifpuC5rZe0llrSGagQ9QuepMyQS7p5q5BpNZdGMOq3FHLore3b0he',
+                'document_type'   => 'CE',
+                'document_number' => '101403061',
+                'phone'           => '916910976',
+                'headquarter_id'  => 1,
+                'status'          => 'inactive',
+                'role'            => null,
+                'direct_perms'    => [],
+            ],
+            [
+                'id'              => 5,
+                'name'            => 'Jhoseph',
+                'username'        => 'Jhoseph',
+                'email'           => 'jhoseph@taxivan.local',
+                'password'        => '$2y$12$i.iYUdCx0JB2zH8mTLcvXugMsKBe4MkkE8Q9xffFkCntBCesD.596',
+                'document_type'   => 'CE',
+                'document_number' => '642543665',
+                'phone'           => '950604096',
+                'headquarter_id'  => 1,
+                'status'          => 'inactive',
+                'role'            => null,
+                'direct_perms'    => [],
+            ],
+            [
+                'id'              => 6,
+                'name'            => 'Luis',
+                'username'        => 'Luis',
+                'email'           => 'luis@taxivan.local',
+                'password'        => '$2y$12$t5JdAqGZRCtYWc5nu6JkHeqM8FT.23MYP48lymn.2cS9LBsevXxUG',
+                'document_type'   => 'CE',
+                'document_number' => '736856248',
+                'phone'           => '983955785',
+                'headquarter_id'  => 1,
+                'status'          => 'active',
+                'role'            => 'controller',
+                'direct_perms'    => [
+                    'departures', 'payments',
+                    'configuracion.vehicles', 'configuracion.owners', 'configuracion.drivers',
+                    'cash.incomes', 'cash.expenses',
+                ],
+            ],
+            [
+                'id'              => 7,
+                'name'            => 'Marko',
+                'username'        => 'Marko',
+                'email'           => 'marko@taxivan.local',
+                'password'        => '$2y$12$G.du5/YaBisH4n83q7560OG/XYleHrGj9naNtx661Gl7N4JkPR4EK',
+                'document_type'   => 'CE',
+                'document_number' => '152241805',
+                'phone'           => '903052133',
+                'headquarter_id'  => 1,
+                'status'          => 'inactive',
+                'role'            => null,
+                'direct_perms'    => [],
+            ],
+            [
+                'id'              => 8,
+                'name'            => 'Nancy',
+                'username'        => 'Nancy',
+                'email'           => 'nancy@taxivan.local',
+                'password'        => '$2y$12$QAsIY4b5bFmD.Fsmyl/DAeUnpHwssBDkaSjpBFPI8PVp38Xx/N48.',
+                'document_type'   => 'CE',
+                'document_number' => '568586891',
+                'phone'           => '980010794',
+                'headquarter_id'  => 3,
+                'status'          => 'active',
+                'role'            => 'controller',
+                'direct_perms'    => [
+                    'departures', 'payments', 'cash.expenses',
+                ],
+            ],
+            [
+                'id'              => 9,
+                'name'            => 'Licet',
+                'username'        => 'Licet',
+                'email'           => 'licet@taxivan.local',
+                'password'        => '$2y$12$yci1wv3ak/e22a/XW2oNBugMf.mxA8tVKBNX.8ON8dNSsbvnJDQLa',
+                'document_type'   => 'DNI',
+                'document_number' => '12017970',
+                'phone'           => '915239213',
+                'headquarter_id'  => 1,
+                'status'          => 'active',
+                'role'            => 'admin',
+                // Permisos directos de Licet (sin cash.expenses; lo hereda del rol admin)
+                'direct_perms'    => [
+                    'dashboard', 'departures', 'payments',
+                    'configuracion.vehicles', 'configuracion.owners', 'configuracion.drivers',
+                    'configuracion.cost-per-plate', 'configuracion.users', 'configuracion.concepts',
+                    'debts.days', 'debts.monthly',
+                    'cash.incomes', 'cash.reports',
+                ],
+            ],
+        ];
+
+        foreach ($users as $data) {
+            $user = User::updateOrCreate(
+                ['id' => $data['id']],
                 [
-                    'name'              => $username,
-                    'document_type'     => $docType,
-                    'document_number'   => $docNumber,
-                    'phone'             => $phone,
-                    'headquarter_id'    => $headquarterId,
-                    'email'             => strtolower($username) . '@taxivan.local',
-                    'email_verified_at' => $faker->optional(0.6)->dateTimeBetween('-1 year', 'now'),
-                    'password'          => Hash::make('12345678'),
-                    'remember_token'    => Str::random(10),
-                    'status'            => 'active',
+                    'name'            => $data['name'],
+                    'username'        => $data['username'],
+                    'email'           => $data['email'],
+                    'password'        => $data['password'],
+                    'document_type'   => $data['document_type'],
+                    'document_number' => $data['document_number'],
+                    'phone'           => $data['phone'],
+                    'headquarter_id'  => $data['headquarter_id'],
+                    'status'          => $data['status'],
                 ]
             );
+
+            // Rol
+            if ($data['role']) {
+                $user->syncRoles([$data['role']]);
+            } else {
+                $user->syncRoles([]);
+            }
+
+            // Permisos directos
+            $user->syncPermissions($data['direct_perms']);
         }
     }
 }

@@ -147,6 +147,8 @@ class ExpensesExport implements
                         'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
                         'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
                     ],
+                    'fill'      => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFFFFF']],
+                    'borders'   => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN, 'color' => ['rgb' => '000000']]],
                 ]);
 
                 $headerRow    = 2;
@@ -182,15 +184,8 @@ class ExpensesExport implements
                 $ws->freezePane("A{$dataStartRow}");
 
                 if ($last >= $dataStartRow) {
-                    $ws->getStyle("A{$dataStartRow}:C{$last}")
+                    $ws->getStyle("A{$dataStartRow}:G{$last}")
                         ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-                    $ws->getStyle("F{$dataStartRow}:G{$last}")
-                        ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-                    $ws->getStyle("D{$dataStartRow}:D{$last}")
-                        ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT)
-                        ->setWrapText(true);
-                    $ws->getStyle("E{$dataStartRow}:E{$last}")
-                        ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
 
                     $ws->getStyle("B{$dataStartRow}:B{$last}")
                         ->getNumberFormat()->setFormatCode('d/m/yy');

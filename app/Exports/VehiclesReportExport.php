@@ -221,16 +221,8 @@ class VehiclesReportExport implements
                     ]);
 
                     // ===== Alineaciones =====
-                    $ws->getStyle("A{$dataStartRow}:B{$last}")
+                    $ws->getStyle("A{$dataStartRow}:L{$last}")
                         ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                    $ws->getStyle("C{$dataStartRow}:F{$last}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                    $ws->getStyle("G{$dataStartRow}:H{$last}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT)->setWrapText(true);
-                    $ws->getStyle("I{$dataStartRow}:K{$last}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                    $ws->getStyle("L{$dataStartRow}:L{$last}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT)->setWrapText(true);
 
                     // ===== Fila TOTAL VEHÍCULOS =====
                     $totalRow = $last + 1;
@@ -245,9 +237,7 @@ class VehiclesReportExport implements
                             'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]],
                         ],
                     ]);
-                    $ws->getStyle("A{$totalRow}:K{$totalRow}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-                    $ws->getStyle("L{$totalRow}")
+                    $ws->getStyle("A{$totalRow}:L{$totalRow}")
                         ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                     $ws->getRowDimension($totalRow)->setRowHeight(18);
 

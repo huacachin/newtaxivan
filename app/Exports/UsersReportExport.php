@@ -116,6 +116,9 @@ class UsersReportExport implements
                         'fillType'   => Fill::FILL_SOLID,
                         'startColor' => ['argb' => $white],
                     ],
+                    'borders' => [
+                        'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FF000000']],
+                    ],
                 ]);
                 $ws->getRowDimension(1)->setRowHeight(18);
 
@@ -159,8 +162,7 @@ class UsersReportExport implements
 
                     $ws->getStyle("D{$dataStartRow}:E{$last}")
                         ->getAlignment()
-                        ->setHorizontal(Alignment::HORIZONTAL_LEFT)
-                        ->setWrapText(true);
+                        ->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
                     $ws->getStyle("F{$dataStartRow}:F{$last}")
                         ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
@@ -194,6 +196,12 @@ class UsersReportExport implements
                     ->getBorders()->getAllBorders()
                     ->setBorderStyle(Border::BORDER_THIN)
                     ->getColor()->setARGB('FF9E9E9E');
+
+                // Borde negro en el título
+                $ws->getStyle("A1:{$lastCol}1")
+                    ->getBorders()->getAllBorders()
+                    ->setBorderStyle(Border::BORDER_THIN)
+                    ->getColor()->setARGB('FF000000');
 
                 $ws->getStyle("A1:{$lastCol}{$totalRow}")->getFont()->setSize(10);
             },

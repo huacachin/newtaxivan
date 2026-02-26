@@ -164,6 +164,7 @@ class DelayDetailsExport implements FromArray, ShouldAutoSize, WithHeadings, Wit
                     'font'      => ['bold' => true, 'size' => 10, 'color' => ['rgb' => 'F80000']],
                     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
                     'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFFFFF']],
+                    'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']]],
                 ]);
 
                 // ===== THEAD (azul #2874A6) =====

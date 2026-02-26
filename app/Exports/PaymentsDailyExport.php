@@ -139,6 +139,7 @@ class PaymentsDailyExport implements FromArray, WithHeadings, WithEvents, WithTi
                     'font'      => ['bold' => true, 'size' => 10, 'color' => ['argb' => $sundayRed]],
                     'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
                     'fill'      => ['fillType' => 'solid', 'startColor' => ['argb' => $fontWhite]],
+                    'borders'   => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN, 'color' => ['argb' => 'FF000000']]],
                 ]);
                 $sheet->getRowDimension(1)->setRowHeight(18);
 
@@ -221,10 +222,7 @@ class PaymentsDailyExport implements FromArray, WithHeadings, WithEvents, WithTi
                 }
 
                 // ====== alineaciones ======
-                // A..C datos a la izquierda; header centrado ya aplicado
-                $sheet->getStyle("A{$firstDataRow}:C{$dataLastRow}")
-                    ->getAlignment()->setHorizontal('left');
-                $sheet->getStyle("D{$firstDataRow}:{$lastCol}{$dataLastRow}")
+                $sheet->getStyle("A{$firstDataRow}:{$lastCol}{$dataLastRow}")
                     ->getAlignment()->setHorizontal('center');
 
                 // ====== anchos compactos ======

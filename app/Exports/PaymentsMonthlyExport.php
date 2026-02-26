@@ -92,6 +92,7 @@ class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, With
                         'horizontal'=>Alignment::HORIZONTAL_CENTER,
                         'vertical'  =>Alignment::VERTICAL_CENTER,
                     ],
+                    'borders' => ['allBorders' => ['borderStyle'=>Border::BORDER_THIN,'color'=>['argb'=>'FF000000']]],
                 ]);
                 $s->getRowDimension($titleRow)->setRowHeight(18);
 

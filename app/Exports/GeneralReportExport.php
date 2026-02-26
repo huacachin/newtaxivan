@@ -300,7 +300,7 @@ class GeneralReportExport implements FromArray, WithEvents, WithColumnFormatting
 
                 // ===== Alineaciones =====
                 if ($this->lastRow >= 3) {
-                    $sheet->getStyle("E3:F{$this->lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+                    $sheet->getStyle("A3:F{$this->lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                     $sheet->getStyle("C3:D{$this->lastRow}")->getAlignment()->setWrapText(true);
                 }
 

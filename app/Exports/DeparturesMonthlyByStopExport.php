@@ -118,6 +118,7 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
                     'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$white]],
                     'font' => ['bold'=>true, 'size'=>10, 'color'=>['argb'=>$sunRed]],
                     'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER, 'vertical'=>Alignment::VERTICAL_CENTER],
+                    'borders' => ['allBorders' => ['borderStyle'=>Border::BORDER_THIN, 'color'=>['argb'=>'FF000000']]],
                 ]);
 
                 // ===== Cabecera (fila 2)
@@ -169,11 +170,11 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
                 $lastColLetter = Coordinate::stringFromColumnIndex($lastColIdx);
 
                 if ($dataRows > 0) {
-                    // A y B a la izquierda; resto centrado
+                    // Centrado
                     $s->getStyle("A{$dataStartRow}:A{$dataEndRow}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                     $s->getStyle("B{$dataStartRow}:B{$dataEndRow}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                     $s->getStyle("C{$dataStartRow}:{$lastCol}{$dataEndRow}")
                         ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
@@ -235,7 +236,7 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
                     $s->getStyle("B{$row1}:B{$row2}")->applyFromArray([
                         'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
                         'font' => ['bold'=>true, 'color'=>['argb'=>$fontW]],
-                        'alignment' => ['horizontal'=>Alignment::HORIZONTAL_LEFT, 'vertical'=>Alignment::VERTICAL_CENTER],
+                        'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER, 'vertical'=>Alignment::VERTICAL_CENTER],
                     ]);
                 }
 
@@ -251,7 +252,7 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
                             $s->getStyle("A{$ctrlStart}:A{$ctrlEnd}")->applyFromArray([
                                 'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
                                 'font' => ['bold'=>true, 'color'=>['argb'=>$fontW]],
-                                'alignment' => ['horizontal'=>Alignment::HORIZONTAL_LEFT, 'vertical'=>Alignment::VERTICAL_CENTER],
+                                'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER, 'vertical'=>Alignment::VERTICAL_CENTER],
                             ]);
                             $ctrlStart = $ctrlEnd + 1;
                             $prevCtrl  = $curr;
@@ -263,7 +264,7 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
                     $s->getStyle("A{$ctrlStart}:A{$ctrlEnd}")->applyFromArray([
                         'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
                         'font' => ['bold'=>true, 'color'=>['argb'=>$fontW]],
-                        'alignment' => ['horizontal'=>Alignment::HORIZONTAL_LEFT, 'vertical'=>Alignment::VERTICAL_CENTER],
+                        'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER, 'vertical'=>Alignment::VERTICAL_CENTER],
                     ]);
                 }
 
@@ -299,11 +300,11 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
                 $s->getStyle("A{$footerTE}:B{$footerVT}")->applyFromArray([
                     'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$blueDark]],
                     'font' => ['bold'=>true, 'color'=>['argb'=>$fontW]],
-                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_LEFT, 'vertical'=>Alignment::VERTICAL_CENTER],
+                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER, 'vertical'=>Alignment::VERTICAL_CENTER],
                 ]);
                 // Ajuste de alineación en totales
                 $s->getStyle("B{$footerTE}:B{$footerVT}")
-                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 $s->getStyle("C{$footerTE}:C{$footerVT}")
                     ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             }

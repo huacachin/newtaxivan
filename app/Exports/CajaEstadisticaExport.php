@@ -235,6 +235,8 @@ class CajaEstadisticaExport implements WithEvents
         $this->paintHeader($sheet, "I{$r3}:I{$r3}");
         $this->paintHeader($sheet, "J{$r3}:J{$r3}");
         $this->headerBaseStyle($sheet, "A{$r}:L{$r3}");
+        // "Retraso" siempre en rojo
+        $sheet->getStyle("C{$r3}")->getFont()->getColor()->setRGB(self::RED_TITLE);
 
         // -------- Datos --------
         $data  = $this->buildDailyData($this->year, $this->month, $this->headquarterId);
@@ -336,6 +338,8 @@ class CajaEstadisticaExport implements WithEvents
         $this->paintHeader($sheet, "I{$r3}:I{$r3}");
         $this->paintHeader($sheet, "J{$r3}:J{$r3}");
         $this->headerBaseStyle($sheet, "A{$r}:L{$r3}");
+        // "Retraso" siempre en rojo
+        $sheet->getStyle("C{$r3}")->getFont()->getColor()->setRGB(self::RED_TITLE);
 
         // -------- Datos --------
         [$rows, $totales, $promedios] = $this->buildAnnualData($this->year, $this->month, $this->headquarterId);

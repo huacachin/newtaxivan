@@ -212,13 +212,7 @@ class DriversReportExport implements FromArray, WithColumnFormatting, WithEvents
                 // ===== Alineaciones =====
                 foreach ([[$dataStart1, $dataEnd1], [$dataStart2, $dataEnd2]] as [$r1, $r2]) {
                     if ($r2 < $r1) continue;
-                    $ws->getStyle("A{$r1}:B{$r2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                    $ws->getStyle("C{$r1}:C{$r2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                    $ws->getStyle("D{$r1}:D{$r2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-                    $ws->getStyle("E{$r1}:E{$r2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-                    $ws->getStyle("F{$r1}:G{$r2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                    $ws->getStyle("H{$r1}:H{$r2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-                    $ws->getStyle("I{$r1}:I{$r2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                    $ws->getStyle("A{$r1}:I{$r2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 }
 
                 // ===== Anchos de columna =====

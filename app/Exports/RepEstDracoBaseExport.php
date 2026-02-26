@@ -379,21 +379,9 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
 
                 // ===== Alineaciones básicas
                 if ($lastRow >= $dataStartRow) {
-                    // Texto a la izquierda con shrink
-                    $ws->getStyle("A{$dataStartRow}:A{$lastRow}")
+                    $ws->getStyle("A{$dataStartRow}:O{$lastRow}")
                         ->getAlignment()
-                        ->setHorizontal(Alignment::HORIZONTAL_LEFT)
-                        ->setShrinkToFit(true);
-
-                    $ws->getStyle("B{$dataStartRow}:B{$lastRow}")
-                        ->getAlignment()
-                        ->setHorizontal(Alignment::HORIZONTAL_LEFT)
-                        ->setShrinkToFit(true);
-
-                    // Montos a la derecha
-                    $ws->getStyle("C{$dataStartRow}:O{$lastRow}")
-                        ->getAlignment()
-                        ->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+                        ->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 }
 
                 // ===== Formato moneda para meses + total
@@ -572,7 +560,7 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
 
                         $ws->getStyle("A{$r}:B{$r}")
                             ->getAlignment()
-                            ->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+                            ->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
                         // Asegura 0 en vacíos C..O
                         for ($col = 'C'; $col <= 'O'; $col++) {
@@ -600,7 +588,7 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
 
                         $ws->getStyle("B{$r}")
                             ->getAlignment()
-                            ->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+                            ->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
                         if ($ws->getCell("B{$r}")->getValue() === '' || $ws->getCell("B{$r}")->getValue() === null) {
                             $ws->getCell("B{$r}")->setValue(0);
@@ -632,8 +620,7 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
                 if ($miniDataStart <= $lastRow) {
                     $ws->getStyle("A{$miniDataStart}:A{$lastRow}")
                         ->getAlignment()
-                        ->setHorizontal(Alignment::HORIZONTAL_LEFT)
-                        ->setShrinkToFit(true);
+                        ->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
                     $ws->getStyle("B{$miniDataStart}:B{$lastRow}")
                         ->getNumberFormat()
@@ -641,7 +628,7 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
 
                     $ws->getStyle("B{$miniDataStart}:B{$lastRow}")
                         ->getAlignment()
-                        ->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+                        ->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
                     for ($r = $miniDataStart; $r <= $lastRow; $r++) {
                         $cell = $ws->getCell("B{$r}");

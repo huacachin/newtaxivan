@@ -140,6 +140,7 @@ class DeparturesStatsMonthlyExport implements FromArray, WithHeadings, WithStyle
                         'horizontal'=>Alignment::HORIZONTAL_CENTER,
                         'vertical'  =>Alignment::VERTICAL_CENTER,
                     ],
+                    'borders' => ['allBorders' => ['borderStyle'=>Border::BORDER_THIN,'color'=>['argb'=>'FF000000']]],
                 ]);
 
                 // ===== Encabezado =====
@@ -201,9 +202,9 @@ class DeparturesStatsMonthlyExport implements FromArray, WithHeadings, WithStyle
 
                 if ($dataRows > 0) {
                     $s->getStyle("A{$dataStartRow}:A{$dataEndRow}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                     $s->getStyle("B{$dataStartRow}:B{$dataEndRow}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                     $s->getStyle("C{$dataStartRow}:C{$dataEndRow}")
                         ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                     $s->getStyle("D{$dataStartRow}:{$lastColL}{$dataEndRow}")
@@ -261,7 +262,7 @@ class DeparturesStatsMonthlyExport implements FromArray, WithHeadings, WithStyle
                         'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blueDark]],
                         'font' => ['bold'=>true,'color'=>['argb'=>$fontW]],
                         'alignment' => [
-                            'horizontal'=>Alignment::HORIZONTAL_LEFT,
+                            'horizontal'=>Alignment::HORIZONTAL_CENTER,
                             'vertical'  =>Alignment::VERTICAL_CENTER,
                         ],
                     ]);
@@ -296,7 +297,7 @@ class DeparturesStatsMonthlyExport implements FromArray, WithHeadings, WithStyle
                         'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blueDark]],
                         'font' => ['bold'=>true,'color'=>['argb'=>$fontW]],
                         'alignment' => [
-                            'horizontal'=>Alignment::HORIZONTAL_LEFT,
+                            'horizontal'=>Alignment::HORIZONTAL_CENTER,
                             'vertical'  =>Alignment::VERTICAL_CENTER,
                         ],
                     ]);
@@ -325,7 +326,7 @@ class DeparturesStatsMonthlyExport implements FromArray, WithHeadings, WithStyle
                         'alignment' => ['vertical'=>Alignment::VERTICAL_CENTER],
                     ]);
                     $s->getStyle("A{$fr}:B{$fr}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                     $s->getStyle("C{$fr}:{$lastColL}{$fr}")
                         ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                     $s->getRowDimension($fr)->setRowHeight(18);
@@ -345,7 +346,7 @@ class DeparturesStatsMonthlyExport implements FromArray, WithHeadings, WithStyle
                     'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blueDark]],
                     'font' => ['bold'=>true,'color'=>['argb'=>$fontW]],
                     'alignment' => [
-                        'horizontal'=>Alignment::HORIZONTAL_LEFT,
+                        'horizontal'=>Alignment::HORIZONTAL_CENTER,
                         'vertical'  =>Alignment::VERTICAL_CENTER,
                     ],
                 ]);

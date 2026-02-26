@@ -139,6 +139,8 @@ class IncomesExport implements
                         'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
                         'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
                     ],
+                    'fill'      => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFFFFF']],
+                    'borders'   => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN, 'color' => ['rgb' => '000000']]],
                 ]);
 
                 // Filas clave
@@ -173,15 +175,8 @@ class IncomesExport implements
 
                 // ===== Alineaciones/formatos
                 if ($last >= $dataStartRow) {
-                    $ws->getStyle("A{$dataStartRow}:D{$last}")
+                    $ws->getStyle("A{$dataStartRow}:F{$last}")
                         ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-                    $ws->getStyle("E{$dataStartRow}:E{$last}")
-                        ->getAlignment()
-                        ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT)
-                        ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER)
-                        ->setWrapText(true);
-                    $ws->getStyle("F{$dataStartRow}:F{$last}")
-                        ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
 
                     $ws->getStyle("B{$dataStartRow}:B{$last}")
                         ->getNumberFormat()->setFormatCode('d/m/yy');

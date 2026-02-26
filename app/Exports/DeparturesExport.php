@@ -294,19 +294,12 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithColumnWidths, Wi
                     ]);
                 }
 
-                // ===== Números a la derecha en columnas H..M =====
-                foreach (['H', 'I', 'J', 'K', 'L', 'M'] as $col) {
-                    $s->getStyle("{$col}{$rSec1Body1}:{$col}{$rSec1BodyN}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-                    $s->getStyle("{$col}{$rSec1Total}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-                    $s->getStyle("{$col}{$rSec2Body1}:{$col}{$rSec2BodyN}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-                    $s->getStyle("{$col}{$rSec2Total}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-                    $s->getStyle("{$col}{$rGrand}")
-                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-                }
+                // ===== Números centrados en columnas H..M =====
+                // (ya centrado globalmente en totales; alineación uniforme en body)
+                $s->getStyle("A{$rSec1Body1}:M{$rSec1BodyN}")
+                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $s->getStyle("A{$rSec2Body1}:M{$rSec2BodyN}")
+                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
                 // ===== Fuente 10 global =====
                 $s->getStyle("A1:M{$lastRow}")->getFont()->setSize(10);

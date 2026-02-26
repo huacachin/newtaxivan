@@ -280,14 +280,19 @@ class PaymentsExport implements
                     ]);
 
                     // ===== Alineaciones =====
-                    foreach (['A', 'D', 'E', 'F', 'J'] as $col) {
-                        $ws->getStyle("{$col}{$dataStartRow}:{$col}{$last}")
-                            ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                    }
+                    $ws->getStyle("A{$dataStartRow}:J{$last}")
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
                     // Formato moneda "S/ "
                     $ws->getStyle("J{$dataStartRow}:J{$last}")
                         ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
+
+                    // ===== "Retraso" en rojo (columna G = Tipo) =====
+                    for ($r = $dataStartRow; $r <= $last; $r++) {
+                        if (strcasecmp((string)$ws->getCell("G{$r}")->getValue(), 'retraso') === 0) {
+                            $ws->getStyle("G{$r}")->getFont()->getColor()->setARGB($red);
+                        }
+                    }
 
                     // ===== Fila TOTAL =====
                     $totalRow = $last + 1;
@@ -307,7 +312,7 @@ class PaymentsExport implements
                         ],
                         'alignment' => [
                             'vertical'   => Alignment::VERTICAL_CENTER,
-                            'horizontal' => Alignment::HORIZONTAL_RIGHT,
+                            'horizontal' => Alignment::HORIZONTAL_CENTER,
                         ],
                         'borders' => [
                             'allBorders' => [

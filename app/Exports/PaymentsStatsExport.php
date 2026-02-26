@@ -93,6 +93,7 @@ class PaymentsStatsExport implements FromArray, WithHeadings, WithEvents, WithTi
                     'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$white]],
                     'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$sundayRed]],
                     'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
+                    'borders' => ['allBorders' => ['borderStyle'=>Border::BORDER_THIN,'color'=>['argb'=>'FF000000']]],
                 ]);
                 $sheet->getRowDimension(1)->setRowHeight(18);
 
@@ -147,14 +148,15 @@ class PaymentsStatsExport implements FromArray, WithHeadings, WithEvents, WithTi
                     ->getNumberFormat()->setFormatCode('#,##0.00');
 
                 // ======= Alineaciones =======
-                $sheet->getStyle("A{$firstDataRow}:A{$footerExcelRow}")
-                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-                $sheet->getStyle("B{$firstDataRow}:B{$footerExcelRow}")
-                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-                $sheet->getStyle("C{$firstDataRow}:C{$footerExcelRow}")
+                $sheet->getStyle("A{$firstDataRow}:{$endCol}{$footerExcelRow}")
                     ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                $sheet->getStyle("{$firstDayColL}{$firstDataRow}:{$endCol}{$footerExcelRow}")
-                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+
+                // ======= "Retraso" siempre en rojo =======
+                for ($r = $firstDataRow; $r <= $footerExcelRow - 1; $r++) {
+                    if (strcasecmp((string)$sheet->getCell("C{$r}")->getValue(), 'retraso') === 0) {
+                        $sheet->getStyle("C{$r}")->getFont()->getColor()->setRGB('F80000');
+                    }
+                }
 
                 // ======= Anchos compactos =======
                 // A: Controlador, B: Paradero, C: Tipo, D..: días, última: Total
