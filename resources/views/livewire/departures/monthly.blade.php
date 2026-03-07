@@ -143,12 +143,109 @@
                         </table>
                     </div>
 
-                    <small class="text-muted">
-                        * Encabezado y pie fijos al hacer scroll. Domingos resaltados en rojo.
+                </div>
+            </div>
+        </div>
+
+        {{-- ===== Tablas por Sede ===== --}}
+        @foreach($hqTables as $hqId => $hq)
+        <div class="col-xl-12 mt-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="fw-bold title-modules mb-2">{{ $hq['name'] }} - V.T {{$monthName}} DEL {{$year}}</h5>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped table-hover">
+                            <thead class="bg-primary">
+                            <tr>
+                                <th>Item</th>
+                                <th>COD</th>
+                                <th>Placa</th>
+                                @foreach($days as $d)
+                                    @php $isSun = \Carbon\Carbon::create($year, $month, $d)->isSunday(); @endphp
+                                    <th class="{{ $isSun ? 'bg-danger' : '' }}">{{ $d }}</th>
+                                @endforeach
+                                <th>T. Salida</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @php $hi=0; @endphp
+                            @foreach($hq['rows'] as $row)
+                                @php $hi++; @endphp
+                                <tr class="text-center">
+                                    <td>{{ $hi }}</td>
+                                    <td>{{ $row['sort_order'] }}</td>
+                                    <td class="text-start">{{ $row['plate'] }}</td>
+                                    @foreach($days as $d)
+                                        <td>{{ $row['daily'][$d] ?? 0 }}</td>
+                                    @endforeach
+                                    <td><strong>{{ $row['total'] }}</strong></td>
+                                </tr>
+                            @endforeach
+                            </tbody>
+                            <tfoot class="text-center f-w-600 bg-primary">
+                            <tr>
+                                <th colspan="3" class="text-center">Total Vueltas</th>
+                                @foreach($days as $d)
+                                    <th class="bg-modules">{{ $hq['totalPerDay'][$d] ?? 0 }}</th>
+                                @endforeach
+                                <th>{{ array_sum($hq['totalPerDay']) }}</th>
+                            </tr>
+                            <tr>
+                                <th colspan="3" class="text-center">Total V.T</th>
+                                @foreach($days as $d)
+                                    <th class="bg-modules">{{ $hq['vtPerDay'][$d] ?? 0 }}</th>
+                                @endforeach
+                                <th>{{ array_sum($hq['vtPerDay']) }}</th>
+                            </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endforeach
+
+        {{-- ===== Resumen por Sede ===== --}}
+        @if(count($hqSummary) > 0)
+        <div class="col-xl-12 mt-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="fw-bold title-modules mb-2">RESUMEN POR SEDE - {{$monthName}} DEL {{$year}}</h5>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead class="bg-primary">
+                            <tr>
+                                <th>Sede</th>
+                                <th class="text-center">Total Vueltas</th>
+                                <th class="text-center">Total V.T</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @foreach($hqSummary as $s)
+                                <tr>
+                                    <td>{{ $s['name'] }}</td>
+                                    <td class="text-center">{{ $s['totalVueltas'] }}</td>
+                                    <td class="text-center">{{ $s['totalVT'] }}</td>
+                                </tr>
+                            @endforeach
+                            </tbody>
+                            <tfoot class="text-center f-w-600 bg-primary">
+                            <tr>
+                                <th>TOTAL GENERAL</th>
+                                <th>{{ $grandTotalVueltas }}</th>
+                                <th>{{ $grandTotalVT }}</th>
+                            </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <small class="text-muted mt-2 d-block">
+                        * El Total General V.T no es la suma de los V.T por sede. Un vehículo que opera en varias sedes el mismo día se cuenta una sola vez en el total general, pero aparece en cada sede donde trabajó.
                     </small>
                 </div>
             </div>
         </div>
+        @endif
+
     </div>
 
     <div class="screen-overlay"

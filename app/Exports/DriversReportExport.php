@@ -73,6 +73,13 @@ class DriversReportExport implements FromArray, WithColumnFormatting, WithEvents
             ];
         }
 
+        // === Footer sección 1 (placeholder) ===
+        $rows[] = array_fill(0, 9, '');
+
+        // === Separador + Título sección 2 (placeholder) ===
+        $rows[] = array_fill(0, 9, '');
+        $rows[] = array_fill(0, 9, '');
+
         // === Tabla 2: Conductores libres ===
         $rows[] = $head;
         foreach ($free as $d) {
@@ -88,6 +95,9 @@ class DriversReportExport implements FromArray, WithColumnFormatting, WithEvents
                 (string)$d->condition,
             ];
         }
+
+        // === Footer sección 2 (placeholder) ===
+        $rows[] = array_fill(0, 9, '');
 
         return $rows;
     }
@@ -124,11 +134,12 @@ class DriversReportExport implements FromArray, WithColumnFormatting, WithEvents
                 $e->sheet->getDelegate()->setTitle('Conductores');
                 $ws = $e->sheet->getDelegate();
 
-                $blue  = 'FF2874A6';
-                $white = 'FFFFFFFF';
-                $black = 'FF000000';
-                $gray  = 'FF808080';
-                $red   = 'FFF80000';
+                $blue     = 'FF2874A6';
+                $footerBg = 'FFCEE7FF';
+                $white    = 'FFFFFFFF';
+                $black    = 'FF000000';
+                $gray     = 'FF808080';
+                $red      = 'FFF80000';
 
                 $ws->getDefaultRowDimension()->setRowHeight(15);
 
@@ -149,25 +160,27 @@ class DriversReportExport implements FromArray, WithColumnFormatting, WithEvents
                 // ===== Ocultar cuadrícula =====
                 $ws->setShowGridLines(false);
 
-                // ===== Detectar bloques =====
+                // ===== Posiciones calculadas =====
+                // After title insert at row 1:
+                // Row 2: header1
+                // Rows 3 to 2+totalActive: active data
+                // Row 3+totalActive: TOTAL ACTIVOS (placeholder)
+                // Row 4+totalActive: gap
+                // Row 5+totalActive: CONDUCTORES LIBRES title (placeholder)
+                // Row 6+totalActive: header2
+                // Rows 7+totalActive to 6+totalActive+totalFree: free data
+                // Row 7+totalActive+totalFree: TOTAL LIBRES (placeholder)
+
                 $header1    = 2;
                 $dataStart1 = 3;
-                $rowsTotal  = (int) $ws->getHighestRow();
-                $header2    = null;
-
-                $firstHeadingLabel = $this->headings()[0] ?? 'Item';
-                for ($r = $dataStart1; $r <= $rowsTotal; $r++) {
-                    if ((string) $ws->getCell("A{$r}")->getValue() === $firstHeadingLabel) {
-                        $header2 = $r;
-                        break;
-                    }
-                }
-                if (!$header2) $header2 = $rowsTotal;
-
-                $dataEnd1   = $header2 - 2;   // última fila de datos sección 1 (antes del separador)
-                $title2     = $header2 - 1;   // fila "CONDUCTORES LIBRES"
+                $dataEnd1   = 2 + $this->totalActive;
+                $foot1      = $dataEnd1 + 1;
+                $gapRow     = $foot1 + 1;
+                $title2     = $gapRow + 1;
+                $header2    = $title2 + 1;
                 $dataStart2 = $header2 + 1;
-                $dataEnd2   = $rowsTotal;
+                $dataEnd2   = $header2 + $this->totalFree;
+                $foot2      = $dataEnd2 + 1;
 
                 // ===== Encabezados azules =====
                 foreach ([$header1, $header2] as $hr) {
@@ -206,14 +219,44 @@ class DriversReportExport implements FromArray, WithColumnFormatting, WithEvents
                         'alignment' => ['vertical' => Alignment::VERTICAL_CENTER],
                     ]);
                 };
-                $applyDataBorders($dataStart1, $dataEnd1);
-                $applyDataBorders($dataStart2, $dataEnd2);
+                if ($this->totalActive > 0) $applyDataBorders($dataStart1, $dataEnd1);
+                if ($this->totalFree > 0)    $applyDataBorders($dataStart2, $dataEnd2);
 
                 // ===== Alineaciones =====
-                foreach ([[$dataStart1, $dataEnd1], [$dataStart2, $dataEnd2]] as [$r1, $r2]) {
-                    if ($r2 < $r1) continue;
-                    $ws->getStyle("A{$r1}:I{$r2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                foreach ([[$dataStart1, $dataEnd1, $this->totalActive], [$dataStart2, $dataEnd2, $this->totalFree]] as [$r1, $r2, $cnt]) {
+                    if ($cnt <= 0) continue;
+                    $ws->getStyle("A{$r1}:{$lastCol}{$r2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 }
+
+                // ===== Item y Cod en negrita =====
+                if ($this->totalActive > 0) {
+                    $ws->getStyle("A{$dataStart1}:B{$dataEnd1}")->getFont()->setBold(true);
+                }
+                if ($this->totalFree > 0) {
+                    $ws->getStyle("A{$dataStart2}:B{$dataEnd2}")->getFont()->setBold(true);
+                }
+
+                // ===== Footer: estilo compartido =====
+                $footerStyle = [
+                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['argb' => $black]],
+                    'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $footerBg]],
+                    'alignment' => ['vertical' => Alignment::VERTICAL_CENTER, 'horizontal' => Alignment::HORIZONTAL_CENTER],
+                    'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]]],
+                ];
+
+                // ===== TOTAL ACTIVOS =====
+                $ws->mergeCells("A{$foot1}:H{$foot1}");
+                $ws->setCellValue("A{$foot1}", 'TOTAL ACTIVOS');
+                $ws->setCellValue("I{$foot1}", $this->totalActive);
+                $ws->getStyle("A{$foot1}:{$lastCol}{$foot1}")->applyFromArray($footerStyle);
+                $ws->getRowDimension($foot1)->setRowHeight(16);
+
+                // ===== TOTAL LIBRES =====
+                $ws->mergeCells("A{$foot2}:H{$foot2}");
+                $ws->setCellValue("A{$foot2}", 'TOTAL LIBRES');
+                $ws->setCellValue("I{$foot2}", $this->totalFree);
+                $ws->getStyle("A{$foot2}:{$lastCol}{$foot2}")->applyFromArray($footerStyle);
+                $ws->getRowDimension($foot2)->setRowHeight(16);
 
                 // ===== Anchos de columna =====
                 $ws->getColumnDimension('A')->setWidth(4.2);

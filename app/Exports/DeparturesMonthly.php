@@ -7,15 +7,16 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithEvents;
-use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class DeparturesMonthly implements FromArray, WithHeadings, WithStyles, WithEvents
+class DeparturesMonthly implements FromArray, WithStyles, WithEvents
 {
     public function __construct(
         protected int $year,
@@ -26,219 +27,432 @@ class DeparturesMonthly implements FromArray, WithHeadings, WithStyles, WithEven
 
     protected int   $daysInMonth = 0;
     protected array $days = [];
-    protected array $rows = [];                 // [ vid => ['plate'=>..., 'daily'=>[1..n], 'total'=>int] ]
-    protected array $totalPerDay = [];          // suma por día
-    protected array $vehiclesWorkedPerDay = []; // # vehículos con salida por día
+    protected array $rows = [];
+    protected array $totalPerDay = [];
+    protected array $vehiclesWorkedPerDay = [];
 
-    /* ----------------- Headings / Data ----------------- */
+    // Per HQ
+    protected array $hqTables = [];
+    protected array $hqSummary = [];
+    protected int   $grandTotalVueltas = 0;
+    protected int   $grandTotalVT = 0;
 
-    public function headings(): array
-    {
-        $this->prepare();
-        $head = ['Item', 'Placa'];
-        for ($d = 1; $d <= $this->daysInMonth; $d++) $head[] = (string)$d;
-        $head[] = 'T. Salida';
-        return $head;
-    }
+    // Section positions for styling
+    protected array $sections = [];
+
+    /* ----------------- Data ----------------- */
 
     public function array(): array
     {
         $this->prepare();
 
         $data = [];
+        $currentRow = 1; // tracks Excel row (1-based)
+
+        // ===== MAIN TABLE =====
+        // Title row
+        $titleText = 'REPORTE MENSUAL POR PLACA - V.T ' . mb_strtoupper($this->monthName()) . ' ' . $this->year;
+        $titleRow = array_merge([$titleText], array_fill(0, $this->daysInMonth + 1, ''));
+        $data[] = $titleRow;
+        $this->sections['main_title'] = $currentRow;
+        $currentRow++;
+
+        // Header row
+        $head = ['Item', 'Placa'];
+        for ($d = 1; $d <= $this->daysInMonth; $d++) $head[] = (string)$d;
+        $head[] = 'T. Salida';
+        $data[] = $head;
+        $this->sections['main_header'] = $currentRow;
+        $currentRow++;
+
+        // Data rows
+        $this->sections['main_data_start'] = $currentRow;
         $i = 0;
         foreach ($this->rows as $r) {
             $i++;
             $row = [$i, $r['plate']];
             for ($d = 1; $d <= $this->daysInMonth; $d++) {
-                // SIEMPRE número para que muestre 0
                 $row[] = (int)($r['daily'][$d] ?? 0);
             }
             $row[] = (int)$r['total'];
             $data[] = $row;
+            $currentRow++;
         }
+        $this->sections['main_data_end'] = $currentRow - 1;
 
-        // Totales: “Total Salidas”
+        // Footer: Total Salidas
         $rowA = ['', 'Total Salidas'];
         for ($d = 1; $d <= $this->daysInMonth; $d++) $rowA[] = (int)($this->totalPerDay[$d] ?? 0);
         $rowA[] = array_sum($this->totalPerDay);
         $data[] = $rowA;
+        $this->sections['main_footer1'] = $currentRow;
+        $currentRow++;
 
-        // Totales: “Total V.T. (vehículos con salida)”
-        $rowB = ['', 'Total V.T. (vehículos con salida)'];
+        // Footer: Total V.T.
+        $rowB = ['', 'Total V.T.'];
         for ($d = 1; $d <= $this->daysInMonth; $d++) $rowB[] = (int)($this->vehiclesWorkedPerDay[$d] ?? 0);
         $rowB[] = array_sum($this->vehiclesWorkedPerDay);
         $data[] = $rowB;
+        $this->sections['main_footer2'] = $currentRow;
+        $currentRow++;
+
+        // ===== PER-HQ TABLES =====
+        $this->sections['hq_sections'] = [];
+
+        foreach ($this->hqTables as $hqId => $hq) {
+            // Blank separator
+            $data[] = array_fill(0, $this->daysInMonth + 3, '');
+            $currentRow++;
+
+            $sec = [];
+
+            // HQ Title
+            $hqTitle = mb_strtoupper($hq['name']) . ' - V.T ' . mb_strtoupper($this->monthName()) . ' ' . $this->year;
+            $data[] = array_merge([$hqTitle], array_fill(0, $this->daysInMonth + 1, ''));
+            $sec['title'] = $currentRow;
+            $currentRow++;
+
+            // HQ Header
+            $data[] = $head; // same headers
+            $sec['header'] = $currentRow;
+            $currentRow++;
+
+            // HQ Data
+            $sec['data_start'] = $currentRow;
+            $hi = 0;
+            foreach ($hq['rows'] as $r) {
+                $hi++;
+                $row = [$hi, $r['plate']];
+                for ($d = 1; $d <= $this->daysInMonth; $d++) {
+                    $row[] = (int)($r['daily'][$d] ?? 0);
+                }
+                $row[] = (int)$r['total'];
+                $data[] = $row;
+                $currentRow++;
+            }
+            $sec['data_end'] = $currentRow - 1;
+
+            // HQ Total Salidas
+            $fA = ['', 'Total Salidas'];
+            for ($d = 1; $d <= $this->daysInMonth; $d++) $fA[] = (int)($hq['totalPerDay'][$d] ?? 0);
+            $fA[] = array_sum($hq['totalPerDay']);
+            $data[] = $fA;
+            $sec['footer1'] = $currentRow;
+            $currentRow++;
+
+            // HQ Total V.T.
+            $fB = ['', 'Total V.T.'];
+            for ($d = 1; $d <= $this->daysInMonth; $d++) $fB[] = (int)($hq['vtPerDay'][$d] ?? 0);
+            $fB[] = array_sum($hq['vtPerDay']);
+            $data[] = $fB;
+            $sec['footer2'] = $currentRow;
+            $currentRow++;
+
+            $this->sections['hq_sections'][] = $sec;
+        }
+
+        // ===== SUMMARY TABLE =====
+        if (!empty($this->hqSummary)) {
+            // Column splits: divide table width into 3 zones for the summary
+            $totalCols = 2 + $this->daysInMonth + 1; // same as lastColIdx
+            $sumC1End  = (int) floor($totalCols / 3);
+            $sumC2Start = $sumC1End + 1;
+            $sumC2End   = (int) floor(2 * $totalCols / 3);
+            $sumC3Start = $sumC2End + 1;
+            $sumC3End   = $totalCols;
+
+            $this->sections['sum_cols'] = [
+                'c1End'    => $sumC1End,
+                'c2Start'  => $sumC2Start,
+                'c2End'    => $sumC2End,
+                'c3Start'  => $sumC3Start,
+                'c3End'    => $sumC3End,
+            ];
+
+            // Helper: build a full-width row with values at zone starts
+            $sumRow = function ($val1, $val2, $val3) use ($totalCols, $sumC2Start, $sumC3Start) {
+                $row = array_fill(0, $totalCols, '');
+                $row[0] = $val1;
+                $row[$sumC2Start - 1] = $val2; // 0-based index
+                $row[$sumC3Start - 1] = $val3;
+                return $row;
+            };
+
+            // Blank separator
+            $data[] = array_fill(0, $totalCols, '');
+            $currentRow++;
+
+            // Summary title
+            $sumTitle = 'RESUMEN POR SEDE - ' . mb_strtoupper($this->monthName()) . ' ' . $this->year;
+            $data[] = array_merge([$sumTitle], array_fill(0, $totalCols - 1, ''));
+            $this->sections['sum_title'] = $currentRow;
+            $currentRow++;
+
+            // Summary header
+            $data[] = $sumRow('Sede', 'Total Vueltas', 'Total V.T');
+            $this->sections['sum_header'] = $currentRow;
+            $currentRow++;
+
+            // Summary rows
+            $this->sections['sum_data_start'] = $currentRow;
+            foreach ($this->hqSummary as $s) {
+                $data[] = $sumRow($s['name'], $s['totalVueltas'], $s['totalVT']);
+                $currentRow++;
+            }
+            $this->sections['sum_data_end'] = $currentRow - 1;
+
+            // Summary total
+            $data[] = $sumRow('TOTAL GENERAL', $this->grandTotalVueltas, $this->grandTotalVT);
+            $this->sections['sum_footer'] = $currentRow;
+            $currentRow++;
+
+            // Disclaimer
+            $data[] = array_merge(['* El Total General V.T no es la suma de los V.T por sede. Un vehiculo que opera en varias sedes el mismo dia se cuenta una sola vez en el total general.'], array_fill(0, $totalCols - 1, ''));
+            $this->sections['disclaimer'] = $currentRow;
+        }
 
         return $data;
     }
 
-    /* ----------------- Styles básicos ----------------- */
-
     public function styles(Worksheet $sheet) { return []; }
 
-    /* ----------------- AfterSheet: diseño ----------------- */
+    /* ----------------- AfterSheet: styling ----------------- */
 
     public function registerEvents(): array
     {
         return [
-            \Maatwebsite\Excel\Events\AfterSheet::class => function ($e) {
+            AfterSheet::class => function (AfterSheet $e) {
                 $ws = $e->sheet->getDelegate();
 
                 $blue     = 'FF2874A6';
                 $footerBg = 'FFCEE7FF';
                 $white    = 'FFFFFFFF';
                 $black    = 'FF000000';
-                $gray     = 'FF808080';
                 $red      = 'FFF80000';
-                $redBg    = 'FFFF0000'; // fondo domingos
+                $redBg    = 'FFFF0000';
 
+                $ws->getParent()->getDefaultStyle()->getFont()->setSize(10);
                 $ws->getDefaultRowDimension()->setRowHeight(15);
-
-                // ===== Insertar fila de título =====
-                $ws->insertNewRowBefore(1, 1);
-                $lastCol    = $ws->getHighestColumn();
-                $lastColIdx = Coordinate::columnIndexFromString($lastCol);
-
-                // ===== Título (fila 1) =====
-                $title = 'REPORTE MENSUAL POR PLACA – V.T ' . mb_strtoupper($this->monthName()) . ' ' . $this->year;
-                $ws->mergeCells("A1:{$lastCol}1");
-                $ws->setCellValue('A1', $title);
-                $ws->getStyle("A1:{$lastCol}1")->applyFromArray([
-                    'font'      => ['bold' => true, 'size' => 11, 'color' => ['argb' => $red]],
-                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
-                    'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]]],
-                ]);
-                $ws->getRowDimension(1)->setRowHeight(20);
-
-                // ===== Ocultar cuadrícula =====
                 $ws->setShowGridLines(false);
 
-                // ===== Encabezado (fila 2) =====
-                $headerRow    = 2;
-                $dataStartRow = 3;
-                $ws->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->applyFromArray([
-                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['argb' => $white]],
-                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
-                    'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $blue]],
-                    'borders'   => [
-                        'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $white]],
-                        'outline'    => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]],
-                    ],
-                ]);
-                $ws->getRowDimension($headerRow)->setRowHeight(18);
+                $lastColIdx    = 2 + $this->daysInMonth + 1; // Item, Placa, days, T.Salida
+                $lastCol       = Coordinate::stringFromColumnIndex($lastColIdx);
+                $firstDayColIdx = 3; // C = day 1
 
-                // ===== Domingos en rojo en el encabezado =====
-                $firstDayColIdx = 3; // C = día 1 (A=Item, B=Placa)
+                // Sunday column indices
+                $sundayCols = [];
                 for ($d = 1; $d <= $this->daysInMonth; $d++) {
-                    $date = \Carbon\Carbon::create($this->year, $this->month, $d);
-                    if ($date->isSunday()) {
-                        $col = Coordinate::stringFromColumnIndex($firstDayColIdx + ($d - 1));
+                    if (Carbon::create($this->year, $this->month, $d)->isSunday()) {
+                        $sundayCols[] = $firstDayColIdx + ($d - 1);
+                    }
+                }
+
+                // Helper: style a full table section
+                $styleSection = function (array $sec) use ($ws, $blue, $white, $black, $red, $redBg, $footerBg, $lastCol, $lastColIdx, $firstDayColIdx, $sundayCols) {
+                    // Title
+                    $titleRow = $sec['title'];
+                    $ws->mergeCells("A{$titleRow}:{$lastCol}{$titleRow}");
+                    $ws->getStyle("A{$titleRow}:{$lastCol}{$titleRow}")->applyFromArray([
+                        'font'      => ['bold' => true, 'size' => 11, 'color' => ['argb' => $red]],
+                        'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                        'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]]],
+                    ]);
+                    $ws->getRowDimension($titleRow)->setRowHeight(20);
+
+                    // Header
+                    $headerRow = $sec['header'];
+                    $ws->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->applyFromArray([
+                        'font'      => ['bold' => true, 'size' => 10, 'color' => ['argb' => $white]],
+                        'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                        'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $blue]],
+                    ]);
+                    $ws->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")
+                        ->getBorders()->getAllBorders()
+                        ->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB($black);
+                    $ws->getRowDimension($headerRow)->setRowHeight(18);
+
+                    // Sundays in header
+                    foreach ($sundayCols as $colIdx) {
+                        $col = Coordinate::stringFromColumnIndex($colIdx);
                         $ws->getStyle("{$col}{$headerRow}")->applyFromArray([
                             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $redBg]],
                             'font' => ['bold' => true, 'color' => ['argb' => $white]],
                         ]);
                     }
-                }
 
-                // ===== Congelar encabezado =====
-                $ws->freezePane('C3');
+                    // Data rows: dashed horizontal, solid vertical
+                    $dataStart = $sec['data_start'];
+                    $dataEnd   = $sec['data_end'];
+                    if ($dataEnd >= $dataStart) {
+                        $dataRange = "A{$dataStart}:{$lastCol}{$dataEnd}";
+                        $borders   = $ws->getStyle($dataRange)->getBorders();
+                        $borders->getLeft()->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB($black);
+                        $borders->getRight()->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB($black);
+                        $borders->getTop()->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB($black);
+                        $borders->getBottom()->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB($black);
+                        $borders->getHorizontal()->setBorderStyle(Border::BORDER_DASHED)->getColor()->setARGB($black);
+                        $borders->getVertical()->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB($black);
 
-                // ===== Datos =====
-                $dataRows   = count($this->rows);
-                $dataEndRow = $dataRows > 0 ? ($dataStartRow + $dataRows - 1) : ($dataStartRow - 1);
-                $totalCol   = Coordinate::stringFromColumnIndex($lastColIdx);
+                        $ws->getStyle($dataRange)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+                        $ws->getStyle("A{$dataStart}:B{$dataEnd}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                        $cCol = Coordinate::stringFromColumnIndex($firstDayColIdx);
+                        $ws->getStyle("{$cCol}{$dataStart}:{$lastCol}{$dataEnd}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                        $ws->getStyle("{$cCol}{$dataStart}:{$lastCol}{$dataEnd}")->getNumberFormat()->setFormatCode('0');
 
-                if ($dataRows > 0) {
-                    $ws->getStyle("A{$dataStartRow}:{$lastCol}{$dataEndRow}")->applyFromArray([
-                        'borders' => [
-                            'allBorders' => ['borderStyle' => Border::BORDER_DOTTED, 'color' => ['argb' => $gray]],
-                            'vertical'   => ['borderStyle' => Border::BORDER_THIN,   'color' => ['argb' => $black]],
-                            'left'       => ['borderStyle' => Border::BORDER_THIN,   'color' => ['argb' => $black]],
-                            'right'      => ['borderStyle' => Border::BORDER_THIN,   'color' => ['argb' => $black]],
-                        ],
-                        'alignment' => ['vertical' => Alignment::VERTICAL_CENTER],
-                    ]);
-
-                    $ws->getStyle("A{$dataStartRow}:A{$dataEndRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                    $ws->getStyle("B{$dataStartRow}:B{$dataEndRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                    $ws->getStyle("C{$dataStartRow}:{$totalCol}{$dataEndRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                    $ws->getStyle("C{$dataStartRow}:{$totalCol}{$dataEndRow}")->getNumberFormat()->setFormatCode('0');
-
-                    // Forzar 0 en celdas vacías
-                    for ($r = $dataStartRow; $r <= $dataEndRow; $r++) {
-                        for ($c = $firstDayColIdx; $c <= $lastColIdx; $c++) {
-                            $cell = $ws->getCellByColumnAndRow($c, $r);
-                            if ($cell->getValue() === null || $cell->getValue() === '') {
-                                $cell->setValueExplicit(0, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_NUMERIC);
+                        // Fill empty cells with 0
+                        for ($r = $dataStart; $r <= $dataEnd; $r++) {
+                            for ($c = $firstDayColIdx; $c <= $lastColIdx; $c++) {
+                                $cell = $ws->getCell(Coordinate::stringFromColumnIndex($c) . $r);
+                                if ($cell->getValue() === null || $cell->getValue() === '') {
+                                    $cell->setValueExplicit(0, DataType::TYPE_NUMERIC);
+                                }
                             }
                         }
                     }
+
+                    // Footers
+                    foreach ([$sec['footer1'], $sec['footer2']] as $fr) {
+                        $ws->getStyle("A{$fr}:{$lastCol}{$fr}")->applyFromArray([
+                            'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $footerBg]],
+                            'font'      => ['bold' => true, 'size' => 10, 'color' => ['argb' => $black]],
+                            'alignment' => ['vertical' => Alignment::VERTICAL_CENTER],
+                            'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]]],
+                        ]);
+                        $ws->getStyle("A{$fr}:B{$fr}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                        $cCol = Coordinate::stringFromColumnIndex($firstDayColIdx);
+                        $ws->getStyle("{$cCol}{$fr}:{$lastCol}{$fr}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                        $ws->getStyle("{$cCol}{$fr}:{$lastCol}{$fr}")->getNumberFormat()->setFormatCode('0');
+                        $ws->getRowDimension($fr)->setRowHeight(18);
+                    }
+                };
+
+                // ===== Style main table =====
+                $styleSection([
+                    'title'      => $this->sections['main_title'],
+                    'header'     => $this->sections['main_header'],
+                    'data_start' => $this->sections['main_data_start'],
+                    'data_end'   => $this->sections['main_data_end'],
+                    'footer1'    => $this->sections['main_footer1'],
+                    'footer2'    => $this->sections['main_footer2'],
+                ]);
+
+                // Freeze pane on main table
+                $ws->freezePane('C3');
+
+                // ===== Style per-HQ tables =====
+                foreach ($this->sections['hq_sections'] as $sec) {
+                    $styleSection($sec);
                 }
 
-                // ===== Pies (Total Salidas + Total V.T.) =====
-                $lastRow = (int) $ws->getHighestRow();
-                $footer2 = $lastRow;
-                $footer1 = $lastRow - 1;
+                // ===== Style summary table =====
+                if (isset($this->sections['sum_title'])) {
+                    $sc = $this->sections['sum_cols'];
+                    $sc1End  = Coordinate::stringFromColumnIndex($sc['c1End']);
+                    $sc2Start = Coordinate::stringFromColumnIndex($sc['c2Start']);
+                    $sc2End   = Coordinate::stringFromColumnIndex($sc['c2End']);
+                    $sc3Start = Coordinate::stringFromColumnIndex($sc['c3Start']);
+                    $sc3End   = Coordinate::stringFromColumnIndex($sc['c3End']);
 
-                foreach ([$footer1, $footer2] as $fr) {
-                    if ($fr < $dataStartRow) continue;
-                    $ws->getStyle("A{$fr}:{$lastCol}{$fr}")->applyFromArray([
-                        'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $footerBg]],
-                        'font'      => ['bold' => true, 'size' => 10, 'color' => ['argb' => $black]],
-                        'alignment' => ['vertical' => Alignment::VERTICAL_CENTER],
+                    $sumTitleRow  = $this->sections['sum_title'];
+                    $sumHeaderRow = $this->sections['sum_header'];
+                    $sumDataStart = $this->sections['sum_data_start'];
+                    $sumDataEnd   = $this->sections['sum_data_end'];
+                    $sumFooterRow = $this->sections['sum_footer'];
+
+                    // Helper: merge 3 zones for a given row
+                    $mergeSumRow = function (int $row) use ($ws, $sc1End, $sc2Start, $sc2End, $sc3Start, $sc3End) {
+                        $ws->mergeCells("A{$row}:{$sc1End}{$row}");
+                        $ws->mergeCells("{$sc2Start}{$row}:{$sc2End}{$row}");
+                        $ws->mergeCells("{$sc3Start}{$row}:{$sc3End}{$row}");
+                    };
+
+                    // Title: merge full width
+                    $ws->mergeCells("A{$sumTitleRow}:{$sc3End}{$sumTitleRow}");
+                    $ws->getStyle("A{$sumTitleRow}:{$sc3End}{$sumTitleRow}")->applyFromArray([
+                        'font'      => ['bold' => true, 'size' => 11, 'color' => ['argb' => $red]],
+                        'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
                         'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]]],
                     ]);
-                    $ws->getStyle("A{$fr}:B{$fr}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                    $ws->getStyle("C{$fr}:{$lastCol}{$fr}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                    $ws->getStyle("C{$fr}:{$lastCol}{$fr}")->getNumberFormat()->setFormatCode('0');
+                    $ws->getRowDimension($sumTitleRow)->setRowHeight(20);
 
-                    // Rellena 0 si vacío
-                    for ($c = $firstDayColIdx; $c <= $lastColIdx; $c++) {
-                        $cell = $ws->getCellByColumnAndRow($c, $fr);
-                        if ($cell->getValue() === null || $cell->getValue() === '') {
-                            $cell->setValueExplicit(0, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_NUMERIC);
+                    // Header: merge 3 zones
+                    $mergeSumRow($sumHeaderRow);
+                    $ws->getStyle("A{$sumHeaderRow}:{$sc3End}{$sumHeaderRow}")->applyFromArray([
+                        'font'      => ['bold' => true, 'size' => 10, 'color' => ['argb' => $white]],
+                        'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                        'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $blue]],
+                        'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]]],
+                    ]);
+                    $ws->getRowDimension($sumHeaderRow)->setRowHeight(18);
+
+                    // Data rows: merge zones + dashed horizontal borders
+                    if ($sumDataEnd >= $sumDataStart) {
+                        for ($r = $sumDataStart; $r <= $sumDataEnd; $r++) {
+                            $mergeSumRow($r);
                         }
+                        $dataRange = "A{$sumDataStart}:{$sc3End}{$sumDataEnd}";
+                        $borders   = $ws->getStyle($dataRange)->getBorders();
+                        $borders->getLeft()->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB($black);
+                        $borders->getRight()->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB($black);
+                        $borders->getTop()->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB($black);
+                        $borders->getBottom()->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB($black);
+                        $borders->getHorizontal()->setBorderStyle(Border::BORDER_DASHED)->getColor()->setARGB($black);
+                        $borders->getVertical()->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB($black);
+
+                        $ws->getStyle("{$sc2Start}{$sumDataStart}:{$sc3End}{$sumDataEnd}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                     }
-                    $ws->getRowDimension($fr)->setRowHeight(18);
+
+                    // Footer: merge zones
+                    $mergeSumRow($sumFooterRow);
+                    $ws->getStyle("A{$sumFooterRow}:{$sc3End}{$sumFooterRow}")->applyFromArray([
+                        'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $footerBg]],
+                        'font'      => ['bold' => true, 'size' => 10, 'color' => ['argb' => $black]],
+                        'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                        'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]]],
+                    ]);
+                    $ws->getRowDimension($sumFooterRow)->setRowHeight(18);
+
+                    // Disclaimer: merge full width
+                    if (isset($this->sections['disclaimer'])) {
+                        $discRow = $this->sections['disclaimer'];
+                        $ws->mergeCells("A{$discRow}:{$sc3End}{$discRow}");
+                        $ws->getStyle("A{$discRow}:{$sc3End}{$discRow}")->applyFromArray([
+                            'font'      => ['italic' => true, 'size' => 9, 'color' => ['argb' => 'FF808080']],
+                            'alignment' => ['wrapText' => true],
+                        ]);
+                    }
                 }
 
-                // ===== Anchos de columna =====
+                // ===== Column widths: autoSize for days and totals =====
                 $ws->getColumnDimension('A')->setAutoSize(false)->setWidth(6.0);
                 $ws->getColumnDimension('B')->setAutoSize(false)->setWidth(9.5);
-                for ($c = $firstDayColIdx; $c < $lastColIdx; $c++) {
-                    $col = Coordinate::stringFromColumnIndex($c);
-                    $ws->getColumnDimension($col)->setAutoSize(false)->setWidth(3.0);
+                for ($c = $firstDayColIdx; $c <= $lastColIdx; $c++) {
+                    $ws->getColumnDimensionByColumn($c)->setAutoSize(true);
                 }
-                $ws->getColumnDimension($lastCol)->setAutoSize(false)->setWidth(7.0);
 
-                // ===== Ocultar columnas vacías más allá de la tabla =====
+                // Hide extra columns
                 for ($c = $lastColIdx + 1; $c <= 50; $c++) {
                     $ws->getColumnDimension(Coordinate::stringFromColumnIndex($c))->setVisible(false);
                 }
 
-                // ===== Fuente 10 global / sin wrap =====
+                // Global font & no wrap (except disclaimer)
                 $finalRow = (int) $ws->getHighestRow();
                 $ws->getStyle("A1:{$lastCol}{$finalRow}")->getFont()->setSize(10);
-                $ws->getStyle("A1:{$lastCol}{$finalRow}")->getAlignment()->setWrapText(false);
             },
         ];
     }
 
-
-
-    /* ----------------- Datos & Helpers ----------------- */
+    /* ----------------- Data & Helpers ----------------- */
 
     protected function prepare(): void
     {
         if ($this->daysInMonth > 0) return;
 
-        // Asegurar columnas existentes
         if (!Schema::hasColumn('departures', $this->dateColumn)) {
             $this->dateColumn = 'date';
         }
         if ($this->countColumn === null) {
-            foreach (['laps','num','quantity','vueltas','count','total_turns'] as $c) {
+            foreach (['laps','num','quantity','vueltas','count','total_turns','times'] as $c) {
                 if (Schema::hasColumn('departures', $c)) { $this->countColumn = $c; break; }
             }
         }
@@ -248,14 +462,17 @@ class DeparturesMonthly implements FromArray, WithHeadings, WithStyles, WithEven
         $this->daysInMonth = (int) $start->daysInMonth;
         $this->days        = range(1, $this->daysInMonth);
 
-        // 1) Vehículos ACTIVOS en orden
+        // 1) Active vehicles in order
         $orderCol = Schema::hasColumn('vehicles', 'sort_order')
             ? 'sort_order'
             : (Schema::hasColumn('vehicles', 'order') ? 'order'
                 : (Schema::hasColumn('vehicles', 'orden') ? 'orden'
                     : (Schema::hasColumn('vehicles','plate') ? 'plate' : 'id')));
 
-        $vehQ = DB::table('vehicles')->select('id', 'plate');
+        $vehCols = ['id', 'plate'];
+        if (Schema::hasColumn('vehicles', 'sort_order')) $vehCols[] = 'sort_order';
+
+        $vehQ = DB::table('vehicles')->select($vehCols);
         if (Schema::hasColumn('vehicles', 'status')) {
             $vehQ->where('status', 'active');
         }
@@ -270,11 +487,11 @@ class DeparturesMonthly implements FromArray, WithHeadings, WithStyles, WithEven
             ];
         }
 
-        // 2) Agregados de departures (COUNT(*) o SUM(col)) dentro del mes
+        // 2) Aggregates
         $dateCol   = $this->dateColumn;
         $selectRaw = $this->countColumn
-            ? "vehicle_id, DAY($dateCol) as d, SUM({$this->countColumn}) as s"
-            : "vehicle_id, DAY($dateCol) as d, COUNT(*) as s";
+            ? "vehicle_id, DAY({$dateCol}) as d, SUM({$this->countColumn}) as s"
+            : "vehicle_id, DAY({$dateCol}) as d, COUNT(*) as s";
 
         $aggs = DB::table('departures')
             ->selectRaw($selectRaw)
@@ -286,14 +503,11 @@ class DeparturesMonthly implements FromArray, WithHeadings, WithStyles, WithEven
             $vid = (int) $r->vehicle_id;
             $d   = (int) $r->d;
             $s   = (float) $r->s;
-            if (!isset($this->rows[$vid])) continue; // ignora vehículos no activos
-
-            // ÷2 con redondeo half-up (misma lógica del módulo)
-            $halved = (int) round($s / 2, 0, PHP_ROUND_HALF_UP);
-            $this->rows[$vid]['daily'][$d] = $halved;
+            if (!isset($this->rows[$vid])) continue;
+            $this->rows[$vid]['daily'][$d] = (int) round($s / 2, 0, PHP_ROUND_HALF_UP);
         }
 
-        // 3) Totales por fila / día
+        // 3) Totals
         $this->totalPerDay = array_fill(1, $this->daysInMonth, 0);
         foreach ($this->rows as &$row) {
             $row['total'] = array_sum($row['daily']);
@@ -301,13 +515,163 @@ class DeparturesMonthly implements FromArray, WithHeadings, WithStyles, WithEven
         }
         unset($row);
 
-        // 4) Vehículos con salida por día (#daily > 0)
+        // 4) Vehicles worked per day
         $this->vehiclesWorkedPerDay = array_fill(1, $this->daysInMonth, 0);
         for ($d = 1; $d <= $this->daysInMonth; $d++) {
             $worked = 0;
             foreach ($this->rows as $row) if (($row['daily'][$d] ?? 0) > 0) $worked++;
             $this->vehiclesWorkedPerDay[$d] = $worked;
         }
+
+        // 5) Per-HQ data
+        $this->prepareByHQ($start->toDateString(), $end->toDateString(), $vehicles);
+    }
+
+    protected function prepareByHQ(string $startDate, string $endDate, $vehicles): void
+    {
+        $this->hqTables = [];
+        $this->hqSummary = [];
+        $this->grandTotalVueltas = 0;
+        $this->grandTotalVT = 0;
+
+        $dateCol = $this->dateColumn;
+
+        // Raw per HQ/vehicle/day (no /2)
+        $selectRaw = $this->countColumn
+            ? "headquarter_id, vehicle_id, DAY({$dateCol}) as d, SUM({$this->countColumn}) as s"
+            : "headquarter_id, vehicle_id, DAY({$dateCol}) as d, COUNT(*) as s";
+
+        $aggregates = DB::table('departures')
+            ->selectRaw($selectRaw)
+            ->whereBetween($dateCol, [$startDate, $endDate])
+            ->groupBy('headquarter_id', 'vehicle_id', 'd')
+            ->get();
+
+        $byHQ = [];
+        foreach ($aggregates as $r) {
+            $hqId = (int)$r->headquarter_id;
+            $vid  = (int)$r->vehicle_id;
+            $d    = (int)$r->d;
+            $s    = (float)$r->s;
+            $byHQ[$hqId][$vid][$d] = ($byHQ[$hqId][$vid][$d] ?? 0) + $s;
+        }
+
+        // Global raw per vehicle/day
+        $globalRaw = [];
+        foreach ($byHQ as $hqId => $vids) {
+            foreach ($vids as $vid => $days) {
+                foreach ($days as $d => $s) {
+                    $globalRaw[$vid][$d] = ($globalRaw[$vid][$d] ?? 0) + $s;
+                }
+            }
+        }
+
+        $vehicleMap = [];
+        foreach ($vehicles as $v) {
+            $vehicleMap[(int)$v->id] = (string)$v->plate;
+        }
+
+        // HQ names from data
+        $hqIds = array_keys($byHQ);
+        $hqNames = [];
+        if (!empty($hqIds)) {
+            $hqNames = DB::table('headquarters')
+                ->whereIn('id', $hqIds)
+                ->orderBy('name')
+                ->pluck('name', 'id')
+                ->all();
+        }
+
+        foreach ($hqNames as $hqId => $hqName) {
+            if (!isset($byHQ[$hqId])) continue;
+
+            $hqRows = [];
+            $totalPerDay = array_fill(1, $this->daysInMonth, 0);
+            $vtPerDay    = array_fill(1, $this->daysInMonth, 0);
+
+            foreach ($vehicleMap as $vid => $plate) {
+                if (!isset($byHQ[$hqId][$vid])) continue;
+                if (!isset($this->rows[$vid])) continue;
+
+                $mainDaily = $this->rows[$vid]['daily'];
+                $daily = array_fill(1, $this->daysInMonth, 0);
+
+                foreach ($byHQ[$hqId][$vid] as $d => $rawHQ) {
+                    if ($d < 1 || $d > $this->daysInMonth) continue;
+                    $rawGlobal = $globalRaw[$vid][$d] ?? 0;
+                    $mainVal   = $mainDaily[$d] ?? 0;
+
+                    if ($rawGlobal > 0 && $mainVal > 0) {
+                        $daily[$d] = (int) round($mainVal * ($rawHQ / $rawGlobal), 0, PHP_ROUND_HALF_UP);
+                    }
+                }
+
+                // Rounding adjustment
+                foreach ($mainDaily as $d => $mainVal) {
+                    if ($mainVal <= 0) continue;
+                    $rawGlobal = $globalRaw[$vid][$d] ?? 0;
+                    if ($rawGlobal <= 0) continue;
+
+                    $assignedTotal = 0;
+                    foreach ($byHQ as $otherHqId => $otherVids) {
+                        if (!isset($otherVids[$vid][$d])) continue;
+                        $otherRaw = $otherVids[$vid][$d];
+                        $assignedTotal += (int) round($mainVal * ($otherRaw / $rawGlobal), 0, PHP_ROUND_HALF_UP);
+                    }
+
+                    $diff = $mainVal - $assignedTotal;
+                    if ($diff !== 0 && isset($byHQ[$hqId][$vid][$d])) {
+                        $maxHq = $hqId;
+                        $maxRaw = 0;
+                        foreach ($byHQ as $otherHqId => $otherVids) {
+                            if (isset($otherVids[$vid][$d]) && $otherVids[$vid][$d] > $maxRaw) {
+                                $maxRaw = $otherVids[$vid][$d];
+                                $maxHq  = $otherHqId;
+                            }
+                        }
+                        if ($maxHq === $hqId) {
+                            $daily[$d] += $diff;
+                        }
+                    }
+                }
+
+                $total = array_sum($daily);
+                if ($total === 0) continue;
+
+                $hqRows[] = [
+                    'plate' => $plate,
+                    'daily' => $daily,
+                    'total' => $total,
+                ];
+
+                foreach ($daily as $d => $val) {
+                    $totalPerDay[$d] += $val;
+                    if ($val > 0) $vtPerDay[$d]++;
+                }
+            }
+
+            if (empty($hqRows)) continue;
+
+            $this->hqTables[$hqId] = [
+                'name'        => $hqName,
+                'rows'        => $hqRows,
+                'totalPerDay' => $totalPerDay,
+                'vtPerDay'    => $vtPerDay,
+            ];
+
+            $totalVueltas = array_sum($totalPerDay);
+            $totalVT      = array_sum($vtPerDay);
+
+            $this->hqSummary[$hqId] = [
+                'name'          => $hqName,
+                'totalVueltas'  => $totalVueltas,
+                'totalVT'       => $totalVT,
+            ];
+
+            $this->grandTotalVueltas += $totalVueltas;
+        }
+
+        $this->grandTotalVT = array_sum($this->vehiclesWorkedPerDay);
     }
 
     protected function monthName(): string

@@ -11,9 +11,13 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class Index extends Component
 {
+    use WithPagination;
+
+    protected $paginationTheme = 'bootstrap';
     // ===== Filtros (listado) =====
     #[Url(as: 'q')]
     public string $search = '';
@@ -152,6 +156,21 @@ class Index extends Component
         return $this->userHasRole('controller');
     }
 
+    public function updatedSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedHeadquarterId(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedType(): void
+    {
+        $this->resetPage();
+    }
+
     public function applyDate(): void
     {
         $this->validate([
@@ -170,6 +189,7 @@ class Index extends Component
 
         $this->date_start = $from;
         $this->date_end   = $to;
+        $this->resetPage();
     }
 
     /** Carga ids de sedes asignadas al usuario (N:N + primaria en users.headquarter_id) */
@@ -680,7 +700,6 @@ class Index extends Component
     {
         // Query base con todos los filtros/búsquedas
         $q = Payment::query()
-            ->with(['vehicle:id,plate', 'user:id,name', 'headquarter:id,name'])
             ->when($this->date_start && $this->date_end,
                 fn($q) => $q->whereBetween('date_register', [$this->date_start, $this->date_end]),
                 fn($q) => $q->whereBetween('date_register', [now()->toDateString(), now()->toDateString()])
@@ -722,11 +741,14 @@ class Index extends Component
             $q->where('user_id', Auth::id());
         }
 
-        // Datos para la tabla
-        $payments = (clone $q)->orderBy('date_register')->orderBy('hour')->get();
-
-        // Total general (con los mismos filtros)
+        // Total general (una sola query de sum, sin cargar modelos)
         $total_general = (clone $q)->sum('amount');
+
+        // Datos paginados con eager loading
+        $payments = $q->with(['vehicle:id,plate', 'user:id,name', 'headquarter:id,name'])
+            ->orderBy('date_register')
+            ->orderBy('hour')
+            ->paginate(50);
 
         return view('livewire.payments.index', [
             'payments'      => $payments,

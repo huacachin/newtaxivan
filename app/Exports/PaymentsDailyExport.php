@@ -10,10 +10,7 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
-use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
-use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Style\Border;
-use PhpOffice\PhpSpreadsheet\Style\Conditional;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 class PaymentsDailyExport implements FromArray, WithHeadings, WithEvents, WithTitle
@@ -66,6 +63,12 @@ class PaymentsDailyExport implements FromArray, WithHeadings, WithEvents, WithTi
 
     public function array(): array
     {
+        // Pre-calculate sundays
+        $sundays = [];
+        for ($d = 1; $d <= $this->daysInMonth; $d++) {
+            $sundays[$d] = CarbonImmutable::create($this->year, $this->month, $d)->isSunday();
+        }
+
         $data = [];
         $i = 0;
         foreach ($this->rows as $row) {
@@ -76,23 +79,25 @@ class PaymentsDailyExport implements FromArray, WithHeadings, WithEvents, WithTi
             $line[] = $row['cond'] ?: '-';
 
             for ($d = 1; $d <= $this->daysInMonth; $d++) {
-                $line[] = (float)($row['days'][$d] ?? 0.0); // siempre numérico → mostrará 0
+                $val = (float)($row['days'][$d] ?? 0.0);
+                // Domingo o valor 0 → celda vacía
+                $line[] = ($sundays[$d] || $val == 0) ? '' : $val;
             }
 
-            $line[] = (float)$row['total'];        // Total (S/)
-            $line[] = (int)$row['days_paid'];      // Días Pag.
+            $line[] = (float)$row['total'];
+            $line[] = (int)$row['days_paid'];
 
             if ($this->mode === 'Pago') {
-                $line[] = (int)$row['debt_days'];          // Deuda (días)
-                $line[] = (float)$row['debt_amount'];      // Deuda (S/)
-                $line[] = (float)$row['real_debt_amount']; // Deuda Real (S/)
+                $line[] = (int)$row['debt_days'];
+                $line[] = (float)$row['debt_amount'];
+                $line[] = (float)$row['real_debt_amount'];
             }
 
             $data[] = $line;
         }
 
         // Footer (totales)
-        $footer = ['Totales por día (S/)', '', ''];
+        $footer = ['', '', 'Total'];
         for ($d = 1; $d <= $this->daysInMonth; $d++) {
             $footer[] = (float)($this->totalsPerDay[$d] ?? 0.0);
         }
@@ -117,16 +122,23 @@ class PaymentsDailyExport implements FromArray, WithHeadings, WithEvents, WithTi
                 $sheet = $event->sheet->getDelegate();
 
                 // ====== cálculo de rango ======
-                $lastColIndex = 3 + $this->daysInMonth + 1 + ($this->mode === 'Pago' ? 4 : 1);
+                $lastColIndex = 3 + $this->daysInMonth + 2 + ($this->mode === 'Pago' ? 3 : 0);
                 $lastCol      = $this->col($lastColIndex);
 
                 // ====== PALETA ======
                 $blueDark   = 'FF2874A6';
-                $footerFill = 'FFCEE7FF';
                 $fontWhite  = 'FFFFFFFF';
-                $fontBlack  = 'FF000000';
                 $borderSoft = '000000';
-                $sundayRed  = 'F80000';
+                $greenFill  = 'FF008000';
+                $redFill    = 'FFFF0000';
+                $whiteFill  = 'FFFFFFFF';
+                $greyFill   = 'FFD0CECE';
+
+                // Pre-calculate sundays
+                $sundays = [];
+                for ($d = 1; $d <= $this->daysInMonth; $d++) {
+                    $sundays[$d] = CarbonImmutable::create($this->year, $this->month, $d)->isSunday();
+                }
 
                 // Fuente compacta 10pt (global)
                 $sheet->getParent()->getDefaultStyle()->getFont()->setSize(10);
@@ -136,10 +148,8 @@ class PaymentsDailyExport implements FromArray, WithHeadings, WithEvents, WithTi
                 $sheet->mergeCells("A1:{$lastCol}1");
                 $sheet->setCellValue('A1', $this->titleText());
                 $sheet->getStyle("A1:{$lastCol}1")->applyFromArray([
-                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['argb' => $sundayRed]],
+                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['argb' => $redFill]],
                     'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
-                    'fill'      => ['fillType' => 'solid', 'startColor' => ['argb' => $fontWhite]],
-                    'borders'   => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN, 'color' => ['argb' => 'FF000000']]],
                 ]);
                 $sheet->getRowDimension(1)->setRowHeight(18);
 
@@ -152,14 +162,13 @@ class PaymentsDailyExport implements FromArray, WithHeadings, WithEvents, WithTi
                 ]);
                 $sheet->getRowDimension(2)->setRowHeight(18);
 
-                // Domingos en rojo en el header de días
-                $baseDayCol = 4; // días empiezan en col 4 (A=1,B=2,C=3)
+                // Domingos en rojo en el header
+                $baseDayCol = 4;
                 for ($d = 1; $d <= $this->daysInMonth; $d++) {
-                    $date = \Carbon\CarbonImmutable::create($this->year, $this->month, $d);
-                    if ($date->isSunday()) {
+                    if ($sundays[$d]) {
                         $col = $this->col($baseDayCol + ($d - 1));
                         $sheet->getStyle("{$col}2")->applyFromArray([
-                            'fill' => ['fillType' => 'solid', 'startColor' => ['argb' => $sundayRed]],
+                            'fill' => ['fillType' => 'solid', 'startColor' => ['argb' => $redFill]],
                             'font' => ['color' => ['argb' => $fontWhite], 'bold' => true],
                         ]);
                     }
@@ -168,170 +177,132 @@ class PaymentsDailyExport implements FromArray, WithHeadings, WithEvents, WithTi
                 // congelar encabezado + 3 primeras columnas
                 $sheet->freezePane('D3');
 
-                // bordes finos
+                // bordes finos en toda la tabla
                 $highestRow = (int)$sheet->getHighestRow();
                 $tableRange = "A2:{$lastCol}{$highestRow}";
                 $sheet->getStyle($tableRange)->applyFromArray([
                     'borders' => [
                         'allBorders' => [
-                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                            'borderStyle' => Border::BORDER_THIN,
                             'color'       => ['argb' => $borderSoft],
                         ],
                     ],
                 ]);
 
                 // ====== filas/rangos útiles ======
-                $firstDataRow = 3;               // 1 título + 1 header
-                $lastDataRow  = $highestRow;     // incluye footer
-                $dataLastRow  = $lastDataRow - 1;// excluye footer
+                $firstDataRow = 3;
+                $lastDataRow  = $highestRow;
+                $dataLastRow  = $lastDataRow - 1; // excluye footer
 
-                // ====== formatos ======
                 $dayStart = 4;
                 $dayEnd   = 3 + $this->daysInMonth;
 
-                // DÍAS: enteros; **cero visible**
-                for ($i = $dayStart; $i <= $dayEnd; $i++) {
-                    $col = $this->col($i);
-                    $sheet->getStyle("{$col}{$firstDataRow}:{$col}{$lastDataRow}")
-                        ->getNumberFormat()->setFormatCode('0');
-                }
-
-                // Total (S/)
-                $totalCol = $this->col($dayEnd + 1);
-                $sheet->getStyle("{$totalCol}{$firstDataRow}:{$totalCol}{$lastDataRow}")
-                    ->getNumberFormat()->setFormatCode('#,##0.00');
-
-                // Días Pag.
-                $daysPaidCol = $this->col($dayEnd + 2);
-                $sheet->getStyle("{$daysPaidCol}{$firstDataRow}:{$daysPaidCol}{$lastDataRow}")
-                    ->getNumberFormat()->setFormatCode('0');
-
-                if ($this->mode === 'Pago') {
-                    // Deuda (días)
-                    $debtDaysCol = $this->col($dayEnd + 3);
-                    $sheet->getStyle("{$debtDaysCol}{$firstDataRow}:{$debtDaysCol}{$lastDataRow}")
-                        ->getNumberFormat()->setFormatCode('0');
-                    // Deuda (S/)
-                    $debtAmtCol = $this->col($dayEnd + 4);
-                    $sheet->getStyle("{$debtAmtCol}{$firstDataRow}:{$debtAmtCol}{$lastDataRow}")
-                        ->getNumberFormat()->setFormatCode('#,##0.00');
-                    // Deuda Real (S/)
-                    $realDebtCol = $this->col($dayEnd + 5);
-                    $sheet->getStyle("{$realDebtCol}{$firstDataRow}:{$realDebtCol}{$lastDataRow}")
-                        ->getNumberFormat()->setFormatCode('#,##0.00');
-                }
-
-                // ====== alineaciones ======
+                // ====== alineación centrada en datos ======
                 $sheet->getStyle("A{$firstDataRow}:{$lastCol}{$dataLastRow}")
-                    ->getAlignment()->setHorizontal('center');
+                    ->getAlignment()->setHorizontal('center')->setVertical('center');
 
-                // ====== anchos compactos ======
-                $setW = function(int $idx, float $w) use ($sheet) {
-                    $sheet->getColumnDimension($this->col($idx))->setAutoSize(false);
-                    $sheet->getColumnDimension($this->col($idx))->setWidth($w);
-                };
-                $setW(1, 5.5);  // Item
-                $setW(2, 9);   // Placa
-                $setW(3, 7);    // Cond.
-                for ($i = $dayStart; $i <= $dayEnd; $i++) $setW($i, 2.7); // días (holgados)
-                $setW($dayEnd + 1, 11); // Total (S/)
-                $setW($dayEnd + 2, 9);  // Días Pag.
-                if ($this->mode === 'Pago') {
-                    $setW($dayEnd + 3, 9);   // Deuda (días)
-                    $setW($dayEnd + 4, 11);  // Deuda (S/)
-                    $setW($dayEnd + 5, 12);  // Deuda Real (S/)
-                }
-
-                // === +1 punto de ancho a columnas D..AG (si existen)
-                $toIdx = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString('AG');
-                $endIdx = min($toIdx, $lastColIndex);
-                for ($c = $dayStart; $c <= $endIdx; $c++) {
-                    $dim = $sheet->getColumnDimension($this->col($c));
-                    $current = (float)$dim->getWidth();
-                    if ($current <= 0.0) { $current = 3.0; }
-                    $dim->setWidth($current + 1.0);
-                }
-
-                // ====== COLOREADO CONDICIONAL (SÓLO DÍAS) ======
-                // = 0  => rojo + blanco
-                $condZero = new \PhpOffice\PhpSpreadsheet\Style\Conditional();
-                $condZero->setConditionType(\PhpOffice\PhpSpreadsheet\Style\Conditional::CONDITION_CELLIS)
-                    ->setOperatorType(\PhpOffice\PhpSpreadsheet\Style\Conditional::OPERATOR_EQUAL)
-                    ->addCondition('0');
-                $condZero->getStyle()->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('EF4444');
-                $condZero->getStyle()->getFont()->getColor()->setRGB('FFFFFF');
-
-                // > 0 => verde + blanco
-                $condGt = new \PhpOffice\PhpSpreadsheet\Style\Conditional();
-                $condGt->setConditionType(\PhpOffice\PhpSpreadsheet\Style\Conditional::CONDITION_CELLIS)
-                    ->setOperatorType(\PhpOffice\PhpSpreadsheet\Style\Conditional::OPERATOR_GREATERTHAN)
-                    ->addCondition('0');
-                $condGt->getStyle()->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('22C55E');
-                $condGt->getStyle()->getFont()->getColor()->setRGB('FFFFFF');
-
-                // aplicar a días (filas de datos, sin footer)
-                $daysRange = $this->col($dayStart) . $firstDataRow . ':' . $this->col($dayEnd) . $dataLastRow;
-                $sheet->getStyle($daysRange)->setConditionalStyles([$condZero, $condGt]);
-
-                // ====== “badge” azul para la columna C (Cond.) en el cuerpo ======
-                if ($dataLastRow >= $firstDataRow) {
-                    $sheet->getStyle("C{$firstDataRow}:C{$dataLastRow}")->applyFromArray([
-                        'fill'  => ['fillType'=>'solid','startColor'=>['argb'=>$blueDark]],
-                        'font'  => ['bold'=>true,'color'=>['argb'=>$fontWhite],'size'=>10],
-                        'alignment' => ['horizontal'=>'center','vertical'=>'center'],
-                    ]);
-                }
-
-                // ====== GRIS SUAVE para columnas resumen (filas de datos) ======
-                $grey = [
-                    'fill' => ['fillType' => 'solid', 'startColor' => ['argb' => 'FFF1F5F9']],
-                    'font' => ['bold' => true],
+                // ====== COLOREADO DIRECTO POR CELDA (días) ======
+                $styleGreen = [
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $greenFill]],
+                    'font' => ['color' => ['argb' => $fontWhite]],
                 ];
-                // Total (S/)
-                $sheet->getStyle("{$totalCol}{$firstDataRow}:{$totalCol}{$dataLastRow}")
-                    ->applyFromArray($grey);
-                // Días Pag.
-                $sheet->getStyle("{$daysPaidCol}{$firstDataRow}:{$daysPaidCol}{$dataLastRow}")
-                    ->applyFromArray($grey);
+                $styleRed = [
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $redFill]],
+                    'font' => ['color' => ['argb' => $fontWhite]],
+                ];
+                $styleSunday = [
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $whiteFill]],
+                ];
 
-                if ($this->mode === 'Pago') {
-                    // Deuda (días)
-                    $debtDaysCol = $this->col($dayEnd + 3);
-                    $sheet->getStyle("{$debtDaysCol}{$firstDataRow}:{$debtDaysCol}{$dataLastRow}")
-                        ->applyFromArray($grey);
-                    // Deuda (S/)
-                    $debtAmtCol = $this->col($dayEnd + 4);
-                    $sheet->getStyle("{$debtAmtCol}{$firstDataRow}:{$debtAmtCol}{$dataLastRow}")
-                        ->applyFromArray($grey);
-                    // Deuda Real (S/)
-                    $realDebtCol = $this->col($dayEnd + 5);
-                    $sheet->getStyle("{$realDebtCol}{$firstDataRow}:{$realDebtCol}{$dataLastRow}")
-                        ->applyFromArray($grey);
-                }
-
-                // ====== RELLENAR CUALQUIER VACÍO CON 0 (días + totales) ======
                 for ($r = $firstDataRow; $r <= $dataLastRow; $r++) {
-                    for ($c = $dayStart; $c <= $lastColIndex; $c++) {
-                        $cell = $sheet->getCellByColumnAndRow($c, $r);
-                        $v    = $cell->getValue();
-                        if ($v === null || $v === '') {
-                            $cell->setValueExplicit(0, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_NUMERIC);
+                    for ($d = 1; $d <= $this->daysInMonth; $d++) {
+                        $col  = $this->col($baseDayCol + ($d - 1));
+                        $cell = "{$col}{$r}";
+                        if ($sundays[$d]) {
+                            $sheet->getStyle($cell)->applyFromArray($styleSunday);
+                        } else {
+                            $val = $sheet->getCell($cell)->getValue();
+                            if ($val !== null && $val !== '' && (float)$val > 0) {
+                                $sheet->getStyle($cell)->applyFromArray($styleGreen);
+                            } else {
+                                $sheet->getStyle($cell)->applyFromArray($styleRed);
+                            }
                         }
                     }
                 }
 
-                // ====== FOOTER (última fila) – #CEE7FF ======
-                $footerRow = $lastDataRow; // última fila (totales)
+                // ====== formatos numéricos ======
+                // Días con valor: mostrar con 2 decimales
+                for ($i = $dayStart; $i <= $dayEnd; $i++) {
+                    $col = $this->col($i);
+                    $sheet->getStyle("{$col}{$firstDataRow}:{$col}{$lastDataRow}")
+                        ->getNumberFormat()->setFormatCode('#,##0.00');
+                }
+
+                $totalCol    = $this->col($dayEnd + 1);
+                $daysPaidCol = $this->col($dayEnd + 2);
+
+                $sheet->getStyle("{$totalCol}{$firstDataRow}:{$totalCol}{$lastDataRow}")
+                    ->getNumberFormat()->setFormatCode('#,##0.00');
+                $sheet->getStyle("{$daysPaidCol}{$firstDataRow}:{$daysPaidCol}{$lastDataRow}")
+                    ->getNumberFormat()->setFormatCode('0');
+
+                if ($this->mode === 'Pago') {
+                    $debtDaysCol = $this->col($dayEnd + 3);
+                    $debtAmtCol  = $this->col($dayEnd + 4);
+                    $realDebtCol = $this->col($dayEnd + 5);
+                    $sheet->getStyle("{$debtDaysCol}{$firstDataRow}:{$debtDaysCol}{$lastDataRow}")
+                        ->getNumberFormat()->setFormatCode('0');
+                    $sheet->getStyle("{$debtAmtCol}{$firstDataRow}:{$debtAmtCol}{$lastDataRow}")
+                        ->getNumberFormat()->setFormatCode('#,##0.00');
+                    $sheet->getStyle("{$realDebtCol}{$firstDataRow}:{$realDebtCol}{$lastDataRow}")
+                        ->getNumberFormat()->setFormatCode('#,##0.00');
+                }
+
+                // ====== GRIS #D0CECE para columnas resumen (filas de datos) ======
+                $summaryStyle = [
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $greyFill]],
+                ];
+                $sheet->getStyle("{$totalCol}{$firstDataRow}:{$totalCol}{$dataLastRow}")
+                    ->applyFromArray($summaryStyle);
+                $sheet->getStyle("{$daysPaidCol}{$firstDataRow}:{$daysPaidCol}{$dataLastRow}")
+                    ->applyFromArray($summaryStyle);
+
+                if ($this->mode === 'Pago') {
+                    $debtDaysCol = $this->col($dayEnd + 3);
+                    $debtAmtCol  = $this->col($dayEnd + 4);
+                    $realDebtCol = $this->col($dayEnd + 5);
+                    $sheet->getStyle("{$debtDaysCol}{$firstDataRow}:{$debtDaysCol}{$dataLastRow}")
+                        ->applyFromArray($summaryStyle);
+                    $sheet->getStyle("{$debtAmtCol}{$firstDataRow}:{$debtAmtCol}{$dataLastRow}")
+                        ->applyFromArray($summaryStyle);
+                    $sheet->getStyle("{$realDebtCol}{$firstDataRow}:{$realDebtCol}{$dataLastRow}")
+                        ->applyFromArray($summaryStyle);
+                }
+
+                // ====== anchos ======
+                $setW = function(int $idx, float $w) use ($sheet) {
+                    $sheet->getColumnDimension($this->col($idx))->setAutoSize(false);
+                    $sheet->getColumnDimension($this->col($idx))->setWidth($w);
+                };
+                $setW(1, 5.5);   // Item
+                $setW(2, 9);     // Placa
+                $setW(3, 7);     // Cond.
+
+                // Días y resumen: autoSize para evitar ###
+                for ($i = $dayStart; $i <= $lastColIndex; $i++) {
+                    $sheet->getColumnDimension($this->col($i))->setAutoSize(true);
+                }
+
+                // ====== FOOTER ======
+                $footerRow = $lastDataRow + 1;
                 $sheet->getStyle("A{$footerRow}:{$lastCol}{$footerRow}")
                     ->applyFromArray([
-                        'font'   => ['bold' => true, 'color' => ['argb' => $fontWhite]],
-                        'fill'   => ['fillType' => 'solid', 'startColor' => ['argb' => $footerFill]],
-                        'borders'=> ['outline' => ['borderStyle'=>\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM, 'color'=>['argb'=>$blueDark]]],
+                        'font' => ['bold' => true],
+                        'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
                     ]);
-
-                // formatos del footer: días (enteros) y montos (0.00)
-                $sheet->getStyle($this->col($dayStart).$footerRow.':'.$this->col($dayEnd).$footerRow)
-                    ->getNumberFormat()->setFormatCode('0');
+                $sheet->getStyle($this->col($dayStart)."{$footerRow}:".$this->col($dayEnd)."{$footerRow}")
+                    ->getNumberFormat()->setFormatCode('#,##0.00');
                 $sheet->getStyle("{$totalCol}{$footerRow}")->getNumberFormat()->setFormatCode('#,##0.00');
                 $sheet->getStyle("{$daysPaidCol}{$footerRow}")->getNumberFormat()->setFormatCode('0');
                 if ($this->mode === 'Pago') {

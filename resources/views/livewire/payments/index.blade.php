@@ -115,7 +115,7 @@
                                     @default Buscar...
                                 @endswitch"
                                    aria-label="Buscar"
-                                   wire:model.live="search">
+                                   wire:model.live.debounce.400ms="search">
                         </div>
 
                         <div class="col-auto">
@@ -219,7 +219,7 @@
                                            wire:click="openEditWindow({{ $p->id }})"></i>
                                     </td>
                                     @endrole
-                                    <td>{{ $loop->iteration }}</td>
+                                    <td>{{ $payments->firstItem() + $loop->index }}</td>
                                     <td>{{ $p->legacy_plate }}</td>
                                     <td>{{ $p->serie }}</td>
                                     <td>{{ optional($p->date_register)->format('Y-m-d') }}</td>
@@ -254,6 +254,9 @@
                             </tfoot>
                         </table>
                     </div>
+                    <div class="d-flex justify-content-center mt-2">
+                        {{ $payments->links() }}
+                    </div>
                 </div>
             </div>
         </div>
@@ -261,7 +264,7 @@
     </div>
     <div class="screen-overlay"
          wire:loading.delay.flex
-         wire:target="openAddWindow,openEditWindow,applyDate,export,save,update,daily,monthly,stats,filter">
+         wire:target="openAddWindow,openEditWindow,applyDate,export,save,update,daily,monthly,stats,filter,search,headquarter_id,type,gotoPage,previousPage,nextPage">
         <div class="text-center">
             <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
             <div class="mt-2 text-white fw-semibold">Cargando…</div>

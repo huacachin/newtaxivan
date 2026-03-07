@@ -143,6 +143,9 @@ class OwnersReportExport implements
                     ]);
 
                     $ws->getStyle("A{$start1}:F{$end1}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+                    // Item y Cod en negrita
+                    $ws->getStyle("A{$start1}:B{$end1}")->getFont()->setBold(true);
                 }
 
                 // ===== TOTAL ACTIVOS =====
@@ -152,7 +155,7 @@ class OwnersReportExport implements
                 $ws->setCellValue("A{$foot1}", 'TOTAL ACTIVOS');
                 $ws->setCellValue("F{$foot1}", $countActive);
                 $ws->getStyle("A{$foot1}:F{$foot1}")->applyFromArray([
-                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['argb' => $white]],
+                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['argb' => $black]],
                     'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $footerBg]],
                     'alignment' => ['vertical' => Alignment::VERTICAL_CENTER, 'horizontal' => Alignment::HORIZONTAL_CENTER],
                     'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]]],
@@ -204,6 +207,12 @@ class OwnersReportExport implements
                     ]);
 
                     $ws->getStyle("A{$start2}:F{$end2}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+                    // Item y Cod en negrita
+                    $ws->getStyle("A{$start2}:B{$end2}")->getFont()->setBold(true);
+
+                    // Footer TOTAL LIBRES
+                    $foot2 = $end2 + 1;
                 } else {
                     $ws->mergeCells("A{$start2}:F{$start2}");
                     $ws->setCellValue("A{$start2}", 'No hay propietarios libres para los filtros actuales.');
@@ -211,7 +220,20 @@ class OwnersReportExport implements
                         'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
                         'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]]],
                     ]);
+                    $foot2 = $start2 + 1;
                 }
+
+                // ===== TOTAL LIBRES =====
+                $ws->mergeCells("A{$foot2}:E{$foot2}");
+                $ws->setCellValue("A{$foot2}", 'TOTAL LIBRES');
+                $ws->setCellValue("F{$foot2}", $countFree);
+                $ws->getStyle("A{$foot2}:F{$foot2}")->applyFromArray([
+                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['argb' => $black]],
+                    'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $footerBg]],
+                    'alignment' => ['vertical' => Alignment::VERTICAL_CENTER, 'horizontal' => Alignment::HORIZONTAL_CENTER],
+                    'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]]],
+                ]);
+                $ws->getRowDimension($foot2)->setRowHeight(16);
 
                 // ===== Actualizar total en título =====
                 $totalOwners = $countActive + $countFree;

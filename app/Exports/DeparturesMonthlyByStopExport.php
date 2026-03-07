@@ -144,25 +144,36 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
                 // Congelar filas 1-2 y columnas A-C
                 //$s->freezePane('D3');
 
-                // ===== Bordes finos a todo
+                // ===== Bordes: título + header sólidos
                 $lastRow = (int)$s->getHighestRow();
-                $s->getStyle("A{$headerRow}:{$lastCol}{$lastRow}")
-                    ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-                $s->getStyle("A{$headerRow}:{$lastCol}{$lastRow}")
-                    ->getBorders()->getAllBorders()->getColor()->setARGB($borderC);
-
-                // ===== Anchos compactos (desactiva autosize y fija)
                 $lastColIdx = Coordinate::columnIndexFromString($lastCol);
-                for ($c=1; $c <= $lastColIdx; $c++) {
-                    $s->getColumnDimensionByColumn($c)->setAutoSize(false);
+
+                $s->getStyle("A1:{$lastCol}{$headerRow}")
+                    ->getBorders()->getAllBorders()
+                    ->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB('FF000000');
+
+                // Bordes en datos + totales: horizontales discontinuos, verticales sólidos
+                if ($lastRow >= $dataStartRow) {
+                    $dataRange = "A{$dataStartRow}:{$lastCol}{$lastRow}";
+                    $borders   = $s->getStyle($dataRange)->getBorders();
+                    $borders->getLeft()->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB('FF000000');
+                    $borders->getRight()->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB('FF000000');
+                    $borders->getTop()->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB('FF000000');
+                    $borders->getBottom()->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB('FF000000');
+                    $borders->getHorizontal()->setBorderStyle(Border::BORDER_DASHED)->getColor()->setARGB('FF000000');
+                    $borders->getVertical()->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB('FF000000');
                 }
-                $s->getColumnDimension('A')->setWidth(14); // CONTROLADOR
-                $s->getColumnDimension('B')->setWidth(11);   // PARADERO
-                $s->getColumnDimension('C')->setWidth(6.5);  // TIPO
-                for ($c=$firstDayColIdx; $c < $lastColIdx; $c++) {
-                    $s->getColumnDimensionByColumn($c)->setWidth(3.7); // Días
+
+                // ===== Anchos: fijos para A-C, autoSize para días y totales
+                $s->getColumnDimension('A')->setAutoSize(false);
+                $s->getColumnDimension('A')->setWidth(14);
+                $s->getColumnDimension('B')->setAutoSize(false);
+                $s->getColumnDimension('B')->setWidth(11);
+                $s->getColumnDimension('C')->setAutoSize(false);
+                $s->getColumnDimension('C')->setWidth(6.5);
+                for ($c=$firstDayColIdx; $c <= $lastColIdx; $c++) {
+                    $s->getColumnDimensionByColumn($c)->setAutoSize(true);
                 }
-                $s->getColumnDimensionByColumn($lastColIdx)->setWidth(6.5); // V.T
 
                 // ===== Alineaciones / formatos
                 $dataRows   = count($this->rows);
@@ -283,11 +294,10 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
                             $cell->setValueExplicit(0, DataType::TYPE_NUMERIC);
                         }
                     }
-                    // Estilo de pie (celeste + borde) y formato entero
+                    // Estilo de pie (celeste + fuente negra)
                     $s->getStyle("A{$fr}:{$lastCol}{$fr}")->applyFromArray([
                         'fill' => ['fillType'=>Fill::FILL_SOLID, 'startColor'=>['argb'=>$footerFill]],
-                        'font' => ['bold'=>true, 'color'=>['argb'=>$fontW], 'size'=>10],
-                        'borders' => ['outline' => ['borderStyle'=>Border::BORDER_THIN, 'color'=>['argb'=>$borderC]]],
+                        'font' => ['bold'=>true, 'color'=>['argb'=>$fontB], 'size'=>10],
                         'alignment' => ['vertical'=>Alignment::VERTICAL_CENTER],
                     ]);
                     $s->getStyle("D{$fr}:{$lastCol}{$fr}")
