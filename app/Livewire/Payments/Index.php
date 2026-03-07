@@ -9,18 +9,25 @@ use App\Models\Vehicle;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
 class Index extends Component
 {
     // ===== Filtros (listado) =====
+    #[Url(as: 'q')]
     public string $search = '';
+    #[Url]
     public string $filter = '';          // 1=Placa, 2=Usuario, 3=Serie
+    #[Url(as: 'from')]
     public string $date_start = '';
+    #[Url(as: 'to')]
     public string $date_end   = '';
     public ?string $ui_date_start = null;
     public ?string $ui_date_end   = null;
+    #[Url(as: 'hq')]
     public string $headquarter_id = '';  // '' = todos (FILTRO)
+    #[Url]
     public string $type = '';            // '' = todos (FILTRO)
 
     public $headquarters = [];
@@ -581,9 +588,13 @@ class Index extends Component
             }
         });
 
+        $dateStart = $this->ui_date_start;
+        $dateEnd   = $this->ui_date_end;
+
         $this->resetForm();
         $this->dispatch('modal-close', ['name' => 'modalAddPayment']);
         $this->dispatch('successAlert', ['message' => 'Pago registrado correctamente']);
+        $this->dispatch('restore-payment-dates', ['date_start' => $dateStart, 'date_end' => $dateEnd]);
     }
 
     public function update(): void
@@ -655,9 +666,13 @@ class Index extends Component
             }
         });
 
+        $dateStart = $this->ui_date_start;
+        $dateEnd   = $this->ui_date_end;
+
         $this->resetForm();
         $this->dispatch('modal-close', ['name' => 'modalEditPayment']);
         $this->dispatch('successAlert', ['message' => 'Pago actualizado correctamente']);
+        $this->dispatch('restore-payment-dates', ['date_start' => $dateStart, 'date_end' => $dateEnd]);
     }
 
     // ===== Listado / Export =====

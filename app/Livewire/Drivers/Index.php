@@ -142,7 +142,7 @@ class Index extends Component
                     $query->where('name', 'like', "%{$search}%");
                 } elseif ($filter === 'code') {
                     $query->whereHas('vehicles', fn ($q) =>
-                    $q->where('id', $search)
+                    $q->where('sort_order', $search)
                     );
                 }
             })

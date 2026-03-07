@@ -1,6 +1,9 @@
 @push('styles')
     <style>
-        .sunday { background: #ffcccc !important; }
+        .sunday { background: #ff0000 !important; color: #fff !important; }
+        .cell-paid { background: #00b050 !important; color: #fff; font-weight: 600; }
+        .cell-zero { background: #ff0000 !important; }
+        .cell-sunday { background: #fff !important; }
     </style>
 @endpush
 
@@ -28,49 +31,7 @@
         </div>
     </div>
 
-    {{-- Filtros --}}
     <div class="row table-section">
-        {{-- Resumen rápido --}}
-        <div class="col-12">
-            <div class="row g-3">
-                <div class="col-md-3 d-none d-lg-block">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-body">
-                            <div class="text-muted small">Total mes (S/)</div>
-                            <div class="display-6 fw-semibold">{{ number_format($grandTotal, 2) }}</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3 d-none d-lg-block">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-body">
-                            <div class="text-muted small">Pagos (días)</div>
-                            <div class="display-6 fw-semibold">{{ number_format($sumDaysPaid) }}</div>
-                        </div>
-                    </div>
-                </div>
-
-                @if($mode === 'Pago')
-                    <div class="col-md-3 d-none d-lg-block">
-                        <div class="card border-0 shadow-sm">
-                            <div class="card-body">
-                                <div class="text-muted small">Deuda (S/)</div>
-                                <div class="display-6 fw-semibold">{{ number_format($sumDebtAmount, 2) }}</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 d-none d-lg-block">
-                        <div class="card border-0 shadow-sm">
-                            <div class="card-body">
-                                <div class="text-muted small">Deuda Real (S/)</div>
-                                <div class="display-6 fw-semibold">{{ number_format($sumRealDebtAmount, 2) }}</div>
-                            </div>
-                        </div>
-                    </div>
-                @endif
-            </div>
-        </div>
-
         {{-- Tabla --}}
         <div class="col-12">
             <div class="card shadow-sm">
@@ -199,8 +160,12 @@
                                     </td>
 
                                     @foreach($days as $d)
-                                        <td class="{{ (number_format($r['days'][$d] ?? 0, 2) == 0.00) ? 'bg-danger' : 'bg-success' }} text-end">
-                                            {{ number_format($r['days'][$d] ?? 0, 2) }}
+                                        @php
+                                            $val = (float)($r['days'][$d] ?? 0);
+                                            $isSunday = \Carbon\Carbon::create($year, $month, $d)->isSunday();
+                                        @endphp
+                                        <td class="{{ $isSunday ? 'cell-sunday' : ($val > 0 ? 'cell-paid' : 'cell-zero') }} text-end">
+                                            {{ (!$isSunday && $val > 0) ? number_format($val, 2) : '' }}
                                         </td>
                                     @endforeach
 

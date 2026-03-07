@@ -194,7 +194,7 @@
                                 @endforeach
                             @else
                                 <tr>
-                                    @php $colspan = 12 + ($status === "inactive" ? 1 : 0); @endphp
+                                    @php $colspan = 12 + ($status === "inactive" ? 1 : 0) + (auth()->user()->hasRole('admin') ? 1 : 0); @endphp
                                     <td colspan="{{ $colspan }}">No se encontrarón resultados</td>
                                 </tr>
                             @endif

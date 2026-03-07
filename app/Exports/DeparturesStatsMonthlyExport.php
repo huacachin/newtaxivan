@@ -62,17 +62,17 @@ class DeparturesStatsMonthlyExport implements FromArray, WithHeadings, WithStyle
             for ($d = 1; $d <= $this->daysInMonth; $d++) {
                 $val = $r['days'][$d] ?? 0;
                 if ($r['type'] === 'S/') {
-                    // Monto como texto sin S/
-                    $row[] = $this->formatMoney($val);
+                    $row[] = $val != 0 ? $this->formatMoney($val) : '';
                 } else {
-                    // Salidas como entero
-                    $row[] = (int)$val;
+                    $row[] = $val != 0 ? (int)$val : '';
                 }
             }
 
             // Totales por fila
-            $row[] = (int)($r['total_sal'] ?? 0);                 // SALIDAS
-            $row[] = $this->formatMoney($r['total_soles'] ?? 0);  // S/
+            $sal = (int)($r['total_sal'] ?? 0);
+            $row[] = $sal != 0 ? $sal : '';
+            $sol = (float)($r['total_soles'] ?? 0);
+            $row[] = $sol != 0 ? $this->formatMoney($sol) : '';
 
             $data[] = $row;
         }
@@ -80,19 +80,21 @@ class DeparturesStatsMonthlyExport implements FromArray, WithHeadings, WithStyle
         // Totales: "Salidas"
         $rowA = ['', '', 'Salidas'];
         for ($d=1; $d <= $this->daysInMonth; $d++) {
-            $rowA[] = (int)($this->totalsSalidas[$d] ?? 0);
+            $vs = (int)($this->totalsSalidas[$d] ?? 0);
+            $rowA[] = $vs != 0 ? $vs : '';
         }
-        $rowA[] = (int)$this->grandSalidas; // total salidas
-        $rowA[] = '';                        // columna S/ vacía
+        $rowA[] = (int)$this->grandSalidas ?: '';
+        $rowA[] = '';
         $data[] = $rowA;
 
         // Totales: "S/"
         $rowB = ['', '', 'S/'];
         for ($d=1; $d <= $this->daysInMonth; $d++) {
-            $rowB[] = $this->formatMoney($this->totalsMonto[$d] ?? 0);
+            $vm = (float)($this->totalsMonto[$d] ?? 0);
+            $rowB[] = $vm != 0 ? $this->formatMoney($vm) : '';
         }
-        $rowB[] = '';                            // SALIDAS no aplica
-        $rowB[] = $this->formatMoney($this->grandMonto); // total S/
+        $rowB[] = '';
+        $rowB[] = $this->grandMonto != 0 ? $this->formatMoney($this->grandMonto) : '';
         $data[] = $rowB;
 
         return $data;
@@ -117,7 +119,7 @@ class DeparturesStatsMonthlyExport implements FromArray, WithHeadings, WithStyle
                 $fontW      = 'FFFFFFFF';
                 $fontB      = 'FF000000';
                 $borderC    = '000000';
-                $sunRed     = 'F800000';
+                $sunRed     = 'FFFF0000';
                 $moneyRed   = 'F80000';
 
                 // Fuente global
@@ -129,7 +131,7 @@ class DeparturesStatsMonthlyExport implements FromArray, WithHeadings, WithStyle
                 $lastColIdx = Coordinate::columnIndexFromString($lastCol);
                 $lastRow    = (int)$s->getHighestRow();
 
-                $title = 'REPORTE ESTADÍSTICO DE SALIDAS – ' . mb_strtoupper($this->monthName()) . ' ' . $this->year;
+                $title = 'REPORTE ESTADÍSTICO DE SALIDAS ' . mb_strtoupper($this->monthName()) . ' DEL ' . $this->year;
                 $s->mergeCells("A1:{$lastCol}1");
                 $s->setCellValue('A1', $title);
                 $s->getRowDimension(1)->setRowHeight(18);
@@ -170,14 +172,27 @@ class DeparturesStatsMonthlyExport implements FromArray, WithHeadings, WithStyle
                 // Freeze
                 $s->freezePane('D3');
 
-                // ===== Bordes a toda la grilla =====
-                $lastRow = (int)$s->getHighestRow();
-                $s->getStyle("A{$headerRow}:{$lastCol}{$lastRow}")
+                // ===== Bordes =====
+                $lastRow  = (int)$s->getHighestRow();
+                $dataRows = count($this->rows);
+
+                // Título + header: sólidos
+                $s->getStyle("A1:{$lastCol}{$headerRow}")
                     ->getBorders()->getAllBorders()
-                    ->setBorderStyle(Border::BORDER_THIN);
-                $s->getStyle("A{$headerRow}:{$lastCol}{$lastRow}")
-                    ->getBorders()->getAllBorders()
-                    ->getColor()->setARGB($borderC);
+                    ->setBorderStyle(Border::BORDER_THIN)
+                    ->getColor()->setARGB($fontB);
+
+                // Datos: contorno y verticales sólidos, horizontales internos discontinuos
+                if ($dataRows > 0) {
+                    $dataEndRowBorders = $dataStartRow + $dataRows - 1;
+                    $borders = $s->getStyle("A{$dataStartRow}:{$lastCol}{$dataEndRowBorders}")->getBorders();
+                    $borders->getLeft()  ->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB($fontB);
+                    $borders->getRight() ->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB($fontB);
+                    $borders->getTop()   ->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB($fontB);
+                    $borders->getBottom()->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB($fontB);
+                    $borders->getHorizontal()->setBorderStyle(Border::BORDER_DASHED)->getColor()->setARGB($fontB);
+                    $borders->getVertical()  ->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB($fontB);
+                }
 
                 // ===== Anchos compactos =====
                 for ($c = 1; $c <= $lastColIdx; $c++) {
@@ -196,7 +211,6 @@ class DeparturesStatsMonthlyExport implements FromArray, WithHeadings, WithStyle
                 $s->getColumnDimensionByColumn($lastColIdx    )->setWidth(8.0);
 
                 // ===== Alineaciones / cuerpo =====
-                $dataRows   = count($this->rows);
                 $dataEndRow = $dataRows > 0 ? ($dataStartRow + $dataRows - 1) : ($dataStartRow - 1);
                 $lastColL   = Coordinate::stringFromColumnIndex($lastColIdx);
 
@@ -231,6 +245,18 @@ class DeparturesStatsMonthlyExport implements FromArray, WithHeadings, WithStyle
                             $s->getStyle("{$col}{$dataStartRow}:{$col}{$dataEndRow}")
                                 ->getFill()->setFillType(Fill::FILL_SOLID)
                                 ->getStartColor()->setARGB('FFF8FAFC');
+                        }
+                    }
+                }
+
+                // Filas S/ → fuente roja en columnas de días + totales
+                if ($dataRows > 0) {
+                    $lastColL = Coordinate::stringFromColumnIndex($lastColIdx);
+                    for ($k = 0; $k < $dataRows; $k++) {
+                        if ($this->rows[$k]['type'] === 'S/') {
+                            $fr = $dataStartRow + $k;
+                            $s->getStyle("D{$fr}:{$lastColL}{$fr}")
+                                ->getFont()->getColor()->setARGB($moneyRed);
                         }
                     }
                 }
@@ -316,21 +342,35 @@ class DeparturesStatsMonthlyExport implements FromArray, WithHeadings, WithStyle
                 foreach ([$footerS, $footerM] as $fr) {
                     $s->getStyle("A{$fr}:{$lastCol}{$fr}")->applyFromArray([
                         'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$footerFill]],
-                        'font' => ['bold'=>true,'color'=>['argb'=>$fontW],'size'=>10],
-                        'borders' => [
-                            'outline' => [
-                                'borderStyle'=>Border::BORDER_MEDIUM,
-                                'color'      => ['argb'=>$blueDark],
-                            ]
-                        ],
+                        'font' => ['bold'=>true,'color'=>['argb'=>$fontB],'size'=>10],
                         'alignment' => ['vertical'=>Alignment::VERTICAL_CENTER],
                     ]);
+                    // Bordes: contorno medium azul + internos thin negro
+                    $footerBorders = $s->getStyle("A{$fr}:{$lastCol}{$fr}")->getBorders();
+                    $footerBorders->getTop()   ->setBorderStyle(Border::BORDER_MEDIUM)->getColor()->setARGB($blueDark);
+                    $footerBorders->getBottom()->setBorderStyle(Border::BORDER_MEDIUM)->getColor()->setARGB($blueDark);
+                    $footerBorders->getLeft()  ->setBorderStyle(Border::BORDER_MEDIUM)->getColor()->setARGB($blueDark);
+                    $footerBorders->getRight() ->setBorderStyle(Border::BORDER_MEDIUM)->getColor()->setARGB($blueDark);
+                    $footerBorders->getVertical()->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB($fontB);
+
                     $s->getStyle("A{$fr}:B{$fr}")
                         ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                     $s->getStyle("C{$fr}:{$lastColL}{$fr}")
                         ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                     $s->getRowDimension($fr)->setRowHeight(18);
                 }
+
+                // Borde discontinuo entre las dos filas del footer
+                $s->getStyle("A{$footerS}:{$lastCol}{$footerS}")
+                    ->getBorders()->getBottom()
+                    ->setBorderStyle(Border::BORDER_DASHED)->getColor()->setARGB($fontB);
+                $s->getStyle("A{$footerM}:{$lastCol}{$footerM}")
+                    ->getBorders()->getTop()
+                    ->setBorderStyle(Border::BORDER_DASHED)->getColor()->setARGB($fontB);
+
+                // Fila S/ del footer → fuente roja en días + total
+                $s->getStyle("D{$footerM}:{$lastCol}{$footerM}")
+                    ->getFont()->getColor()->setARGB($moneyRed);
 
                 // Merge SALIDAS y S/ (simular rowspan=2 en las últimas dos columnas)
                 $s->mergeCells("{$salidasColL}{$footerS}:{$salidasColL}{$footerM}");
@@ -350,6 +390,11 @@ class DeparturesStatsMonthlyExport implements FromArray, WithHeadings, WithStyle
                         'vertical'  =>Alignment::VERTICAL_CENTER,
                     ],
                 ]);
+
+                // Borde superior discontinuo de TOTAL GENERAL (límite con los datos)
+                $s->getStyle("A{$footerS}:B{$footerS}")
+                    ->getBorders()->getTop()
+                    ->setBorderStyle(Border::BORDER_DASHED)->getColor()->setARGB($fontB);
             }
         ];
     }

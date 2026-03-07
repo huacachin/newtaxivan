@@ -94,6 +94,11 @@ class Index extends Component
 
     }
 
+    public function export(): void
+    {
+        $this->dispatch('url-open', ['url' => route('exports.concepts', ['search' => $this->search])]);
+    }
+
     public function render()
     {
         return view('livewire.concepts.index');

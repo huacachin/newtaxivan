@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\ConceptsReportExport;
 use App\Models\Concept;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ConceptController extends Controller
 {
@@ -25,5 +27,13 @@ class ConceptController extends Controller
     public function edit(Concept $concept)
     {
         return view('concepts.edit', ['conceptId' => $concept->id]);
+    }
+
+    public function export(Request $request)
+    {
+        return Excel::download(
+            new ConceptsReportExport($request->get('search')),
+            'conceptos.xlsx'
+        );
     }
 }

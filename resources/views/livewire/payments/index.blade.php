@@ -5,6 +5,9 @@
 @endpush
 
 <div class="container-fluid">
+    <style>
+        tr.row-retraso td, tr.row-retraso th { color: #cc0000 !important; font-weight: 600; }
+    </style>
     <!-- Header -->
     <div class="row">
         <div class="col-sm-6">
@@ -209,7 +212,7 @@
 
                             <tbody>
                             @forelse($payments as $p)
-                                <tr>
+                                <tr {{ $p->type === 'RETRASO' ? 'class=row-retraso' : '' }}>
                                     @role('admin')
                                     <td width="50">
                                         <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
@@ -274,6 +277,15 @@
                 ['#date_start', 'ui_date_start'],
                 ['#date_end',   'ui_date_end'],
             ], wire);
+
+            window.addEventListener('restore-payment-dates', function (e) {
+                var d = (e.detail && e.detail[0]) ? e.detail[0] : (e.detail || {});
+                var today = $.datepicker.formatDate('yy-mm-dd', new Date());
+                var ds = d.date_start || today;
+                var de = d.date_end   || today;
+                $('#date_start').val(ds);
+                $('#date_end').val(de);
+            });
         });
     </script>
 @endpush

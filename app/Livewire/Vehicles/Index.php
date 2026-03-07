@@ -52,6 +52,9 @@ class Index extends Component
             ->when(in_array($status, ['active', 'inactive'], true),
                 fn($q) => $q->whereRaw('LOWER(TRIM(status)) = ?', [$status])
             )
+            ->when($status === 'inactive',
+                fn($q) => $q->whereNotNull('termination_date')
+            )
             ->when($search !== '' && $filter !== '', function ($q) use ($filter, $search) {
                 return match ($filter) {
                     'plate' => $q->where('plate', 'like', "%{$search}%"),

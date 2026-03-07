@@ -31,6 +31,7 @@ class UsersReportExport implements
 
         return User::query()
             ->where('status', 'active')
+            ->whereDoesntHave('roles', fn ($q) => $q->where('name', 'admin'))
             ->when($search !== '', function ($q) use ($search) {
                 $q->where(function ($w) use ($search) {
                     $w->where('name', 'like', "%{$search}%")
@@ -44,7 +45,7 @@ class UsersReportExport implements
 
     public function headings(): array
     {
-        return ['Item', 'Nombre', 'Teléfono', 'Sedes', 'Sede Primaria', 'Rol'];
+        return ['Item', 'Nombres', 'Telefono', 'Sedes', 'Sede Primaria', 'Nivel'];
     }
 
     public function map($user): array
@@ -53,7 +54,8 @@ class UsersReportExport implements
 
         $sedes = $user->headquarters->pluck('name')->implode(', ') ?: '—';
         $sedePrimaria = optional($user->headquarter)->name ?? '—';
-        $rol = optional($user->roles->first())->name ?? '—';
+        $rolKey = optional($user->roles->first())->name;
+        $rol    = $rolKey ? __('roles.' . $rolKey, [], 'es') : '—';
 
         return [
             $this->rowNum,
@@ -79,7 +81,7 @@ class UsersReportExport implements
 
     public function styles(Worksheet $sheet)
     {
-        return [3 => ['font' => ['bold' => true, 'size' => 10]]];
+        return [];
     }
 
     public function registerEvents(): array
@@ -90,11 +92,10 @@ class UsersReportExport implements
                 $e->sheet->getDelegate()->setTitle('Usuarios');
                 $ws = $e->sheet->getDelegate();
 
-                $blue     = 'FF2874A6';
-                $footerBg = 'FFCEE7FF';
-                $white    = 'FFFFFFFF';
-                $borderC  = 'FFCFD8DC';
-                $red      = 'F80000';
+                $blue    = 'FF2874A6';
+                $white   = 'FFFFFFFF';
+                $borderC = 'FFCFD8DC';
+                $red     = 'F80000';
 
                 $ws->getParent()->getDefaultStyle()->getFont()->setSize(10);
                 $ws->getDefaultRowDimension()->setRowHeight(15);
@@ -102,11 +103,13 @@ class UsersReportExport implements
                 // Insertar fila de título
                 $ws->insertNewRowBefore(1, 1);
 
-                $total = $this->rowNum;
-                $title = "USUARIOS · TOTAL: {$total}";
-                $ws->mergeCells('A1:F1');
+                $lastCol      = 'F';
+
+                // Fila 1: título
+                $title = 'LISTADO GENERAL DE USUARIO';
+                $ws->mergeCells("A1:{$lastCol}1");
                 $ws->setCellValue('A1', $title);
-                $ws->getStyle('A1:F1')->applyFromArray([
+                $ws->getStyle("A1:{$lastCol}1")->applyFromArray([
                     'font'      => ['bold' => true, 'size' => 10, 'color' => ['argb' => $red]],
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -116,15 +119,11 @@ class UsersReportExport implements
                         'fillType'   => Fill::FILL_SOLID,
                         'startColor' => ['argb' => $white],
                     ],
-                    'borders' => [
-                        'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FF000000']],
-                    ],
                 ]);
                 $ws->getRowDimension(1)->setRowHeight(18);
 
                 $headerRow    = 2;
                 $dataStartRow = 3;
-                $lastCol      = 'F';
 
                 // Encabezado azul
                 $ws->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->applyFromArray([
@@ -142,11 +141,6 @@ class UsersReportExport implements
 
                 $last = (int) $ws->getHighestRow();
 
-                // Bordes
-                $ws->getStyle("A{$headerRow}:{$lastCol}{$last}")
-                    ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)
-                    ->getColor()->setARGB($borderC);
-
                 if ($last >= $dataStartRow) {
                     // Alineaciones
                     $ws->getStyle("A{$dataStartRow}:A{$last}")
@@ -161,49 +155,37 @@ class UsersReportExport implements
                         ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
                     $ws->getStyle("D{$dataStartRow}:E{$last}")
-                        ->getAlignment()
-                        ->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
                     $ws->getStyle("F{$dataStartRow}:F{$last}")
                         ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 }
 
-                // Fila TOTAL
-                $totalRow = $last + 1;
-                $ws->mergeCells("A{$totalRow}:E{$totalRow}");
-                $ws->setCellValue("A{$totalRow}", 'TOTAL USUARIOS');
-                $ws->setCellValue("F{$totalRow}", "=COUNT(A{$dataStartRow}:A{$last})");
-                $ws->getStyle("A{$totalRow}:{$lastCol}{$totalRow}")->applyFromArray([
-                    'fill' => [
-                        'fillType'   => Fill::FILL_SOLID,
-                        'startColor' => ['argb' => $footerBg],
-                    ],
-                    'font'    => ['bold' => true, 'size' => 10, 'color' => ['argb' => $white]],
-                    'borders' => [
-                        'outline' => [
-                            'borderStyle' => Border::BORDER_MEDIUM,
-                            'color'       => ['argb' => $blue],
-                        ],
-                    ],
-                ]);
-                $ws->getStyle("A{$totalRow}:E{$totalRow}")
-                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-                $ws->getStyle("F{$totalRow}")
-                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-
-                // Bordes finales sobre todo el rango
-                $ws->getStyle("A1:{$lastCol}{$totalRow}")
-                    ->getBorders()->getAllBorders()
-                    ->setBorderStyle(Border::BORDER_THIN)
-                    ->getColor()->setARGB('FF9E9E9E');
-
-                // Borde negro en el título
-                $ws->getStyle("A1:{$lastCol}1")
+                // Bordes negros sólidos en título + header
+                $ws->getStyle("A1:{$lastCol}{$headerRow}")
                     ->getBorders()->getAllBorders()
                     ->setBorderStyle(Border::BORDER_THIN)
                     ->getColor()->setARGB('FF000000');
 
-                $ws->getStyle("A1:{$lastCol}{$totalRow}")->getFont()->setSize(10);
+                // Bordes en filas de datos: verticales sólidos, horizontales discontinuos
+                if ($last >= $dataStartRow) {
+                    $dataRange = "A{$dataStartRow}:{$lastCol}{$last}";
+                    $borders   = $ws->getStyle($dataRange)->getBorders();
+
+                    // Contorno sólido
+                    $borders->getLeft()->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB('FF000000');
+                    $borders->getRight()->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB('FF000000');
+                    $borders->getTop()->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB('FF000000');
+                    $borders->getBottom()->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB('FF000000');
+
+                    // Líneas horizontales internas (entre filas): discontinuas
+                    $borders->getHorizontal()->setBorderStyle(Border::BORDER_DASHED)->getColor()->setARGB('FF000000');
+
+                    // Líneas verticales internas (entre columnas): sólidas
+                    $borders->getVertical()->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB('FF000000');
+                }
+
+                $ws->getStyle("A1:{$lastCol}{$last}")->getFont()->setSize(10);
             },
         ];
     }

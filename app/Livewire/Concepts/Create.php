@@ -12,6 +12,26 @@ class Create extends Component
     public string $status = 'inactive';
     public string $type   = 'ingreso';
 
+    public function mount(): void
+    {
+        $this->code = $this->generateCode();
+    }
+
+    private function generateCode(): string
+    {
+        $nextId = (Concept::max('id') ?? 0) + 1;
+        return $nextId < 10 ? '0' . $nextId : (string) $nextId;
+    }
+
+    public function clear(): void
+    {
+        $this->name   = '';
+        $this->status = 'inactive';
+        $this->type   = 'ingreso';
+        $this->code   = $this->generateCode();
+        $this->resetErrorBag();
+    }
+
     protected $rules = [
         'code'   => 'required|string|max:255',
         'name'   => 'required|string|max:255',

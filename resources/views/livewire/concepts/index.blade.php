@@ -50,7 +50,7 @@
                                 <div class="flex-shrink-0" style="width: 260px;">
                                     <input type="search"
                                            class="form-control form-control-sm"
-                                           placeholder="Buscar..."
+                                           placeholder="Buscar por nombre"
                                            aria-label="Buscar"
                                            wire:model.live="search">
                                 </div>
@@ -59,6 +59,11 @@
                                 <button class="btn btn-sm btn-primary flex-shrink-0"
                                         wire:click="openAddModal">
                                     <i class="ti ti-square-plus f-s-12"></i> Nuevo
+                                </button>
+
+                                <button class="btn btn-sm btn-primary flex-shrink-0"
+                                        wire:click="export">
+                                    <i class="ti ti-file-analytics f-s-12"></i> Exportar
                                 </button>
 
                             </div>

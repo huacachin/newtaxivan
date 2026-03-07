@@ -82,7 +82,7 @@
                                                 <br><small class="text-muted">Primaria: {{ $user->headquarter->name }}</small>
                                             @endif
                                         </td>
-                                        <td>{{ optional($user->roles->first())->name ?? '—' }}</td>
+                                        <td>{{ ($r = optional($user->roles->first())->name) ? __('roles.' . $r, [], 'es') : '—' }}</td>
                                         <td>
                                             <span class="badge bg-dark">
                                                 {{ $user->permissions->count() }} permisos

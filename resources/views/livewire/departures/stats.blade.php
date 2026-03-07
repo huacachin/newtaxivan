@@ -145,9 +145,9 @@
                                     @foreach($days as $d)
                                         @php $val = $r['days'][$d] ?? 0; @endphp
                                         @if($r['type'] === 'S/')
-                                            <td class="title-modules f-w-600">{{ number_format($val, 2) }}</td>
+                                            <td class="title-modules f-w-600">{{ $val != 0 ? number_format($val, 2) : '' }}</td>
                                         @else
-                                            <td class="green_modules">{{ number_format($val) }}</td>
+                                            <td class="green_modules">{{ $val != 0 ? number_format($val) : '' }}</td>
                                         @endif
                                     @endforeach
 
@@ -178,7 +178,8 @@
                                     <td>Salidas</td>
 
                                     @foreach($days as $d)
-                                        <td class="striped-cond">{{ number_format($totalsSalidas[$d] ?? 0) }}</td>
+                                        @php $vs = $totalsSalidas[$d] ?? 0; @endphp
+                                        <td class="striped-cond">{{ $vs != 0 ? number_format($vs) : '' }}</td>
                                     @endforeach
 
                                     {{-- 🔹 Total Salidas (rowspan 2) --}}
@@ -197,7 +198,8 @@
                                     <td>S/</td>
 
                                     @foreach($days as $d)
-                                        <td>{{ number_format($totalsMonto[$d] ?? 0, 2) }}</td>
+                                        @php $vm = $totalsMonto[$d] ?? 0; @endphp
+                                        <td>{{ $vm != 0 ? number_format($vm, 2) : '' }}</td>
                                     @endforeach
                                     {{-- OJO: aquí ya NO agregamos celdas al final porque las de arriba están con rowspan --}}
                                 </tr>

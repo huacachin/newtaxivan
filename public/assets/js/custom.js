@@ -44,6 +44,7 @@ function _applyDatepickers(pairs, wire) {
     pairs.forEach(function (pair) {
         var $el = $(pair[0]);
         if (!$el.length) return;
+        var currentVal = $el.val();
         // Destruir siempre antes de reinicializar (evita doble binding)
         try { $el.datepicker('destroy'); } catch (e) {}
         $el.datepicker({
@@ -54,6 +55,8 @@ function _applyDatepickers(pairs, wire) {
                 wire.set(pair[1], dateText);
             }
         });
+        // Restaurar valor visual sin disparar eventos de Livewire
+        if (currentVal) $el.val(currentVal);
     });
 }
 

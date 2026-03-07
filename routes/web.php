@@ -136,4 +136,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/exports/users', [UserController::class, 'export'])
         ->name('exports.users');
 
+    Route::get('/exports/concepts', [ConceptController::class, 'export'])
+        ->name('exports.concepts');
+
 });
