@@ -178,10 +178,14 @@ class IncomesExport implements
                     $ws->getStyle("A{$dataStartRow}:F{$last}")
                         ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
+                    // Item column bold
+                    $ws->getStyle("A{$dataStartRow}:A{$last}")
+                        ->getFont()->setBold(true);
+
                     $ws->getStyle("B{$dataStartRow}:B{$last}")
                         ->getNumberFormat()->setFormatCode('d/m/yy');
                     $ws->getStyle("F{$dataStartRow}:F{$last}")
-                        ->getNumberFormat()->setFormatCode('"S/ " #,##0');
+                        ->getNumberFormat()->setFormatCode('#,##0.00');
                 }
 
                 // ===== Congelar bajo encabezado
@@ -202,17 +206,16 @@ class IncomesExport implements
 
                 // ===== TOTAL
                 $totalRow = max($last, $dataStartRow - 1) + 1;
-                $ws->mergeCells("A{$totalRow}:E{$totalRow}");
-                $ws->setCellValue("A{$totalRow}", 'Total');
+                $ws->setCellValue("C{$totalRow}", 'Total');
                 $ws->setCellValue("F{$totalRow}", $last >= $dataStartRow
                     ? "=SUM(F{$dataStartRow}:F{$last})"
                     : 0
                 );
 
                 $ws->getStyle("A{$totalRow}:F{$totalRow}")->applyFromArray([
-                    'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+                    'font'      => ['bold' => true],
                     'alignment' => [
-                        'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT,
+                        'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
                         'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
                     ],
                     'fill'      => [
@@ -221,9 +224,7 @@ class IncomesExport implements
                     ],
                 ]);
                 $ws->getStyle("F{$totalRow}")
-                    ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
-                $ws->getStyle("F{$totalRow}")
-                    ->getNumberFormat()->setFormatCode('"S/ " #,##0');
+                    ->getNumberFormat()->setFormatCode('#,##0.00');
 
                 // Borde exterior
                 $ws->getStyle("A{$headerRow}:F{$totalRow}")
