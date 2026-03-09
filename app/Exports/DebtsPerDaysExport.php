@@ -13,7 +13,6 @@ use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
-use PhpOffice\PhpSpreadsheet\Style\Conditional;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTitle
@@ -211,8 +210,9 @@ class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTi
                 $borderC  = '000000';
                 $sunRed   = 'F80000';
 
-                // Fuente base 10 pt (compacto)
+                // Fuente base 10 pt, sin gridlines
                 $ws->getParent()->getDefaultStyle()->getFont()->setSize(10);
+                $ws->setShowGridlines(false);
 
                 // ===== Insertar SOLO 1 fila (título). Ya NO usamos la fila 2 =====
                 $ws->insertNewRowBefore(1, 1);
@@ -263,61 +263,23 @@ class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTi
                 // Rango de datos
                 $lastDataRow = $dataStartRow + max(0, $this->rowCount) - 1;
 
-                // Zebra
+                // Bordes datos: dashed horizontal, thin vertical
                 if ($lastDataRow >= $dataStartRow) {
-                    $rangeData = "A{$dataStartRow}:{$lastColLetter}{$lastDataRow}";
-                    $cond = new Conditional();
-                    $cond->setConditionType(Conditional::CONDITION_EXPRESSION);
-                    $cond->setConditions(['MOD(ROW(),2)=0']);
-                    $cond->getStyle()->getFill()->setFillType(Fill::FILL_SOLID)
-                        ->getStartColor()->setARGB('FFF3F4F6');
-                    $styles = $ws->getStyle($rangeData)->getConditionalStyles();
-                    $styles[] = $cond;
-                    $ws->getStyle($rangeData)->setConditionalStyles($styles);
+                    $dataRange = "A{$dataStartRow}:{$lastColLetter}{$lastDataRow}";
+                    $borders = $ws->getStyle($dataRange)->getBorders();
+                    $borders->getTop()->setBorderStyle(Border::BORDER_THIN)->getColor()->setRGB($borderC);
+                    $borders->getBottom()->setBorderStyle(Border::BORDER_THIN)->getColor()->setRGB($borderC);
+                    $borders->getLeft()->setBorderStyle(Border::BORDER_THIN)->getColor()->setRGB($borderC);
+                    $borders->getRight()->setBorderStyle(Border::BORDER_THIN)->getColor()->setRGB($borderC);
+                    $borders->getHorizontal()->setBorderStyle(Border::BORDER_DASHED)->getColor()->setRGB($borderC);
+                    $borders->getVertical()->setBorderStyle(Border::BORDER_THIN)->getColor()->setRGB($borderC);
                 }
 
-                // Bordes finos
-                $ws->getStyle("A{$headerRow}:{$lastColLetter}" . max($headerRow, $lastDataRow))
+                // Bordes header
+                $ws->getStyle("A{$headerRow}:{$lastColLetter}{$headerRow}")
                     ->getBorders()->getAllBorders()
                     ->setBorderStyle(Border::BORDER_THIN)
-                    ->getColor()->setARGB($borderC);
-
-                // Condicionales en celdas de días
-                if ($lastDataRow >= $dataStartRow && $this->dayCols > 0) {
-                    $firstDayLetter = $this->colLetter($dayStartColIndex);
-                    $lastDayLetter  = $this->colLetter($dayEndColIndex);
-                    $dayRange = "{$firstDayLetter}{$dataStartRow}:{$lastDayLetter}{$lastDataRow}";
-
-                    // "P" ⇒ verde claro
-                    $cP = new Conditional();
-                    $cP->setConditionType(Conditional::CONDITION_CONTAINSTEXT)
-                        ->setOperatorType(Conditional::OPERATOR_CONTAINSTEXT)
-                        ->setText('P');
-                    $cP->getStyle()->getFill()->setFillType(Fill::FILL_SOLID)
-                        ->getStartColor()->setARGB('FFDCFCE7');
-                    $cP->getStyle()->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-
-                    // "NT" ⇒ rojo suave
-                    $cNT = new Conditional();
-                    $cNT->setConditionType(Conditional::CONDITION_CONTAINSTEXT)
-                        ->setOperatorType(Conditional::OPERATOR_CONTAINSTEXT)
-                        ->setText('NT');
-                    $cNT->getStyle()->getFill()->setFillType(Fill::FILL_SOLID)
-                        ->getStartColor()->setARGB('FFFEE2E2');
-                    $cNT->getStyle()->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-
-                    // número (frecuencia) ⇒ ámbar
-                    $cNum = new Conditional();
-                    $cNum->setConditionType(Conditional::CONDITION_EXPRESSION);
-                    $cNum->setConditions(["LEN(TRIM({$firstDayLetter}{$dataStartRow}))>0"]);
-                    $cNum->getStyle()->getFill()->setFillType(Fill::FILL_SOLID)
-                        ->getStartColor()->setARGB('FFFEF3C7');
-                    $cNum->getStyle()->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-
-                    $styles = $ws->getStyle($dayRange)->getConditionalStyles();
-                    $styles[] = $cP; $styles[] = $cNT; $styles[] = $cNum;
-                    $ws->getStyle($dayRange)->setConditionalStyles($styles);
-                }
+                    ->getColor()->setRGB($borderC);
 
                 // Montos (S/)
                 $paidAmtColLetter = $this->colLetter($dayEndColIndex + 2);
@@ -384,15 +346,13 @@ class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTi
                     $ws->setCellValue("{$debtDaysColLetter}{$totalRow}", "=SUM({$debtDaysColLetter}{$dataStartRow}:{$debtDaysColLetter}{$lastDataRow})");
                     $ws->setCellValue("{$debtAmtColLetter}{$totalRow}", "=SUM({$debtAmtColLetter}{$dataStartRow}:{$debtAmtColLetter}{$lastDataRow})");
 
-                    // Estilo pie
+                    // Estilo pie: celeste, texto negro, bordes thin
                     $ws->getStyle("A{$totalRow}:{$lastColLetter}{$totalRow}")->applyFromArray([
-                        'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>'FFFFFFFF']],
-                        'alignment' => ['horizontal'=>Alignment::HORIZONTAL_RIGHT,'vertical'=>Alignment::VERTICAL_CENTER],
+                        'font' => ['bold'=>true,'size'=>10,'color'=>['rgb'=>'000000']],
+                        'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
                         'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$footerBg]],
+                        'borders' => ['allBorders' => ['borderStyle'=>Border::BORDER_THIN,'color'=>['rgb'=>$borderC]]],
                     ]);
-                    $ws->getStyle("A{$totalRow}:{$lastColLetter}{$totalRow}")
-                        ->getBorders()->getTop()->setBorderStyle(Border::BORDER_THIN)
-                        ->getColor()->setARGB($borderC);
                     $ws->getStyle("{$paidAmtColLetter}{$totalRow}")->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
                     $ws->getStyle("{$debtAmtColLetter}{$totalRow}")->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
                     $ws->getStyle("{$paidDaysColLetter}{$totalRow}:{$debtDaysColLetter}{$totalRow}")

@@ -90,6 +90,10 @@
                                     <i class="ti ti-arrow-back-up f-s-12"></i> Regresar
                                 </a>
 
+                                <button class="btn btn-sm btn-primary flex-shrink-0 align-self-end" id="down" title="Bajar">
+                                    <i class="fa-solid fa-angle-down"></i>
+                                </button>
+
                             </div>
                         </div>
                     </div>

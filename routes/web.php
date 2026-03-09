@@ -84,8 +84,10 @@ Route::middleware('auth')->group(function () {
     Route::get('cash/open',[CashController::class,'open'])->name('cash.open');
     Route::get('cash/report/movement',[CashController::class,'movementReport'])->name('cash.report.movement');
     Route::get('cash/incomes',[CashController::class,'incomes'])->name('cash.incomes');
+    Route::get('cash/incomes/create',[CashController::class,'createIncome'])->name('cash.incomes.create')->middleware('role:admin');
     Route::get('cash/incomes/{id}/edit',[CashController::class,'editIncome'])->name('cash.incomes.edit')->middleware('role:admin');
     Route::get('cash/expenses',[CashController::class,'expenses'])->name('cash.expenses');
+    Route::get('cash/expenses/create',[CashController::class,'createExpense'])->name('cash.expenses.create')->middleware('role:admin');
     Route::get('cash/expenses/{id}/edit',[CashController::class,'editExpense'])->name('cash.expenses.edit')->middleware('role:admin');
     Route::get('cash/report/general',[CashController::class,'generalReport'])->name('cash.report.general');
     Route::get('cash/report/est-draco-base',[CashController::class,'reportEstDracoBase'])->name('cash.report.est-draco-base');

@@ -3,19 +3,15 @@
 namespace App\Livewire\Cash;
 
 use App\Models\Expense;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Storage;
-use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
-class EditExpense extends Component
+class CreateExpense extends Component
 {
     use WithFileUploads;
-
-    public Expense $expense;
-    public int $expenseId;
 
     public string $expenseKind = 'Otros';
     public ?int   $concept_id  = null;
@@ -30,36 +26,16 @@ class EditExpense extends Component
     public $users;
 
     public $image_file = null;
-    public ?string $image_path = null;
 
-    public function mount(int $id): void
+    public function mount(): void
     {
         if (!auth()->user()?->hasRole('admin')) {
             abort(403);
         }
 
-        $this->expense   = Expense::findOrFail($id);
-        $this->expenseId = $id;
-        $this->users     = DB::table('users')->pluck('name', 'id');
+        $this->date  = now()->toDateString();
+        $this->users = DB::table('users')->pluck('name', 'id');
         $this->refreshConcepts();
-
-        $e = $this->expense;
-
-        $this->date          = optional($e->date)->format('Y-m-d');
-        $this->detail        = (string)($e->detail ?? '');
-        $this->total         = (float)($e->total ?? 0);
-        $this->document_type = (string)($e->document_type ?? '');
-        $this->in_charge     = (string)($e->in_charge ?? '');
-        $this->image_path    = $e->image_path ?: null;
-
-        $match = collect($this->concepts)->firstWhere('name', (string)$e->reason);
-        if ($match) {
-            $this->expenseKind = 'Fijos';
-            $this->concept_id  = (int)$match['id'];
-        } else {
-            $this->expenseKind = 'Otros';
-            $this->reason_text = (string)($e->reason ?? '');
-        }
     }
 
     private function refreshConcepts(): void
@@ -110,6 +86,14 @@ class EditExpense extends Component
         if (in_array($val, ['Otros', 'Planilla'])) $this->concept_id = null;
     }
 
+    public function clear(): void
+    {
+        $this->reset(['expenseKind', 'concept_id', 'reason_text', 'detail', 'total', 'document_type', 'in_charge', 'image_file']);
+        $this->date        = now()->toDateString();
+        $this->expenseKind = 'Otros';
+        $this->resetValidation();
+    }
+
     public function updatedConceptId($value): void
     {
         if ($this->expenseKind !== 'Fijos' || empty($value)) return;
@@ -120,30 +104,14 @@ class EditExpense extends Component
         }
     }
 
-    public function questionDelete(int $id): void
+    protected function conceptNameById(?int $id): string
     {
-        $this->dispatch('questionDelete', ['id' => $id]);
+        if (!$id) return '';
+        $row = collect($this->concepts)->firstWhere('id', (int)$id);
+        return $row['name'] ?? '';
     }
 
-    #[On('register_destroy')]
-    public function destroy(int $id): void
-    {
-        if (!auth()->user()?->hasRole('admin')) {
-            abort(403);
-        }
-
-        $expense = Expense::findOrFail($id);
-
-        if ($expense->image_path && Storage::disk('public')->exists($expense->image_path)) {
-            Storage::disk('public')->delete($expense->image_path);
-        }
-
-        $expense->delete();
-        session()->flash('expense_success', 'Egreso eliminado correctamente.');
-        $this->redirectRoute('cash.expenses');
-    }
-
-    public function update(): void
+    public function save(): void
     {
         try {
             $this->validate();
@@ -152,14 +120,6 @@ class EditExpense extends Component
                 ? $this->conceptNameById($this->concept_id)
                 : trim($this->reason_text);
 
-            $newImagePath = null;
-            if ($this->image_file) {
-                $newImagePath = $this->image_file->storePublicly('expenses', 'public');
-                if ($this->expense->image_path && Storage::disk('public')->exists($this->expense->image_path)) {
-                    Storage::disk('public')->delete($this->expense->image_path);
-                }
-            }
-
             $payload = [
                 'date'          => $this->date,
                 'reason'        => $reason,
@@ -167,33 +127,27 @@ class EditExpense extends Component
                 'total'         => round((float)$this->total, 2),
                 'document_type' => trim((string)$this->document_type),
                 'in_charge'     => trim((string)$this->in_charge),
+                'user_id'       => Auth::id(),
             ];
 
-            if ($newImagePath) {
-                $payload['image_path'] = $newImagePath;
+            if ($this->image_file) {
+                $payload['image_path'] = $this->image_file->storePublicly('expenses', 'public');
             }
 
-            $this->expense->update($payload);
+            Expense::create($payload);
 
-            session()->flash('expense_success', 'Egreso actualizado correctamente.');
+            session()->flash('expense_success', 'Egreso registrado correctamente.');
             $this->redirectRoute('cash.expenses');
         } catch (\Illuminate\Validation\ValidationException $e) {
             throw $e;
         } catch (\Throwable $e) {
-            session()->flash('expense_error', 'Error al actualizar: ' . $e->getMessage());
+            session()->flash('expense_error', 'Error al registrar: ' . $e->getMessage());
             $this->redirectRoute('cash.expenses');
         }
     }
 
-    protected function conceptNameById(?int $id): string
-    {
-        if (!$id) return '';
-        $row = collect($this->concepts)->firstWhere('id', (int)$id);
-        return $row['name'] ?? '';
-    }
-
     public function render()
     {
-        return view('livewire.cash.edit-expense');
+        return view('livewire.cash.create-expense');
     }
 }

@@ -132,7 +132,7 @@
                                 <th>Cod</th>
                                 <th>Placa</th>
                                 <th>Condición</th>
-                                <th title="Días NO trabajados">Días NO trabajados</th>
+                                <th title="Días NO trabajados">DIAS NO TRABAJADOS(<span style="color:#eab723">{{ $months[$month] ?? '' }}</span>)</th>
                                 <th title="Total Días no Trabajados">T. d.n.t</th>
                                 <th title="Total Deuda (S/)">T. D. (S/)</th>
                                 <th title="Exonerado (S/)">Ex (S/)</th>

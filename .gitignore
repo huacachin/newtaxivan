@@ -53,3 +53,4 @@ Thumbs.db
 
 # --- Otros comunes ---
 /rr.log
+.claude/worktrees/

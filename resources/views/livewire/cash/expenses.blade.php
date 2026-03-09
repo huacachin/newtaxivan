@@ -130,9 +130,10 @@
                                 <i class="ti ti-search f-s-12"></i> Buscar
                             </button>
 
-                            <button class="btn btn-sm btn-success flex-shrink-0" wire:click="openCreateModal">
+                            <a href="{{ route('cash.expenses.create') }}"
+                               class="btn btn-sm btn-success flex-shrink-0">
                                 <i class="ti ti-square-plus f-s-12"></i> Nuevo
-                            </button>
+                            </a>
 
                             <button class="btn btn-sm btn-primary flex-shrink-0" wire:click="export">
                                 <i class="ti ti-file-analytics f-s-12"></i> Excel
@@ -187,11 +188,8 @@
                                 <td>{{ $e->in_charge }}</td>
                                 <td class="text-center">
                                     @if($e->image_path)
-                                        <img src="{{ asset('storage/'.$e->image_path) }}"
-                                             alt="Ver comprobante"
-                                             class="img-thumbnail"
-                                             style="height:36px;width:36px;object-fit:cover;cursor:pointer;"
-                                             onclick="showLightbox('{{ asset('storage/'.$e->image_path) }}')">
+                                        <i class="fa-solid fa-camera f-s-18 text-dark" style="cursor:pointer;"
+                                           onclick="showLightbox('{{ asset('storage/'.$e->image_path) }}')"></i>
                                     @else
                                         <span class="text-muted">—</span>
                                     @endif
@@ -205,9 +203,9 @@
                         </tbody>
 
                         <tfoot class="bg-primary">
-                        <tr>
-                            <td colspan="9" class="text-end f-fw-700">Total general</td>
-                            <td class="text-end f-fw-700">{{ number_format($totalGeneral ?? 0, 2) }}</td>
+                        <tr style="font-size: 1.3rem; color: #000 !important;">
+                            <td colspan="9" class="text-end fw-bold" style="padding: 4px 8px !important;">Total General</td>
+                            <td class="text-end fw-bold" style="padding: 4px 8px !important;">{{ number_format($totalGeneral ?? 0, 2) }}</td>
                         </tr>
                         </tfoot>
                     </table>

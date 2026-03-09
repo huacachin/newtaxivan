@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Payments;
 
+use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Url;
@@ -74,8 +75,32 @@ class Stats extends Component
             $this->totalsPerDay[$d] = 0.0;
         }
 
+        $emptyBlock = fn() => [
+            'PAGO'    => ['days'=>array_fill(1,$this->daysInMonth,0.0), 'total'=>0.0],
+            'RETRASO' => ['days'=>array_fill(1,$this->daysInMonth,0.0), 'total'=>0.0],
+            'DEUDA'   => ['days'=>array_fill(1,$this->daysInMonth,0.0), 'total'=>0.0],
+        ];
+
+        // Pre-armar estructura con TODOS los controllers y sus sedes
+        $controllers = User::role('controller')
+            ->with('headquarters:id,name')
+            ->orderBy('name')
+            ->get(['id','name']);
+
+        foreach ($controllers as $u) {
+            $ctrl = (string)$u->name;
+            $this->rows[$ctrl] = [];
+            $hqs = $u->headquarters->sortBy('name');
+            foreach ($hqs as $hq) {
+                $this->rows[$ctrl][(string)$hq->name] = $emptyBlock();
+            }
+            // Si no tiene sedes, asegurar al menos una entrada vacía
+            if ($hqs->isEmpty()) {
+                $this->rows[$ctrl]['-'] = $emptyBlock();
+            }
+        }
+
         // Agregación por controlador, sucursal, tipo y día
-        // Nota: usamos date_register para estadístico (como “Caja”).
         $aggs = DB::table('payments as p')
             ->leftJoin('users as u', 'u.id', '=', 'p.user_id')
             ->leftJoin('headquarters as h', 'h.id', '=', 'p.headquarter_id')
@@ -94,20 +119,7 @@ class Stats extends Component
             ->orderBy('headquarter')
             ->get();
 
-        // Pre-armamos estructura vacía para cada (controller, headquarter)
-        foreach ($aggs as $r) {
-            $ctrl = (string)$r->controller;
-            $hq   = (string)$r->headquarter;
-
-            $this->rows[$ctrl] = $this->rows[$ctrl] ?? [];
-            $this->rows[$ctrl][$hq] = $this->rows[$ctrl][$hq] ?? [
-                'PAGO'    => ['days'=>array_fill(1,$this->daysInMonth,0.0), 'total'=>0.0],
-                'RETRASO' => ['days'=>array_fill(1,$this->daysInMonth,0.0), 'total'=>0.0],
-                'DEUDA'   => ['days'=>array_fill(1,$this->daysInMonth,0.0), 'total'=>0.0],
-            ];
-        }
-
-        // Asignamos montos por día
+        // Asignamos montos por día (crear entradas si no existían)
         foreach ($aggs as $r) {
             $ctrl = (string)$r->controller;
             $hq   = (string)$r->headquarter;
@@ -115,27 +127,31 @@ class Stats extends Component
             $d    = (int)$r->d;
             $s    = (float)$r->s;
 
+            if (!isset($this->rows[$ctrl])) $this->rows[$ctrl] = [];
+            if (!isset($this->rows[$ctrl][$hq])) $this->rows[$ctrl][$hq] = $emptyBlock();
             if (!isset($this->rows[$ctrl][$hq][$t])) continue;
+
             if ($d >= 1 && $d <= $this->daysInMonth) {
                 $this->rows[$ctrl][$hq][$t]['days'][$d] += $s;
             }
         }
 
         // Totales por fila y totales generales
-        foreach ($this->rows as $ctrl => $byHq) {
-            foreach ($byHq as $hq => $blocks) {
+        foreach ($this->rows as $ctrl => &$byHq) {
+            foreach ($byHq as $hq => &$blocks) {
                 foreach (['PAGO','RETRASO','DEUDA'] as $t) {
                     $sumRow = array_sum($blocks[$t]['days']);
-                    $this->rows[$ctrl][$hq][$t]['total'] = $sumRow;
+                    $blocks[$t]['total'] = $sumRow;
 
-                    // Totales por día (sumamos los 3 tipos)
                     for ($d=1; $d <= $this->daysInMonth; $d++) {
                         $this->totalsPerDay[$d] += (float)$blocks[$t]['days'][$d];
                     }
                     $this->grandTotal += (float)$sumRow;
                 }
             }
+            unset($blocks);
         }
+        unset($byHq);
     }
 
     /* ======================= HELPERS ======================= */

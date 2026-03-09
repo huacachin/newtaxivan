@@ -132,12 +132,27 @@ class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, With
                     ],
                 ]);
 
-                // Bordes finos para toda la tabla (incl. pies)
+                // Bordes: headers con thin, datos con dashed horizontal / thin vertical
                 $lastRow = (int)$s->getHighestRow();
-                $s->getStyle("A{$groupRow}:{$lastCol}{$lastRow}")
+                $dataEnd = $lastRow - 2;
+
+                // Headers (rows 2-3): thin borders
+                $s->getStyle("A{$groupRow}:{$lastCol}{$headRow}")
                     ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-                $s->getStyle("A{$groupRow}:{$lastCol}{$lastRow}")
+                $s->getStyle("A{$groupRow}:{$lastCol}{$headRow}")
                     ->getBorders()->getAllBorders()->getColor()->setARGB($borderC);
+
+                // Data rows: dashed horizontal, thin vertical/outline
+                if ($dataEnd >= $dataRow1) {
+                    $dataRange = "A{$dataRow1}:{$lastCol}{$dataEnd}";
+                    $borders = $s->getStyle($dataRange)->getBorders();
+                    $borders->getTop()->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB($borderC);
+                    $borders->getBottom()->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB($borderC);
+                    $borders->getLeft()->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB($borderC);
+                    $borders->getRight()->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB($borderC);
+                    $borders->getHorizontal()->setBorderStyle(Border::BORDER_DASHED)->getColor()->setARGB($borderC);
+                    $borders->getVertical()->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB($borderC);
+                }
 
                 // ===== Anchos (compactos) =====
                 foreach (range('A','L') as $col) {
@@ -157,7 +172,6 @@ class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, With
                 $s->getColumnDimension('L')->setWidth(11);    // T.Deuda
 
                 // ===== Alineaciones: TODO centrado (datos + pies) =====
-                $dataEnd = $lastRow - 2;  // antes de footers (2 filas)
                 if ($dataEnd >= $dataRow1) {
                     // Centrar todo el bloque de datos y pies
                     $s->getStyle("A{$dataRow1}:{$lastCol}{$lastRow}")
@@ -202,12 +216,28 @@ class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, With
                         ],
                         'font' => [
                             'bold'=>true,
-                            'color'=>['argb'=>$white],
+                            'color'=>['argb'=>'FF000000'],
                         ],
                         'borders' => [
-                            'outline' => [
+                            'top' => [
                                 'borderStyle'=>Border::BORDER_MEDIUM,
-                                'color'=>['argb'=>$blue],
+                                'color'=>['argb'=>'FF000000'],
+                            ],
+                            'bottom' => [
+                                'borderStyle'=>Border::BORDER_MEDIUM,
+                                'color'=>['argb'=>'FF000000'],
+                            ],
+                            'left' => [
+                                'borderStyle'=>Border::BORDER_THIN,
+                                'color'=>['argb'=>'FF000000'],
+                            ],
+                            'right' => [
+                                'borderStyle'=>Border::BORDER_THIN,
+                                'color'=>['argb'=>'FF000000'],
+                            ],
+                            'vertical' => [
+                                'borderStyle'=>Border::BORDER_THIN,
+                                'color'=>['argb'=>'FF000000'],
                             ],
                         ],
                         'alignment' => [
@@ -426,9 +456,9 @@ class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, With
 
         $this->footer2 = [
             '', 'TOTAL', '',
-            0, 0, 0,
+            '', '', '',
             round($sumMonth + $sumPrevPaid, 2),
-            0, 0, 0, '', 0,
+            '', '', '', '', '',
         ];
     }
 

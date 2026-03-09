@@ -7,18 +7,15 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\FromArray;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithEvents;
-use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
-class DelayDetailsExport implements FromArray, ShouldAutoSize, WithHeadings, WithEvents, WithStyles, WithTitle
+class DelayDetailsExport implements FromArray, WithHeadings, WithEvents, WithTitle
 {
     public function __construct(
         protected string  $monthDate,
@@ -106,6 +103,7 @@ class DelayDetailsExport implements FromArray, ShouldAutoSize, WithHeadings, Wit
                         $item++;
                         $data[] = [
                             'item'   => $item,
+                            'cod'    => $v->sort_order ?? '',
                             'fecha'  => $date,
                             'placa'  => $v->plate,
                             'vuelta' => (int)ceil($k1/2),
@@ -120,19 +118,12 @@ class DelayDetailsExport implements FromArray, ShouldAutoSize, WithHeadings, Wit
         return $data;
     }
 
-    /* ---------------- encabezados (sin “código”) ---------------- */
     public function headings(): array
     {
-        return ['Item','Fecha','Placa','Vueltas','S/'];
+        return ['Item','Codigo','Fecha','Placa','Vueltas','S/'];
     }
 
-    public function styles(Worksheet $sheet)
-    {
-        // Header en negrita (fila 2 tras insertar título)
-        return [2 => ['font' => ['bold' => true]]];
-    }
-
-    public function title(): string
+public function title(): string
     {
         return "Deuda Detalle";
     }
@@ -143,8 +134,9 @@ class DelayDetailsExport implements FromArray, ShouldAutoSize, WithHeadings, Wit
             AfterSheet::class => function (AfterSheet $e) {
                 $ws = $e->sheet->getDelegate();
 
-                // Fuente 10pt global
+                // Fuente 10pt global, sin gridlines
                 $ws->getParent()->getDefaultStyle()->getFont()->setSize(10);
+                $ws->setShowGridlines(false);
 
                 // Insertar SOLO 1 fila (título). No hay subtítulo ni AutoFilter.
                 $ws->insertNewRowBefore(1, 1);
@@ -152,12 +144,12 @@ class DelayDetailsExport implements FromArray, ShouldAutoSize, WithHeadings, Wit
                 $headerRow     = 2;              // cabecera real
                 $dataStartRow  = 3;              // datos
                 $lastRow       = $dataStartRow + max(0, $this->rowCount) - 1;
-                $lastColLetter = 'E';            // A..E
+                $lastColLetter = 'F';            // A..F
 
                 // ===== TÍTULO =====
                 $seed      = Carbon::parse($this->monthDate);
-                $monthText = $seed->locale('es')->translatedFormat('F Y');
-                $ws->setCellValue('A1', 'REPORTE DE RETRASO ' . ($monthText ? " – {$monthText}" : ''));
+                $monthText = mb_strtoupper($seed->locale('es')->translatedFormat('F')) . ' ' . $seed->year;
+                $ws->setCellValue('A1', "REPORTE DE RETRASO  – {$monthText}");
                 $ws->mergeCells("A1:{$lastColLetter}1");
                 $ws->getRowDimension(1)->setRowHeight(22);
                 $ws->getStyle('A1')->applyFromArray([
@@ -172,74 +164,62 @@ class DelayDetailsExport implements FromArray, ShouldAutoSize, WithHeadings, Wit
                     'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
                     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
                     'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '2874A6']],
+                    'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']]],
                 ]);
                 $ws->getRowDimension($headerRow)->setRowHeight(18);
 
                 // Congelar debajo del thead
                 $ws->freezePane("A{$dataStartRow}");
 
-                // ===== Anchos compactos =====
-                $ws->getColumnDimension('A')->setWidth(6);   // Item
-                $ws->getColumnDimension('B')->setWidth(10);  // Fecha
-                $ws->getColumnDimension('C')->setWidth(10);  // Placa
-                $ws->getColumnDimension('D')->setWidth(7);   // Vueltas
-                $ws->getColumnDimension('E')->setWidth(9);   // S/
+                // ===== Anchos =====
+                $ws->getColumnDimension('A')->setWidth(7.3);   // Item
+                $ws->getColumnDimension('B')->setWidth(9);     // Codigo
+                $ws->getColumnDimension('C')->setWidth(15.2);  // Fecha
+                $ws->getColumnDimension('D')->setWidth(10.5);  // Placa
+                $ws->getColumnDimension('E')->setWidth(10.3);  // Vueltas
+                $ws->getColumnDimension('F')->setWidth(14);    // S/
 
-                // ===== Nada de AutoFilter =====
-                // (intencionalmente no se llama setAutoFilter)
-
-                // Zebra en cuerpo
+                // ===== Bordes datos: dashed horizontal, thin vertical =====
                 if ($lastRow >= $dataStartRow) {
-                    $rangeData = "A{$dataStartRow}:{$lastColLetter}{$lastRow}";
-                    $cond = new \PhpOffice\PhpSpreadsheet\Style\Conditional();
-                    $cond->setConditionType(\PhpOffice\PhpSpreadsheet\Style\Conditional::CONDITION_EXPRESSION);
-                    $cond->setConditions(['MOD(ROW(),2)=0']);
-                    $cond->getStyle()->getFill()->setFillType(Fill::FILL_SOLID)
-                        ->getStartColor()->setRGB('F9FAFB');
-                    $styles = $ws->getStyle($rangeData)->getConditionalStyles();
-                    $styles[] = $cond;
-                    $ws->getStyle($rangeData)->setConditionalStyles($styles);
+                    $dataRange = "A{$dataStartRow}:{$lastColLetter}{$lastRow}";
+                    $borders = $ws->getStyle($dataRange)->getBorders();
+                    $borders->getTop()->setBorderStyle(Border::BORDER_THIN)->getColor()->setRGB('000000');
+                    $borders->getBottom()->setBorderStyle(Border::BORDER_THIN)->getColor()->setRGB('000000');
+                    $borders->getLeft()->setBorderStyle(Border::BORDER_THIN)->getColor()->setRGB('000000');
+                    $borders->getRight()->setBorderStyle(Border::BORDER_THIN)->getColor()->setRGB('000000');
+                    $borders->getHorizontal()->setBorderStyle(Border::BORDER_DASHED)->getColor()->setRGB('000000');
+                    $borders->getVertical()->setBorderStyle(Border::BORDER_THIN)->getColor()->setRGB('000000');
                 }
 
-                // Bordes finos
-                $ws->getStyle("A{$headerRow}:{$lastColLetter}" . max($headerRow, $lastRow))
-                    ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)
-                    ->getColor()->setRGB('000000');
-
-                // Centrar todas las columnas
-                $ws->getStyle("A{$dataStartRow}:{$lastColLetter}" . ($lastRow >= $dataStartRow ? $lastRow : $headerRow))
-                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-
-                // Formatos
+                // Datos: bold negro, centrado
                 if ($lastRow >= $dataStartRow) {
-                    $ws->getStyle("B{$dataStartRow}:B{$lastRow}")->getNumberFormat()->setFormatCode('yyyy-mm-dd');       // Fecha
-                    $ws->getStyle("E{$dataStartRow}:E{$lastRow}")->getNumberFormat()->setFormatCode('"S/ " #,##0.00');   // S/
-                    // Alternancia por bloque de placa (C): opcional, la mantengo
-                    $prev = (string)$ws->getCell("C{$dataStartRow}")->getValue();
-                    $red  = false;
-                    for ($r = $dataStartRow; $r <= $lastRow; $r++) {
-                        $p = (string)$ws->getCell("C{$r}")->getValue();
-                        if ($r > $dataStartRow && $p !== $prev) { $red = !$red; $prev = $p; }
-                        $ws->getStyle("A{$r}:{$lastColLetter}{$r}")->getFont()->getColor()
-                            ->setRGB($red ? 'FF0000' : '000000');
-                    }
+                    $ws->getStyle("A{$dataStartRow}:{$lastColLetter}{$lastRow}")->applyFromArray([
+                        'font'      => ['color' => ['rgb' => '000000']],
+                        'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+                    ]);
+                    $ws->getStyle("C{$dataStartRow}:C{$lastRow}")->getNumberFormat()->setFormatCode('yyyy-mm-dd');
+                    $ws->getStyle("F{$dataStartRow}:F{$lastRow}")->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
                 }
 
-                // ===== Footer (celeste #CEE7FF) =====
+                // ===== Footer (celeste #CEE7FF, texto negro) =====
                 $totalRow = ($lastRow >= $dataStartRow) ? $lastRow + 1 : $headerRow + 1;
-                $ws->mergeCells("A{$totalRow}:D{$totalRow}");
+                $ws->mergeCells("A{$totalRow}:E{$totalRow}");
                 $ws->setCellValue("A{$totalRow}", 'Total');
-                $ws->setCellValue("E{$totalRow}", $lastRow >= $dataStartRow ? "=SUM(E{$dataStartRow}:E{$lastRow})" : 0);
+                $ws->setCellValue("F{$totalRow}", $lastRow >= $dataStartRow ? "=SUM(F{$dataStartRow}:F{$lastRow})" : 0);
 
                 $ws->getStyle("A{$totalRow}:{$lastColLetter}{$totalRow}")->applyFromArray([
-                    'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+                    'font'      => ['bold' => true, 'color' => ['rgb' => '000000']],
                     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
-                    'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '2874A6']],
+                    'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'CEE7FF']],
+                    'borders'   => [
+                        'top'      => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']],
+                        'bottom'   => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']],
+                        'left'     => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']],
+                        'right'    => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']],
+                        'vertical' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']],
+                    ],
                 ]);
-                $ws->getStyle("A{$totalRow}:{$lastColLetter}{$totalRow}")
-                    ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)
-                    ->getColor()->setRGB('000000');
-                $ws->getStyle("E{$totalRow}")->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
+                $ws->getStyle("F{$totalRow}")->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
             },
         ];
     }

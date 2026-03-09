@@ -3,7 +3,7 @@
     {{-- Header --}}
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title title-modules">EGRESOS : ACTUALIZAR</h4>
+            <h4 class="main-title title-modules">EGRESOS : NUEVO</h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -14,7 +14,7 @@
                     </a>
                 </li>
                 <li class="d-flex active">
-                    <span class="f-s-14">Editar</span>
+                    <span class="f-s-14">Nuevo</span>
                 </li>
             </ul>
         </div>
@@ -25,7 +25,7 @@
             <div class="card">
                 <div class="card-body">
 
-                    {{-- Errores de validación --}}
+                    {{-- Errores de validacion --}}
                     @if ($errors->any())
                         <div class="alert alert-danger">
                             <strong>Revisa los siguientes errores:</strong>
@@ -88,7 +88,7 @@
                             <div class="mb-3">
                                 <label class="form-label">Motivo / Detalle (*)</label>
                                 <input type="text" class="form-control form-control-sm @error('detail') is-invalid @enderror"
-                                       placeholder="Descripción breve"
+                                       placeholder="Descripcion breve"
                                        wire:model.defer="detail">
                                 @error('detail') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
@@ -138,31 +138,23 @@
                                 <input type="file" class="form-control form-control-sm" wire:model="image_file" accept="image/*">
                                 @error('image_file') <div class="title-modules">{{ $message }}</div> @enderror
 
-                                <div class="mt-2">
-                                    @if ($image_file)
+                                @if ($image_file)
+                                    <div class="mt-2">
                                         <img src="{{ $image_file->temporaryUrl() }}" alt="Vista previa"
                                              class="img-fluid rounded border" style="max-height:220px;">
-                                    @else
-                                        @php
-                                            $p      = $image_path;
-                                            $exists = $p && \Illuminate\Support\Facades\Storage::disk('public')->exists($p);
-                                            $url    = $exists ? asset('storage/'.$p) : asset('images/placeholder-income.png');
-                                        @endphp
-                                        <img src="{{ $url }}" alt="Comprobante"
-                                             class="img-fluid rounded border" style="max-height:220px;">
-                                    @endif
-                                </div>
+                                    </div>
+                                @endif
                             </div>
                         </div>
 
                     </div>
 
                     <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-sm btn-primary" wire:click="update" wire:loading.attr="disabled">
-                            Guardar cambios
+                        <button type="button" class="btn btn-sm btn-primary" wire:click="save" wire:loading.attr="disabled">
+                            Guardar
                         </button>
-                        <button type="button" class="btn btn-sm btn-danger" wire:click="questionDelete({{ $expenseId }})">
-                            Eliminar
+                        <button type="button" class="btn btn-sm btn-warning" wire:click="clear">
+                            Limpiar
                         </button>
                         <a href="{{ route('cash.expenses') }}" class="btn btn-sm btn-secondary">Volver</a>
                     </div>
@@ -175,10 +167,10 @@
     {{-- Overlay de carga --}}
     <div class="screen-overlay"
          wire:loading.delay.flex
-         wire:target="update,image_file">
+         wire:target="save,image_file">
         <div class="text-center">
-            <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
-            <div class="mt-2 text-white fw-semibold">Cargando…</div>
+            <div class="spinner-border text-light" role="status" aria-label="Cargando..."></div>
+            <div class="mt-2 text-white fw-semibold">Cargando...</div>
         </div>
     </div>
 

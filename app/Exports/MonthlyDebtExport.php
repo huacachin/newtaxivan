@@ -103,12 +103,12 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
 
     public function headings(): array
     {
-        $monthL = \Carbon\Carbon::parse($this->monthDate)->startOfMonth()->locale('es')->translatedFormat('F');
+        $monthL = mb_strtoupper(\Carbon\Carbon::parse($this->monthDate)->startOfMonth()->locale('es')->translatedFormat('F'));
         return [
             'Item',
             'Placa',
             'Cond.',
-            'No trabajados '. ($monthL ? " ({$monthL})" : ''),
+            "DIAS NO TRABAJADOS ({$monthL})",
             'D. deuda',
             'Total',
             'Exon.',
@@ -179,6 +179,23 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
                 ]);
                 $ws->getRowDimension($headerRow)->setRowHeight(17);
 
+                // RichText en D2: "DIAS NO TRABAJADOS" blanco + "(MES)" en #eab723
+                $monthName = mb_strtoupper(\Carbon\Carbon::parse($this->monthDate)->startOfMonth()->locale('es')->translatedFormat('F'));
+                $rtH = new \PhpOffice\PhpSpreadsheet\RichText\RichText();
+                $r1 = $rtH->createTextRun('DIAS NO TRABAJADOS');
+                $r1->getFont()->setBold(true)->setSize(10);
+                $r1->getFont()->getColor()->setRGB('FFFFFF');
+                $r2 = $rtH->createTextRun('(');
+                $r2->getFont()->setBold(true)->setSize(10);
+                $r2->getFont()->getColor()->setRGB('FFFFFF');
+                $r3 = $rtH->createTextRun($monthName);
+                $r3->getFont()->setBold(true)->setSize(10);
+                $r3->getFont()->getColor()->setRGB('EAB723');
+                $r4 = $rtH->createTextRun(')');
+                $r4->getFont()->setBold(true)->setSize(10);
+                $r4->getFont()->getColor()->setRGB('FFFFFF');
+                $ws->getCell("D{$headerRow}")->setValue($rtH);
+
                 // ===== Bordes datos =====
                 if ($lastRow >= $dataStartRow) {
                     $ws->getStyle("A{$dataStartRow}:{$lastCol}{$lastRow}")->applyFromArray([
@@ -210,8 +227,12 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
                             ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
                     }
 
+                    // Columna Exon. (G) en rojo claro
+                    $ws->getStyle("G{$dataStartRow}:G{$lastRow}")
+                        ->getFont()->getColor()->setRGB('FF6666');
+
                     // RichText en D (días X1 en azul oscuro + negrita)
-                    $darkBlue = '1A3A6C';
+                    $darkBlue = '0066FF';
                     for ($r = $dataStartRow; $r <= $lastRow; $r++) {
                         $item = (int) $ws->getCell("A{$r}")->getCalculatedValue();
                         $sets = $this->daysPerRow[$item] ?? null;

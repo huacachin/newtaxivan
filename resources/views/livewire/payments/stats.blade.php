@@ -2,6 +2,8 @@
 @push('styles')
     <style>
         .sunday { background-color: #ef4444 !important; color:#fff !important; }
+        .num-val { color: #3e9281 !important; }
+        .num-total { color: #000 !important; }
     </style>
 @endpush
 
@@ -112,27 +114,33 @@
                                         <td class="fw-semibold bg-primary text-white">Pago</td>
 
                                         @foreach($days as $d)
-                                            <td class="num">{{ number_format($blocks['PAGO']['days'][$d] ?? 0, 2) }}</td>
+                                            @php $v = (float)($blocks['PAGO']['days'][$d] ?? 0); @endphp
+                                            <td class="num-val">{{ $v > 0 ? number_format($v, 2) : '' }}</td>
                                         @endforeach
-                                        <td class="num fw-semibold">{{ number_format($blocks['PAGO']['total'], 2) }}</td>
+                                        @php $vt = (float)$blocks['PAGO']['total']; @endphp
+                                        <td class="num-total fw-semibold">{{ $vt > 0 ? number_format($vt, 2) : '' }}</td>
                                     </tr>
 
                                     {{-- RETRASO --}}
                                     <tr>
                                         <td class="fw-semibold bg-primary text-white">Retraso</td>
                                         @foreach($days as $d)
-                                            <td class="num">{{ number_format($blocks['RETRASO']['days'][$d] ?? 0, 2) }}</td>
+                                            @php $v = (float)($blocks['RETRASO']['days'][$d] ?? 0); @endphp
+                                            <td class="num-val">{{ $v > 0 ? number_format($v, 2) : '' }}</td>
                                         @endforeach
-                                        <td class="num fw-semibold">{{ number_format($blocks['RETRASO']['total'], 2) }}</td>
+                                        @php $vt = (float)$blocks['RETRASO']['total']; @endphp
+                                        <td class="num-total fw-semibold">{{ $vt > 0 ? number_format($vt, 2) : '' }}</td>
                                     </tr>
 
                                     {{-- DEUDA --}}
                                     <tr>
                                         <td class="fw-semibold bg-primary text-white">Deuda</td>
                                         @foreach($days as $d)
-                                            <td class="num">{{ number_format($blocks['DEUDA']['days'][$d] ?? 0, 2) }}</td>
+                                            @php $v = (float)($blocks['DEUDA']['days'][$d] ?? 0); @endphp
+                                            <td class="num-val">{{ $v > 0 ? number_format($v, 2) : '' }}</td>
                                         @endforeach
-                                        <td class="num fw-semibold">{{ number_format($blocks['DEUDA']['total'], 2) }}</td>
+                                        @php $vt = (float)$blocks['DEUDA']['total']; @endphp
+                                        <td class="num-total fw-semibold">{{ $vt > 0 ? number_format($vt, 2) : '' }}</td>
                                     </tr>
                                 @endforeach
                             @empty
@@ -146,9 +154,11 @@
                             <tr>
                                 <td colspan="3">TOTAL GENERAL</td>
                                 @foreach($days as $d)
-                                    <td class="num">{{ number_format($totalsPerDay[$d] ?? 0, 2) }}</td>
+                                    @php $v = (float)($totalsPerDay[$d] ?? 0); @endphp
+                                    <td class="num-total">{{ $v > 0 ? number_format($v, 2) : '' }}</td>
                                 @endforeach
-                                <td class="num">{{ number_format($grandTotal, 2) }}</td>
+                                @php $v = (float)$grandTotal; @endphp
+                                <td class="num-total">{{ $v > 0 ? number_format($v, 2) : '' }}</td>
                             </tr>
                             </tfoot>
                         </table>

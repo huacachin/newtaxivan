@@ -4,6 +4,8 @@
     <style>
         .sun-head{ background:#ef4444 !important; color:#fff !important; }
         .sun-col{  background:#fee2e2 !important; }
+        .day-val{ color:#ef4444 !important; }
+        .total-val{ color:#000 !important; }
     </style>
 @endpush
 
@@ -124,15 +126,15 @@
                                     <td>{{ $r['condition'] }}</td>
 
                                     @foreach($r['cells'] as $i => $c)
-                                        <td class="{{ 'cell-' . ($c['class'] ?? '') }} {{ $days[$i]['isSunday'] ? 'sun-col' : '' }}">
+                                        <td class="{{ 'cell-' . ($c['class'] ?? '') }} {{ $days[$i]['isSunday'] ? 'sun-col' : '' }} {{ is_numeric(str_replace(',', '', $c['txt'] ?? '')) ? 'day-val' : '' }}">
                                             {{ $c['txt'] }}
                                         </td>
                                     @endforeach
 
-                                    <td><strong>{{ $r['paid_days'] }}</strong></td>
-                                    <td><strong>{{ number_format($r['paid_amount'], 2) }}</strong></td>
-                                    <td><strong>{{ $r['debt_days'] }}</strong></td>
-                                    <td><strong>{{ number_format($r['debt_amount'], 2) }}</strong></td>
+                                    <td class="total-val"><strong>{{ $r['paid_days'] }}</strong></td>
+                                    <td class="total-val"><strong>{{ number_format($r['paid_amount'], 2) }}</strong></td>
+                                    <td class="total-val"><strong>{{ $r['debt_days'] }}</strong></td>
+                                    <td class="total-val"><strong>{{ number_format($r['debt_amount'], 2) }}</strong></td>
                                 </tr>
                             @endforeach
                             </tbody>

@@ -125,10 +125,10 @@
                                         </button>
 
                                         <!-- Nuevo -->
-                                        <button class="btn btn-sm btn-success flex-shrink-0"
-                                                wire:click="openAddModal">
+                                        <a href="{{ route('cash.incomes.create') }}"
+                                           class="btn btn-sm btn-success flex-shrink-0">
                                             <i class="ti ti-square-plus f-s-12"></i> Nuevo
-                                        </button>
+                                        </a>
 
                                         <!-- Exportar -->
                                         <button class="btn btn-sm btn-primary flex-shrink-0"
@@ -182,11 +182,8 @@
                                     <td class="text-end" data-label="S/">{{ number_format($i->total, 2) }}</td>
                                     <td class="text-center">
                                         @if($i->image_path)
-                                            <img src="{{ asset('storage/'.$i->image_path) }}"
-                                                 alt="Ver comprobante"
-                                                 class="img-thumbnail"
-                                                 style="height:36px;width:36px;object-fit:cover;cursor:pointer;"
-                                                 onclick="showLightbox('{{ asset('storage/'.$i->image_path) }}')">
+                                            <i class="fa-solid fa-camera f-s-18 text-dark" style="cursor:pointer;"
+                                               onclick="showLightbox('{{ asset('storage/'.$i->image_path) }}')"></i>
                                         @else
                                             <span class="text-muted">—</span>
                                         @endif
@@ -199,9 +196,9 @@
                             @endforelse
                             </tbody>
                             <tfoot class="bg-primary">
-                            <tr>
-                                <td colspan="7" class="f-fw-700 text-end">Total General</td>
-                                <td>{{ number_format($totalGeneral, 2) }}</td>
+                            <tr style="font-size: 1.3rem; color: #000 !important;">
+                                <td colspan="7" class="fw-bold text-end" style="padding: 4px 8px !important;">Total General</td>
+                                <td class="fw-bold" style="padding: 4px 8px !important;">{{ number_format($totalGeneral, 2) }}</td>
                             </tr>
                             </tfoot>
                         </table>

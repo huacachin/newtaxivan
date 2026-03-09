@@ -17,11 +17,11 @@ class CashController extends Controller
     //CashController
     public function __construct(){
         $this->middleware(['auth','permission:cash.incomes'])->only([
-            'incomes','editIncome','exportIncomes'
+            'incomes','createIncome','editIncome','exportIncomes'
         ]);
 
         $this->middleware(['auth','permission:cash.expenses'])->only([
-            'expenses','editExpense','exportExpenses'
+            'expenses','createExpense','editExpense','exportExpenses'
         ]);
 
         $this->middleware(['auth','permission:cash.reports'])->only([
@@ -45,12 +45,20 @@ class CashController extends Controller
         return view('cash.incomes');
     }
 
+    public function createIncome(){
+        return view('cash.create-income');
+    }
+
     public function editIncome(int $id){
         return view('cash.edit-income', ['incomeId' => $id]);
     }
 
     public function expenses(){
         return view('cash.expenses');
+    }
+
+    public function createExpense(){
+        return view('cash.create-expense');
     }
 
     public function editExpense(int $id){
