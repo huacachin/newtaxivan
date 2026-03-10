@@ -7,12 +7,12 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth; // <-- agregado
 use Maatwebsite\Excel\Concerns\FromQuery;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
@@ -20,8 +20,8 @@ use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 
 class IncomesExport implements
-    FromQuery, ShouldAutoSize, WithHeadings, WithMapping,
-    WithColumnFormatting, WithStyles, WithEvents,WithTitle
+    FromQuery, WithHeadings, WithMapping,
+    WithColumnFormatting, WithStyles, WithEvents, WithColumnWidths, WithTitle
 {
     /** contador de item (1..n) */
     private int $i = 0;
@@ -108,8 +108,20 @@ class IncomesExport implements
 
     public function styles(Worksheet $sheet)
     {
-        // Header en negrita (fila que quedará en 2 tras insertar el título)
+        $sheet->getParent()->getDefaultStyle()->getFont()->setSize(10);
         return [1 => ['font' => ['bold' => true]]];
+    }
+
+    public function columnWidths(): array
+    {
+        return [
+            'A' => 5.0,
+            'B' => 10.0,
+            'C' => 14.0,
+            'D' => 8.5,
+            'E' => 32.0,
+            'F' => 9.5,
+        ];
     }
 
     /* ========================= ESTILOS AVANZADOS ========================= */
@@ -124,9 +136,11 @@ class IncomesExport implements
                 $FOOT   = 'CEE7FF';
                 $BORDER = '000000';
 
-                // Fuente base y altura compacta (sin reducción automática del texto)
-                $ws->getParent()->getDefaultStyle()->getFont()->setSize(10);
-                $ws->getDefaultRowDimension()->setRowHeight(13);
+                // Ocultar cuadrícula fuera de la tabla
+                $ws->setShowGridLines(false);
+
+                // Altura base compacta
+                $ws->getDefaultRowDimension()->setRowHeight(14);
 
                 // ===== Título (fila 1)
                 $ws->insertNewRowBefore(1, 1);
@@ -162,16 +176,10 @@ class IncomesExport implements
                 ]);
                 $ws->getRowDimension($headerRow)->setRowHeight(16);
 
-                // ===== Anchos “al ras”
-                foreach (range('A', 'F') as $c) {
-                    $ws->getColumnDimension($c)->setAutoSize(false);
+                // ===== Ocultar columnas vacías (G en adelante) =====
+                foreach (range('G', 'Z') as $col) {
+                    $ws->getColumnDimension($col)->setVisible(false);
                 }
-                $ws->getColumnDimension('A')->setWidth(5.0);
-                $ws->getColumnDimension('B')->setWidth(10.0);
-                $ws->getColumnDimension('C')->setWidth(14.0);
-                $ws->getColumnDimension('D')->setWidth(8.5);
-                $ws->getColumnDimension('E')->setWidth(32.0);
-                $ws->getColumnDimension('F')->setWidth(9.5);
 
                 // ===== Alineaciones/formatos
                 if ($last >= $dataStartRow) {

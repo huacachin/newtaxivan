@@ -131,17 +131,15 @@
                         </tbody>
 
                         {{-- FOOTER del mes --}}
-                        <tfoot class="bg-primary">
-                        <tr>
-                            <td colspan="4">TOTAL GENERAL</td>
-                            <td>{{ number_format($totalIncomes,2) }}</td>
-                            <td>{{ number_format($totalExpenses,2) }}</td>
-                        </tr>
-                        <tr>
-                            <td colspan="4">UTILIDAD</td>
-                            <td colspan="2">
-                                {{ number_format($finalBalance,2) }}
+                        <tfoot>
+                        <tr style="background-color: #d4edda;">
+                            <td class="fw-bold text-primary">UTILIDAD</td>
+                            <td class="fw-bold">{{ number_format($finalBalance,2) }}</td>
+                            <td colspan="2" class="fw-bold text-center">
+                                <span class="text-dark">TOTAL </span><span class="text-success fw-bold">GENERAL</span>
                             </td>
+                            <td class="fw-bold report-blue">{{ number_format($totalIncomes,2) }}</td>
+                            <td class="fw-bold title-modules">{{ number_format($totalExpenses,2) }}</td>
                         </tr>
                         </tfoot>
                     </table>

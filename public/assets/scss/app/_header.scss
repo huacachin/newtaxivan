@@ -24,8 +24,13 @@ header {
       .card{
         border: 0;
         border-radius: 0;
-        background-color: var(--bodybg-color);
-        border-bottom: 1px dashed rgba(var(--dark), 0.2);
+        background-color: #009BDC;
+        border-bottom: none;
+        .header-toggle i,
+        .head-icon i.ti,
+        .head-icon i.ti:hover {
+          color: #fff;
+        }
       }
     }
     .header-searchbar{

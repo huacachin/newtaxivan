@@ -291,8 +291,9 @@ class CajaEstadisticaExport implements WithEvents
         $this->num($sheet, "K{$row}", $t['egreso'],         $numFmt);
         $this->num($sheet, "L{$row}", $t['utilidad'],       $numFmt);
 
-        // Resalta columna Utilidad completa (datos + total)
+        // Resalta columna Total/Utilidad en rojo y datos en #3e9281
         $firstDataRow = $r3 + 1;
+        $this->paintDataColor($sheet, $firstDataRow, $row - 1);
         $this->paintUtilidadRed($sheet, $firstDataRow, $row);
 
         return $row;
@@ -396,8 +397,10 @@ class CajaEstadisticaExport implements WithEvents
         $this->num($sheet, "K{$row}", $promedios['egreso'],         $numFmt);
         $this->num($sheet, "L{$row}", $promedios['utilidad'],       $numFmt);
 
-        // Resalta columna Utilidad completa (datos + total + promedio)
+        // Resalta columna Total/Utilidad en rojo y datos en #3e9281
         $firstDataRow = $r3 + 1;
+        $lastDataRow = $this->footerRows[1] - 1; // fila antes del primer footer anual
+        $this->paintDataColor($sheet, $firstDataRow, $lastDataRow);
         $this->paintUtilidadRed($sheet, $firstDataRow, $row);
 
         return $row;
@@ -623,8 +626,25 @@ class CajaEstadisticaExport implements WithEvents
     private function paintUtilidadRed(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet, int $fromRow, int $toRow): void
     {
         if ($toRow >= $fromRow) {
+            // Columna J (Total ingresos) y L (Utilidad) en rojo
+            $sheet->getStyle("J{$fromRow}:J{$toRow}")
+                ->applyFromArray(['font' => ['color' => ['rgb' => self::RED_TITLE]]]);
             $sheet->getStyle("L{$fromRow}:L{$toRow}")
                 ->applyFromArray(['font' => ['color' => ['rgb' => self::RED_TITLE]]]);
+        }
+    }
+
+    private function paintDataColor(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet, int $fromRow, int $toRow): void
+    {
+        if ($toRow >= $fromRow) {
+            // Columnas B-I y K en #3e9281
+            $sheet->getStyle("B{$fromRow}:I{$toRow}")
+                ->applyFromArray(['font' => ['color' => ['rgb' => '3e9281']]]);
+            $sheet->getStyle("K{$fromRow}:K{$toRow}")
+                ->applyFromArray(['font' => ['color' => ['rgb' => '3e9281']]]);
+            // Columna A (Fecha/Mes) en negro
+            $sheet->getStyle("A{$fromRow}:A{$toRow}")
+                ->applyFromArray(['font' => ['color' => ['rgb' => '000000']]]);
         }
     }
 

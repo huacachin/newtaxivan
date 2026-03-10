@@ -102,23 +102,23 @@
                             @php
                                 $isSunday = \Carbon\Carbon::createFromFormat('d/m/Y',$r['fecha'])->isSunday();
                             @endphp
-                            <tr @if($isSunday) @endif>
-                                <td @if($isSunday) class="bg-danger text-white" @endif >{{ $r['fecha'] }}</td>
+                            <tr>
+                                <td @if($isSunday) style="background-color: var(--bs-danger) !important; color: #fff !important;" @else style="color: #000;" @endif>{{ $r['fecha'] }}</td>
 
-                                <td>{{ number_format($r['cotizacion'],2,'.',',') }}</td>
-                                <td>{{ number_format($r['retraso'],2,'.',',') }}</td>
-                                <td>{{ number_format($r['deuda'],2,'.',',') }}</td>
-                                <td>{{ number_format($r['pago_total'],2,'.',',') }}</td>
+                                <td style="color: #3e9281;">{{ number_format($r['cotizacion'],2,'.',',') }}</td>
+                                <td style="color: #3e9281;">{{ number_format($r['retraso'],2,'.',',') }}</td>
+                                <td style="color: #3e9281;">{{ number_format($r['deuda'],2,'.',',') }}</td>
+                                <td style="color: #3e9281;">{{ number_format($r['pago_total'],2,'.',',') }}</td>
 
-                                <td>{{ number_format($r['empresa'],2,'.',',') }}</td>
-                                <td>{{ number_format($r['apoyo'],2,'.',',') }}</td>
-                                <td>{{ number_format($r['salidas_total'],2,'.',',') }}</td>
+                                <td style="color: #3e9281;">{{ number_format($r['empresa'],2,'.',',') }}</td>
+                                <td style="color: #3e9281;">{{ number_format($r['apoyo'],2,'.',',') }}</td>
+                                <td style="color: #3e9281;">{{ number_format($r['salidas_total'],2,'.',',') }}</td>
 
-                                <td>{{ number_format($r['otros'],2,'.',',') }}</td>
-                                <td class="title-modules" >{{ number_format($r['ingresos_total'],2,'.',',') }}</td>
+                                <td style="color: #3e9281;">{{ number_format($r['otros'],2,'.',',') }}</td>
+                                <td style="color: red;">{{ number_format($r['ingresos_total'],2,'.',',') }}</td>
 
-                                <td>{{ number_format($r['egreso'],2,'.',',') }}</td>
-                                <td class="title-modules">{{ number_format($r['utilidad'],2,'.',',') }}</td>
+                                <td style="color: #3e9281;">{{ number_format($r['egreso'],2,'.',',') }}</td>
+                                <td style="color: red;">{{ number_format($r['utilidad'],2,'.',',') }}</td>
                             </tr>
                         @empty
                             <tr>
@@ -129,23 +129,23 @@
                         @endforelse
 
                         @if(!empty($rows))
-                            <tr class="bg-primary">
-                                <td>Total</td>
+                            <tr>
+                                <td class="fw-bold" style="background-color: #CEE7FF !important; color: #000 !important;">Total</td>
 
-                                <td>{{ number_format($totales['pago'],2,'.',',') }}</td>
-                                <td>{{ number_format($totales['retraso'],2,'.',',') }}</td>
-                                <td>{{ number_format($totales['deuda'],2,'.',',') }}</td>
-                                <td>{{ number_format($totales['pago_total'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($totales['pago'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($totales['retraso'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($totales['deuda'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($totales['pago_total'],2,'.',',') }}</td>
 
-                                <td>{{ number_format($totales['empresa'],2,'.',',') }}</td>
-                                <td>{{ number_format($totales['apoyo'],2,'.',',') }}</td>
-                                <td>{{ number_format($totales['salidas_total'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($totales['empresa'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($totales['apoyo'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($totales['salidas_total'],2,'.',',') }}</td>
 
-                                <td>{{ number_format($totales['otros'],2,'.',',') }}</td>
-                                <td class="title-modules">{{ number_format($totales['ingresos_total'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($totales['otros'],2,'.',',') }}</td>
+                                <td class="fw-bold" style="background-color: #CEE7FF !important; color: red !important;">{{ number_format($totales['ingresos_total'],2,'.',',') }}</td>
 
-                                <td>{{ number_format($totales['egreso'],2,'.',',') }}</td>
-                                <td class="title-modules">{{ number_format($totales['utilidad'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($totales['egreso'],2,'.',',') }}</td>
+                                <td class="fw-bold" style="background-color: #CEE7FF !important; color: red !important;">{{ number_format($totales['utilidad'],2,'.',',') }}</td>
                             </tr>
                         @endif
                         </tbody>
@@ -178,63 +178,63 @@
                         <tbody>
                         @foreach($anual as $r)
                             <tr>
-                                <td>{{ $r['mes'] }}</td>
+                                <td style="color: #000;">{{ $r['mes'] }}</td>
 
-                                <td>{{ number_format($r['pago'],2,'.',',') }}</td>
-                                <td>{{ number_format($r['retraso'],2,'.',',') }}</td>
-                                <td>{{ number_format($r['deuda'],2,'.',',') }}</td>
-                                <td>{{ number_format($r['pago_total'],2,'.',',') }}</td>
+                                <td style="color: #3e9281;">{{ number_format($r['pago'],2,'.',',') }}</td>
+                                <td style="color: #3e9281;">{{ number_format($r['retraso'],2,'.',',') }}</td>
+                                <td style="color: #3e9281;">{{ number_format($r['deuda'],2,'.',',') }}</td>
+                                <td style="color: #3e9281;">{{ number_format($r['pago_total'],2,'.',',') }}</td>
 
-                                <td>{{ number_format($r['empresa'],2,'.',',') }}</td>
-                                <td>{{ number_format($r['apoyo'],2,'.',',') }}</td>
-                                <td>{{ number_format($r['salidas_total'],2,'.',',') }}</td>
+                                <td style="color: #3e9281;">{{ number_format($r['empresa'],2,'.',',') }}</td>
+                                <td style="color: #3e9281;">{{ number_format($r['apoyo'],2,'.',',') }}</td>
+                                <td style="color: #3e9281;">{{ number_format($r['salidas_total'],2,'.',',') }}</td>
 
-                                <td>{{ number_format($r['otros'],2,'.',',') }}</td>
-                                <td class="title-modules f-w-600">{{ number_format($r['ingresos_total'],2,'.',',') }}</td>
+                                <td style="color: #3e9281;">{{ number_format($r['otros'],2,'.',',') }}</td>
+                                <td style="color: red;">{{ number_format($r['ingresos_total'],2,'.',',') }}</td>
 
-                                <td>{{ number_format($r['egreso'],2,'.',',') }}</td>
-                                <td class="title-modules f-w-600">{{ number_format($r['utilidad'],2,'.',',') }}</td>
+                                <td style="color: #3e9281;">{{ number_format($r['egreso'],2,'.',',') }}</td>
+                                <td style="color: red;">{{ number_format($r['utilidad'],2,'.',',') }}</td>
                             </tr>
                         @endforeach
 
 
                         </tbody>
-                        <tfoot class="bg-primary">
+                        <tfoot>
                         @if(!empty($anual))
                             <tr>
-                                <td>Total</td>
-                                <td>{{ number_format($anualTotales['pago'],2,'.',',') }}</td>
-                                <td>{{ number_format($anualTotales['retraso'],2,'.',',') }}</td>
-                                <td>{{ number_format($anualTotales['deuda'],2,'.',',') }}</td>
-                                <td>{{ number_format($anualTotales['pago_total'],2,'.',',') }}</td>
+                                <td class="fw-bold" style="background-color: #CEE7FF !important; color: #000 !important;">Total</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualTotales['pago'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualTotales['retraso'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualTotales['deuda'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualTotales['pago_total'],2,'.',',') }}</td>
 
-                                <td>{{ number_format($anualTotales['empresa'],2,'.',',') }}</td>
-                                <td>{{ number_format($anualTotales['apoyo'],2,'.',',') }}</td>
-                                <td>{{ number_format($anualTotales['salidas_total'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualTotales['empresa'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualTotales['apoyo'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualTotales['salidas_total'],2,'.',',') }}</td>
 
-                                <td>{{ number_format($anualTotales['otros'],2,'.',',') }}</td>
-                                <td>{{ number_format($anualTotales['ingresos_total'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualTotales['otros'],2,'.',',') }}</td>
+                                <td class="fw-bold" style="background-color: #CEE7FF !important; color: red !important;">{{ number_format($anualTotales['ingresos_total'],2,'.',',') }}</td>
 
-                                <td>{{ number_format($anualTotales['egreso'],2,'.',',') }}</td>
-                                <td>{{ number_format($anualTotales['utilidad'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualTotales['egreso'],2,'.',',') }}</td>
+                                <td class="fw-bold" style="background-color: #CEE7FF !important; color: red !important;">{{ number_format($anualTotales['utilidad'],2,'.',',') }}</td>
                             </tr>
 
                             <tr>
-                                <td>Promedio</td>
-                                <td>{{ number_format($anualPromedios['pago'],2,'.',',') }}</td>
-                                <td>{{ number_format($anualPromedios['retraso'],2,'.',',') }}</td>
-                                <td>{{ number_format($anualPromedios['deuda'],2,'.',',') }}</td>
-                                <td>{{ number_format($anualPromedios['pago_total'],2,'.',',') }}</td>
+                                <td class="fw-bold" style="background-color: #CEE7FF !important; color: #000 !important;">Promedio</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualPromedios['pago'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualPromedios['retraso'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualPromedios['deuda'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualPromedios['pago_total'],2,'.',',') }}</td>
 
-                                <td>{{ number_format($anualPromedios['empresa'],2,'.',',') }}</td>
-                                <td>{{ number_format($anualPromedios['apoyo'],2,'.',',') }}</td>
-                                <td>{{ number_format($anualPromedios['salidas_total'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualPromedios['empresa'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualPromedios['apoyo'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualPromedios['salidas_total'],2,'.',',') }}</td>
 
-                                <td>{{ number_format($anualPromedios['otros'],2,'.',',') }}</td>
-                                <td>{{ number_format($anualPromedios['ingresos_total'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualPromedios['otros'],2,'.',',') }}</td>
+                                <td class="fw-bold" style="background-color: #CEE7FF !important; color: red !important;">{{ number_format($anualPromedios['ingresos_total'],2,'.',',') }}</td>
 
-                                <td>{{ number_format($anualPromedios['egreso'],2,'.',',') }}</td>
-                                <td>{{ number_format($anualPromedios['utilidad'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualPromedios['egreso'],2,'.',',') }}</td>
+                                <td class="fw-bold" style="background-color: #CEE7FF !important; color: red !important;">{{ number_format($anualPromedios['utilidad'],2,'.',',') }}</td>
                             </tr>
                         @endif
                         </tfoot>

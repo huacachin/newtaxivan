@@ -41,6 +41,10 @@
                            <button class="btn btn-sm btn-primary" id="down">
                                <i class="fa-solid fa-angle-down"></i>
                            </button>
+
+                           <a href="{{ route('departures.index') }}" class="btn btn-sm btn-primary ms-2">
+                               <i class="ti ti-arrow-back-up f-s-12"></i>
+                           </a>
                        </div>
 
 
@@ -130,10 +134,10 @@
 
 
                          </tbody>
-                         <tfoot class="bg-primary">
+                         <tfoot>
                          @if (!empty($this->rows))
-                             <tr>
-                                 <td colspan="3"><strong>SALDO A FAVOR</strong></td>
+                             <tr style="background-color: #fff !important; color: #000 !important;">
+                                 <td colspan="3" style="background-color: #fff !important; color: #000 !important;"><strong>SALDO A FAVOR</strong></td>
                                  @for ($m=1; $m<=12; $m++)
                                      <td>
                                          <strong>{{ number_format($this->totalesSaldoMes[$m] ?? 0, 2, '.', ',') }}</strong>
@@ -199,8 +203,8 @@
                          </tbody>
                          <tfoot>
                          @if (!empty($this->comparativo))
-                             <tr class="bg-primary">
-                                 <td colspan="2">Total</td>
+                             <tr style="background-color: #fff !important; color: #000 !important;">
+                                 <td colspan="2" style="background-color: #fff !important; color: #000 !important;"><strong>Total</strong></td>
                                  <td>{{ number_format($this->comparativoTotales['a_h'], 2, '.', ',') }}</td>
                                  <td>{{ number_format($this->comparativoTotales['b_h'], 2, '.', ',') }}</td>
                                  <td>{{ number_format($this->comparativoTotales['dif_h'], 2, '.', ',') }}</td>

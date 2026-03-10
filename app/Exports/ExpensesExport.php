@@ -7,12 +7,12 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth; // <-- agregado
 use Maatwebsite\Excel\Concerns\FromQuery;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
@@ -20,8 +20,8 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 
 class ExpensesExport implements
-    FromQuery, ShouldAutoSize, WithHeadings, WithMapping,
-    WithColumnFormatting, WithStyles, WithEvents, WithTitle
+    FromQuery, WithHeadings, WithMapping,
+    WithColumnFormatting, WithStyles, WithEvents, WithColumnWidths, WithTitle
 {
     /** contador de item (1..n) */
     private int $i = 0;
@@ -114,7 +114,21 @@ class ExpensesExport implements
 
     public function styles(Worksheet $sheet)
     {
+        $sheet->getParent()->getDefaultStyle()->getFont()->setSize(10);
         return [1 => ['font' => ['bold' => true]]];
+    }
+
+    public function columnWidths(): array
+    {
+        return [
+            'A' => 4.6,
+            'B' => 9.6,
+            'C' => 12.0,
+            'D' => 36.0,
+            'E' => 9.0,
+            'F' => 14.0,
+            'G' => 14.0,
+        ];
     }
 
     public function title(): string
@@ -133,8 +147,11 @@ class ExpensesExport implements
                 $FOOT   = 'CEE7FF';
                 $BORDER = '000000';
 
-                $ws->getParent()->getDefaultStyle()->getFont()->setSize(10);
-                $ws->getDefaultRowDimension()->setRowHeight(13);
+                // Ocultar cuadrícula fuera de la tabla
+                $ws->setShowGridLines(false);
+
+                // Altura base compacta
+                $ws->getDefaultRowDimension()->setRowHeight(14);
 
                 // Título
                 $ws->insertNewRowBefore(1, 1);
@@ -169,17 +186,10 @@ class ExpensesExport implements
                 ]);
                 $ws->getRowDimension($headerRow)->setRowHeight(16);
 
-                // Anchos “al ras”
-                foreach (range('A','G') as $c) {
-                    $ws->getColumnDimension($c)->setAutoSize(false);
+                // Ocultar columnas vacías (H en adelante)
+                foreach (range('H', 'Z') as $col) {
+                    $ws->getColumnDimension($col)->setVisible(false);
                 }
-                $ws->getColumnDimension('A')->setWidth(4.6);
-                $ws->getColumnDimension('B')->setWidth(9.6);
-                $ws->getColumnDimension('C')->setWidth(12.0);
-                $ws->getColumnDimension('D')->setWidth(24.0);
-                $ws->getColumnDimension('E')->setWidth(9.0);
-                $ws->getColumnDimension('F')->setWidth(14.0);
-                $ws->getColumnDimension('G')->setWidth(14.0);
 
                 $ws->freezePane("A{$dataStartRow}");
 
@@ -214,7 +224,7 @@ class ExpensesExport implements
                 );
 
                 $ws->getStyle("A{$totalRow}:G{$totalRow}")->applyFromArray([
-                    'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+                    'font'      => ['bold' => true, 'color' => ['rgb' => '000000']],
                     'alignment' => [
                         'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
                         'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,

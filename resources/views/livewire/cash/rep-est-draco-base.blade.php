@@ -39,6 +39,9 @@
                             <button class="btn btn-sm btn-primary" wire:click="export">
                                 <i class="ti ti-file-analytics f-s-12"></i>
                             </button>
+                            <a href="{{ route('departures.index') }}" class="btn btn-sm btn-primary ms-2">
+                                <i class="ti ti-arrow-back-up f-s-12"></i>
+                            </a>
                         </div>
                     </div>
                     <div class="table-responsive">
