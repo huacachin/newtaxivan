@@ -15,7 +15,7 @@ class DepartureController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['auth', 'permission:departures'])->only(['index','add','edit','export']);
+        $this->middleware(['auth', 'permission:departures'])->only(['index','add','edit','export','byDebt']);
         $this->middleware(['auth', 'role:admin'])->only(['monthly','rmp','stats','exportMonthly','exportRmp','exportStats']);
     }
 
@@ -35,6 +35,10 @@ class DepartureController extends Controller
 
     public function stats(){
         return view('departures.stats');
+    }
+
+    public function byDebt(){
+        return view('departures.by-debt');
     }
 
     public function add(){

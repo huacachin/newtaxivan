@@ -62,6 +62,7 @@ Route::middleware('auth')->group(function () {
     Route::get('departures/monthly', [DepartureController::class,'monthly'])->name('departures.monthly');
     Route::get('departures/rmp', [DepartureController::class,'rmp'])->name('departures.rmp');
     Route::get('departures/stats', [DepartureController::class,'stats'])->name('departures.stats');
+    Route::get('departures/by-debt',[DepartureController::class,'byDebt'])->name('departures.by-debt');
     Route::get('departures/add',[DepartureController::class,'add'])->name('departures.add');
     Route::get('departures/edit/{id}',[DepartureController::class,'edit'])->name('departures.edit')->middleware('role:admin');
 

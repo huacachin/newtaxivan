@@ -98,17 +98,39 @@ class RepEstDracoBase extends Component
             }
         }
 
-        // Pre-seed: todos los controllers activos (aunque no tengan gastos)
-        foreach ($this->controllerIds as $uid) {
-            if (!isset($this->groups[$uid])) {
+        $initMonths = fn() => array_fill(1, 12, 0.0);
+
+        // Pre-seed: todos los controllers activos con TODAS sus sedes asignadas
+        if (!empty($this->controllerIds)) {
+            $assignedHqs = DB::table('headquarter_user')
+                ->whereIn('user_id', $this->controllerIds)
+                ->get()
+                ->groupBy('user_id');
+
+            foreach ($this->controllerIds as $uid) {
                 $this->groups[$uid] = [
                     'user'    => $this->userMap[$uid] ?? ('User#'.$uid),
-                    'hq_rows' => []
+                    'hq_rows' => [],
                 ];
+                $userHqs = $assignedHqs->get($uid, collect());
+                foreach ($userHqs as $pivot) {
+                    $hid = (int) $pivot->headquarter_id;
+                    $this->groups[$uid]['hq_rows'][$hid] = [
+                        'hq'    => $this->hqMap[$hid] ?? ($hid ? ('HQ#'.$hid) : '-'),
+                        'm'     => $initMonths(),
+                        'total' => 0.0,
+                    ];
+                }
+                // Si no tiene sedes asignadas, fila vacía
+                if (empty($this->groups[$uid]['hq_rows'])) {
+                    $this->groups[$uid]['hq_rows'][0] = [
+                        'hq'    => '–',
+                        'm'     => $initMonths(),
+                        'total' => 0.0,
+                    ];
+                }
             }
         }
-
-        $initMonths = fn() => array_fill(1, 12, 0.0);
 
         // --- DRACO por usuario x HQ x mes (SOLO controllers activos) ---
         if (!empty($this->controllerIds)) {
@@ -142,17 +164,6 @@ class RepEstDracoBase extends Component
 
                 $this->totalsByMonth[$mi] += $val;
                 $this->grandTotalDraco    += $val;
-            }
-        }
-
-        // Para controllers que no tuvieron gastos, fuerza una fila "–" en 0
-        foreach ($this->controllerIds as $uid) {
-            if (empty($this->groups[$uid]['hq_rows'])) {
-                $this->groups[$uid]['hq_rows'][0] = [
-                    'hq'    => '–',
-                    'm'     => $initMonths(),
-                    'total' => 0.0,
-                ];
             }
         }
 

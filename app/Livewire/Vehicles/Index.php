@@ -103,11 +103,12 @@ class Index extends Component
     public function totals(): void
     {
         $this->owners = Vehicle::query()
-            ->whereIn('fuel', ['GAS', 'D2'])
+            ->whereRaw('LOWER(TRIM(status)) = ?', ['active'])
             ->whereColumn('owner_id', 'driver_id')
             ->count();
 
         $this->drivers = Vehicle::query()
+            ->whereRaw('LOWER(TRIM(status)) = ?', ['active'])
             ->whereColumn('owner_id', '!=', 'driver_id')
             ->count();
     }

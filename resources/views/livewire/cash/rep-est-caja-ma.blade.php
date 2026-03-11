@@ -97,6 +97,7 @@
                             <th>Total</th>
                         </tr>
                         </thead>
+                        @php $fmt = fn($v) => $v != 0 ? number_format($v,2,'.',',') : ''; @endphp
                         <tbody class="text-center">
                         @forelse($rows as $r)
                             @php
@@ -105,20 +106,20 @@
                             <tr>
                                 <td @if($isSunday) style="background-color: var(--bs-danger) !important; color: #fff !important;" @else style="color: #000;" @endif>{{ $r['fecha'] }}</td>
 
-                                <td style="color: #3e9281;">{{ number_format($r['cotizacion'],2,'.',',') }}</td>
-                                <td style="color: #3e9281;">{{ number_format($r['retraso'],2,'.',',') }}</td>
-                                <td style="color: #3e9281;">{{ number_format($r['deuda'],2,'.',',') }}</td>
-                                <td style="color: #3e9281;">{{ number_format($r['pago_total'],2,'.',',') }}</td>
+                                <td style="color: #3e9281;">{{ $fmt($r['cotizacion']) }}</td>
+                                <td style="color: #3e9281;">{{ $fmt($r['retraso']) }}</td>
+                                <td style="color: #3e9281;">{{ $fmt($r['deuda']) }}</td>
+                                <td style="color: #3e9281;">{{ $fmt($r['pago_total']) }}</td>
 
-                                <td style="color: #3e9281;">{{ number_format($r['empresa'],2,'.',',') }}</td>
-                                <td style="color: #3e9281;">{{ number_format($r['apoyo'],2,'.',',') }}</td>
-                                <td style="color: #3e9281;">{{ number_format($r['salidas_total'],2,'.',',') }}</td>
+                                <td style="color: #3e9281;">{{ $fmt($r['empresa']) }}</td>
+                                <td style="color: #3e9281;">{{ $fmt($r['apoyo']) }}</td>
+                                <td style="color: #3e9281;">{{ $fmt($r['salidas_total']) }}</td>
 
-                                <td style="color: #3e9281;">{{ number_format($r['otros'],2,'.',',') }}</td>
-                                <td style="color: red;">{{ number_format($r['ingresos_total'],2,'.',',') }}</td>
+                                <td style="color: #3e9281;">{{ $fmt($r['otros']) }}</td>
+                                <td style="color: red;">{{ $fmt($r['ingresos_total']) }}</td>
 
-                                <td style="color: #3e9281;">{{ number_format($r['egreso'],2,'.',',') }}</td>
-                                <td style="color: red;">{{ number_format($r['utilidad'],2,'.',',') }}</td>
+                                <td style="color: #3e9281;">{{ $fmt($r['egreso']) }}</td>
+                                <td style="color: red;">{{ $fmt($r['utilidad']) }}</td>
                             </tr>
                         @empty
                             <tr>
@@ -132,20 +133,20 @@
                             <tr>
                                 <td class="fw-bold" style="background-color: #CEE7FF !important; color: #000 !important;">Total</td>
 
-                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($totales['pago'],2,'.',',') }}</td>
-                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($totales['retraso'],2,'.',',') }}</td>
-                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($totales['deuda'],2,'.',',') }}</td>
-                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($totales['pago_total'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ $fmt($totales['pago']) }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ $fmt($totales['retraso']) }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ $fmt($totales['deuda']) }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ $fmt($totales['pago_total']) }}</td>
 
-                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($totales['empresa'],2,'.',',') }}</td>
-                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($totales['apoyo'],2,'.',',') }}</td>
-                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($totales['salidas_total'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ $fmt($totales['empresa']) }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ $fmt($totales['apoyo']) }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ $fmt($totales['salidas_total']) }}</td>
 
-                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($totales['otros'],2,'.',',') }}</td>
-                                <td class="fw-bold" style="background-color: #CEE7FF !important; color: red !important;">{{ number_format($totales['ingresos_total'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ $fmt($totales['otros']) }}</td>
+                                <td class="fw-bold" style="background-color: #CEE7FF !important; color: red !important;">{{ $fmt($totales['ingresos_total']) }}</td>
 
-                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($totales['egreso'],2,'.',',') }}</td>
-                                <td class="fw-bold" style="background-color: #CEE7FF !important; color: red !important;">{{ number_format($totales['utilidad'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ $fmt($totales['egreso']) }}</td>
+                                <td class="fw-bold" style="background-color: #CEE7FF !important; color: red !important;">{{ $fmt($totales['utilidad']) }}</td>
                             </tr>
                         @endif
                         </tbody>
@@ -180,20 +181,20 @@
                             <tr>
                                 <td style="color: #000;">{{ $r['mes'] }}</td>
 
-                                <td style="color: #3e9281;">{{ number_format($r['pago'],2,'.',',') }}</td>
-                                <td style="color: #3e9281;">{{ number_format($r['retraso'],2,'.',',') }}</td>
-                                <td style="color: #3e9281;">{{ number_format($r['deuda'],2,'.',',') }}</td>
-                                <td style="color: #3e9281;">{{ number_format($r['pago_total'],2,'.',',') }}</td>
+                                <td style="color: #3e9281;">{{ $fmt($r['pago']) }}</td>
+                                <td style="color: #3e9281;">{{ $fmt($r['retraso']) }}</td>
+                                <td style="color: #3e9281;">{{ $fmt($r['deuda']) }}</td>
+                                <td style="color: #3e9281;">{{ $fmt($r['pago_total']) }}</td>
 
-                                <td style="color: #3e9281;">{{ number_format($r['empresa'],2,'.',',') }}</td>
-                                <td style="color: #3e9281;">{{ number_format($r['apoyo'],2,'.',',') }}</td>
-                                <td style="color: #3e9281;">{{ number_format($r['salidas_total'],2,'.',',') }}</td>
+                                <td style="color: #3e9281;">{{ $fmt($r['empresa']) }}</td>
+                                <td style="color: #3e9281;">{{ $fmt($r['apoyo']) }}</td>
+                                <td style="color: #3e9281;">{{ $fmt($r['salidas_total']) }}</td>
 
-                                <td style="color: #3e9281;">{{ number_format($r['otros'],2,'.',',') }}</td>
-                                <td style="color: red;">{{ number_format($r['ingresos_total'],2,'.',',') }}</td>
+                                <td style="color: #3e9281;">{{ $fmt($r['otros']) }}</td>
+                                <td style="color: red;">{{ $fmt($r['ingresos_total']) }}</td>
 
-                                <td style="color: #3e9281;">{{ number_format($r['egreso'],2,'.',',') }}</td>
-                                <td style="color: red;">{{ number_format($r['utilidad'],2,'.',',') }}</td>
+                                <td style="color: #3e9281;">{{ $fmt($r['egreso']) }}</td>
+                                <td style="color: red;">{{ $fmt($r['utilidad']) }}</td>
                             </tr>
                         @endforeach
 
@@ -203,38 +204,38 @@
                         @if(!empty($anual))
                             <tr>
                                 <td class="fw-bold" style="background-color: #CEE7FF !important; color: #000 !important;">Total</td>
-                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualTotales['pago'],2,'.',',') }}</td>
-                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualTotales['retraso'],2,'.',',') }}</td>
-                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualTotales['deuda'],2,'.',',') }}</td>
-                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualTotales['pago_total'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ $fmt($anualTotales['pago']) }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ $fmt($anualTotales['retraso']) }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ $fmt($anualTotales['deuda']) }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ $fmt($anualTotales['pago_total']) }}</td>
 
-                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualTotales['empresa'],2,'.',',') }}</td>
-                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualTotales['apoyo'],2,'.',',') }}</td>
-                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualTotales['salidas_total'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ $fmt($anualTotales['empresa']) }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ $fmt($anualTotales['apoyo']) }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ $fmt($anualTotales['salidas_total']) }}</td>
 
-                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualTotales['otros'],2,'.',',') }}</td>
-                                <td class="fw-bold" style="background-color: #CEE7FF !important; color: red !important;">{{ number_format($anualTotales['ingresos_total'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ $fmt($anualTotales['otros']) }}</td>
+                                <td class="fw-bold" style="background-color: #CEE7FF !important; color: red !important;">{{ $fmt($anualTotales['ingresos_total']) }}</td>
 
-                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualTotales['egreso'],2,'.',',') }}</td>
-                                <td class="fw-bold" style="background-color: #CEE7FF !important; color: red !important;">{{ number_format($anualTotales['utilidad'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ $fmt($anualTotales['egreso']) }}</td>
+                                <td class="fw-bold" style="background-color: #CEE7FF !important; color: red !important;">{{ $fmt($anualTotales['utilidad']) }}</td>
                             </tr>
 
                             <tr>
                                 <td class="fw-bold" style="background-color: #CEE7FF !important; color: #000 !important;">Promedio</td>
-                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualPromedios['pago'],2,'.',',') }}</td>
-                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualPromedios['retraso'],2,'.',',') }}</td>
-                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualPromedios['deuda'],2,'.',',') }}</td>
-                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualPromedios['pago_total'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ $fmt($anualPromedios['pago']) }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ $fmt($anualPromedios['retraso']) }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ $fmt($anualPromedios['deuda']) }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ $fmt($anualPromedios['pago_total']) }}</td>
 
-                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualPromedios['empresa'],2,'.',',') }}</td>
-                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualPromedios['apoyo'],2,'.',',') }}</td>
-                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualPromedios['salidas_total'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ $fmt($anualPromedios['empresa']) }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ $fmt($anualPromedios['apoyo']) }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ $fmt($anualPromedios['salidas_total']) }}</td>
 
-                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualPromedios['otros'],2,'.',',') }}</td>
-                                <td class="fw-bold" style="background-color: #CEE7FF !important; color: red !important;">{{ number_format($anualPromedios['ingresos_total'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ $fmt($anualPromedios['otros']) }}</td>
+                                <td class="fw-bold" style="background-color: #CEE7FF !important; color: red !important;">{{ $fmt($anualPromedios['ingresos_total']) }}</td>
 
-                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ number_format($anualPromedios['egreso'],2,'.',',') }}</td>
-                                <td class="fw-bold" style="background-color: #CEE7FF !important; color: red !important;">{{ number_format($anualPromedios['utilidad'],2,'.',',') }}</td>
+                                <td style="background-color: #CEE7FF !important; color: #000 !important;">{{ $fmt($anualPromedios['egreso']) }}</td>
+                                <td class="fw-bold" style="background-color: #CEE7FF !important; color: red !important;">{{ $fmt($anualPromedios['utilidad']) }}</td>
                             </tr>
                         @endif
                         </tfoot>

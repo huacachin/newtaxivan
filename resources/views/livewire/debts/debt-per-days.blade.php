@@ -127,7 +127,11 @@
 
                                     @foreach($r['cells'] as $i => $c)
                                         <td class="{{ 'cell-' . ($c['class'] ?? '') }} {{ $days[$i]['isSunday'] ? 'sun-col' : '' }} {{ is_numeric(str_replace(',', '', $c['txt'] ?? '')) ? 'day-val' : '' }}">
-                                            {{ $c['txt'] }}
+                                            <a href="{{ route('departures.by-debt', ['plate' => $r['plate'], 'date' => $days[$i]['d']]) }}"
+                                               target="_blank"
+                                               style="text-decoration:none; color:inherit;">
+                                                {{ $c['txt'] }}
+                                            </a>
                                         </td>
                                     @endforeach
 
