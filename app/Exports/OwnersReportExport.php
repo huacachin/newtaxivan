@@ -41,7 +41,7 @@ class OwnersReportExport implements
             })
             ->when($like !== null, function ($q) use ($like) {
                 if ($this->filter === 'name')  $q->where('o.name','like',$like);
-                if ($this->filter === 'code')  $q->where('o.id','like',$like);
+                if ($this->filter === 'code')  $q->where('v.sort_order', '=', trim((string)$this->search));
                 if ($this->filter === 'plate') $q->where('v.plate','like',$like);
             })
             ->select(['o.id','o.name','v.plate','o.document_number','o.phone','v.sort_order'])
@@ -236,8 +236,7 @@ class OwnersReportExport implements
                 $ws->getRowDimension($foot2)->setRowHeight(16);
 
                 // ===== Actualizar total en título =====
-                $totalOwners = $countActive + $countFree;
-                $ws->setCellValue('A1', "LISTADO GENERAL DE PROPIETARIO ( {$totalOwners} )");
+                $ws->setCellValue('A1', "LISTADO GENERAL DE PROPIETARIO ( {$countActive} )");
 
                 // ===== Anchos de columna =====
                 foreach (['A', 'B', 'C', 'D', 'E', 'F'] as $col) {

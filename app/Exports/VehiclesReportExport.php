@@ -115,12 +115,14 @@ class VehiclesReportExport implements
         $gas   = (clone $q)->where('fuel', 'GAS')->count();
 
         $vt    = (clone $q)->whereIn('fuel', ['GAS','D2'])->count();
-        $vqnt  = (clone $q)->whereNotIn('fuel', ['GAS','D2'])->count();
+        $vqnt  = (clone $q)->where(function ($w) {
+            $w->whereNotIn('fuel', ['GAS','D2'])->orWhereNull('fuel');
+        })->count();
 
-        $prop  = (clone $q)->whereIn('fuel', ['GAS','D2'])
-            ->whereColumn('owner_id', 'driver_id')->count();
+        $activeQ = Vehicle::query()->whereRaw('LOWER(TRIM(status)) = ?', ['active']);
 
-        $cond  = (clone $q)->whereColumn('owner_id', '!=', 'driver_id')->count();
+        $prop  = (clone $activeQ)->whereColumn('owner_id', 'driver_id')->count();
+        $cond  = (clone $activeQ)->whereColumn('owner_id', '!=', 'driver_id')->count();
 
         return compact('total','d2','gas','vt','vqnt','prop','cond');
     }

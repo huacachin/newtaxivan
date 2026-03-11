@@ -52,6 +52,7 @@ class Create extends Component
                 'district'                 => $this->district,
                 'email'                    => $this->email,
                 'phone'                    => $this->phone,
+                'status'                   => 'active',
             ]);
 
             session()->flash('owner_success', 'Propietario creado correctamente.');

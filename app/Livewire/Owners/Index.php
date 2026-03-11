@@ -53,14 +53,13 @@ class Index extends Component
             })
             ->whereRaw("LOWER(TRIM(o.status)) = 'active'")
             // search selectivo según $filterBy
-            ->when($like !== null, function ($q) use ($like) {
+            ->when($like !== null, function ($q) use ($like, $search) {
                 $q->when($this->filter === 'name', fn($qq) => $qq->where('o.name', 'like', $like))
-                    ->when($this->filter === 'code', fn($qq) => $qq->where('o.id', 'like', $like))
+                    ->when($this->filter === 'code', fn($qq) => $qq->where('v.sort_order', '=', $search))
                     ->when($this->filter === 'plate', fn($qq) => $qq->where('v.plate', 'like', $like));
             })
-            // Si el filtro es plate y NO hay término de búsqueda,
-            // tiene sentido listar solo owners que tengan al menos una placa activa:
-            ->when($this->filter === 'plate' && $like === null, fn($q) => $q->whereNotNull('v.id'))
+            // Solo owners que tengan al menos una placa activa
+            ->whereNotNull('v.id')
             ->select(
                 'o.id',
                 'v.sort_order',

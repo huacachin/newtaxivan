@@ -90,6 +90,11 @@ class Create extends Component
         return redirect()->route('settings.users.index');
     }
 
+    public function clean(): void
+    {
+        $this->reset(['name', 'username', 'pwd', 'email', 'document_type', 'document_number', 'phone', 'selectedHeadquarters', 'defaultHeadquarter', 'selectedRoleId']);
+    }
+
     public function render()
     {
         return view('livewire.users.create');

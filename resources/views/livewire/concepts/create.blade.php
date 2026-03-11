@@ -91,7 +91,7 @@
                         <button type="button" class="btn btn-sm btn-primary" wire:click="save" wire:loading.attr="disabled">
                             Agregar
                         </button>
-                        <button type="button" class="btn btn-sm btn-secondary" wire:click="clear">
+                        <button type="button" class="btn btn-sm btn-danger" wire:click="clear">
                             Limpiar
                         </button>
                         <a href="{{ route('settings.concepts.index') }}" class="btn btn-sm btn-secondary">Volver</a>

@@ -133,6 +133,7 @@
 
             <div class="mt-2 d-flex gap-2">
                 <button class="btn btn-primary btn-sm" wire:click="save">Guardar</button>
+                <button type="button" class="btn btn-danger btn-sm" wire:click="clean">Limpiar</button>
                 <a class="btn btn-secondary btn-sm" href="{{ route('settings.users.index') }}">Volver</a>
             </div>
         </div>

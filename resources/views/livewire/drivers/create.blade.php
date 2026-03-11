@@ -30,7 +30,7 @@
 
             <div class="mt-3 d-flex gap-2 justify-content-end">
                 <button type="button" class="btn btn-sm btn-primary" wire:click="save">Guardar</button>
-                <button type="button" class="btn btn-sm btn-primary" wire:click="clean">Limpiar</button>
+                <button type="button" class="btn btn-sm btn-danger" wire:click="clean">Limpiar</button>
                 <a href="{{ route('settings.drivers.index') }}" class="btn btn-sm btn-secondary">Cancelar</a>
             </div>
 
