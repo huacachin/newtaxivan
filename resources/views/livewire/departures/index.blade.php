@@ -71,6 +71,7 @@
                                             <label class="form-check-label" for="rbPlate">Placa</label>
                                         </div>
 
+                                        @role('admin')
                                         <div class="form-check form-check-inline">
                                             <input class="form-check-input mg-e-4"
                                                    type="radio"
@@ -80,6 +81,7 @@
                                                    wire:model.live="searchType">
                                             <label class="form-check-label" for="rbUser">Usuario</label>
                                         </div>
+                                        @endrole
 
                                         <div class="form-check form-check-inline">
                                             <input class="form-check-input mg-e-4"
@@ -98,7 +100,7 @@
                                        class="form-control form-control-sm"
                                        placeholder="@if($searchType==1) Buscar por placa... @elseif($searchType==2) Buscar por usuario... @else Buscar... @endif"
                                        aria-label="Buscar"
-                                       wire:model.live="searchText">
+                                       wire:model.live.debounce.400ms="searchText">
                             @else
                                 <select class="form-control form-control-sm"
                                         aria-label="Selecciona sucursal"

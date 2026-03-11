@@ -569,104 +569,122 @@ class Index extends Component
      */
     public function render(): View
     {
-        // Siempre inicializa para evitar “undefined variable”
-        $rows          = collect();
-        $supportRows   = collect();
-        $totals        = (object)['records'=>0,'times_total'=>0,'price_total'=>0,'passengers_total'=>0,'passage_total'=>0,'total_pasaje_total'=>0];
-        $supportTotals = (object)['records'=>0,'times_total'=>0,'price_total'=>0,'passengers_total'=>0,'passage_total'=>0,'total_pasaje_total'=>0];
+        $emptyTotals = (object)['records'=>0,'times_total'=>0,'price_total'=>0,'passengers_total'=>0,'passage_total'=>0,'total_pasaje_total'=>0];
 
-        // ====== PRINCIPAL (vehículos existentes activos) ======
+        // ====== PRINCIPAL (vehículos existentes activos) — 1 sola query ======
         if ($this->groupMode) {
-            // Agrupado por placa
-            $aggE = $this->existingBase()
-                ->selectRaw("
-                v.plate as plate,
-                ANY_VALUE(h.name) as headquarter_name,
-                ANY_VALUE(u.name) as user_name,
-                COALESCE(SUM(d.times), 0)  as k1,
-                COALESCE(SUM(d.price), 0)  as p1,
-                COALESCE(SUM(d.passenger), 0) as pasajeros,
-                COALESCE(SUM(d.passage), 0)   as pasaje,
-                COALESCE(SUM(COALESCE(d.passenger,0)*COALESCE(d.passage,0)), 0) as total_pasaje,
-                MIN(d.date) as from_date,
-                MAX(d.date) as to_date,
-                MAX(d.date) as date
-            ")
-                ->groupBy('v.plate');
-
-            $rows = DB::query()
-                ->fromSub($aggE, 'a')
-                ->selectRaw("a.*, ROW_NUMBER() OVER (ORDER BY a.plate) AS ordinal")
-                ->orderBy('a.plate')
+            $rows = $this->existingBase()
+                ->selectRaw(“
+                    v.plate as plate,
+                    ANY_VALUE(h.name) as headquarter_name,
+                    ANY_VALUE(u.name) as user_name,
+                    COALESCE(SUM(d.times), 0)  as k1,
+                    COALESCE(SUM(d.price), 0)  as p1,
+                    COALESCE(SUM(d.passenger), 0) as pasajeros,
+                    COALESCE(SUM(d.passage), 0)   as pasaje,
+                    COALESCE(SUM(COALESCE(d.passenger,0)*COALESCE(d.passage,0)), 0) as total_pasaje,
+                    MIN(d.date) as from_date,
+                    MAX(d.date) as to_date,
+                    MAX(d.date) as date
+                “)
+                ->groupBy('v.plate')
+                ->orderBy('v.plate')
                 ->get();
+
+            // Ordinal en PHP
+            $rows = $rows->values()->map(function ($r, $i) {
+                $r->ordinal = $i + 1;
+                return $r;
+            });
         } else {
-            // Detalle con frecuencia
-            $innerE = $this->existingBase()
-                ->selectRaw("
-                d.id, d.date, d.hour, d.times, d.price, d.passenger, d.passage,
-                d.latitude, d.longitude,
-                v.plate as plate,
-                h.name as headquarter_name, u.name as user_name,
-                COALESCE(d.passenger,0)*COALESCE(d.passage,0) as total_pasaje,
-                CONCAT(d.date,' ',d.hour) as curr_dt,
-                LAG(CONCAT(d.date,' ',d.hour)) OVER (PARTITION BY v.plate ORDER BY d.date, d.hour) as prev_dt
-            ");
-
-            $rows = DB::query()
-                ->fromSub($innerE, 'x')
-                ->selectRaw("x.*, SEC_TO_TIME(TIMESTAMPDIFF(SECOND, x.prev_dt, x.curr_dt)) as freq")
-                ->orderBy('x.id')
+            $rows = $this->existingBase()
+                ->selectRaw(“
+                    d.id, d.date, d.hour, d.times, d.price, d.passenger, d.passage,
+                    d.latitude, d.longitude,
+                    v.plate as plate,
+                    h.name as headquarter_name, u.name as user_name,
+                    COALESCE(d.passenger,0)*COALESCE(d.passage,0) as total_pasaje
+                “)
+                ->orderBy('d.id')
                 ->get();
-        }
-        $totals = $this->totalsFor($this->existingBase());
 
-        // ====== APOYO (is_support = 1) ======
+            // Frecuencia en PHP (evita LAG + fromSub)
+            $prevByPlate = [];
+            $rows = $rows->map(function ($r) use (&$prevByPlate) {
+                $currDt = $r->date . ' ' . $r->hour;
+                $plate  = $r->plate;
+                $r->freq = null;
+                if (isset($prevByPlate[$plate])) {
+                    $diff = strtotime($currDt) - strtotime($prevByPlate[$plate]);
+                    if ($diff > 0) {
+                        $r->freq = gmdate('H:i:s', $diff);
+                    }
+                }
+                $prevByPlate[$plate] = $currDt;
+                return $r;
+            });
+        }
+
+        // Totales en PHP (evita query separada)
+        $totals = $this->computeTotals($rows);
+
+        // ====== APOYO (is_support = 1) — 1 sola query ======
         if ($this->groupMode) {
-            // Agrupado por placa legacy
-            $aggS = $this->supportBase()
-                ->selectRaw("
-                d.legacy_plate as plate,
-                ANY_VALUE(h.name) as headquarter_name,
-                ANY_VALUE(u.name) as user_name,
-                COALESCE(SUM(d.times), 0)  as k1,
-                COALESCE(SUM(d.price), 0)  as p1,
-                COALESCE(SUM(d.passenger), 0) as pasajeros,
-                COALESCE(SUM(d.passage), 0)   as pasaje,
-                COALESCE(SUM(COALESCE(d.passenger,0)*COALESCE(d.passage,0)), 0) as total_pasaje,
-                MIN(d.date) as from_date,
-                MAX(d.date) as to_date,
-                MAX(d.date) as date
-            ")
-                ->groupBy('d.legacy_plate');
-
-            $supportRows = DB::query()
-                ->fromSub($aggS, 'a')
-                ->selectRaw("a.*, ROW_NUMBER() OVER (ORDER BY a.plate) AS ordinal")
-                ->orderBy('a.plate')
+            $supportRows = $this->supportBase()
+                ->selectRaw(“
+                    d.legacy_plate as plate,
+                    ANY_VALUE(h.name) as headquarter_name,
+                    ANY_VALUE(u.name) as user_name,
+                    COALESCE(SUM(d.times), 0)  as k1,
+                    COALESCE(SUM(d.price), 0)  as p1,
+                    COALESCE(SUM(d.passenger), 0) as pasajeros,
+                    COALESCE(SUM(d.passage), 0)   as pasaje,
+                    COALESCE(SUM(COALESCE(d.passenger,0)*COALESCE(d.passage,0)), 0) as total_pasaje,
+                    MIN(d.date) as from_date,
+                    MAX(d.date) as to_date,
+                    MAX(d.date) as date
+                “)
+                ->groupBy('d.legacy_plate')
+                ->orderBy('d.legacy_plate')
                 ->get();
+
+            $supportRows = $supportRows->values()->map(function ($r, $i) {
+                $r->ordinal = $i + 1;
+                return $r;
+            });
         } else {
-            // Detalle con frecuencia
-            $innerS = $this->supportBase()
-                ->selectRaw("
-                d.id, d.date, d.hour, d.times, d.price, d.passenger, d.passage,
-                d.latitude, d.longitude,
-                d.legacy_plate as plate,
-                h.name as headquarter_name, u.name as user_name,
-                COALESCE(d.passenger,0)*COALESCE(d.passage,0) as total_pasaje,
-                CONCAT(d.date,' ',d.hour) as curr_dt,
-                LAG(CONCAT(d.date,' ',d.hour)) OVER (PARTITION BY d.legacy_plate ORDER BY d.date, d.hour) as prev_dt
-            ");
-
-            $supportRows = DB::query()
-                ->fromSub($innerS, 'x')
-                ->selectRaw("x.*, SEC_TO_TIME(TIMESTAMPDIFF(SECOND, x.prev_dt, x.curr_dt)) as freq")
-                ->orderBy('x.id')
+            $supportRows = $this->supportBase()
+                ->selectRaw(“
+                    d.id, d.date, d.hour, d.times, d.price, d.passenger, d.passage,
+                    d.latitude, d.longitude,
+                    d.legacy_plate as plate,
+                    h.name as headquarter_name, u.name as user_name,
+                    COALESCE(d.passenger,0)*COALESCE(d.passage,0) as total_pasaje
+                “)
+                ->orderBy('d.id')
                 ->get();
+
+            // Frecuencia en PHP
+            $prevByPlate = [];
+            $supportRows = $supportRows->map(function ($r) use (&$prevByPlate) {
+                $currDt = $r->date . ' ' . $r->hour;
+                $plate  = $r->plate;
+                $r->freq = null;
+                if (isset($prevByPlate[$plate])) {
+                    $diff = strtotime($currDt) - strtotime($prevByPlate[$plate]);
+                    if ($diff > 0) {
+                        $r->freq = gmdate('H:i:s', $diff);
+                    }
+                }
+                $prevByPlate[$plate] = $currDt;
+                return $r;
+            });
         }
-        $supportTotals = $this->totalsFor($this->supportBase());
+
+        // Totales en PHP
+        $supportTotals = $this->computeTotals($supportRows);
         $grandTotals   = $this->sumTotals($totals, $supportTotals);
 
-        // Pasa SIEMPRE todas las variables al Blade
         return view('livewire.departures.index', [
             'rows'           => $rows,
             'totals'         => $totals,
@@ -674,9 +692,8 @@ class Index extends Component
             'supportTotals'  => $supportTotals,
             'groupMode'      => $this->groupMode,
             'grandTotals'    => $grandTotals,
-            'headquarters'   => $this->headquarters, // <-- necesario para el select
+            'headquarters'   => $this->headquarters,
         ]);
-
     }
 
     // ==============================
@@ -743,6 +760,29 @@ class Index extends Component
         return $row ?: (object)[
             'records'=>0,'times_total'=>0,'price_total'=>0,
             'passengers_total'=>0,'passage_total'=>0,'total_pasaje_total'=>0
+        ];
+    }
+
+    /**
+     * Calcula totales desde una colección ya obtenida (evita query adicional).
+     */
+    private function computeTotals($collection): object
+    {
+        if ($collection->isEmpty()) {
+            return (object)['records'=>0,'times_total'=>0,'price_total'=>0,'passengers_total'=>0,'passage_total'=>0,'total_pasaje_total'=>0];
+        }
+
+        // Detectar si es modo agrupado (tiene k1/p1) o detalle (tiene times/price)
+        $first = $collection->first();
+        $isGrouped = property_exists($first, 'k1');
+
+        return (object)[
+            'records'            => $isGrouped ? (int) $collection->sum('k1') : $collection->count(),
+            'times_total'        => (int) $collection->sum($isGrouped ? 'k1' : 'times'),
+            'price_total'        => (float) $collection->sum($isGrouped ? 'p1' : 'price'),
+            'passengers_total'   => (int) $collection->sum($isGrouped ? 'pasajeros' : 'passenger'),
+            'passage_total'      => (float) $collection->sum($isGrouped ? 'pasaje' : 'passage'),
+            'total_pasaje_total' => (float) $collection->sum('total_pasaje'),
         ];
     }
 

@@ -194,6 +194,10 @@ class Index extends Component
             ? array_sum(array_column($daysWithMove, 'balance')) / count($daysWithMove)
             : 0.0;
 
+        // Datos filtrados para el chart
+        $chartData = array_values(array_filter($days, fn($r) => ($r['income'] != 0 || $r['expense'] != 0)));
+        $this->dispatch('chart-data', data: $chartData);
+
         return view('livewire.dashboard.index', compact(
             'ingMes','egrMes','utilMes',
             'ingHoy','egrHoy','saldoHoy',
