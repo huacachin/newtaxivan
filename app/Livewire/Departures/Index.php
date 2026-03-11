@@ -574,7 +574,7 @@ class Index extends Component
         // ====== PRINCIPAL (vehículos existentes activos) — 1 sola query ======
         if ($this->groupMode) {
             $rows = $this->existingBase()
-                ->selectRaw(“
+                ->selectRaw('
                     v.plate as plate,
                     ANY_VALUE(h.name) as headquarter_name,
                     ANY_VALUE(u.name) as user_name,
@@ -586,7 +586,7 @@ class Index extends Component
                     MIN(d.date) as from_date,
                     MAX(d.date) as to_date,
                     MAX(d.date) as date
-                “)
+                ')
                 ->groupBy('v.plate')
                 ->orderBy('v.plate')
                 ->get();
@@ -598,13 +598,13 @@ class Index extends Component
             });
         } else {
             $rows = $this->existingBase()
-                ->selectRaw(“
+                ->selectRaw('
                     d.id, d.date, d.hour, d.times, d.price, d.passenger, d.passage,
                     d.latitude, d.longitude,
                     v.plate as plate,
                     h.name as headquarter_name, u.name as user_name,
                     COALESCE(d.passenger,0)*COALESCE(d.passage,0) as total_pasaje
-                “)
+                ')
                 ->orderBy('d.id')
                 ->get();
 
@@ -631,7 +631,7 @@ class Index extends Component
         // ====== APOYO (is_support = 1) — 1 sola query ======
         if ($this->groupMode) {
             $supportRows = $this->supportBase()
-                ->selectRaw(“
+                ->selectRaw('
                     d.legacy_plate as plate,
                     ANY_VALUE(h.name) as headquarter_name,
                     ANY_VALUE(u.name) as user_name,
@@ -643,7 +643,7 @@ class Index extends Component
                     MIN(d.date) as from_date,
                     MAX(d.date) as to_date,
                     MAX(d.date) as date
-                “)
+                ')
                 ->groupBy('d.legacy_plate')
                 ->orderBy('d.legacy_plate')
                 ->get();
@@ -654,13 +654,13 @@ class Index extends Component
             });
         } else {
             $supportRows = $this->supportBase()
-                ->selectRaw(“
+                ->selectRaw('
                     d.id, d.date, d.hour, d.times, d.price, d.passenger, d.passage,
                     d.latitude, d.longitude,
                     d.legacy_plate as plate,
                     h.name as headquarter_name, u.name as user_name,
                     COALESCE(d.passenger,0)*COALESCE(d.passage,0) as total_pasaje
-                “)
+                ')
                 ->orderBy('d.id')
                 ->get();
 
