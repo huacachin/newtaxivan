@@ -31,6 +31,8 @@
 
 @yield('css')
 <style>
+    [x-cloak] { display: none !important; }
+
     @font-face {
         font-family: 'brush';
         src: url({{asset('assets/fonts/brush.otf')}}) format('opentype');

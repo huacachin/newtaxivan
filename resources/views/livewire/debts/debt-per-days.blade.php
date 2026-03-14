@@ -99,8 +99,8 @@
                             </div>
                         </div>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-hover">
+                    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%">
+                        <table class="table table-bordered table-hover" style="min-width:1800px;white-space:nowrap">
                             <thead class="bg-primary">
                             <tr>
                                 <th>ITEM</th>

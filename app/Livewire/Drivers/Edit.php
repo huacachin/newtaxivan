@@ -7,9 +7,12 @@ use Carbon\Carbon;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\On;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class Edit extends Component
 {
+    use WithFileUploads;
+
     public Driver $driver;
 
     public $name;
@@ -35,6 +38,9 @@ class Edit extends Component
     public $credential; // fecha
     public $credential_expiration_date;
     public $credential_municipality;
+    public $details;
+    public $image_file;
+    public $existing_image;
 
     public $age;
 
@@ -66,6 +72,8 @@ class Edit extends Component
         $this->credential                   = optional($this->driver->credential)?->format('Y-m-d');
         $this->credential_expiration_date   = optional($this->driver->credential_expiration_date)?->format('Y-m-d');
         $this->credential_municipality      = $this->driver->credential_municipality;
+        $this->details                      = $this->driver->details;
+        $this->existing_image               = $this->driver->image_path;
     }
 
     public function rules()
@@ -94,6 +102,8 @@ class Edit extends Component
             'credential'                       => 'nullable|date',
             'credential_expiration_date'       => 'nullable|date',
             'credential_municipality'          => 'nullable|string|max:255',
+            'details'                          => 'nullable|string|max:1000',
+            'image_file'                       => 'nullable|image|max:3072',
         ];
     }
 
@@ -180,7 +190,7 @@ class Edit extends Component
         try {
             $this->validate();
 
-            $this->driver->update([
+            $payload = [
                 "name"                           => $this->name,
                 "document_number"                => $this->document_number,
                 "document_expiration_date"       => $this->document_expiration_date,
@@ -204,7 +214,14 @@ class Edit extends Component
                 "credential"                     => $this->credential,
                 "credential_expiration_date"     => $this->credential_expiration_date,
                 "credential_municipality"        => $this->credential_municipality,
-            ]);
+                "details"                        => $this->details,
+            ];
+
+            if ($this->image_file) {
+                $payload['image_path'] = $this->image_file->storePublicly('drivers', 'public');
+            }
+
+            $this->driver->update($payload);
 
             session()->flash('driver_success', 'Conductor actualizado correctamente.');
             $this->redirectRoute('settings.drivers.index');

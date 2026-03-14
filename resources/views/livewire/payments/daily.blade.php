@@ -1,13 +1,11 @@
-@push('styles')
+<div class="container-fluid">
+
     <style>
         .sunday { background: #ff0000 !important; color: #fff !important; }
         .cell-paid { background: #00b050 !important; color: #fff; font-weight: 600; }
         .cell-zero { background: #ff0000 !important; }
         .cell-sunday { background: #fff !important; }
     </style>
-@endpush
-
-<div class="container-fluid">
 
     {{-- Encabezado --}}
     <div class="row align-items-center mb-3">
@@ -35,7 +33,7 @@
         {{-- Tabla --}}
         <div class="col-12">
             <div class="card shadow-sm">
-                <div class="card-body">
+                <div class="card-body" style="overflow-x:auto">
                     <div class="row mb-2">
                         <div class="col-12">
                             <div class="d-flex flex-nowrap align-items-end gap-2 overflow-auto py-1">
@@ -96,8 +94,8 @@
                         $totalCols = $baseCols + $extraCols;
                     @endphp
 
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-hover">
+                    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%">
+                        <table class="table table-bordered table-hover" style="min-width:1800px;white-space:nowrap">
                             <thead class="bg-primary text-white">
                             {{-- Fila 1 de encabezados (agrupadores) --}}
                             <tr>

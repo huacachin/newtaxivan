@@ -83,31 +83,39 @@
                     </div>
                 </div>
 
-                {{-- Sedes --}}
-                <div class="perm-row span-2">
+                {{-- Sedes (solo visible para roles no-admin) --}}
+                @php
+                    $selectedRoleName = $selectedRoleId ? collect($roles)->firstWhere('id', $selectedRoleId)?->name : null;
+                    $isAdminRole = $selectedRoleName && mb_strtolower($selectedRoleName) === 'admin';
+                @endphp
+                <div class="perm-row span-2" @if($isAdminRole) style="display:none" @endif>
                     <div class="perm-col-title">Sucursales</div>
                     <div class="perm-col-controls">
-                        <div class="perm-chips">
-                            @foreach($headquartes as $h)
-                                @php
-                                    $isSelected = in_array($h->id, (array)$selectedHeadquarters, true);
-                                    $isDefault  = (int)$defaultHeadquarter === (int)$h->id;
-                                @endphp
-                                <label class="chip-hq {{ $isSelected ? 'is-selected' : '' }} {{ $isDefault ? 'is-default' : '' }}">
-                                    <input class="form-check-input" type="checkbox"
-                                           value="{{ $h->id }}" wire:model="selectedHeadquarters">
-                                    <span>{{ $h->name }}</span>
-                                    <span class="hq-primary" title="Marcar como sede primaria">
-                                        <input class="form-check-input" type="radio"
-                                               name="default_hq_add"
-                                               value="{{ $h->id }}" wire:model="defaultHeadquarter">
-                                        <small>Primaria</small>
-                                    </span>
-                                </label>
-                            @endforeach
-                        </div>
-                        @error('selectedHeadquarters') <span class="title-modules d-block small mt-1">{{ $message }}</span> @enderror
-                        @error('defaultHeadquarter')  <span class="title-modules d-block small mt-1">{{ $message }}</span> @enderror
+                        @if($isAdminRole)
+                            <span class="text-muted small">Admin tiene acceso a todas las sedes automáticamente.</span>
+                        @else
+                            <div class="perm-chips">
+                                @foreach($headquartes as $h)
+                                    @php
+                                        $isSelected = in_array($h->id, (array)$selectedHeadquarters, true);
+                                        $isDefault  = (int)$defaultHeadquarter === (int)$h->id;
+                                    @endphp
+                                    <label class="chip-hq {{ $isSelected ? 'is-selected' : '' }} {{ $isDefault ? 'is-default' : '' }}">
+                                        <input class="form-check-input" type="checkbox"
+                                               value="{{ $h->id }}" wire:model="selectedHeadquarters">
+                                        <span>{{ $h->name }}</span>
+                                        <span class="hq-primary" title="Marcar como sede primaria">
+                                            <input class="form-check-input" type="radio"
+                                                   name="default_hq_add"
+                                                   value="{{ $h->id }}" wire:model="defaultHeadquarter">
+                                            <small>Primaria</small>
+                                        </span>
+                                    </label>
+                                @endforeach
+                            </div>
+                            @error('selectedHeadquarters') <span class="title-modules d-block small mt-1">{{ $message }}</span> @enderror
+                            @error('defaultHeadquarter')  <span class="title-modules d-block small mt-1">{{ $message }}</span> @enderror
+                        @endif
                     </div>
                 </div>
 

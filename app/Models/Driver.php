@@ -32,6 +32,8 @@ class Driver extends Model
         'credential_expiration_date',
         'credential_municipality',
         'score',
+        'details',
+        'image_path',
     ];
 
     protected $casts = [

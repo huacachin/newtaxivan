@@ -235,4 +235,27 @@
         </select>
         @error('credential_municipality') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
+
+    <div class="col-12"><div class="app-divider-v justify-content-center"><p>DETALLES Y FOTO</p></div></div>
+
+    <div class="col-12 col-md-6">
+        <label class="form-label">Detalles</label>
+        <textarea class="form-control form-control-sm" rows="3" placeholder="Detalles adicionales del conductor..." wire:model="details"></textarea>
+        @error('details') <span class="title-modules">{{ $message }}</span> @enderror
+    </div>
+
+    <div class="col-12 col-md-6">
+        <label class="form-label">Foto</label>
+        <input type="file" class="form-control form-control-sm" wire:model="image_file" accept="image/*">
+        @error('image_file') <span class="title-modules">{{ $message }}</span> @enderror
+
+        {{-- Preview de imagen nueva --}}
+        @if($image_file)
+            <img src="{{ $image_file->temporaryUrl() }}" alt="Preview" class="mt-2 rounded" style="max-height:80px; cursor:pointer"
+                 onclick="window.open(this.src, '_blank')">
+        @elseif(isset($existing_image) && $existing_image)
+            <img src="{{ asset('storage/' . $existing_image) }}" alt="Foto conductor" class="mt-2 rounded" style="max-height:80px; cursor:pointer"
+                 onclick="window.open(this.src, '_blank')">
+        @endif
+    </div>
 </div>

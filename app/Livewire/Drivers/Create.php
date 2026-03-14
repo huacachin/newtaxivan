@@ -5,9 +5,12 @@ namespace App\Livewire\Drivers;
 use App\Models\Driver;
 use Carbon\Carbon;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class Create extends Component
 {
+    use WithFileUploads;
+
     public $name;
     public $document_number;
     public $document_expiration_date;
@@ -31,6 +34,8 @@ class Create extends Component
     public $credential; // fecha
     public $credential_expiration_date;
     public $credential_municipality;
+    public $details;
+    public $image_file;
 
     public $age;
 
@@ -58,6 +63,8 @@ class Create extends Component
         'credential' => 'nullable|date',
         'credential_expiration_date' => 'nullable|date',
         'credential_municipality' => 'nullable|string|max:255',
+        'details' => 'nullable|string|max:1000',
+        'image_file' => 'nullable|image|max:3072',
     ];
 
     public function mount(){
@@ -78,31 +85,38 @@ class Create extends Component
         try {
             $this->validate();
 
-            Driver::create([
-            "name" => $this->name,
-            "document_number" => $this->document_number,
-            "document_expiration_date" => $this->document_expiration_date,
-            "birthdate" => $this->birthdate,
-            "address" => $this->address,
-            "district" => $this->district,
-            "email" => $this->email,
-            "phone" => $this->phone,
-            "license" => $this->license,
-            "class" => $this->class,
-            "category" => $this->category,
-            "license_issue_date" => $this->license_issue_date,
-            "license_revalidation_date" => $this->license_revalidation_date,
-            "contract_start" => $this->contract_start,
-            "contract_end" => $this->contract_end,
-            "condition" => $this->condition,
-            "score" => $this->score ?? 0,
-            "road_education" => $this->road_education,
-            "road_education_expiration_date" => $this->road_education_expiration_date,
-            "road_education_municipality" => $this->road_education_municipality,
-            "credential" => $this->credential,
-            "credential_expiration_date" => $this->credential_expiration_date,
-            "credential_municipality" => $this->credential_municipality
-        ]);
+            $payload = [
+                "name" => $this->name,
+                "document_number" => $this->document_number,
+                "document_expiration_date" => $this->document_expiration_date,
+                "birthdate" => $this->birthdate,
+                "address" => $this->address,
+                "district" => $this->district,
+                "email" => $this->email,
+                "phone" => $this->phone,
+                "license" => $this->license,
+                "class" => $this->class,
+                "category" => $this->category,
+                "license_issue_date" => $this->license_issue_date,
+                "license_revalidation_date" => $this->license_revalidation_date,
+                "contract_start" => $this->contract_start,
+                "contract_end" => $this->contract_end,
+                "condition" => $this->condition,
+                "score" => $this->score ?? 0,
+                "road_education" => $this->road_education,
+                "road_education_expiration_date" => $this->road_education_expiration_date,
+                "road_education_municipality" => $this->road_education_municipality,
+                "credential" => $this->credential,
+                "credential_expiration_date" => $this->credential_expiration_date,
+                "credential_municipality" => $this->credential_municipality,
+                "details" => $this->details,
+            ];
+
+            if ($this->image_file) {
+                $payload['image_path'] = $this->image_file->storePublicly('drivers', 'public');
+            }
+
+            Driver::create($payload);
 
             session()->flash('driver_success', 'Conductor creado correctamente.');
             $this->redirectRoute('settings.drivers.index');
@@ -116,7 +130,7 @@ class Create extends Component
 
     public function clean(): void
     {
-        $this->reset(['name','document_number','document_expiration_date','birthdate','address','district','email','phone','license','class','category','license_issue_date','license_revalidation_date','contract_start','contract_end','condition','score','road_education','road_education_expiration_date','road_education_municipality','credential','credential_expiration_date','credential_municipality']);
+        $this->reset(['name','document_number','document_expiration_date','birthdate','address','district','email','phone','license','class','category','license_issue_date','license_revalidation_date','contract_start','contract_end','condition','score','road_education','road_education_expiration_date','road_education_municipality','credential','credential_expiration_date','credential_municipality','details','image_file']);
         $this->mount();
     }
 

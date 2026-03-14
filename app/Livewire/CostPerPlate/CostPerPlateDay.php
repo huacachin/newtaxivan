@@ -27,7 +27,7 @@ class CostPerPlateDay extends Component
 
     public function goBack()
     {
-        $this->dispatch('go-back', ["fallback" => route('settings.cost-per-plate.index')]);
+        $this->redirect(route('settings.cost-per-plate.index'));
     }
 
     public function render()

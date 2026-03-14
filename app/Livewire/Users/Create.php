@@ -58,6 +58,18 @@ class Create extends Component
     {
         $this->validate();
 
+        // Si el rol es admin, asignar todas las sedes con Huaycan como primaria
+        $roleName = $this->selectedRoleId
+            ? collect($this->roles)->firstWhere('id', $this->selectedRoleId)?->name
+            : null;
+
+        if ($roleName && mb_strtolower($roleName) === 'admin') {
+            $allHqs = Headquarter::where('status', 'active')->pluck('id')->map(fn($v) => (int)$v)->toArray();
+            $this->selectedHeadquarters = $allHqs;
+            $huaycan = Headquarter::where('name', 'Huaycan')->value('id');
+            $this->defaultHeadquarter = $huaycan ? (int)$huaycan : ($allHqs[0] ?? null);
+        }
+
         if ($this->defaultHeadquarter && !in_array($this->defaultHeadquarter, $this->selectedHeadquarters, true)) {
             $this->selectedHeadquarters[] = $this->defaultHeadquarter;
         }

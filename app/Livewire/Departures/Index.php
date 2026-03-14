@@ -211,6 +211,10 @@ class Index extends Component
     /** IDs de sedes asignadas al usuario autenticado (pivote + primaria por compatibilidad) */
     private array $userHqIds = [];
 
+    /** Cache de roles para evitar reconsultar en cada render */
+    private ?bool $cachedIsAdmin = null;
+    private ?bool $cachedIsController = null;
+
     /** Retorna true si el usuario autenticado tiene el rol indicado (insensible a mayúsculas). */
     private function userHasRole(string $needle): bool
     {
@@ -223,15 +227,14 @@ class Index extends Component
             ->contains($needle);
     }
 
-    /** Atajos legibles */
+    /** Atajos legibles (cacheados tras primera llamada) */
     private function isAdmin(): bool
     {
-        // Agrega otras variantes si existiesen (p.ej. "super admin")
-        return $this->userHasRole('admin');
+        return $this->cachedIsAdmin ??= $this->userHasRole('admin');
     }
     private function isController(): bool
     {
-        return $this->userHasRole('controller');
+        return $this->cachedIsController ??= $this->userHasRole('controller');
     }
 
     /** Carga ids de sedes asignadas al usuario (N:N + primaria en users.headquarter_id) */
@@ -305,7 +308,6 @@ class Index extends Component
     public function updatedSearchType($value)
     {
         $this->searchType = (int) $value;
-        $this->searchText = ''; // evita quedarse con el valor anterior
     }
 
     // ==============================
@@ -597,32 +599,21 @@ class Index extends Component
                 return $r;
             });
         } else {
-            $rows = $this->existingBase()
+            $inner = $this->existingBase()
                 ->selectRaw('
                     d.id, d.date, d.hour, d.times, d.price, d.passenger, d.passage,
                     d.latitude, d.longitude,
                     v.plate as plate,
                     h.name as headquarter_name, u.name as user_name,
-                    COALESCE(d.passenger,0)*COALESCE(d.passage,0) as total_pasaje
+                    COALESCE(d.passenger,0)*COALESCE(d.passage,0) as total_pasaje,
+                    LAG(CONCAT(d.date, " ", d.hour)) OVER (PARTITION BY v.plate ORDER BY d.date, d.hour) as prev_dt
                 ')
-                ->orderBy('d.id')
-                ->get();
+                ->orderBy('d.id');
 
-            // Frecuencia en PHP (evita LAG + fromSub)
-            $prevByPlate = [];
-            $rows = $rows->map(function ($r) use (&$prevByPlate) {
-                $currDt = $r->date . ' ' . $r->hour;
-                $plate  = $r->plate;
-                $r->freq = null;
-                if (isset($prevByPlate[$plate])) {
-                    $diff = strtotime($currDt) - strtotime($prevByPlate[$plate]);
-                    if ($diff > 0) {
-                        $r->freq = gmdate('H:i:s', $diff);
-                    }
-                }
-                $prevByPlate[$plate] = $currDt;
-                return $r;
-            });
+            $rows = DB::table(DB::raw("({$inner->toSql()}) as sub"))
+                ->mergeBindings($inner)
+                ->selectRaw('*, CASE WHEN prev_dt IS NOT NULL AND TIMESTAMPDIFF(SECOND, prev_dt, CONCAT(date, " ", hour)) > 0 THEN SEC_TO_TIME(TIMESTAMPDIFF(SECOND, prev_dt, CONCAT(date, " ", hour))) ELSE NULL END as freq')
+                ->get();
         }
 
         // Totales en PHP (evita query separada)
@@ -653,32 +644,21 @@ class Index extends Component
                 return $r;
             });
         } else {
-            $supportRows = $this->supportBase()
+            $innerSupport = $this->supportBase()
                 ->selectRaw('
                     d.id, d.date, d.hour, d.times, d.price, d.passenger, d.passage,
                     d.latitude, d.longitude,
                     d.legacy_plate as plate,
                     h.name as headquarter_name, u.name as user_name,
-                    COALESCE(d.passenger,0)*COALESCE(d.passage,0) as total_pasaje
+                    COALESCE(d.passenger,0)*COALESCE(d.passage,0) as total_pasaje,
+                    LAG(CONCAT(d.date, " ", d.hour)) OVER (PARTITION BY d.legacy_plate ORDER BY d.date, d.hour) as prev_dt
                 ')
-                ->orderBy('d.id')
-                ->get();
+                ->orderBy('d.id');
 
-            // Frecuencia en PHP
-            $prevByPlate = [];
-            $supportRows = $supportRows->map(function ($r) use (&$prevByPlate) {
-                $currDt = $r->date . ' ' . $r->hour;
-                $plate  = $r->plate;
-                $r->freq = null;
-                if (isset($prevByPlate[$plate])) {
-                    $diff = strtotime($currDt) - strtotime($prevByPlate[$plate]);
-                    if ($diff > 0) {
-                        $r->freq = gmdate('H:i:s', $diff);
-                    }
-                }
-                $prevByPlate[$plate] = $currDt;
-                return $r;
-            });
+            $supportRows = DB::table(DB::raw("({$innerSupport->toSql()}) as sub"))
+                ->mergeBindings($innerSupport)
+                ->selectRaw('*, CASE WHEN prev_dt IS NOT NULL AND TIMESTAMPDIFF(SECOND, prev_dt, CONCAT(date, " ", hour)) > 0 THEN SEC_TO_TIME(TIMESTAMPDIFF(SECOND, prev_dt, CONCAT(date, " ", hour))) ELSE NULL END as freq')
+                ->get();
         }
 
         // Totales en PHP

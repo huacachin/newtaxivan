@@ -106,7 +106,7 @@ class Calendar extends Component
 
     public function goBack()
     {
-        $this->dispatch('go-back', ["fallback" => route('settings.cost-per-plate.cost-per-plate-day',["year" => $this->year, "month" => $this->month])]);;
+        $this->redirect(route('settings.cost-per-plate.cost-per-plate-day', ["year" => $this->year, "month" => $this->month]));
     }
 
     /** Guarda SOLO los días que cambiaron vs $original */

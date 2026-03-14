@@ -77,9 +77,13 @@
                                         <td>{{ $user->username }}</td>
                                         <td>{{ $user->phone ?: '—' }}</td>
                                         <td>
-                                            {{ $user->headquarters->pluck('name')->implode(', ') ?: '—' }}
-                                            @if($user->headquarter)
-                                                <br><small class="text-muted">Primaria: {{ $user->headquarter->name }}</small>
+                                            @if(optional($user->roles->first())->name === 'admin')
+                                                —
+                                            @else
+                                                {{ $user->headquarters->pluck('name')->implode(', ') ?: '—' }}
+                                                @if($user->headquarter)
+                                                    <br><small class="text-muted">Primaria: {{ $user->headquarter->name }}</small>
+                                                @endif
                                             @endif
                                         </td>
                                         <td>{{ ($r = optional($user->roles->first())->name) ? __('roles.' . $r, [], 'es') : '—' }}</td>
@@ -96,12 +100,14 @@
                                                 <i class="ti ti-edit"></i>
                                             </button>
 
-                                            {{-- Rol & Permisos (modal nuevo) --}}
+                                            {{-- Rol & Permisos (no aplica para admin) --}}
+                                            @if(optional($user->roles->first())->name !== 'admin')
                                             <button class="btn btn-sm btn-outline-dark"
                                                     title="Rol & Permisos"
                                                     wire:click="openPermsWindow({{ $user->id }})">
                                                 <i class="ti ti-shield-lock"></i>
                                             </button>
+                                            @endif
 
                                             @role('admin')
                                             <button class="btn btn-sm btn-outline-danger ms-1"

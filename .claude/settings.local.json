@@ -15,7 +15,10 @@
       "Bash(perl:*)",
       "Bash(pip3 install:*)",
       "Bash(xxd:*)",
-      "Bash(awk NR>=145 && NR<=155:*)"
+      "Bash(awk NR>=145 && NR<=155:*)",
+      "Bash(grep -l \"expenses\" /Users/antonyalfredoculquicarranza/projects/laravel_taxivan/database/migrations/*.php)",
+      "Bash(grep -l \"income\" /Users/antonyalfredoculquicarranza/projects/laravel_taxivan/database/migrations/*.php)",
+      "Bash(grep -l \"DriverController\" /Users/antonyalfredoculquicarranza/projects/laravel_taxivan/app/Http/Controllers/*.php)"
     ]
   }
 }

@@ -54,8 +54,8 @@
                     {{-- ===== Fila 2: search/select + fechas + botón ===== --}}
                     <div class="row g-2 align-items-end mb-2">
 
-                        {{-- Campo dinámico: input o select (forzamos remount con wire:key) --}}
-                        <div class="col-auto" wire:key="search-field-{{ (int) $searchType }}">
+                        {{-- Campo dinámico: Alpine maneja el toggle visual sin server roundtrip --}}
+                        <div class="col-auto" x-data="{ filterType: @entangle('searchType') }">
                             <div class="row g-2 mb-2">
                                 <div class="col-12 f-s-11">
                                     <div class="d-flex flex-wrap align-items-center gap-3">
@@ -67,7 +67,7 @@
                                                    name="rbFilter"
                                                    id="rbPlate"
                                                    value="1"
-                                                   wire:model.live="searchType">  {{-- sin .live ni wire:click --}}
+                                                   x-model="filterType">
                                             <label class="form-check-label" for="rbPlate">Placa</label>
                                         </div>
 
@@ -78,7 +78,7 @@
                                                    name="rbFilter"
                                                    id="rbUser"
                                                    value="2"
-                                                   wire:model.live="searchType">
+                                                   x-model="filterType">
                                             <label class="form-check-label" for="rbUser">Usuario</label>
                                         </div>
                                         @endrole
@@ -89,29 +89,28 @@
                                                    name="rbFilter"
                                                    id="rbHQ"
                                                    value="3"
-                                                   wire:model.live="searchType">
+                                                   x-model="filterType">
                                             <label class="form-check-label" for="rbHQ">Sucursal</label>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            @if((int) $searchType !== 3)
-                                <input type="search"
-                                       class="form-control form-control-sm"
-                                       placeholder="@if($searchType==1) Buscar por placa... @elseif($searchType==2) Buscar por usuario... @else Buscar... @endif"
-                                       aria-label="Buscar"
-                                       wire:model.live.debounce.400ms="searchText">
-                            @else
-                                <select class="form-control form-control-sm"
-                                        aria-label="Selecciona sucursal"
-                                        wire:model.live="searchText"
-                                        wire:key="hq-select">
-                                    <option value="">Todos</option>
-                                    @foreach($headquarters as $h)
-                                        <option value="{{ $h->id }}">{{ $h->name }}</option>
-                                    @endforeach
-                                </select>
-                            @endif
+                            <input type="search"
+                                   class="form-control form-control-sm"
+                                   :placeholder="filterType == 1 ? 'Buscar por placa...' : (filterType == 2 ? 'Buscar por usuario...' : 'Buscar...')"
+                                   aria-label="Buscar"
+                                   wire:model="searchText"
+                                   x-show="filterType != 3">
+                            <select class="form-control form-control-sm"
+                                    aria-label="Selecciona sucursal"
+                                    wire:model="searchText"
+                                    x-show="filterType == 3"
+                                    x-cloak>
+                                <option value="">Todos</option>
+                                @foreach($headquarters as $h)
+                                    <option value="{{ $h->id }}">{{ $h->name }}</option>
+                                @endforeach
+                            </select>
                         </div>
 
                         {{-- Fecha Inicio --}}

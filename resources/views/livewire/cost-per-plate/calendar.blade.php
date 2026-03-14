@@ -35,23 +35,23 @@
             <div class="card">
 
                 <div class="card-body pb-2">
-                    <div class="d-flex g-3 justify-content-between align-items-center my-2">
-                        <h5>Calendario</h5>
-                        <div class="d-flex">
-                            <input type="number" class="form-control form-control-sm mg-e-10" placeholder="0.00"
+                    <div class="d-flex gap-2 justify-content-between align-items-center my-2">
+                        <h5 class="mb-0 d-none d-sm-block">Calendario</h5>
+                        <div class="d-flex gap-1">
+                            <input type="number" class="form-control form-control-sm" style="width:70px" placeholder="0.00"
                                    aria-label="Apply" step="0.01" min="0"
                                    wire:model.live="bulk">
-                            <button class="btn btn-sm btn-primary w-100 mg-e-10"
+                            <button class="btn btn-sm btn-primary text-nowrap"
                                     wire:click="fillAll"
                                     wire:loading.attr="disabled"
                                     wire:target="fillAll,saveAll">
-                                <i class="ti ti-circle-check-filled f-s-12"></i> Aplicar
+                                <i class="ti ti-circle-check-filled f-s-12"></i><span class="d-none d-sm-inline"> Aplicar</span>
                             </button>
-                            <button class="btn btn-sm btn-primary w-100 mg-e-10"
+                            <button class="btn btn-sm btn-primary text-nowrap"
                                     wire:click="saveAll"
                                     wire:loading.attr="disabled"
                                     wire:target="fillAll,saveAll">
-                                <i class="ti ti-device-floppy f-s-12"></i> Guardar
+                                <i class="ti ti-device-floppy f-s-12"></i><span class="d-none d-sm-inline"> Guardar</span>
                             </button>
                             <button class="btn btn-sm btn-primary" wire:click="goBack">
                                 <i class="ti ti-arrow-back-up f-s-12"></i>
