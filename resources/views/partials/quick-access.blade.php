@@ -13,7 +13,7 @@
     @if(!request()->routeIs('payments.index'))
         @can('payments')
         <a href="{{ route('payments.index') }}" class="quick-access-btn qa-payments" title="Pagos">
-            <i class="ti ti-currency-dollar"></i>
+            <span class="qa-icon-text">S/.</span>
             <span>Pagos</span>
         </a>
         @endcan

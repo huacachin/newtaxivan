@@ -220,6 +220,7 @@ input.hasDatepicker {
     transition: transform .15s, box-shadow .15s;
 
     i { font-size: 18px !important; }
+    .qa-icon-text { font-size: 14px !important; font-weight: 800; line-height: 1; }
 
     &:hover {
         transform: translateY(-2px);
