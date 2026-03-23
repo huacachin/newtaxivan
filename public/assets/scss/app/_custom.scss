@@ -195,3 +195,38 @@ input.hasDatepicker {
     min-width: 320px;
     max-width: 100%;
 }
+
+// --- Quick Access FAB ---
+.quick-access {
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 1050;
+}
+
+.quick-access-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 50px;
+    color: #fff !important;
+    font-size: 12px !important;
+    font-weight: 600;
+    text-decoration: none !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
+    transition: transform .15s, box-shadow .15s;
+
+    i { font-size: 18px !important; }
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, .3);
+    }
+}
+
+.qa-departures { background: #3b82f6; }
+.qa-payments   { background: #22c55e; }
+.qa-incomes    { background: #f59e0b; }
