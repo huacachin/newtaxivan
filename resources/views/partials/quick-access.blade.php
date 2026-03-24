@@ -17,10 +17,10 @@
         @endcan
     @endif
 
-    @if(!request()->routeIs('cash.incomes'))
-        @can('cash.incomes')
-        <a href="{{ route('cash.incomes') }}" class="quick-access-btn qa-incomes" title="Ingresos">
-            <span>Ing.</span>
+    @if(!request()->routeIs('cash.expenses'))
+        @can('cash.expenses')
+        <a href="{{ route('cash.expenses') }}" class="quick-access-btn qa-incomes" title="Egresos">
+            <span>Egr.</span>
         </a>
         @endcan
     @endif
