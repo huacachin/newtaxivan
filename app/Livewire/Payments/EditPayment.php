@@ -213,7 +213,14 @@ class EditPayment extends Component
 
         $vehicle = Vehicle::query()
             ->whereRaw('REPLACE(UPPER(TRIM(plate)),"-","") = ?', [$this->plateNeedle()])
+            ->where('status', 'active')
             ->first();
+
+        // Vehículo activo pero con fecha de cese vencida → no vincular
+        if ($vehicle && $vehicle->termination_date && $vehicle->termination_date < now(config('app.timezone', 'America/Lima'))->startOfDay()) {
+            $vehicle = null;
+        }
+
         if (!$vehicle) { $this->detected_cost = null; return; }
 
         $cost = CostPerPlateDay::query()
@@ -244,7 +251,13 @@ class EditPayment extends Component
 
         $vehicle = Vehicle::query()
             ->whereRaw('REPLACE(UPPER(TRIM(plate)),"-","") = ?', [$this->plateNeedle()])
+            ->where('status', 'active')
             ->first();
+
+        // Vehículo activo pero con fecha de cese vencida → no vincular
+        if ($vehicle && $vehicle->termination_date && $vehicle->termination_date < now(config('app.timezone', 'America/Lima'))->startOfDay()) {
+            $vehicle = null;
+        }
 
         $q = DB::table('debt_days')
             ->select('id','total','amortized','exonerated')
@@ -450,7 +463,12 @@ class EditPayment extends Component
         $vehicle = Vehicle::whereRaw(
             'REPLACE(UPPER(TRIM(plate)),"-","") = ?',
             [$this->plateNeedle()]
-        )->first();
+        )->where('status', 'active')->first();
+
+        // Vehículo activo pero con fecha de cese vencida → no vincular
+        if ($vehicle && $vehicle->termination_date && $vehicle->termination_date < now(config('app.timezone', 'America/Lima'))->startOfDay()) {
+            $vehicle = null;
+        }
 
         try {
             DB::transaction(function () use ($p, $vehicle) {

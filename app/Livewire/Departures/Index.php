@@ -879,15 +879,26 @@ class Index extends Component
         $plate = strtoupper(trim((string)$rawPlate));              // normaliza
         $plate = preg_replace('/\s+/','',$plate);                  // quita espacios internos
 
-        $vehicle = Vehicle::whereRaw('UPPER(TRIM(plate)) = ?', [$plate])
-            ->where('status', 'active')
-            ->first();
+        $vehicle = Vehicle::whereRaw('UPPER(TRIM(plate)) = ?', [$plate])->first();
 
         if ($vehicle) {
+            $today = now(config('app.timezone', 'America/Lima'))->startOfDay();
+            $ceased = $vehicle->termination_date && $vehicle->termination_date < $today;
+
+            if ($vehicle->status === 'active' && !$ceased) {
+                return [
+                    'vehicle_id'   => $vehicle->id,
+                    'is_support'   => 0,
+                    'legacy_plate' => null,
+                    'norm_plate'   => $plate,
+                ];
+            }
+
+            // Vehículo cesado o inactivo → apoyo
             return [
-                'vehicle_id'   => $vehicle->id,
-                'is_support'   => 0,
-                'legacy_plate' => null,
+                'vehicle_id'   => null,
+                'is_support'   => 1,
+                'legacy_plate' => $plate,
                 'norm_plate'   => $plate,
             ];
         }

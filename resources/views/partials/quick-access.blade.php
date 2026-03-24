@@ -5,7 +5,7 @@
         @can('departures')
         <a href="{{ route('departures.index') }}" class="quick-access-btn qa-departures" title="Salidas">
             <i class="ti ti-door-exit"></i>
-            <span>Salidas</span>
+            <span>Sal.</span>
         </a>
         @endcan
     @endif
@@ -14,7 +14,7 @@
         @can('payments')
         <a href="{{ route('payments.index') }}" class="quick-access-btn qa-payments" title="Pagos">
             <span class="qa-icon-text">S/.</span>
-            <span>Pagos</span>
+            <span>Pag.</span>
         </a>
         @endcan
     @endif
@@ -23,7 +23,7 @@
         @can('cash.incomes')
         <a href="{{ route('cash.incomes') }}" class="quick-access-btn qa-incomes" title="Ingresos">
             <i class="ti ti-home-dollar"></i>
-            <span>Ingresos</span>
+            <span>Ing.</span>
         </a>
         @endcan
     @endif

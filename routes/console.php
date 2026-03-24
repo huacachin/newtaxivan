@@ -15,3 +15,9 @@ Schedule::command('debt-days:generate')
     ->timezone('America/Lima')
     ->lastDayOfMonth('23:00')
     ->onOneServer();
+
+Schedule::command('vehicles:deactivate-ceased')
+    ->dailyAt('00:05')
+    ->timezone('America/Lima')
+    ->withoutOverlapping()
+    ->onOneServer();

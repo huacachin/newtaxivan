@@ -271,6 +271,11 @@ class Index extends Component
             ->where('status', 'active')
             ->first();
 
+        // Vehículo activo pero con fecha de cese vencida → no vincular
+        if ($vehicle && $vehicle->termination_date && $vehicle->termination_date < now(config('app.timezone', 'America/Lima'))->startOfDay()) {
+            $vehicle = null;
+        }
+
         if (!$vehicle) {
             $this->detected_cost = null;
             return;
@@ -307,6 +312,11 @@ class Index extends Component
             ->whereRaw('REPLACE(UPPER(TRIM(plate)),"-","") = ?', [$this->plateNeedle()])
             ->where('status', 'active')
             ->first();
+
+        // Vehículo activo pero con fecha de cese vencida → no vincular
+        if ($vehicle && $vehicle->termination_date && $vehicle->termination_date < now(config('app.timezone', 'America/Lima'))->startOfDay()) {
+            $vehicle = null;
+        }
 
         $q = DB::table('debt_days')
             ->select('id','total','amortized','exonerated')
@@ -587,6 +597,11 @@ class Index extends Component
             [$this->plateNeedle()]
         )->where('status', 'active')->first();
 
+        // Vehículo activo pero con fecha de cese vencida → no vincular
+        if ($vehicle && $vehicle->termination_date && $vehicle->termination_date < now(config('app.timezone', 'America/Lima'))->startOfDay()) {
+            $vehicle = null;
+        }
+
         DB::transaction(function () use ($vehicle) {
             $payment = Payment::create([
                 'vehicle_id'     => $vehicle?->id,
@@ -648,6 +663,11 @@ class Index extends Component
             'REPLACE(UPPER(TRIM(plate)),"-","") = ?',
             [$this->plateNeedle()]
         )->where('status', 'active')->first();
+
+        // Vehículo activo pero con fecha de cese vencida → no vincular
+        if ($vehicle && $vehicle->termination_date && $vehicle->termination_date < now(config('app.timezone', 'America/Lima'))->startOfDay()) {
+            $vehicle = null;
+        }
 
         DB::transaction(function () use ($p, $vehicle) {
             $oldType = $p->type;
