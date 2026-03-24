@@ -119,9 +119,9 @@
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">
                             <tr>
-                                @role('admin')
+                                @hasanyrole('superadmin|admin')
                                 <th class="sticky-col">Acción</th>
-                                @endrole
+                                @endhasanyrole
                                 <th>Item</th>
                                 <th>Cod</th>
                                 <th class="sticky-col-2">Placa</th>
@@ -151,13 +151,13 @@
                                         elseif ($cond === 'DT') { $condClass .= 'cond-DT'; }
                                     @endphp
                                     <tr>
-                                        @role('admin')
+                                        @hasanyrole('superadmin|admin')
                                         <td>
                                             <i class="ti ti-edit f-s-18 text-success"
                                                style="cursor:pointer"
                                                wire:click="openEditWindow({{ $vehicle->id }})"></i>
                                         </td>
-                                        @endrole
+                                        @endhasanyrole
 
                                         <td>{{ $loop->iteration }}</td>
                                         <td>{{ $vehicle->sort_order }}</td>
@@ -194,7 +194,7 @@
                                 @endforeach
                             @else
                                 <tr>
-                                    @php $colspan = 12 + ($status === "inactive" ? 1 : 0) + (auth()->user()->hasRole('admin') ? 1 : 0); @endphp
+                                    @php $colspan = 12 + ($status === "inactive" ? 1 : 0) + (auth()->user()->hasAnyRole('superadmin','admin') ? 1 : 0); @endphp
                                     <td colspan="{{ $colspan }}">No se encontrarón resultados</td>
                                 </tr>
                             @endif

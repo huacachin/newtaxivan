@@ -174,9 +174,9 @@
                         <button type="button" class="btn btn-sm btn-primary" wire:click="update" wire:loading.attr="disabled">
                             Guardar cambios
                         </button>
-                        @role('admin')
+                        @hasanyrole('superadmin|admin')
                         <button type="button" class="btn btn-sm btn-danger" wire:click="questionDelete({{ $paymentId }})">Eliminar</button>
-                        @endrole
+                        @endhasanyrole
                         <a href="{{ route('payments.index') }}" class="btn btn-sm btn-secondary">Volver</a>
                     </div>
                 </div>

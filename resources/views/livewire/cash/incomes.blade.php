@@ -169,10 +169,10 @@
                             @forelse($incomes as $i)
                                 <tr wire:key="exp-{{ $i->id }}">
                                     <td data-label="Opciones">
-                                        @role('admin')
+                                        @hasanyrole('superadmin|admin')
                                         <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
                                            wire:click="openEditWindow({{ $i->id }})"></i>
-                                        @endrole
+                                        @endhasanyrole
                                     </td>
                                     <td>{{ $incomes->firstItem() + $loop->index }}</td>
                                     <td data-label="Fecha">{{ \Carbon\Carbon::parse($i->date)->format('d/m/Y') }}</td>

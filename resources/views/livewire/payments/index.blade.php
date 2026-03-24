@@ -168,7 +168,7 @@
                                 <button class="btn btn-sm btn-success" wire:click="openAddWindow">
                                     <i class="ti ti-square-plus f-s-12"></i> Nuevo
                                 </button>
-                                @role('admin')
+                                @hasanyrole('superadmin|admin')
                                 <button class="btn btn-sm btn-primary" wire:click="daily">
                                     <i class="ti ti-report-analytics f-s-12"></i> Diario
                                 </button>
@@ -178,7 +178,7 @@
                                 <button class="btn btn-sm btn-primary" wire:click="stats">
                                     <i class="ti ti-report-analytics f-s-12"></i> Estadis.
                                 </button>
-                                @endrole
+                                @endhasanyrole
 
                                 <button class="btn btn-sm btn-primary" wire:click="export">
                                     <i class="ti ti-file-analytics f-s-12"></i>
@@ -195,7 +195,7 @@
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="text-center bg-primary">
                             <tr>
-                                @role('admin')<th>Acción</th>@endrole
+                                @hasanyrole('superadmin|admin')<th>Acción</th>@endhasanyrole
                                 <th>Ítem</th>
                                 <th>Placa</th>
                                 <th>Serie</th>
@@ -213,12 +213,12 @@
                             <tbody>
                             @forelse($payments as $p)
                                 <tr {{ $p->type === 'RETRASO' ? 'class=row-retraso' : '' }}>
-                                    @role('admin')
+                                    @hasanyrole('superadmin|admin')
                                     <td width="50">
                                         <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
                                            wire:click="openEditWindow({{ $p->id }})"></i>
                                     </td>
-                                    @endrole
+                                    @endhasanyrole
                                     <td>{{ $payments->firstItem() + $loop->index }}</td>
                                     <td>{{ $p->legacy_plate }}</td>
                                     <td>{{ $p->serie }}</td>
@@ -240,14 +240,14 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="{{ auth()->user()->hasRole('admin') ? 12 : 11 }}" class="text-muted">No se encontraron resultados</td>
+                                    <td colspan="{{ auth()->user()->hasAnyRole('superadmin','admin') ? 12 : 11 }}" class="text-muted">No se encontraron resultados</td>
                                 </tr>
                             @endforelse
                             </tbody>
 
                             <tfoot class="fw-semibold bg-primary">
                             <tr>
-                                <th colspan="{{ auth()->user()->hasRole('admin') ? 10 : 9 }}">Total general:</th>
+                                <th colspan="{{ auth()->user()->hasAnyRole('superadmin','admin') ? 10 : 9 }}">Total general:</th>
                                 <th>{{ number_format($total_general, 2) }}</th>
                                 <th></th>
                             </tr>

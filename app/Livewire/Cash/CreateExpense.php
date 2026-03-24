@@ -29,7 +29,7 @@ class CreateExpense extends Component
 
     public function mount(): void
     {
-        if (!auth()->user()?->hasRole('admin')) {
+        if (!auth()->user()?->hasAnyRole('superadmin','admin')) {
             abort(403);
         }
 

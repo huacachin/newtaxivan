@@ -13,6 +13,7 @@ class RoleSetupSeeder extends Seeder
         $guard = 'web';
 
         // Crea roles si no existen
+        Role::firstOrCreate(['name'=>'superadmin','guard_name'=>$guard]);
         Role::firstOrCreate(['name'=>'admin','guard_name'=>$guard]);
         Role::firstOrCreate(['name'=>'controller','guard_name'=>$guard]);
 

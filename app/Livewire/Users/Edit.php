@@ -81,7 +81,7 @@ class Edit extends Component
             ? collect($this->roles)->firstWhere('id', $this->selectedRoleId)?->name
             : null;
 
-        if ($roleName && mb_strtolower($roleName) === 'admin') {
+        if ($roleName && in_array(mb_strtolower($roleName), ['superadmin', 'admin'])) {
             $allHqs = Headquarter::where('status', 'active')->pluck('id')->map(fn($v) => (int)$v)->toArray();
             $this->selectedHeadquarters = $allHqs;
             $huaycan = Headquarter::where('name', 'Huaycan')->value('id');

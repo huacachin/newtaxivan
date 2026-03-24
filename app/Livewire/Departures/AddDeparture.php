@@ -86,7 +86,7 @@ class AddDeparture extends Component
     /** Atajo legible para admin */
     private function isAdmin(): bool
     {
-        return $this->userHasRole('admin');
+        return $this->userHasRole('superadmin') || $this->userHasRole('admin');
     }
 
     /** Carga ids de sedes asignadas al usuario (N:N + primaria por compatibilidad) */

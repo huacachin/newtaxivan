@@ -86,7 +86,7 @@
                 {{-- Sedes (solo visible para roles no-admin) --}}
                 @php
                     $selectedRoleName = $selectedRoleId ? collect($roles)->firstWhere('id', $selectedRoleId)?->name : null;
-                    $isAdminRole = $selectedRoleName && mb_strtolower($selectedRoleName) === 'admin';
+                    $isAdminRole = $selectedRoleName && in_array(mb_strtolower($selectedRoleName), ['superadmin', 'admin']);
                 @endphp
                 <div class="perm-row span-2" @if($isAdminRole) style="display:none" @endif>
                     <div class="perm-col-title">Sucursales</div>

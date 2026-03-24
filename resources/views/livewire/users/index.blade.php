@@ -109,13 +109,13 @@
                                             </button>
                                             @endif
 
-                                            @role('admin')
+                                            @hasanyrole('superadmin|admin')
                                             <button class="btn btn-sm btn-outline-danger ms-1"
                                                     title="Desactivar usuario"
                                                     wire:click="questionDelete({{ $user->id }})">
                                                 <i class="ti ti-trash"></i>
                                             </button>
-                                            @endrole
+                                            @endhasanyrole
                                         </td>
                                     </tr>
                                 @endforeach

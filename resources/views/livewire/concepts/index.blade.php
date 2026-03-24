@@ -90,10 +90,10 @@
                                         <td>{{ $concept->name }}</td>
                                         <td>{{ ucfirst($concept->type) }}</td>
                                         <td>
-                                            @role('admin')
+                                            @hasanyrole('superadmin|admin')
                                             <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
                                                wire:click="openEditWindow({{ $concept->id }})"></i>
-                                            @endrole
+                                            @endhasanyrole
                                         </td>
                                     </tr>
                                 @endforeach

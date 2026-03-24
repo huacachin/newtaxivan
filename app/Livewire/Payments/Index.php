@@ -148,8 +148,7 @@ class Index extends Component
     /** Atajos legibles */
     private function isAdmin(): bool
     {
-        // agrega otras variantes si existiesen
-        return $this->userHasRole('admin');
+        return $this->userHasRole('superadmin') || $this->userHasRole('admin');
     }
     private function isController(): bool
     {

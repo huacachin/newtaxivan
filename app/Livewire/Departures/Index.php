@@ -230,7 +230,7 @@ class Index extends Component
     /** Atajos legibles (cacheados tras primera llamada) */
     private function isAdmin(): bool
     {
-        return $this->cachedIsAdmin ??= $this->userHasRole('admin');
+        return $this->cachedIsAdmin ??= ($this->userHasRole('superadmin') || $this->userHasRole('admin'));
     }
     private function isController(): bool
     {

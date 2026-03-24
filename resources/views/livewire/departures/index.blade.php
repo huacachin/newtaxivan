@@ -71,7 +71,7 @@
                                             <label class="form-check-label" for="rbPlate">Placa</label>
                                         </div>
 
-                                        @role('admin')
+                                        @hasanyrole('superadmin|admin')
                                         <div class="form-check form-check-inline">
                                             <input class="form-check-input mg-e-4"
                                                    type="radio"
@@ -81,7 +81,7 @@
                                                    x-model="filterType">
                                             <label class="form-check-label" for="rbUser">Usuario</label>
                                         </div>
-                                        @endrole
+                                        @endhasanyrole
 
                                         <div class="form-check form-check-inline">
                                             <input class="form-check-input mg-e-4"
@@ -141,7 +141,7 @@
                         <button class="btn btn-sm btn-success" wire:click="openAddWindow">
                             <i class="ti ti-square-plus f-s-12"></i> Nuevo
                         </button>
-                        @role('admin')
+                        @hasanyrole('superadmin|admin')
                         <button wire:click="reportMonthly" class="btn btn-sm btn-primary">
                             <i class="ti ti-report-analytics f-s-12"></i> Mensual
                         </button>
@@ -151,7 +151,7 @@
                         <button wire:click="reportStats" class="btn btn-sm btn-primary">
                             <i class="ti ti-report-analytics f-s-12"></i> Estadis.
                         </button>
-                        @endrole
+                        @endhasanyrole
 
                         <button class="btn btn-sm btn-primary" wire:click="export">
                             <i class="ti ti-file-analytics f-s-12"></i>
@@ -176,11 +176,11 @@
 
                             <thead class="text-center bg-primary" >
                             <tr>
-                                @role('admin')
+                                @hasanyrole('superadmin|admin')
                                 @if(!$groupMode)
                                     <th rowspan="2"></th>
                                 @endif
-                                @endrole
+                                @endhasanyrole
                                 <th class="text-center " rowspan="2">N°</th>
                                 <th class="text-center " rowspan="2">Placa</th>
                                 <th class="text-center " rowspan="2">Fecha</th>
@@ -211,13 +211,13 @@
                             @if($rows->count() > 0)
                                 @foreach($rows as $d)
                                     <tr>
-                                        @role('admin')
+                                        @hasanyrole('superadmin|admin')
                                             @if(!$groupMode)
                                                 <td class="text-center ">
                                                     <i  class="ti ti-edit f-s-18 text-success" wire:click="openEditWindow({{ $d->id }})"></i>
                                                 </td>
                                             @endif
-                                        @endrole
+                                        @endhasanyrole
 
                                         {{-- Nº --}}
                                         @if($groupMode)
@@ -281,7 +281,7 @@
 
                             <tfoot class="text-center f-w-600 bg-primary">
                             <tr>
-                                <td colspan="{{ (!$groupMode) ? (auth()->user()?->hasRole('admin') ? 8 : 7) : 7 }}">TOTAL</td>
+                                <td colspan="{{ (!$groupMode) ? (auth()->user()?->hasAnyRole('superadmin','admin') ? 8 : 7) : 7 }}">TOTAL</td>
                                 <td>{{ number_format($totals->times_total ?? 0) }}</td>
                                 <td>{{ number_format($totals->times_total ?? 0) }}</td>
                                 <td>{{ number_format($totals->price_total ?? 0, 2) }}</td>
@@ -301,11 +301,11 @@
                         <table class=" table table-bordered table-striped   p-0 table-hover">
                             <thead class="text-center bg-primary">
                             <tr>
-                                @role('admin')
+                                @hasanyrole('superadmin|admin')
                                     @if(!$groupMode)
                                         <th rowspan="2"></th>
                                     @endif
-                                @endrole
+                                @endhasanyrole
                                 <th rowspan="2">N°</th>
                                 <th rowspan="2">Placa</th>
                                 <th rowspan="2">Fecha</th>
@@ -335,14 +335,14 @@
                             <tbody wire:key="dep-support-tbody-{{ $groupMode ? 'g' : 'd' }}">
                             @forelse($supportRows as $d)
                                 <tr class="text-center ">
-                                    @role('admin')
+                                    @hasanyrole('superadmin|admin')
                                         @if(!$groupMode)
                                             <td class="text-center title-modules">
                                                 <i  class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
                                                     wire:click="openEditWindow({{ $d->id }})"></i>
                                             </td>
                                         @endif
-                                    @endrole
+                                    @endhasanyrole
 
                                     {{-- Nº --}}
                                     <td class="title-modules">@if($groupMode) {{ $d->ordinal }} @else {{ $loop->iteration }} @endif</td>
@@ -393,7 +393,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td  colspan="{{ auth()->user()?->hasRole('admin') ? 15 : 14 }}">No se encontraron resultados</td>
+                                    <td  colspan="{{ auth()->user()?->hasAnyRole('superadmin','admin') ? 15 : 14 }}">No se encontraron resultados</td>
                                 </tr>
                             @endforelse
                             </tbody>
@@ -401,7 +401,7 @@
                             <tfoot class="text-center f-w-600  bg-primary"
                                    wire:key="dep-support-tfoot-{{ $groupMode ? 'g' : 'd' }}">
                             <tr>
-                                <td class="text-end pa-e-6" colspan="{{ (!$groupMode) ? (auth()->user()?->hasRole('admin') ? 8 : 7) : 6 }}">TOTAL</td>
+                                <td class="text-end pa-e-6" colspan="{{ (!$groupMode) ? (auth()->user()?->hasAnyRole('superadmin','admin') ? 8 : 7) : 6 }}">TOTAL</td>
                                 <td>{{ number_format((float) data_get($supportTotals, 'times_total', 0)) }}</td>
                                 <td>{{ number_format((float) data_get($supportTotals, 'times_total', 0)) }}</td>
                                 <td>{{ number_format((float) data_get($supportTotals, 'price_total', 0), 2) }}</td>
@@ -411,7 +411,7 @@
                                 <td>-</td>
                             </tr>
                             <tr>
-                                <td class="text-end pa-e-6" colspan="{{ (!$groupMode) ? (auth()->user()?->hasRole('admin') ? 8 : 7) : 6 }}">TOTAL GENERAL</td>
+                                <td class="text-end pa-e-6" colspan="{{ (!$groupMode) ? (auth()->user()?->hasAnyRole('superadmin','admin') ? 8 : 7) : 6 }}">TOTAL GENERAL</td>
                                 {{-- Empresa --}}
                                 <td>{{ number_format($grandTotals->times_total ?? 0) }}</td>
                                 <td>{{ number_format($grandTotals->times_total ?? 0) }}</td>

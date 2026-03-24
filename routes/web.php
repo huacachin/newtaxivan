@@ -31,14 +31,14 @@ Route::middleware('auth')->group(function () {
 
     // Configuraciones
     Route::get('vehicles', [VehicleController::class,'index'])->name('settings.vehicles.index');
-    Route::get('vehicles/create', [VehicleController::class,'create'])->name('settings.vehicles.create')->middleware('role:admin');
-    Route::get('vehicles/{id}/edit', [VehicleController::class,'edit'])->name('settings.vehicles.edit')->middleware('role:admin');
+    Route::get('vehicles/create', [VehicleController::class,'create'])->name('settings.vehicles.create')->middleware('role:superadmin|admin');
+    Route::get('vehicles/{id}/edit', [VehicleController::class,'edit'])->name('settings.vehicles.edit')->middleware('role:superadmin|admin');
     Route::get('owners', [OwnerController::class,'index'])->name('settings.owners.index');
-    Route::get('owners/create', [OwnerController::class,'create'])->name('settings.owners.create')->middleware('role:admin');
-    Route::get('owners/{id}/edit', [OwnerController::class,'edit'])->name('settings.owners.edit')->middleware('role:admin');
+    Route::get('owners/create', [OwnerController::class,'create'])->name('settings.owners.create')->middleware('role:superadmin|admin');
+    Route::get('owners/{id}/edit', [OwnerController::class,'edit'])->name('settings.owners.edit')->middleware('role:superadmin|admin');
     Route::get('drivers', [DriverController::class,'index'])->name('settings.drivers.index');
-    Route::get('drivers/create', [DriverController::class,'create'])->name('settings.drivers.create')->middleware('role:admin');
-    Route::get('drivers/{id}/edit', [DriverController::class,'edit'])->name('settings.drivers.edit')->middleware('role:admin');
+    Route::get('drivers/create', [DriverController::class,'create'])->name('settings.drivers.create')->middleware('role:superadmin|admin');
+    Route::get('drivers/{id}/edit', [DriverController::class,'edit'])->name('settings.drivers.edit')->middleware('role:superadmin|admin');
 
     // Costo por placa
     Route::get('cost-per-plate', [CostPerPlateController::class,'index'])->name('settings.cost-per-plate.index');
@@ -50,9 +50,9 @@ Route::middleware('auth')->group(function () {
 
     // Usuarios
     Route::get('users', [UserController::class,'index'])->name('settings.users.index');
-    Route::get('users/create', [UserController::class,'create'])->name('settings.users.create')->middleware('role:admin');
-    Route::get('users/{user}/edit', [UserController::class,'edit'])->name('settings.users.edit')->middleware('role:admin');
-    Route::get('users/{user}/perms', [UserController::class,'perms'])->name('settings.users.perms')->middleware('role:admin');
+    Route::get('users/create', [UserController::class,'create'])->name('settings.users.create')->middleware('role:superadmin|admin');
+    Route::get('users/{user}/edit', [UserController::class,'edit'])->name('settings.users.edit')->middleware('role:superadmin|admin');
+    Route::get('users/{user}/perms', [UserController::class,'perms'])->name('settings.users.perms')->middleware('role:superadmin|admin');
 
     // Conceptos
     Route::resource('concepts', ConceptController::class)->names('settings.concepts');
@@ -64,7 +64,7 @@ Route::middleware('auth')->group(function () {
     Route::get('departures/stats', [DepartureController::class,'stats'])->name('departures.stats');
     Route::get('departures/by-debt',[DepartureController::class,'byDebt'])->name('departures.by-debt');
     Route::get('departures/add',[DepartureController::class,'add'])->name('departures.add');
-    Route::get('departures/edit/{id}',[DepartureController::class,'edit'])->name('departures.edit')->middleware('role:admin');
+    Route::get('departures/edit/{id}',[DepartureController::class,'edit'])->name('departures.edit')->middleware('role:superadmin|admin');
 
     // Pagos
     Route::get('payments', [PaymentController::class,'index'])->name('payments.index');
@@ -72,7 +72,7 @@ Route::middleware('auth')->group(function () {
     Route::get('payments/monthly', [PaymentController::class,'monthly'])->name('payments.monthly');
     Route::get('payments/stats', [PaymentController::class,'stats'])->name('payments.stats');
     Route::get('payments/add',[PaymentController::class,'add'])->name('payments.add');
-    Route::get('payments/edit/{id}',[PaymentController::class,'edit'])->name('payments.edit')->middleware('role:admin');
+    Route::get('payments/edit/{id}',[PaymentController::class,'edit'])->name('payments.edit')->middleware('role:superadmin|admin');
 
     // Deudas
     Route::get('debts-per-days', [DebtController::class,'debtPerDays'])->name('debts.debt-per-days');
@@ -85,11 +85,11 @@ Route::middleware('auth')->group(function () {
     Route::get('cash/open',[CashController::class,'open'])->name('cash.open');
     Route::get('cash/report/movement',[CashController::class,'movementReport'])->name('cash.report.movement');
     Route::get('cash/incomes',[CashController::class,'incomes'])->name('cash.incomes');
-    Route::get('cash/incomes/create',[CashController::class,'createIncome'])->name('cash.incomes.create')->middleware('role:admin');
-    Route::get('cash/incomes/{id}/edit',[CashController::class,'editIncome'])->name('cash.incomes.edit')->middleware('role:admin');
+    Route::get('cash/incomes/create',[CashController::class,'createIncome'])->name('cash.incomes.create')->middleware('role:superadmin|admin');
+    Route::get('cash/incomes/{id}/edit',[CashController::class,'editIncome'])->name('cash.incomes.edit')->middleware('role:superadmin|admin');
     Route::get('cash/expenses',[CashController::class,'expenses'])->name('cash.expenses');
-    Route::get('cash/expenses/create',[CashController::class,'createExpense'])->name('cash.expenses.create')->middleware('role:admin');
-    Route::get('cash/expenses/{id}/edit',[CashController::class,'editExpense'])->name('cash.expenses.edit')->middleware('role:admin');
+    Route::get('cash/expenses/create',[CashController::class,'createExpense'])->name('cash.expenses.create')->middleware('role:superadmin|admin');
+    Route::get('cash/expenses/{id}/edit',[CashController::class,'editExpense'])->name('cash.expenses.edit')->middleware('role:superadmin|admin');
     Route::get('cash/report/general',[CashController::class,'generalReport'])->name('cash.report.general');
     Route::get('cash/report/est-draco-base',[CashController::class,'reportEstDracoBase'])->name('cash.report.est-draco-base');
     Route::get('cash/report/est-sal-pag-cont',[CashController::class,'reportEstSalPagCont'])->name('cash.report.est-sal-pag-cont');
