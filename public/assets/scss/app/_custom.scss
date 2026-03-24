@@ -198,6 +198,7 @@ input.hasDatepicker {
 
 // --- Quick Access FAB ---
 .quick-access {
+    display: flex;
     position: fixed;
     bottom: 90px;
     right: 20px;
@@ -209,7 +210,7 @@ input.hasDatepicker {
 .quick-access-btn {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    justify-content: center;
     padding: 8px 14px;
     border-radius: 50px;
     color: #fff !important;
@@ -218,9 +219,6 @@ input.hasDatepicker {
     text-decoration: none !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
     transition: transform .15s, box-shadow .15s;
-
-    i { font-size: 18px !important; }
-    .qa-icon-text { font-size: 14px !important; font-weight: 800; line-height: 1; }
 
     &:hover {
         transform: translateY(-2px);
