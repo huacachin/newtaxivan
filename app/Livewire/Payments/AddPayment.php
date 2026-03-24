@@ -421,7 +421,7 @@ class AddPayment extends Component
         $today = $now->toDateString();
 
         // 👉 Hora tomada en el momento de guardar (solo backend)
-        $this->hour = $now->format('H:i'); // o 'H:i:s' si tu columna lo requiere
+        $this->hour = $now->format('H:i:s');
 
         // Si es PAGO, forzamos hoy
         if ($this->type_form === 'PAGO') {

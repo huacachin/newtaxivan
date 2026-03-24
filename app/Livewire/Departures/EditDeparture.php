@@ -226,7 +226,7 @@ class EditDeparture extends Component
                 = $this->resolveVehicleByPlate($this->plate);
 
             $now  = now(config('app.timezone','America/Lima'));
-            $hour = $this->hour ?: $now->format('H:i');
+            $hour = $this->hour ?: $now->format('H:i:s');
 
             DB::table('departures')->where('id', $this->depId)->update([
                 'is_support'     => $isSupport,

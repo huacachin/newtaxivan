@@ -224,7 +224,7 @@ class Index extends Component
         $this->ui_date_start = $this->date_start;
         $this->ui_date_end   = $this->date_end;
 
-        $this->hour          = $now->format('H:i');
+        $this->hour          = $now->format('H:i:s');
 
         // === INTEGRACIÓN ROLES/SEDES: catálogo de sedes para filtros y formularios
         $this->loadUserHeadquarters();

@@ -152,7 +152,7 @@ class AddDeparture extends Component
         // Defaults fecha/hora (America/Lima)
         $now = now(config('app.timezone','America/Lima'));
         $this->date = $this->date ?: $now->toDateString();
-        $this->hour = $this->hour ?: $now->format('H:i');
+        $this->hour = $this->hour ?: $now->format('H:i:s');
 
         // Seleccionar por defecto la sede primaria si existe en la lista; sino, la primera disponible
         if (!$this->headquarter_id) {
@@ -189,7 +189,7 @@ class AddDeparture extends Component
 
         $userId = Auth::id();
         $now    = now(config('app.timezone','America/Lima'));
-        $hour   = $this->hour ?: $now->format('H:i');
+        $hour   = $this->hour ?: $now->format('H:i:s');
 
         DB::table('departures')->insert([
             'is_support'     => $isSupport,
@@ -270,7 +270,7 @@ class AddDeparture extends Component
         $now = now(config('app.timezone','America/Lima'));
         $this->plate = null;
         $this->date  = $now->toDateString();
-        $this->hour  = $now->format('H:i');
+        $this->hour  = $now->format('H:i:s');
 
         $primaryId = (int) (Auth::user()?->headquarter_id ?? 0);
         $allowed   = $this->allowedHqIds();

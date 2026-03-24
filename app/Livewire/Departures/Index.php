@@ -297,7 +297,7 @@ class Index extends Component
         // defaults para el form
         $now = now(config('app.timezone','America/Lima'));
         $this->date = $this->date ?: $now->toDateString();
-        $this->hour = $this->hour ?: $now->format('H:i');
+        $this->hour = $this->hour ?: $now->format('H:i:s');
 
         $this->byHQ = ($this->searchType ?? 1) == 3;
 
@@ -352,7 +352,7 @@ class Index extends Component
 
         $userId = Auth::id();
         $now    = now(config('app.timezone','America/Lima'));
-        $hour   = $this->hour ?: $now->format('H:i');
+        $hour   = $this->hour ?: $now->format('H:i:s');
 
         DB::table('departures')->insert([
             'is_support'     => $isSupport,          // <-- se calcula aquí
@@ -411,7 +411,7 @@ class Index extends Component
             = $this->resolveVehicleByPlate($this->plate);
 
         $now  = now(config('app.timezone','America/Lima'));
-        $hour = $this->hour ?: $now->format('H:i');
+        $hour = $this->hour ?: $now->format('H:i:s');
 
         DB::table('departures')->where('id', $this->depId)->update([
             'is_support'     => $isSupport,      // <-- recalculado según placa actual
@@ -450,7 +450,7 @@ class Index extends Component
         $this->depId = null;
         $this->plate = null;
         $this->date  = $now->toDateString();
-        $this->hour  = $now->format('H:i');
+        $this->hour  = $now->format('H:i:s');
         $this->headquarter_id = null;
         $this->price = 0;
         $this->passenger = 0;
