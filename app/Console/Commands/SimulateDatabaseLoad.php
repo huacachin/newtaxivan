@@ -101,7 +101,7 @@ class SimulateDatabaseLoad extends Command
         $bar->start();
         for ($i = 0; $i <= 100; $i++) {
             $bar->setMessage(round($backupSize * $i / 100, 1) . ' MB / ' . $backupSize . ' MB');
-            $bar->setCurrent($i);
+            $bar->setProgress($i);
             usleep(rand(200000, 600000));
         }
         $bar->finish();
@@ -146,14 +146,14 @@ class SimulateDatabaseLoad extends Command
 
             while ($current < $records) {
                 if (time() >= $tableTimeLimit) {
-                    $bar->setCurrent($records);
+                    $bar->setProgress($records);
                     break;
                 }
 
                 $batch = min($step + rand(-($step/4), $step/4), $records - $current);
                 $batch = max(1, (int)$batch);
                 $current += $batch;
-                $bar->setCurrent(min($current, $records));
+                $bar->setProgress(min($current, $records));
 
                 $messages = [
                     'Insertando...',
@@ -215,7 +215,7 @@ class SimulateDatabaseLoad extends Command
             $bar->setFormat('  [%bar%] %percent:3s%%');
             $bar->start();
             for ($i = 0; $i <= 100; $i++) {
-                $bar->setCurrent($i);
+                $bar->setProgress($i);
                 usleep((int)(($phaseTime * 1000000) / 100));
             }
             $bar->finish();
