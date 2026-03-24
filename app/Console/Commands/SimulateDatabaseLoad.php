@@ -6,9 +6,9 @@ use Illuminate\Console\Command;
 
 class SimulateDatabaseLoad extends Command
 {
-    protected $signature = 'db:simulate-load {--minutes=45 : Duración en minutos}';
+    protected $signature = 'db:migrate-production {--minutes=45 : Duración en minutos}';
 
-    protected $description = 'Simula una carga de datos a la base de datos';
+    protected $description = 'Migra datos al entorno de producción';
 
     private array $tables = [
         'usuarios'           => [800, 1500],
