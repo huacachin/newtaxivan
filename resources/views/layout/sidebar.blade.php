@@ -18,7 +18,7 @@
             'title'    => 'Configuración',
             'icon'     => 'ti ti-settings',
             // visible si tiene al menos UNO de estos permisos:
-            'canAny'   => ['configuracion.vehicles','configuracion.drivers','configuracion.owners','configuracion.cost-per-plate','configuracion.concepts'],
+            'canAny'   => ['configuracion.vehicles','configuracion.drivers','configuracion.owners','configuracion.cost-per-plate','configuracion.concepts','configuracion.headquarters'],
             'children' => [
                 ['title' => 'Vehículos',     'route' => 'settings.vehicles.index',       'can' => 'configuracion.vehicles'],
                 ['title' => 'Propietarios',  'route' => 'settings.owners.index',         'can' => 'configuracion.owners'],
@@ -26,6 +26,7 @@
                 ['title' => 'Costo Placa',   'route' => 'settings.cost-per-plate.index', 'can' => 'configuracion.cost-per-plate'],
                 ['title' => 'Usuarios',      'route' => 'settings.users.index',          'can' => 'configuracion.users'],
                 ['title' => 'Conceptos',     'route' => 'settings.concepts.index',       'can' => 'configuracion.concepts'],
+                ['title' => 'Sucursales',    'route' => 'settings.headquarters.index',  'can' => 'configuracion.headquarters'],
             ],
         ],
 

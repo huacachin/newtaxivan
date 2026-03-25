@@ -41,6 +41,7 @@ class PermissionCatalogSeeder extends Seeder
             ['name' => 'configuracion.cost-per-plate',  'label' => 'Costo por Placa','module' => 'configuracion','module_label' => 'Configuración','description' => 'Acceso a Costo por Placa'],
             ['name' => 'configuracion.users',           'label' => 'Usuarios',      'module' => 'configuracion','module_label' => 'Configuración', 'description' => 'Acceso a Usuarios'],
             ['name' => 'configuracion.concepts',        'label' => 'Conceptos',     'module' => 'configuracion','module_label' => 'Configuración', 'description' => 'Acceso a Conceptos'],
+            ['name' => 'configuracion.headquarters',    'label' => 'Sucursales',    'module' => 'configuracion','module_label' => 'Configuración', 'description' => 'Acceso a Sucursales'],
 
             // Deudas (hijos)
             ['name' => 'debts.days',    'label' => 'Deuda x Días',  'module' => 'debts', 'module_label' => 'Deudas', 'description' => 'Acceso a Deuda por Días'],

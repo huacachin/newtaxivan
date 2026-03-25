@@ -5,7 +5,8 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\{
     DashboardController, VehicleController, OwnerController, DriverController,
     CostPerPlateController, DspController, UserController, ConceptController,
-    DepartureController, PaymentController, DebtController, CashController
+    DepartureController, PaymentController, DebtController, CashController,
+    HeadquarterController
 };
 
 // === Público (solo invitados) ===
@@ -56,6 +57,11 @@ Route::middleware('auth')->group(function () {
 
     // Conceptos
     Route::resource('concepts', ConceptController::class)->names('settings.concepts');
+
+    // Sucursales
+    Route::get('headquarters', [HeadquarterController::class,'index'])->name('settings.headquarters.index');
+    Route::get('headquarters/create', [HeadquarterController::class,'create'])->name('settings.headquarters.create')->middleware('role:director|gerente');
+    Route::get('headquarters/{id}/edit', [HeadquarterController::class,'edit'])->name('settings.headquarters.edit')->middleware('role:director|gerente');
 
     // Salidas
     Route::get('departures', [DepartureController::class,'index'])->name('departures.index');
@@ -141,5 +147,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/exports/concepts', [ConceptController::class, 'export'])
         ->name('exports.concepts');
+    Route::get('/exports/headquarters', [HeadquarterController::class, 'export'])
+        ->name('exports.headquarters');
 
 });
