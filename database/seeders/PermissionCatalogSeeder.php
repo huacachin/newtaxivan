@@ -50,7 +50,10 @@ class PermissionCatalogSeeder extends Seeder
             // Caja (hijos)
             ['name' => 'cash.incomes',  'label' => 'Ingreso',  'module' => 'cash', 'module_label' => 'Caja', 'description' => 'Acceso a Ingresos'],
             ['name' => 'cash.expenses', 'label' => 'Egreso',   'module' => 'cash', 'module_label' => 'Caja', 'description' => 'Acceso a Egresos'],
-            ['name' => 'cash.reports',  'label' => 'Reportes', 'module' => 'cash', 'module_label' => 'Caja', 'description' => 'Acceso a Reportes de Caja'],
+            ['name' => 'cash.report-general',       'label' => 'Reporte General',       'module' => 'cash', 'module_label' => 'Caja', 'description' => 'Acceso a Reporte General'],
+            ['name' => 'cash.report-draco',         'label' => 'Rep Est Draco Base',    'module' => 'cash', 'module_label' => 'Caja', 'description' => 'Acceso a Rep Est Draco Base'],
+            ['name' => 'cash.report-sal-pag-cont',  'label' => 'Rep Esp Sal Pag Cont',  'module' => 'cash', 'module_label' => 'Caja', 'description' => 'Acceso a Rep Esp Sal Pag Cont'],
+            ['name' => 'cash.report-caja-ma',       'label' => 'Rep Est Caja M.A',      'module' => 'cash', 'module_label' => 'Caja', 'description' => 'Acceso a Rep Est Caja M.A'],
         ];
 
         // 4) Crear permisos nuevos

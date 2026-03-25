@@ -61,7 +61,7 @@ class Perms extends Component
                 'configuracion.headquarters',
             ],
             'debts' => ['debts.days', 'debts.monthly'],
-            'cash'  => ['cash.incomes', 'cash.expenses', 'cash.reports'],
+            'cash'  => ['cash.incomes', 'cash.expenses', 'cash.report-general', 'cash.report-draco', 'cash.report-sal-pag-cont', 'cash.report-caja-ma'],
         ];
 
         // Ordenar items dentro de cada grupo

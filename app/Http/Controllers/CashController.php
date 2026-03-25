@@ -24,10 +24,10 @@ class CashController extends Controller
             'expenses','createExpense','editExpense','exportExpenses'
         ]);
 
-        $this->middleware(['auth','permission:cash.reports'])->only([
-            'movementReport','generalReport',
-            'reportEstDracoBase','reportEstSalPagCont','reportEstCajaMa'
-        ]);
+        $this->middleware(['auth','permission:cash.report-general'])->only(['generalReport']);
+        $this->middleware(['auth','permission:cash.report-draco'])->only(['reportEstDracoBase']);
+        $this->middleware(['auth','permission:cash.report-sal-pag-cont'])->only(['reportEstSalPagCont']);
+        $this->middleware(['auth','permission:cash.report-caja-ma'])->only(['reportEstCajaMa']);
     }
 
     public function open()
