@@ -11,7 +11,7 @@ class ConceptController extends Controller
 {
     public function __construct(){
         $this->middleware(['auth','permission:configuracion.concepts'])->only(['index','create','edit']);
-        $this->middleware(['auth','role:admin'])->only(['create','edit']);
+        $this->middleware(['auth','role:director|gerente'])->only(['create','edit']);
     }
 
     public function index()
