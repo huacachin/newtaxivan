@@ -49,8 +49,19 @@ class Perms extends Component
                 $groups[$name]['items'][] = ['key'=>$name,'label'=>$label];
             }
         }
-        ksort($groups);
-        $this->aclGroups = $groups;
+        $sidebarOrder = ['dashboard', 'configuracion', 'departures', 'payments', 'debts', 'cash'];
+        $ordered = [];
+        foreach ($sidebarOrder as $key) {
+            if (isset($groups[$key])) {
+                $ordered[$key] = $groups[$key];
+            }
+        }
+        foreach ($groups as $key => $group) {
+            if (!isset($ordered[$key])) {
+                $ordered[$key] = $group;
+            }
+        }
+        $this->aclGroups = $ordered;
     }
 
     private function humanize(string $val): string
