@@ -40,7 +40,7 @@
 
                                    <!-- Botón a la derecha -->
                                    <a class="btn btn-sm btn-primary flex-shrink-0"
-                                      href="{{ route('settings.users.create') }}">
+                                      href="{{ route('settings.users.create') }}" target="_blank">
                                        <i class="ti ti-square-plus f-s-12"></i> Nuevo
                                    </a>
 
@@ -103,7 +103,7 @@
                                             {{-- Rol & Permisos --}}
                                             <a class="btn btn-sm btn-outline-dark"
                                                title="Rol & Permisos"
-                                               href="{{ route('settings.users.perms', $user->id) }}">
+                                               href="{{ route('settings.users.perms', $user->id) }}" target="_blank">
                                                 <i class="ti ti-shield-lock"></i>
                                             </a>
 

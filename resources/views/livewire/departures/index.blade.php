@@ -138,7 +138,7 @@
 
                     {{-- ===== Acciones (dejas tu bloque actual) ===== --}}
                     <div class="d-flex flex-wrap gap-2 justify-content-start mb-2">
-                        <a class="btn btn-sm btn-success" href="{{ route('departures.add') }}">
+                        <a class="btn btn-sm btn-success" href="{{ route('departures.add') }}" target="_blank">
                             <i class="ti ti-square-plus f-s-12"></i> Nuevo
                         </a>
                         @hasanyrole('director|gerente')

@@ -126,7 +126,7 @@
 
                                         <!-- Nuevo -->
                                         <a href="{{ route('cash.incomes.create') }}"
-                                           class="btn btn-sm btn-success flex-shrink-0">
+                                           class="btn btn-sm btn-success flex-shrink-0" target="_blank">
                                             <i class="ti ti-square-plus f-s-12"></i> Nuevo
                                         </a>
 

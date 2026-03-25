@@ -165,7 +165,7 @@
                                         wire:target="applyDate">
                                     <i class="ti ti-search f-s-12"></i>
                                 </button>
-                                <a class="btn btn-sm btn-success" href="{{ route('payments.add') }}">
+                                <a class="btn btn-sm btn-success" href="{{ route('payments.add') }}" target="_blank">
                                     <i class="ti ti-square-plus f-s-12"></i> Nuevo
                                 </a>
                                 @hasanyrole('director|gerente')

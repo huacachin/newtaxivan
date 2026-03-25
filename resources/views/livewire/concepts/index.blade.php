@@ -57,7 +57,7 @@
 
                                 <!-- Botón a la derecha (ancho intrínseco) -->
                                 <a class="btn btn-sm btn-primary flex-shrink-0"
-                                   href="{{ route('settings.concepts.create') }}">
+                                   href="{{ route('settings.concepts.create') }}" target="_blank">
                                     <i class="ti ti-square-plus f-s-12"></i> Nuevo
                                 </a>
 
