@@ -244,7 +244,7 @@ window.addEventListener('url-open', function (event) {
     var url = (event.detail && event.detail[0] && event.detail[0].url)
            || (event.detail && event.detail.url);
     if (!url) return;
-    window.open(url);
+    window.location.href = url;
 });
 
 window.addEventListener('go-back', function (e) {

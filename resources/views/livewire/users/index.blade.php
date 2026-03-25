@@ -94,18 +94,18 @@
                                         </td>
                                         <td class="text-nowrap">
                                             {{-- Editar datos --}}
-                                            <button class="btn btn-sm btn-outline-success me-1"
-                                                    title="Editar datos"
-                                                    wire:click="openEditWindow({{ $user->id }})">
+                                            <a class="btn btn-sm btn-outline-success me-1"
+                                               title="Editar datos"
+                                               href="{{ route('settings.users.edit', $user->id) }}">
                                                 <i class="ti ti-edit"></i>
-                                            </button>
+                                            </a>
 
                                             {{-- Rol & Permisos --}}
-                                            <button class="btn btn-sm btn-outline-dark"
-                                                    title="Rol & Permisos"
-                                                    wire:click="openPermsWindow({{ $user->id }})">
+                                            <a class="btn btn-sm btn-outline-dark"
+                                               title="Rol & Permisos"
+                                               href="{{ route('settings.users.perms', $user->id) }}">
                                                 <i class="ti ti-shield-lock"></i>
-                                            </button>
+                                            </a>
 
                                             @hasanyrole('director|gerente')
                                             <button class="btn btn-sm btn-outline-danger ms-1"
