@@ -65,6 +65,7 @@
                             <thead class="bg-primary">
                             <tr>
                                 <th>#</th>
+                                <th>Orden</th>
                                 <th>Nombre</th>
                                 <th>Estado</th>
                                 @hasanyrole('director|gerente')
@@ -76,6 +77,7 @@
                             @forelse($headquarters as $hq)
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
+                                    <td>{{ $hq->sort_order }}</td>
                                     <td>{{ $hq->name }}</td>
                                     <td>
                                         <span class="badge {{ $hq->status === 'active' ? 'bg-success' : 'bg-secondary' }}">
@@ -92,12 +94,13 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="py-4 text-muted">No se encontraron resultados</td>
+                                    <td colspan="5" class="py-4 text-muted">No se encontraron resultados</td>
                                 </tr>
                             @endforelse
                             </tbody>
                             <tfoot class="bg-primary">
                             <tr>
+                                <td></td>
                                 <td></td>
                                 <td class="text-start">TOTAL</td>
                                 <td colspan="2" class="num">{{ $headquarters->count() }}</td>

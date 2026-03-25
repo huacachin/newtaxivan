@@ -34,6 +34,16 @@
                     @endif
 
                     <div class="row">
+                        <div class="col-md-auto">
+                            <div class="mb-3">
+                                <label class="form-label">Orden (*)</label>
+                                <input type="number" class="form-control form-control-sm @error('sort_order') is-invalid @enderror"
+                                       placeholder="0"
+                                       wire:model.defer="sort_order">
+                                @error('sort_order') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+
                         <div class="col-md-4">
                             <div class="mb-3">
                                 <label class="form-label">Nombre (*)</label>

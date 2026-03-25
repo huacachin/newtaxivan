@@ -31,12 +31,12 @@ class HeadquartersReportExport implements
 
         return Headquarter::query()
             ->when($search !== '', fn ($q) => $q->where('name', 'like', "%{$search}%"))
-            ->orderBy('name');
+            ->orderBy('sort_order');
     }
 
     public function headings(): array
     {
-        return ['Item', 'Nombre', 'Estado'];
+        return ['Item', 'Orden', 'Nombre', 'Estado'];
     }
 
     public function map($hq): array
@@ -45,6 +45,7 @@ class HeadquartersReportExport implements
 
         return [
             $this->rowNum,
+            $hq->sort_order,
             $hq->name,
             $hq->status === 'active' ? 'Activo' : 'Inactivo',
         ];
@@ -54,8 +55,9 @@ class HeadquartersReportExport implements
     {
         return [
             'A' => 6.0,
-            'B' => 30.0,
-            'C' => 12.0,
+            'B' => 8.0,
+            'C' => 30.0,
+            'D' => 12.0,
         ];
     }
 
@@ -79,7 +81,7 @@ class HeadquartersReportExport implements
                 $ws->getDefaultRowDimension()->setRowHeight(15);
                 $ws->insertNewRowBefore(1, 1);
 
-                $lastCol = 'C';
+                $lastCol = 'D';
 
                 $ws->mergeCells("A1:{$lastCol}1");
                 $ws->setCellValue('A1', 'SUCURSALES');

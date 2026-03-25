@@ -11,8 +11,9 @@ class Edit extends Component
     public Headquarter $headquarter;
     public int $headquarterId;
 
-    public string $name   = '';
-    public string $status = 'active';
+    public string $name       = '';
+    public int    $sort_order = 0;
+    public string $status     = 'active';
 
     public function mount(int $id): void
     {
@@ -23,13 +24,15 @@ class Edit extends Component
         $this->headquarter   = Headquarter::findOrFail($id);
         $this->headquarterId = $id;
 
-        $this->name   = (string) $this->headquarter->name;
-        $this->status = (string) $this->headquarter->status;
+        $this->name       = (string) $this->headquarter->name;
+        $this->sort_order = (int) $this->headquarter->sort_order;
+        $this->status     = (string) $this->headquarter->status;
     }
 
     protected $rules = [
-        'name'   => 'required|string|max:150',
-        'status' => 'required|in:active,inactive',
+        'name'       => 'required|string|max:150',
+        'sort_order' => 'required|integer|min:0',
+        'status'     => 'required|in:active,inactive',
     ];
 
     public function questionDelete(int $id): void
@@ -55,8 +58,9 @@ class Edit extends Component
             $this->validate();
 
             $this->headquarter->update([
-                'name'   => $this->name,
-                'status' => $this->status,
+                'name'       => $this->name,
+                'sort_order' => $this->sort_order,
+                'status'     => $this->status,
             ]);
 
             session()->flash('headquarter_success', 'Sucursal actualizada correctamente.');

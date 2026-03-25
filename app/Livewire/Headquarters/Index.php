@@ -17,7 +17,7 @@ class Index extends Component
             ->when($term !== '', fn ($q) =>
                 $q->where('name', 'like', "%{$term}%")
             )
-            ->orderBy('name')
+            ->orderBy('sort_order')
             ->get();
     }
 

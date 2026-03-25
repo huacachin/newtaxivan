@@ -7,8 +7,9 @@ use Livewire\Component;
 
 class Create extends Component
 {
-    public string $name   = '';
-    public string $status = 'active';
+    public string $name       = '';
+    public int    $sort_order = 0;
+    public string $status     = 'active';
 
     public function mount(): void
     {
@@ -19,14 +20,16 @@ class Create extends Component
 
     public function clear(): void
     {
-        $this->name   = '';
-        $this->status = 'active';
+        $this->name       = '';
+        $this->sort_order = 0;
+        $this->status     = 'active';
         $this->resetErrorBag();
     }
 
     protected $rules = [
-        'name'   => 'required|string|max:150',
-        'status' => 'required|in:active,inactive',
+        'name'       => 'required|string|max:150',
+        'sort_order' => 'required|integer|min:0',
+        'status'     => 'required|in:active,inactive',
     ];
 
     public function save(): void
@@ -35,8 +38,9 @@ class Create extends Component
             $this->validate();
 
             Headquarter::create([
-                'name'   => $this->name,
-                'status' => $this->status,
+                'name'       => $this->name,
+                'sort_order' => $this->sort_order,
+                'status'     => $this->status,
             ]);
 
             session()->flash('headquarter_success', 'Sucursal creada correctamente.');

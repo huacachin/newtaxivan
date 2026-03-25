@@ -8,6 +8,7 @@ class Headquarter extends Model
 {
     protected $fillable = [
         'name',
+        'sort_order',
         'status'
     ];
     public function users()
