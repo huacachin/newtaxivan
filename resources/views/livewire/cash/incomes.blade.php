@@ -170,8 +170,9 @@
                                 <tr wire:key="exp-{{ $i->id }}">
                                     <td data-label="Opciones">
                                         @hasanyrole('director|gerente')
-                                        <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
-                                           wire:click="openEditWindow({{ $i->id }})"></i>
+                                        <a href="{{ route('cash.incomes.edit', $i->id) }}">
+                                            <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"></i>
+                                        </a>
                                         @endhasanyrole
                                     </td>
                                     <td>{{ $incomes->firstItem() + $loop->index }}</td>

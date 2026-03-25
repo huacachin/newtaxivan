@@ -39,10 +39,10 @@
                                    </div>
 
                                    <!-- Botón a la derecha -->
-                                   <button class="btn btn-sm btn-primary flex-shrink-0"
-                                           wire:click="openAddWindow">
+                                   <a class="btn btn-sm btn-primary flex-shrink-0"
+                                      href="{{ route('settings.users.create') }}">
                                        <i class="ti ti-square-plus f-s-12"></i> Nuevo
-                                   </button>
+                                   </a>
 
                                    <button class="btn btn-sm btn-primary flex-shrink-0"
                                            wire:click="export">

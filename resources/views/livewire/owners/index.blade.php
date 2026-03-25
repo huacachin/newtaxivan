@@ -63,10 +63,10 @@
                                 </div>
 
                                 <!-- Botones -->
-                                <button class="btn btn-sm btn-primary flex-shrink-0"
-                                        wire:click="openAddWindow">
+                                <a class="btn btn-sm btn-primary flex-shrink-0"
+                                   href="{{ route('settings.owners.create') }}">
                                     <i class="ti ti-square-plus f-s-12"></i> Nuevo
-                                </button>
+                                </a>
 
                                 <button class="btn btn-sm btn-primary flex-shrink-0"
                                         wire:click="export">
@@ -100,8 +100,9 @@
                                     <tr>
                                         @hasanyrole('director|gerente')
                                         <td>
-                                            <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
-                                               wire:click="openEditWindow({{ $owner->id }})"></i>
+                                            <a href="{{ route('settings.owners.edit', $owner->id) }}">
+                                                <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"></i>
+                                            </a>
                                         </td>
                                         @endhasanyrole
                                         <td>{{ $loop->iteration }}</td>
@@ -165,8 +166,9 @@
                                 <tr>
                                     @hasanyrole('director|gerente')
                                     <td width="50">
-                                        <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
-                                           wire:click="openEditWindow({{ $owner->id }})"></i>
+                                        <a href="{{ route('settings.owners.edit', $owner->id) }}">
+                                            <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"></i>
+                                        </a>
                                     </td>
                                     @endhasanyrole
                                     <td>{{ $loop->iteration }}</td>

@@ -138,9 +138,9 @@
 
                     {{-- ===== Acciones (dejas tu bloque actual) ===== --}}
                     <div class="d-flex flex-wrap gap-2 justify-content-start mb-2">
-                        <button class="btn btn-sm btn-success" wire:click="openAddWindow">
+                        <a class="btn btn-sm btn-success" href="{{ route('departures.add') }}">
                             <i class="ti ti-square-plus f-s-12"></i> Nuevo
-                        </button>
+                        </a>
                         @hasanyrole('director|gerente')
                         <button wire:click="reportMonthly" class="btn btn-sm btn-primary">
                             <i class="ti ti-report-analytics f-s-12"></i> Mensual
@@ -214,7 +214,7 @@
                                         @hasanyrole('director|gerente')
                                             @if(!$groupMode)
                                                 <td class="text-center ">
-                                                    <i  class="ti ti-edit f-s-18 text-success" wire:click="openEditWindow({{ $d->id }})"></i>
+                                                    <a href="{{ route('departures.edit', $d->id) }}"><i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"></i></a>
                                                 </td>
                                             @endif
                                         @endhasanyrole
@@ -338,8 +338,7 @@
                                     @hasanyrole('director|gerente')
                                         @if(!$groupMode)
                                             <td class="text-center title-modules">
-                                                <i  class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
-                                                    wire:click="openEditWindow({{ $d->id }})"></i>
+                                                <a href="{{ route('departures.edit', $d->id) }}"><i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"></i></a>
                                             </td>
                                         @endif
                                     @endhasanyrole
@@ -438,7 +437,7 @@
     {{-- Overlay de carga scopeado (ya no targetea fromDate/toDate) --}}
     <div class="screen-overlay"
          wire:loading.delay.flex
-         wire:target="openAddWindow,openEditWindow,searchType,applyDateRange,groupMode,export,toggleGroup,save,update,reportMonthly,reportRmp,reportStats">
+         wire:target="searchType,applyDateRange,groupMode,export,toggleGroup,save,update,reportMonthly,reportRmp,reportStats">
         <div class="text-center">
             <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
             <div class="mt-2 text-white fw-semibold">Cargando…</div>

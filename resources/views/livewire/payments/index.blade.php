@@ -165,9 +165,9 @@
                                         wire:target="applyDate">
                                     <i class="ti ti-search f-s-12"></i>
                                 </button>
-                                <button class="btn btn-sm btn-success" wire:click="openAddWindow">
+                                <a class="btn btn-sm btn-success" href="{{ route('payments.add') }}">
                                     <i class="ti ti-square-plus f-s-12"></i> Nuevo
-                                </button>
+                                </a>
                                 @hasanyrole('director|gerente')
                                 <button class="btn btn-sm btn-primary" wire:click="daily">
                                     <i class="ti ti-report-analytics f-s-12"></i> Diario
@@ -215,8 +215,9 @@
                                 <tr {{ $p->type === 'RETRASO' ? 'class=row-retraso' : '' }}>
                                     @hasanyrole('director|gerente')
                                     <td width="50">
-                                        <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
-                                           wire:click="openEditWindow({{ $p->id }})"></i>
+                                        <a href="{{ route('payments.edit', $p->id) }}">
+                                            <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"></i>
+                                        </a>
                                     </td>
                                     @endhasanyrole
                                     <td>{{ $payments->firstItem() + $loop->index }}</td>
@@ -264,7 +265,7 @@
     </div>
     <div class="screen-overlay"
          wire:loading.delay.flex
-         wire:target="openAddWindow,openEditWindow,applyDate,export,save,update,daily,monthly,stats,filter,search,headquarter_id,type,gotoPage,previousPage,nextPage">
+         wire:target="applyDate,export,save,update,daily,monthly,stats,filter,search,headquarter_id,type,gotoPage,previousPage,nextPage">
         <div class="text-center">
             <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
             <div class="mt-2 text-white fw-semibold">Cargando…</div>

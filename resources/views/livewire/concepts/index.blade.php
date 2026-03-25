@@ -56,10 +56,10 @@
                                 </div>
 
                                 <!-- Botón a la derecha (ancho intrínseco) -->
-                                <button class="btn btn-sm btn-primary flex-shrink-0"
-                                        wire:click="openAddModal">
+                                <a class="btn btn-sm btn-primary flex-shrink-0"
+                                   href="{{ route('settings.concepts.create') }}">
                                     <i class="ti ti-square-plus f-s-12"></i> Nuevo
-                                </button>
+                                </a>
 
                                 <button class="btn btn-sm btn-primary flex-shrink-0"
                                         wire:click="export">
@@ -91,8 +91,9 @@
                                         <td>{{ ucfirst($concept->type) }}</td>
                                         <td>
                                             @hasanyrole('director|gerente')
-                                            <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
-                                               wire:click="openEditWindow({{ $concept->id }})"></i>
+                                            <a href="{{ route('settings.concepts.edit', $concept->id) }}">
+                                                <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"></i>
+                                            </a>
                                             @endhasanyrole
                                         </td>
                                     </tr>

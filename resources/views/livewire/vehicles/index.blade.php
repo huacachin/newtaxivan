@@ -94,10 +94,10 @@
                                     </div>
 
                                     <!-- Botones -->
-                                    <button class="btn btn-sm btn-primary flex-shrink-0"
-                                            wire:click="openAddWindow">
+                                    <a class="btn btn-sm btn-primary flex-shrink-0"
+                                       href="{{ route('settings.vehicles.create') }}">
                                         <i class="ti ti-square-plus f-s-12"></i> Nuevo
-                                    </button>
+                                    </a>
 
                                     <button id="down"
                                             class="btn btn-sm btn-primary flex-shrink-0">
@@ -153,9 +153,9 @@
                                     <tr>
                                         @hasanyrole('director|gerente')
                                         <td>
-                                            <i class="ti ti-edit f-s-18 text-success"
-                                               style="cursor:pointer"
-                                               wire:click="openEditWindow({{ $vehicle->id }})"></i>
+                                            <a href="{{ route('settings.vehicles.edit', $vehicle->id) }}">
+                                                <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"></i>
+                                            </a>
                                         </td>
                                         @endhasanyrole
 
