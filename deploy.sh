@@ -11,12 +11,6 @@ git pull origin main
 echo "📦 Instalando dependencias PHP..."
 composer install --no-dev --optimize-autoloader --no-interaction
 
-echo "📦 Instalando dependencias NPM..."
-npm ci
-
-echo "🔨 Compilando assets..."
-npm run build
-
 echo "🗄️ Ejecutando migraciones..."
 php artisan migrate --force
 
