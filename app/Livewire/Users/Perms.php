@@ -50,6 +50,42 @@ class Perms extends Component
             }
         }
         $sidebarOrder = ['dashboard', 'configuracion', 'departures', 'payments', 'debts', 'cash'];
+        $itemsOrder = [
+            'configuracion' => [
+                'configuracion.vehicles',
+                'configuracion.owners',
+                'configuracion.drivers',
+                'configuracion.cost-per-plate',
+                'configuracion.users',
+                'configuracion.concepts',
+                'configuracion.headquarters',
+            ],
+            'debts' => ['debts.days', 'debts.monthly'],
+            'cash'  => ['cash.incomes', 'cash.expenses', 'cash.reports'],
+        ];
+
+        // Ordenar items dentro de cada grupo
+        foreach ($itemsOrder as $groupKey => $order) {
+            if (!isset($groups[$groupKey])) continue;
+            $items = $groups[$groupKey]['items'];
+            $sorted = [];
+            foreach ($order as $key) {
+                foreach ($items as $item) {
+                    if ($item['key'] === $key) {
+                        $sorted[] = $item;
+                        break;
+                    }
+                }
+            }
+            foreach ($items as $item) {
+                if (!in_array($item['key'], $order)) {
+                    $sorted[] = $item;
+                }
+            }
+            $groups[$groupKey]['items'] = $sorted;
+        }
+
+        // Ordenar grupos según sidebar
         $ordered = [];
         foreach ($sidebarOrder as $key) {
             if (isset($groups[$key])) {
