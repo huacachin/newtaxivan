@@ -88,7 +88,7 @@
                               <label class="form-label mb-1">Exonerado (S/)</label>
                               <input type="number" step="0.01"
                                      class="form-control form-control-sm text-end @error('exonerateInput') is-invalid @enderror"
-                                     style="background-color: #fff3cd;"
+                                     style="background-color: yellow;"
                                      wire:model.live.debounce.400ms="exonerateInput">
                               @error('exonerateInput')
                               <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -111,7 +111,7 @@
                               <label class="form-label mb-1">Detalle exoneración</label>
                               <input type="text"
                                      class="form-control form-control-sm @error('detailInput') is-invalid @enderror"
-                                     style="background-color: #fff3cd;"
+                                     style="background-color: yellow;"
                                      wire:model.live.defer="detailInput"
                                      placeholder="Motivo / detalle">
                               @error('detailInput')
