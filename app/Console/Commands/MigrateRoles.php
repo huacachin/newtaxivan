@@ -32,6 +32,11 @@ class MigrateRoles extends Command
         $total = 0;
 
         foreach ($map as $oldRole => $newRole) {
+            if (!Role::where('name', $oldRole)->where('guard_name', $guard)->exists()) {
+                $this->line("  Rol '{$oldRole}' no existe, omitido");
+                continue;
+            }
+
             $users = User::role($oldRole)->get();
 
             foreach ($users as $user) {
