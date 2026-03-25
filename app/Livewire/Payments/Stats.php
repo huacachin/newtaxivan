@@ -82,7 +82,7 @@ class Stats extends Component
         ];
 
         // Pre-armar estructura con TODOS los controllers y sus sedes
-        $controllers = User::role('controller')
+        $controllers = User::role('controlador')
             ->with('headquarters:id,name')
             ->orderBy('name')
             ->get(['id','name']);

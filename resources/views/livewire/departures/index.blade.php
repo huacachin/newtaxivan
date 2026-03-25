@@ -71,7 +71,7 @@
                                             <label class="form-check-label" for="rbPlate">Placa</label>
                                         </div>
 
-                                        @hasanyrole('superadmin|admin')
+                                        @hasanyrole('director|gerente')
                                         <div class="form-check form-check-inline">
                                             <input class="form-check-input mg-e-4"
                                                    type="radio"
@@ -141,7 +141,7 @@
                         <button class="btn btn-sm btn-success" wire:click="openAddWindow">
                             <i class="ti ti-square-plus f-s-12"></i> Nuevo
                         </button>
-                        @hasanyrole('superadmin|admin')
+                        @hasanyrole('director|gerente')
                         <button wire:click="reportMonthly" class="btn btn-sm btn-primary">
                             <i class="ti ti-report-analytics f-s-12"></i> Mensual
                         </button>
@@ -176,7 +176,7 @@
 
                             <thead class="text-center bg-primary" >
                             <tr>
-                                @hasanyrole('superadmin|admin')
+                                @hasanyrole('director|gerente')
                                 @if(!$groupMode)
                                     <th rowspan="2"></th>
                                 @endif
@@ -211,7 +211,7 @@
                             @if($rows->count() > 0)
                                 @foreach($rows as $d)
                                     <tr>
-                                        @hasanyrole('superadmin|admin')
+                                        @hasanyrole('director|gerente')
                                             @if(!$groupMode)
                                                 <td class="text-center ">
                                                     <i  class="ti ti-edit f-s-18 text-success" wire:click="openEditWindow({{ $d->id }})"></i>
@@ -281,7 +281,7 @@
 
                             <tfoot class="text-center f-w-600 bg-primary">
                             <tr>
-                                <td colspan="{{ (!$groupMode) ? (auth()->user()?->hasAnyRole('superadmin','admin') ? 8 : 7) : 7 }}">TOTAL</td>
+                                <td colspan="{{ (!$groupMode) ? (auth()->user()?->hasAnyRole('director','gerente') ? 8 : 7) : 7 }}">TOTAL</td>
                                 <td>{{ number_format($totals->times_total ?? 0) }}</td>
                                 <td>{{ number_format($totals->times_total ?? 0) }}</td>
                                 <td>{{ number_format($totals->price_total ?? 0, 2) }}</td>
@@ -301,7 +301,7 @@
                         <table class=" table table-bordered table-striped   p-0 table-hover">
                             <thead class="text-center bg-primary">
                             <tr>
-                                @hasanyrole('superadmin|admin')
+                                @hasanyrole('director|gerente')
                                     @if(!$groupMode)
                                         <th rowspan="2"></th>
                                     @endif
@@ -335,7 +335,7 @@
                             <tbody wire:key="dep-support-tbody-{{ $groupMode ? 'g' : 'd' }}">
                             @forelse($supportRows as $d)
                                 <tr class="text-center ">
-                                    @hasanyrole('superadmin|admin')
+                                    @hasanyrole('director|gerente')
                                         @if(!$groupMode)
                                             <td class="text-center title-modules">
                                                 <i  class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
@@ -393,7 +393,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td  colspan="{{ auth()->user()?->hasAnyRole('superadmin','admin') ? 15 : 14 }}">No se encontraron resultados</td>
+                                    <td  colspan="{{ auth()->user()?->hasAnyRole('director','gerente') ? 15 : 14 }}">No se encontraron resultados</td>
                                 </tr>
                             @endforelse
                             </tbody>
@@ -401,7 +401,7 @@
                             <tfoot class="text-center f-w-600  bg-primary"
                                    wire:key="dep-support-tfoot-{{ $groupMode ? 'g' : 'd' }}">
                             <tr>
-                                <td class="text-end pa-e-6" colspan="{{ (!$groupMode) ? (auth()->user()?->hasAnyRole('superadmin','admin') ? 8 : 7) : 6 }}">TOTAL</td>
+                                <td class="text-end pa-e-6" colspan="{{ (!$groupMode) ? (auth()->user()?->hasAnyRole('director','gerente') ? 8 : 7) : 6 }}">TOTAL</td>
                                 <td>{{ number_format((float) data_get($supportTotals, 'times_total', 0)) }}</td>
                                 <td>{{ number_format((float) data_get($supportTotals, 'times_total', 0)) }}</td>
                                 <td>{{ number_format((float) data_get($supportTotals, 'price_total', 0), 2) }}</td>
@@ -411,7 +411,7 @@
                                 <td>-</td>
                             </tr>
                             <tr>
-                                <td class="text-end pa-e-6" colspan="{{ (!$groupMode) ? (auth()->user()?->hasAnyRole('superadmin','admin') ? 8 : 7) : 6 }}">TOTAL GENERAL</td>
+                                <td class="text-end pa-e-6" colspan="{{ (!$groupMode) ? (auth()->user()?->hasAnyRole('director','gerente') ? 8 : 7) : 6 }}">TOTAL GENERAL</td>
                                 {{-- Empresa --}}
                                 <td>{{ number_format($grandTotals->times_total ?? 0) }}</td>
                                 <td>{{ number_format($grandTotals->times_total ?? 0) }}</td>

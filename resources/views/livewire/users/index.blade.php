@@ -77,7 +77,7 @@
                                         <td>{{ $user->username }}</td>
                                         <td>{{ $user->phone ?: '—' }}</td>
                                         <td>
-                                            @if(optional($user->roles->first())->name === 'admin')
+                                            @if(in_array(optional($user->roles->first())->name, ['director','gerente']))
                                                 —
                                             @else
                                                 {{ $user->headquarters->pluck('name')->implode(', ') ?: '—' }}
@@ -100,16 +100,14 @@
                                                 <i class="ti ti-edit"></i>
                                             </button>
 
-                                            {{-- Rol & Permisos (no aplica para admin) --}}
-                                            @if(optional($user->roles->first())->name !== 'admin')
+                                            {{-- Rol & Permisos --}}
                                             <button class="btn btn-sm btn-outline-dark"
                                                     title="Rol & Permisos"
                                                     wire:click="openPermsWindow({{ $user->id }})">
                                                 <i class="ti ti-shield-lock"></i>
                                             </button>
-                                            @endif
 
-                                            @hasanyrole('superadmin|admin')
+                                            @hasanyrole('director|gerente')
                                             <button class="btn btn-sm btn-outline-danger ms-1"
                                                     title="Desactivar usuario"
                                                     wire:click="questionDelete({{ $user->id }})">

@@ -122,7 +122,7 @@ class Incomes extends Component
             ->orderBy('id');
 
         // --- Filtro por rol: controller ve solo lo suyo; admin ve todo ---
-        if ($user && method_exists($user, 'hasRole') && $user->hasRole('controller')) {
+        if ($user && method_exists($user, 'hasRole') && $user->hasRole('controlador')) {
             $q->where('user_id', $user->id);
         }
         // Nota: si no es controller (p.ej. admin), no se aplica restricción adicional.
@@ -179,7 +179,7 @@ class Incomes extends Component
         // Refuerzo: si es controller, solo puede abrir sus registros
         $query = Income::with('user:id,name');
         $user  = Auth::user();
-        if ($user && method_exists($user, 'hasRole') && $user->hasRole('controller')) {
+        if ($user && method_exists($user, 'hasRole') && $user->hasRole('controlador')) {
             $query->where('user_id', $user->id);
         }
 
@@ -245,7 +245,7 @@ class Incomes extends Component
         // Refuerzo: limitar edición si es controller
         $query = Income::query();
         $user  = Auth::user();
-        if ($user && method_exists($user, 'hasRole') && $user->hasRole('controller')) {
+        if ($user && method_exists($user, 'hasRole') && $user->hasRole('controlador')) {
             $query->where('user_id', $user->id);
         }
 

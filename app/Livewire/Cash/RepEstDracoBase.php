@@ -255,8 +255,8 @@ class RepEstDracoBase extends Component
             return $q->pluck('u.id')->map(fn($v)=>(int)$v)->unique()->values()->all();
         };
 
-        $this->controllerIds = $getIds('controller');
-        $this->adminIds      = $getIds('admin');
+        $this->controllerIds = $getIds('controlador');
+        $this->adminIds      = $getIds('administrador');
     }
 
     protected function monthNames(): array

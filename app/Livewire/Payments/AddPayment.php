@@ -107,7 +107,7 @@ class AddPayment extends Component
         $needle = mb_strtolower($needle);
         return $u->getRoleNames()->map(fn($r)=>mb_strtolower($r))->contains($needle);
     }
-    private function isAdmin(): bool { return $this->userHasRole('superadmin') || $this->userHasRole('admin'); }
+    private function isAdmin(): bool { return $this->userHasRole('director') || $this->userHasRole('gerente'); }
 
     private function loadUserHeadquarters(): void
     {

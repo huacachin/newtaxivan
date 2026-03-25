@@ -169,7 +169,7 @@
                             @forelse($incomes as $i)
                                 <tr wire:key="exp-{{ $i->id }}">
                                     <td data-label="Opciones">
-                                        @hasanyrole('superadmin|admin')
+                                        @hasanyrole('director|gerente')
                                         <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
                                            wire:click="openEditWindow({{ $i->id }})"></i>
                                         @endhasanyrole

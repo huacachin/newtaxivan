@@ -79,7 +79,7 @@ class PaymentsExport implements
 
         // === Restricción por rol: controller => solo sus pagos; admin => todos ===
         $user = Auth::user();
-        if ($user && method_exists($user, 'hasRole') && $user->hasRole('controller')) {
+        if ($user && method_exists($user, 'hasRole') && $user->hasRole('controlador')) {
             $q->where('user_id', $user->id);
         }
 

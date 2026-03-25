@@ -327,7 +327,7 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithColumnWidths, Wi
 
         // Restricción por rol (controller -> solo sus registros)
         $user = Auth::user();
-        if ($user && method_exists($user, 'hasRole') && $user->hasRole('controller')) {
+        if ($user && method_exists($user, 'hasRole') && $user->hasRole('controlador')) {
             $q->where('d.user_id', $user->id);
         }
 
@@ -372,7 +372,7 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithColumnWidths, Wi
 
         // Restricción por rol (controller -> solo sus registros)
         $user = Auth::user();
-        if ($user && method_exists($user, 'hasRole') && $user->hasRole('controller')) {
+        if ($user && method_exists($user, 'hasRole') && $user->hasRole('controlador')) {
             $q->where('d.user_id', $user->id);
         }
 

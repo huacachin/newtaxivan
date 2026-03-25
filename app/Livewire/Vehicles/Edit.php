@@ -108,7 +108,7 @@ class Edit extends Component
     #[On('register_destroy')]
     public function delete(int $id): void
     {
-        if (!auth()->user()?->hasAnyRole('superadmin','admin')) {
+        if (!auth()->user()?->hasAnyRole('director','gerente')) {
             abort(403);
         }
         Vehicle::find($id)->update(['status' => 'inactive']);

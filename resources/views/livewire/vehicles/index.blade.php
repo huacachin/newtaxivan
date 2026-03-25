@@ -119,7 +119,7 @@
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">
                             <tr>
-                                @hasanyrole('superadmin|admin')
+                                @hasanyrole('director|gerente')
                                 <th class="sticky-col">Acción</th>
                                 @endhasanyrole
                                 <th>Item</th>
@@ -151,7 +151,7 @@
                                         elseif ($cond === 'DT') { $condClass .= 'cond-DT'; }
                                     @endphp
                                     <tr>
-                                        @hasanyrole('superadmin|admin')
+                                        @hasanyrole('director|gerente')
                                         <td>
                                             <i class="ti ti-edit f-s-18 text-success"
                                                style="cursor:pointer"
@@ -194,7 +194,7 @@
                                 @endforeach
                             @else
                                 <tr>
-                                    @php $colspan = 12 + ($status === "inactive" ? 1 : 0) + (auth()->user()->hasAnyRole('superadmin','admin') ? 1 : 0); @endphp
+                                    @php $colspan = 12 + ($status === "inactive" ? 1 : 0) + (auth()->user()->hasAnyRole('director','gerente') ? 1 : 0); @endphp
                                     <td colspan="{{ $colspan }}">No se encontrarón resultados</td>
                                 </tr>
                             @endif

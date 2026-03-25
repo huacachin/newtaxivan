@@ -31,7 +31,7 @@ class UsersReportExport implements
 
         return User::query()
             ->where('status', 'active')
-            ->whereDoesntHave('roles', fn ($q) => $q->where('name', 'admin'))
+            ->whereDoesntHave('roles', fn ($q) => $q->where('name', 'director'))
             ->when($search !== '', function ($q) use ($search) {
                 $q->where(function ($w) use ($search) {
                     $w->where('name', 'like', "%{$search}%")

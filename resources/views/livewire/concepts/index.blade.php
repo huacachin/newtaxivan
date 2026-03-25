@@ -90,7 +90,7 @@
                                         <td>{{ $concept->name }}</td>
                                         <td>{{ ucfirst($concept->type) }}</td>
                                         <td>
-                                            @hasanyrole('superadmin|admin')
+                                            @hasanyrole('director|gerente')
                                             <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"
                                                wire:click="openEditWindow({{ $concept->id }})"></i>
                                             @endhasanyrole

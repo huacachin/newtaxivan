@@ -270,7 +270,7 @@ class PaymentsStatsExport implements FromArray, WithHeadings, WithEvents, WithTi
         $end   = $start->endOfMonth();
 
         // ALL controllers with their assigned HQs
-        $controllers = User::role('controller')
+        $controllers = User::role('controlador')
             ->with('headquarters:id,name')
             ->orderBy('name')
             ->get(['id', 'name']);

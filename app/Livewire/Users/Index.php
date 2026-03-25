@@ -350,10 +350,18 @@ class Index extends Component
     #[On('register_destroy')]
     public function destroy(int $id): void
     {
-        if (!auth()->user()?->hasAnyRole('superadmin','admin')) {
+        if (!auth()->user()?->hasAnyRole('director','gerente')) {
             abort(403);
         }
-        User::findOrFail($id)->update(['status' => 'inactive']);
+
+        $user = User::findOrFail($id);
+
+        if ($user->hasRole('director')) {
+            $this->dispatch('errorAlert', ['message' => 'No se puede eliminar a un usuario con rol Director']);
+            return;
+        }
+
+        $user->update(['status' => 'inactive']);
         $this->dispatch('successAlert', ['message' => 'Usuario desactivado correctamente']);
     }
 

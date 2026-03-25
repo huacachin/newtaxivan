@@ -43,7 +43,7 @@ class ExpensesExport implements
 
         // === Restricción por rol: controller solo sus propios registros ===
         $user = Auth::user();
-        if ($user && method_exists($user, 'hasRole') && $user->hasRole('controller')) {
+        if ($user && method_exists($user, 'hasRole') && $user->hasRole('controlador')) {
             $q->where('user_id', $user->id);
         }
         // Nota: admin (u otros) ven todo sin filtro extra.

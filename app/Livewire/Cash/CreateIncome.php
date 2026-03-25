@@ -24,7 +24,7 @@ class CreateIncome extends Component
 
     public function mount(): void
     {
-        if (!auth()->user()?->hasAnyRole('superadmin','admin')) {
+        if (!auth()->user()?->hasAnyRole('director','gerente')) {
             abort(403);
         }
 

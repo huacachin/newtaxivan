@@ -230,11 +230,11 @@ class Index extends Component
     /** Atajos legibles (cacheados tras primera llamada) */
     private function isAdmin(): bool
     {
-        return $this->cachedIsAdmin ??= ($this->userHasRole('superadmin') || $this->userHasRole('admin'));
+        return $this->cachedIsAdmin ??= ($this->userHasRole('director') || $this->userHasRole('gerente'));
     }
     private function isController(): bool
     {
-        return $this->cachedIsController ??= $this->userHasRole('controller');
+        return $this->cachedIsController ??= $this->userHasRole('controlador');
     }
 
     /** Carga ids de sedes asignadas al usuario (N:N + primaria en users.headquarter_id) */

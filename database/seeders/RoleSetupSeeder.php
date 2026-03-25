@@ -13,14 +13,10 @@ class RoleSetupSeeder extends Seeder
         $guard = 'web';
 
         // Crea roles si no existen
-        Role::firstOrCreate(['name'=>'superadmin','guard_name'=>$guard]);
-        Role::firstOrCreate(['name'=>'admin','guard_name'=>$guard]);
-        Role::firstOrCreate(['name'=>'controller','guard_name'=>$guard]);
-
-        // Opcional: asignar un rol a un usuario específico
-        // use App\Models\User;
-        // if ($u = \App\Models\User::where('username', 'TU_USERNAME')->first()) {
-        //     $u->syncRoles(['admin']); // o ['controller']
-        // }
+        Role::firstOrCreate(['name'=>'director','guard_name'=>$guard]);
+        Role::firstOrCreate(['name'=>'gerente','guard_name'=>$guard]);
+        Role::firstOrCreate(['name'=>'administrador','guard_name'=>$guard]);
+        Role::firstOrCreate(['name'=>'supervisor','guard_name'=>$guard]);
+        Role::firstOrCreate(['name'=>'controlador','guard_name'=>$guard]);
     }
 }

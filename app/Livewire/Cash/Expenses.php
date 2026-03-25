@@ -132,7 +132,7 @@ class Expenses extends Component
             ->orderBy('id');
 
         // ---- Restricción por rol ----
-        if ($user && method_exists($user, 'hasRole') && $user->hasRole('controller')) {
+        if ($user && method_exists($user, 'hasRole') && $user->hasRole('controlador')) {
             $q->where('user_id', $user->id);
         }
         // admin (u otros roles) ven sin restricción extra.
@@ -197,7 +197,7 @@ class Expenses extends Component
         // Restringir qué registro se puede abrir si es controller
         $query = Expense::query();
         $user  = Auth::user();
-        if ($user && method_exists($user, 'hasRole') && $user->hasRole('controller')) {
+        if ($user && method_exists($user, 'hasRole') && $user->hasRole('controlador')) {
             $query->where('user_id', $user->id);
         }
         $e = $query->findOrFail($id);
@@ -289,7 +289,7 @@ class Expenses extends Component
             // Limitar edición si es controller
             $query = Expense::query();
             $user  = Auth::user();
-            if ($user && method_exists($user, 'hasRole') && $user->hasRole('controller')) {
+            if ($user && method_exists($user, 'hasRole') && $user->hasRole('controlador')) {
                 $query->where('user_id', $user->id);
             }
 
