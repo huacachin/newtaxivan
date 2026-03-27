@@ -354,22 +354,20 @@ class Index extends Component
         $now    = now(config('app.timezone','America/Lima'));
         $hour   = $this->hour ?: $now->format('H:i:s');
 
-        DB::table('departures')->insert([
-            'is_support'     => $isSupport,          // <-- se calcula aquí
+        \App\Models\Departure::create([
+            'is_support'     => $isSupport,
             'date'           => $this->date,
             'hour'           => $hour,
             'vehicle_id'     => $vehicleId,
             'legacy_plate'   => $legacyPlate,
             'headquarter_id' => $this->headquarter_id,
-            'user_id'        => $userId,             // <-- usuario autenticado
-            'times'          => 1,                   // <-- siempre 1
+            'user_id'        => $userId,
+            'times'          => 1,
             'price'          => $this->price,
             'passenger'      => $this->passenger,
             'passage'        => $this->passage,
-            'latitude'       => $this->latitude,     // <-- geoloc navegador
+            'latitude'       => $this->latitude,
             'longitude'      => $this->longitude,
-            'created_at'     => now(),
-            'updated_at'     => now(),
         ]);
 
         $this->resetForm();
@@ -413,21 +411,20 @@ class Index extends Component
         $now  = now(config('app.timezone','America/Lima'));
         $hour = $this->hour ?: $now->format('H:i:s');
 
-        DB::table('departures')->where('id', $this->depId)->update([
-            'is_support'     => $isSupport,      // <-- recalculado según placa actual
+        $departure = \App\Models\Departure::findOrFail($this->depId);
+        $departure->update([
+            'is_support'     => $isSupport,
             'date'           => $this->date,
             'hour'           => $hour,
             'vehicle_id'     => $vehicleId,
             'legacy_plate'   => $legacyPlate,
             'headquarter_id' => $this->headquarter_id,
-            // 'user_id'     => Auth::id(), // conservar histórico: dejar comentado
             'times'          => 1,
             'price'          => $this->price,
             'passenger'      => $this->passenger,
             'passage'        => $this->passage,
             'latitude'       => $this->latitude,
             'longitude'      => $this->longitude,
-            'updated_at'     => now(),
         ]);
 
         $this->resetForm();

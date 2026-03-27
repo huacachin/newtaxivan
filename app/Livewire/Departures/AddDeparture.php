@@ -191,7 +191,7 @@ class AddDeparture extends Component
         $now    = now(config('app.timezone','America/Lima'));
         $hour   = $this->hour ?: $now->format('H:i:s');
 
-        DB::table('departures')->insert([
+        \App\Models\Departure::create([
             'is_support'     => $isSupport,
             'date'           => $this->date,
             'hour'           => $hour,
@@ -205,8 +205,6 @@ class AddDeparture extends Component
             'passage'        => $this->passage,
             'latitude'       => $this->latitude,
             'longitude'      => $this->longitude,
-            'created_at'     => now(),
-            'updated_at'     => now(),
         ]);
 
         // Mostrar alert Bootstrap en la vista (sin redirección)

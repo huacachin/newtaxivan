@@ -228,7 +228,8 @@ class EditDeparture extends Component
             $now  = now(config('app.timezone','America/Lima'));
             $hour = $this->hour ?: $now->format('H:i:s');
 
-            DB::table('departures')->where('id', $this->depId)->update([
+            $departure = \App\Models\Departure::findOrFail($this->depId);
+            $departure->update([
                 'is_support'     => $isSupport,
                 'date'           => $this->date,
                 'hour'           => $hour,
@@ -241,7 +242,6 @@ class EditDeparture extends Component
                 'passage'        => $this->passage,
                 'latitude'       => $this->latitude,
                 'longitude'      => $this->longitude,
-                'updated_at'     => now(),
             ]);
 
             session()->flash('departure_success', 'Salida actualizada correctamente.');
