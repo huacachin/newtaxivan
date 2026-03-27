@@ -68,7 +68,7 @@
                     </div>
 
                     <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-sm btn-primary" wire:click="save" wire:loading.attr="disabled">
+                        <button type="button" class="btn btn-sm btn-primary" wire:click="save">
                             Agregar
                         </button>
                         <button type="button" class="btn btn-sm btn-danger" wire:click="clear">
@@ -79,15 +79,6 @@
 
                 </div>
             </div>
-        </div>
-    </div>
-
-    <div class="screen-overlay"
-         wire:loading.delay.flex
-         wire:target="save">
-        <div class="text-center">
-            <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
-            <div class="mt-2 text-white fw-semibold">Cargando…</div>
         </div>
     </div>
 

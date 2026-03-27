@@ -161,7 +161,7 @@
                             <div class="d-flex flex-wrap gap-2">
                                 <button class="btn btn-sm btn-search"
                                         wire:click="applyDate"
-                                        wire:loading.attr="disabled"
+                                       
                                         wire:target="applyDate">
                                     <i class="ti ti-search f-s-12"></i>
                                 </button>
@@ -260,14 +260,6 @@
             </div>
         </div>
 
-    </div>
-    <div class="screen-overlay"
-         wire:loading.delay.flex
-         wire:target="applyDate,export,save,update,daily,monthly,stats,filter,search,headquarter_id,type,gotoPage,previousPage,nextPage">
-        <div class="text-center">
-            <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
-            <div class="mt-2 text-white fw-semibold">Cargando…</div>
-        </div>
     </div>
 </div>
 

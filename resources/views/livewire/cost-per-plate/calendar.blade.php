@@ -43,13 +43,13 @@
                                    wire:model.live="bulk">
                             <button class="btn btn-sm btn-primary text-nowrap"
                                     wire:click="fillAll"
-                                    wire:loading.attr="disabled"
+                                   
                                     wire:target="fillAll,saveAll">
                                 <i class="ti ti-circle-check-filled f-s-12"></i><span class="d-none d-sm-inline"> Aplicar</span>
                             </button>
                             <button class="btn btn-sm btn-primary text-nowrap"
                                     wire:click="saveAll"
-                                    wire:loading.attr="disabled"
+                                   
                                     wire:target="fillAll,saveAll">
                                 <i class="ti ti-device-floppy f-s-12"></i><span class="d-none d-sm-inline"> Guardar</span>
                             </button>

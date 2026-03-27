@@ -118,7 +118,7 @@
                     </div>
 
                     <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-sm btn-primary" wire:click="save" wire:loading.attr="disabled">
+                        <button type="button" class="btn btn-sm btn-primary" wire:click="save">
                             Guardar
                         </button>
                         <button type="button" class="btn btn-sm btn-warning" wire:click="clear">
@@ -132,14 +132,6 @@
         </div>
     </div>
 
-    {{-- Overlay de carga --}}
-    <div class="screen-overlay"
-         wire:loading.delay.flex
-         wire:target="save,image_file">
-        <div class="text-center">
-            <div class="spinner-border text-light" role="status" aria-label="Cargando..."></div>
-            <div class="mt-2 text-white fw-semibold">Cargando...</div>
-        </div>
-    </div>
+    {{-- Overlay de carga --}}
 
 </div>

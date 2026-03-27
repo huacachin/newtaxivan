@@ -131,7 +131,7 @@
                       <!-- Guardar -->
                       <button class="btn btn-sm btn-primary flex-shrink-0"
                               wire:click="save"
-                              wire:loading.attr="disabled">
+                             >
                           <i class="ti ti-device-floppy f-s-12"></i> Guardar
                       </button>
 
@@ -162,7 +162,7 @@
                     <tbody>
 
                     @forelse($details as $row)
-                        <tr wire:loading.remove>
+                        <tr>
                             <td>
                                 <button  class="btn btn-sm btn-danger" wire:click="questionDelete({{ $row['id'] }})">
                                     Eliminar
@@ -176,7 +176,7 @@
                             <td>{{ $row['user'] }}</td>
                         </tr>
                     @empty
-                        <tr wire:loading.remove>
+                        <tr>
                             <td colspan="7">Sin detalles aún.</td>
                         </tr>
                     @endforelse
@@ -193,15 +193,6 @@
                 </table>
             </div>
 
-        </div>
-    </div>
-
-    <div class="screen-overlay"
-         wire:loading.delay.flex
-         wire:target="save,questionDelete">
-        <div class="text-center">
-            <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
-            <div class="mt-2 text-white fw-semibold">Cargando…</div>
         </div>
     </div>
 </div>

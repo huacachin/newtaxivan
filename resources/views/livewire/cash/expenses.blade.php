@@ -326,7 +326,7 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button class="btn btn-primary" type="submit" wire:loading.attr="disabled">
+                    <button class="btn btn-primary" type="submit">
                         Guardar
                     </button>
                     <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal">
@@ -348,15 +348,6 @@
                     <img id="lightboxImg" src="" alt="Comprobante" class="img-fluid rounded" style="max-height:80vh;">
                 </div>
             </div>
-        </div>
-    </div>
-
-    <div class="screen-overlay"
-         wire:loading.delay.flex
-         wire:target="export,applyDate,filterType">
-        <div class="text-center">
-            <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
-            <div class="mt-2 text-white fw-semibold">Cargando…</div>
         </div>
     </div>
 

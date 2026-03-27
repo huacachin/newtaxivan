@@ -87,11 +87,6 @@
                         </table>
                     </div>
 
-                    <div class="mt-2" wire:loading.delay>
-                        <span class="text-muted">
-                            <span class="spinner-border spinner-border-sm"></span> Cargando…
-                        </span>
-                    </div>
                 </div>
             </div>
         </div>

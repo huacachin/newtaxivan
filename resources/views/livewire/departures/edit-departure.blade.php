@@ -119,7 +119,7 @@
                     </div>
 
                     <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-sm btn-primary" wire:click="update" wire:loading.attr="disabled">
+                        <button type="button" class="btn btn-sm btn-primary" wire:click="update">
                             Guardar
                         </button>
                         <button type="button" class="btn btn-sm btn-danger" wire:click="questionDelete({{ $depId }})">Eliminar</button>
@@ -131,14 +131,6 @@
     </div>
 
     {{-- Overlay de carga (igual estilo) --}}
-    <div class="screen-overlay"
-         wire:loading.delay.flex
-         wire:target="update">
-        <div class="text-center">
-            <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
-            <div class="mt-2 text-white fw-semibold">Cargando…</div>
-        </div>
-    </div>
 </div>
 
 @push('datepicker_js')

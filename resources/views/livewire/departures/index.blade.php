@@ -127,7 +127,7 @@
                         <div class="col-auto d-flex align-items-end">
                             <button class="btn btn-search btn-sm"
                                     wire:click="applyDateRange"
-                                    wire:loading.attr="disabled"
+                                   
                                     wire:target="applyDateRange">
                                 <i class="ti ti-search f-s-12"></i>
                             </button>
@@ -427,14 +427,6 @@
     </div>
 
     {{-- Overlay de carga scopeado (ya no targetea fromDate/toDate) --}}
-    <div class="screen-overlay"
-         wire:loading.delay.flex
-         wire:target="searchType,applyDateRange,groupMode,export,toggleGroup,save,update,reportMonthly,reportRmp,reportStats">
-        <div class="text-center">
-            <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
-            <div class="mt-2 text-white fw-semibold">Cargando…</div>
-        </div>
-    </div>
 </div>
 
 @push('datepicker_js')

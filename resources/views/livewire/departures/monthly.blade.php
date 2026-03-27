@@ -247,13 +247,4 @@
         @endif
 
     </div>
-
-    <div class="screen-overlay"
-         wire:loading.delay.flex
-         wire:target="month,year,export">
-        <div class="text-center">
-            <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
-            <div class="mt-2 text-white fw-semibold">Cargando…</div>
-        </div>
-    </div>
 </div>

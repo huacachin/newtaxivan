@@ -1,27 +1,3 @@
-@push('styles')
-    <style>
-        /* Overlay LOCAL solo dentro del card-body */
-        .card-body { position: relative; }
-        .screen-overlay-local{
-            position: absolute;
-            inset: 0;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            background: rgba(255,255,255,.75);
-            backdrop-filter: none;
-            z-index: 10;
-            pointer-events: all;
-        }
-        .screen-overlay-local .loader-text{
-            margin-top: .5rem;
-            color: #000;
-            font-weight: 600;
-            text-transform: none;
-        }
-    </style>
-@endpush
-
 <div class="container-fluid">
     {{-- Header / migas --}}
     <div class="row">
@@ -117,14 +93,6 @@
                         </div>
                     </div>
                     <div class="table-responsive">
-                        <div class="screen-overlay-local"
-                             wire:loading.flex
-                             wire:target="search">
-                            <div>
-                                <div class="spinner-border text-light" role="status" aria-label="Buscando…"></div>
-                                <div class="loader-text">Buscando…</div>
-                            </div>
-                        </div>
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">
                             <tr>
@@ -145,7 +113,7 @@
                             <tbody>
                             {{-- filas --}}
                             @forelse($rows as $r)
-                                <tr wire:key="row-{{ $r['item'] }}" wire:loading.class="d-none">
+                                <tr wire:key="row-{{ $r['item'] }}">
                                     <td>
                                         @hasanyrole('director')
                                         @if(($r['total'] ?? 0) > 0)
@@ -167,7 +135,7 @@
                                     <td>{{ number_format($r['pending'], 2) }}</td>
                                 </tr>
                             @empty
-                                <tr wire:loading.class="d-none">
+                                <tr>
                                     <td colspan="11">No se encontraron resultados.</td>
                                 </tr>
                             @endforelse
@@ -194,13 +162,5 @@
             </div>
         </div>
 
-    </div>
-    <div class="screen-overlay"
-         wire:loading.delay.flex
-         wire:target="export,month,year,condition">
-        <div class="text-center">
-            <div class="spinner-border text-light" role="status" aria-label="Cargando…"></div>
-            <div class="mt-2 text-white fw-semibold">Cargando…</div>
-        </div>
     </div>
 </div>
