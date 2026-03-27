@@ -21,10 +21,15 @@
     <div class="card">
         <div class="card-body">
 
-            @if(!$canEdit)
+            @if(!$canEdit && !auth()->user()->isDirector())
                 <div class="alert alert-info py-2 mb-3">
                     <i class="ti ti-info-circle"></i>
                     Vista de solo lectura. Solo el Director puede modificar permisos.
+                </div>
+            @elseif(!$canEdit && auth()->user()->isDirector())
+                <div class="alert alert-secondary py-2 mb-3">
+                    <i class="ti ti-info-circle"></i>
+                    El Director tiene todos los permisos por defecto.
                 </div>
             @endif
 
