@@ -83,7 +83,7 @@ class Edit extends Component
     #[On('register_destroy')]
     public function destroy(int $id): void
     {
-        if (!auth()->user()?->hasAnyRole('director','gerente')) {
+        if (!auth()->user()?->hasAnyRole('director','gerente','administrador')) {
             abort(403);
         }
         Owner::findOrFail($id)->update(['status' => 'inactive']);

@@ -91,7 +91,7 @@ class EditDeparture extends Component
 
     private function isAdmin(): bool
     {
-        return $this->userHasRole('director') || $this->userHasRole('gerente');
+        return $this->userHasRole('director') || $this->userHasRole('gerente') || $this->userHasRole('administrador');
     }
 
     private function loadUserHeadquarters(): void

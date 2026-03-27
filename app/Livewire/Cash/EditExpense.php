@@ -34,7 +34,7 @@ class EditExpense extends Component
 
     public function mount(int $id): void
     {
-        if (!auth()->user()?->hasAnyRole('director','gerente')) {
+        if (!auth()->user()?->hasAnyRole('director','gerente','administrador')) {
             abort(403);
         }
 
@@ -128,7 +128,7 @@ class EditExpense extends Component
     #[On('register_destroy')]
     public function destroy(int $id): void
     {
-        if (!auth()->user()?->hasAnyRole('director','gerente')) {
+        if (!auth()->user()?->hasAnyRole('director','gerente','administrador')) {
             abort(403);
         }
 

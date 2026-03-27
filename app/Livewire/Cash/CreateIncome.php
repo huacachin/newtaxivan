@@ -24,10 +24,6 @@ class CreateIncome extends Component
 
     public function mount(): void
     {
-        if (!auth()->user()?->hasAnyRole('director','gerente')) {
-            abort(403);
-        }
-
         $this->date     = now()->toDateString();
         $this->currency = 'Soles';
     }
