@@ -20,8 +20,10 @@ class Departure extends Model
         'price',
         'latitude',
         'longitude',
-        'passenger','
-        passage',
+        'passenger',
+        'passage',
+        'is_support',
+        'legacy_plate',
     ];
 
     protected $casts = [
