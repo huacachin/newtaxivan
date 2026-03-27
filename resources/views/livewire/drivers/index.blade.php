@@ -90,7 +90,7 @@
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">
                             <tr>
-                                @hasanyrole('director|administrador')<th>Acción</th>@endhasanyrole
+                                @hasanyrole('director|gerente|administrador')<th>Acción</th>@endhasanyrole
                                 <th>Item</th>
                                 <th>Cod</th>
                                 <th>Placa</th>
@@ -106,7 +106,7 @@
                             @if($drivers->count() > 0)
                                 @foreach($drivers as $driver)
                                     <tr>
-                                        @hasanyrole('director|administrador')
+                                        @hasanyrole('director|gerente|administrador')
                                         <td width="50">
                                             <a href="{{ route('settings.drivers.edit', $driver->id) }}">
                                                 <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"></i>
@@ -161,12 +161,12 @@
                                     </tr>
                                 @endforeach
                             @else
-                                <tr><td colspan="{{ auth()->user()->hasAnyRole('director','administrador') ? 10 : 9 }}">No se encontrarón resultados</td></tr>
+                                <tr><td colspan="{{ auth()->user()->hasAnyRole('director','gerente','administrador') ? 10 : 9 }}">No se encontrarón resultados</td></tr>
                             @endif
                             </tbody>
                             <tfoot class="bg-primary">
                             <tr>
-                                <td colspan="{{ auth()->user()->hasAnyRole('director','administrador') ? 10 : 9 }}" class="text-end f-w-600">TOTAL: {{ $drivers->count() }}</td>
+                                <td colspan="{{ auth()->user()->hasAnyRole('director','gerente','administrador') ? 10 : 9 }}" class="text-end f-w-600">TOTAL: {{ $drivers->count() }}</td>
                             </tr>
                             </tfoot>
                         </table>
@@ -176,7 +176,7 @@
                             <table class="table table-bordered table-striped table-hover">
                                 <thead class="bg-primary">
                                 <tr>
-                                    @hasanyrole('director|administrador')<th>Acción</th>@endhasanyrole
+                                    @hasanyrole('director|gerente|administrador')<th>Acción</th>@endhasanyrole
                                     <th>Id</th>
                                     <th>Nombre</th>
                                     <th>DNI</th>
@@ -189,7 +189,7 @@
                                 <tbody>
                                 @forelse($driversFree as $driver)
                                     <tr>
-                                        @hasanyrole('director|administrador')
+                                        @hasanyrole('director|gerente|administrador')
                                         <td width="50">
                                             <a href="{{ route('settings.drivers.edit', $driver->id) }}">
                                                 <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"></i>
@@ -241,12 +241,12 @@
 
                                     </tr>
                                 @empty
-                                    <tr><td colspan="{{ auth()->user()->hasAnyRole('director','administrador') ? 8 : 7 }}">No se encontrarón resultados</td></tr>
+                                    <tr><td colspan="{{ auth()->user()->hasAnyRole('director','gerente','administrador') ? 8 : 7 }}">No se encontrarón resultados</td></tr>
                                 @endforelse
                                 </tbody>
                                 <tfoot class="bg-primary">
                                 <tr>
-                                    <td colspan="{{ auth()->user()->hasAnyRole('director','administrador') ? 8 : 7 }}" class="text-end f-w-600">TOTAL: {{ $driversFree->count() }}</td>
+                                    <td colspan="{{ auth()->user()->hasAnyRole('director','gerente','administrador') ? 8 : 7 }}" class="text-end f-w-600">TOTAL: {{ $driversFree->count() }}</td>
                                 </tr>
                                 </tfoot>
                             </table>
