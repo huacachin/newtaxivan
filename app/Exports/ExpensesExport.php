@@ -197,6 +197,8 @@ class ExpensesExport implements
                     $ws->getStyle("A{$dataStartRow}:G{$last}")
                         ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
+                    $ws->getColumnDimension('B')->setAutoSize(false);
+                    $ws->getColumnDimension('B')->setWidth(13.0);
                     $ws->getStyle("B{$dataStartRow}:B{$last}")
                         ->getNumberFormat()->setFormatCode('dd/mm/yyyy');
                     $ws->getStyle("E{$dataStartRow}:E{$last}")

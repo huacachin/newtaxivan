@@ -181,6 +181,16 @@ class DeparturesMainExport implements
                 $ws = $e->sheet->getDelegate();
                 $ws->freezePane('A2');
                 $ws->setAutoFilter($ws->calculateWorksheetDimension());
+
+                if ($this->groupMode) {
+                    $ws->getColumnDimension('I')->setAutoSize(false);
+                    $ws->getColumnDimension('I')->setWidth(13.0);
+                    $ws->getColumnDimension('J')->setAutoSize(false);
+                    $ws->getColumnDimension('J')->setWidth(13.0);
+                } else {
+                    $ws->getColumnDimension('D')->setAutoSize(false);
+                    $ws->getColumnDimension('D')->setWidth(13.0);
+                }
             },
         ];
     }

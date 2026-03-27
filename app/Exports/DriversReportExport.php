@@ -264,8 +264,8 @@ class DriversReportExport implements FromArray, WithColumnFormatting, WithEvents
                 $ws->getColumnDimension('C')->setAutoSize(true);
                 $ws->getColumnDimension('D')->setAutoSize(true);
                 $ws->getColumnDimension('E')->setWidth(12.0);
-                $ws->getColumnDimension('F')->setWidth(11.0);
-                $ws->getColumnDimension('G')->setWidth(11.0);
+                $ws->getColumnDimension('F')->setWidth(13.0);
+                $ws->getColumnDimension('G')->setWidth(13.0);
                 $ws->getColumnDimension('H')->setWidth(11.0);
                 $ws->getColumnDimension('I')->setWidth(10.0);
 

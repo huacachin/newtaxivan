@@ -190,6 +190,8 @@ class IncomesExport implements
                     $ws->getStyle("A{$dataStartRow}:A{$last}")
                         ->getFont()->setBold(true);
 
+                    $ws->getColumnDimension('B')->setAutoSize(false);
+                    $ws->getColumnDimension('B')->setWidth(13.0);
                     $ws->getStyle("B{$dataStartRow}:B{$last}")
                         ->getNumberFormat()->setFormatCode('dd/mm/yyyy');
                     $ws->getStyle("F{$dataStartRow}:F{$last}")
