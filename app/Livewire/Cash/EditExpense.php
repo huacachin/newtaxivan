@@ -34,11 +34,11 @@ class EditExpense extends Component
 
     public function mount(int $id): void
     {
-        if (!auth()->user()?->hasRole('director')) {
+        $this->expense   = Expense::findOrFail($id);
+
+        if (!$this->expense->canBeEditedBy(auth()->user())) {
             abort(403);
         }
-
-        $this->expense   = Expense::findOrFail($id);
         $this->expenseId = $id;
         $this->users     = DB::table('users')->pluck('name', 'id');
         $this->refreshConcepts();
@@ -145,6 +145,10 @@ class EditExpense extends Component
 
     public function update(): void
     {
+        if (!$this->expense->canBeEditedBy(auth()->user())) {
+            abort(403);
+        }
+
         try {
             $this->validate();
 

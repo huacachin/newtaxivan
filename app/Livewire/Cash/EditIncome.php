@@ -31,11 +31,11 @@ class EditIncome extends Component
 
     public function mount(int $id): void
     {
-        if (!auth()->user()?->hasRole('director')) {
+        $this->income   = Income::findOrFail($id);
+
+        if (!$this->income->canBeEditedBy(auth()->user())) {
             abort(403);
         }
-
-        $this->income   = Income::findOrFail($id);
         $this->incomeId = $id;
 
         $i = $this->income;
@@ -125,6 +125,10 @@ class EditIncome extends Component
 
     public function update(): void
     {
+        if (!$this->income->canBeEditedBy(auth()->user())) {
+            abort(403);
+        }
+
         try {
             $this->validate();
 

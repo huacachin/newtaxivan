@@ -49,7 +49,15 @@ class Expense extends Model
     {
         return $this->image_path
             ? asset('storage/'.$this->image_path)
-            : asset('images/placeholder-income.png'); // usa el mismo placeholder
+            : asset('images/placeholder-income.png');
     }
 
+    public function canBeEditedBy(User $user): bool
+    {
+        if ($user->hasRole('director')) return true;
+        if (!$user->hasAnyRole(['administrador', 'gerente'])) return false;
+        if ($this->user_id !== $user->id) return false;
+        if (!$this->created_at || !$this->created_at->timezone(config('app.timezone'))->isToday()) return false;
+        return true;
+    }
 }
