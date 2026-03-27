@@ -6,6 +6,7 @@ use App\Models\Headquarter;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 use Livewire\Component;
 use Spatie\Permission\Models\Role;
 
@@ -33,7 +34,7 @@ class Create extends Component
             'name'            => ['required','string','max:255'],
             'username'        => ['required','string','min:3','max:64', Rule::unique('users','username')],
             'email'           => ['nullable','email','max:255', Rule::unique('users','email')],
-            'pwd'             => ['required','string','min:8'],
+            'pwd'             => ['required','string', Password::min(8)->mixedCase()->numbers()->symbols()],
             'document_type'   => ['required','string','max:3'],
             'document_number' => ['required','string','max:11', Rule::unique('users','document_number')->where(fn($q)=>$q->where('document_type',$this->document_type))],
             'phone'           => ['required','string','max:15'],

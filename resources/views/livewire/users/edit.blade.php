@@ -44,10 +44,61 @@
                 </div>
 
                 {{-- Contraseña (opcional) --}}
-                <div class="perm-row">
+                <div class="perm-row" x-data="{
+                    show: false,
+                    strength: 0,
+                    strengthLabel: '',
+                    strengthColor: '',
+                    generate() {
+                        const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                        const lower = 'abcdefghijklmnopqrstuvwxyz';
+                        const nums = '0123456789';
+                        const syms = '!@#$%^&*_+-=';
+                        const all = upper + lower + nums + syms;
+                        let pwd = [
+                            upper[Math.floor(Math.random() * upper.length)],
+                            lower[Math.floor(Math.random() * lower.length)],
+                            nums[Math.floor(Math.random() * nums.length)],
+                            syms[Math.floor(Math.random() * syms.length)],
+                        ];
+                        for (let i = 4; i < 14; i++) pwd.push(all[Math.floor(Math.random() * all.length)]);
+                        pwd = pwd.sort(() => Math.random() - 0.5).join('');
+                        $wire.set('pwd', pwd);
+                        this.show = true;
+                        this.checkStrength(pwd);
+                    },
+                    checkStrength(val) {
+                        let s = 0;
+                        if (val.length >= 8) s++;
+                        if (/[A-Z]/.test(val)) s++;
+                        if (/[a-z]/.test(val)) s++;
+                        if (/[0-9]/.test(val)) s++;
+                        if (/[!@#$%^&*_+\-=]/.test(val)) s++;
+                        this.strength = s;
+                        if (s <= 2) { this.strengthLabel = 'Débil'; this.strengthColor = 'bg-danger'; }
+                        else if (s <= 3) { this.strengthLabel = 'Media'; this.strengthColor = 'bg-warning'; }
+                        else { this.strengthLabel = 'Fuerte'; this.strengthColor = 'bg-success'; }
+                    }
+                }" x-init="$watch('$wire.pwd', val => checkStrength(val || ''))">
                     <div class="perm-col-title">Contraseña</div>
                     <div class="perm-col-controls">
-                        <input type="text" class="form-control form-control-sm" placeholder="Nueva contraseña (opcional)" wire:model.live="pwd">
+                        <div class="input-group input-group-sm">
+                            <input :type="show ? 'text' : 'password'" class="form-control form-control-sm"
+                                   placeholder="Nueva contraseña (opcional)" wire:model.live="pwd"
+                                   @if(!$canFullEdit) readonly @endif>
+                            <button class="btn btn-outline-secondary" type="button" @click="show = !show" title="Mostrar/ocultar">
+                                <i class="ti" :class="show ? 'ti-eye-off' : 'ti-eye'"></i>
+                            </button>
+                            <button class="btn btn-outline-primary" type="button" @click="generate()" title="Generar contraseña segura">
+                                <i class="ti ti-key"></i> Generar
+                            </button>
+                        </div>
+                        <div class="mt-1" x-show="$wire.pwd && $wire.pwd.length > 0" x-cloak>
+                            <div class="progress" style="height: 5px;">
+                                <div class="progress-bar" :class="strengthColor" :style="'width:' + (strength * 20) + '%'"></div>
+                            </div>
+                            <small :class="strengthColor.replace('bg-','text-')" x-text="strengthLabel"></small>
+                        </div>
                         @error('pwd') <span class="title-modules small">{{ $message }}</span> @enderror
                     </div>
                 </div>

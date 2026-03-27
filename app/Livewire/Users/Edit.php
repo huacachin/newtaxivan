@@ -6,6 +6,7 @@ use App\Models\Headquarter;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 use Livewire\Component;
 use Spatie\Permission\Models\Role;
 
@@ -70,7 +71,7 @@ class Edit extends Component
             'name'            => ['required','string','max:255'],
             'username'        => ['required','string','min:3','max:64', Rule::unique('users','username')->ignore($id)],
             'email'           => ['nullable','email','max:255', Rule::unique('users','email')->ignore($id)],
-            'pwd'             => ['nullable','string','min:8'],
+            'pwd'             => ['nullable','string', Password::min(8)->mixedCase()->numbers()->symbols()],
             'document_type'   => ['required','string','max:3'],
             'document_number' => ['required','string','max:11', Rule::unique('users','document_number')->ignore($id)->where(fn($q)=>$q->where('document_type',$this->document_type))],
             'phone'           => ['required','string','max:15'],
@@ -143,7 +144,7 @@ class Edit extends Component
             $this->user->syncRoles($roleName ? [$roleName] : []);
         } else {
             // No-Director: solo password y sucursales (sucursales solo si el editado es controlador)
-            $rules = ['pwd' => ['nullable','string','min:8']];
+            $rules = ['pwd' => ['nullable','string', Password::min(8)->mixedCase()->numbers()->symbols()]];
 
             $isControlador = $this->editedUserRoleName === 'controlador';
             if ($isControlador) {
