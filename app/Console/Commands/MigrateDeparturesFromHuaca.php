@@ -144,6 +144,18 @@ class MigrateDeparturesFromHuaca extends Command
                 $userKey  = $this->normalizeName($r->{$colUser} ?? null);
                 $hqKey    = $this->normalizeName($r->{$colHQ} ?? null);
                 $userId   = $userKey && isset($userMap[$userKey]) ? $userMap[$userKey] : null;
+
+                // Aliases de sucursal legacy
+                static $hqAliases = [
+                    'noche h'        => 'huaycan',
+                    'huay. atocongo' => 'huaycan',
+                    'p.sta.gamarra'  => 'h.gamarra',
+                    '0'              => null,
+                ];
+                if ($hqKey && array_key_exists($hqKey, $hqAliases)) {
+                    $hqKey = $hqAliases[$hqKey] ? $this->normalizeName($hqAliases[$hqKey]) : null;
+                }
+
                 $hqId     = $hqKey   && isset($hqMap[$hqKey])     ? $hqMap[$hqKey]   : null;
 
                 // --- Payload destino ---

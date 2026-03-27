@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('district', 100)->nullable();
             $table->string('phone', 50)->nullable();
             $table->string('email', 150)->nullable();
-            $table->string('status', 50)->default('activo'); // active | inactive
+            $table->string('status', 50)->default('active');
             $table->timestamps();
 
             // índices útiles

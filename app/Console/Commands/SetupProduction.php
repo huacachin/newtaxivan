@@ -59,7 +59,7 @@ class SetupProduction extends Command
 
         // Fix: owners migrados deben quedar como inactive
         $this->step('Fix: owners → status inactive');
-        $affected = DB::table('owners')->where('status', 'active')->update(['status' => 'inactive']);
+        $affected = DB::table('owners')->whereIn('status', ['active', 'activo'])->update(['status' => 'inactive']);
         $this->line("  → {$affected} propietarios actualizados a inactive.");
 
         $this->step('Vehículos (depende de conductores y propietarios)');
