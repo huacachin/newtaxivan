@@ -165,7 +165,7 @@ class MonthlyDebt extends Component
             });
         }
 
-        $rows = $q->orderByDesc('id')->get();
+        $rows = $q->orderBy('id')->get();
 
         // Map vehículos para COD/PLACA/COND
         $vehicleIds = $rows->pluck('vehicle_id')->filter()->unique()->values();
