@@ -23,12 +23,10 @@ class HeadquartersSeeder extends Seeder
         ];
 
         foreach ($headquarters as $hq) {
-            DB::table('headquarters')->insert([
-                'name'   => $hq,
-                'status' => 'active',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            DB::table('headquarters')->updateOrInsert(
+                ['name' => $hq],
+                ['status' => 'active', 'created_at' => now(), 'updated_at' => now()]
+            );
         }
     }
 }
