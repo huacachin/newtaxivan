@@ -25,14 +25,14 @@
         <i class="ti ti-circle-check me-1"></i> {{ session('vehicle_success') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
     </div>
-    @endif
+    @endhasanyrole
 
     @if(session('vehicle_error'))
     <div class="alert alert-danger alert-dismissible fade show py-2 mb-2" role="alert">
         <i class="ti ti-alert-circle me-1"></i> {{ session('vehicle_error') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
     </div>
-    @endif
+    @endhasanyrole
 
     <div class="row table-section">
 
@@ -94,12 +94,12 @@
                                     </div>
 
                                     <!-- Botones -->
-                                    @if(auth()->user()->isDirector())
+                                    @hasanyrole('director|gerente|administrador')
                                     <a class="btn btn-sm btn-primary flex-shrink-0"
                                        href="{{ route('settings.vehicles.create') }}" target="_blank">
                                         <i class="ti ti-square-plus f-s-12"></i> Nuevo
                                     </a>
-                                    @endif
+                                    @endhasanyrole
 
                                     <button id="down"
                                             class="btn btn-sm btn-primary flex-shrink-0">
@@ -121,9 +121,9 @@
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">
                             <tr>
-                                @if(auth()->user()->isDirector())
+                                @hasanyrole('director|gerente|administrador')
                                 <th class="sticky-col">Acción</th>
-                                @endif
+                                @endhasanyrole
                                 <th>Item</th>
                                 <th>Cod</th>
                                 <th class="sticky-col-2">Placa</th>
@@ -138,7 +138,7 @@
                                 <th>Empresa Afil.</th>
                                 @if($status === "inactive")
                                     <th>Fecha Cese</th>
-                                @endif
+                                @endhasanyrole
                             </tr>
                             </thead>
 
@@ -153,13 +153,13 @@
                                         elseif ($cond === 'DT') { $condClass .= 'cond-DT'; }
                                     @endphp
                                     <tr>
-                                        @if(auth()->user()->isDirector())
+                                        @hasanyrole('director|gerente|administrador')
                                         <td>
                                             <a href="{{ route('settings.vehicles.edit', $vehicle->id) }}">
                                                 <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"></i>
                                             </a>
                                         </td>
-                                        @endif
+                                        @endhasanyrole
 
                                         <td>{{ $loop->iteration }}</td>
                                         <td>{{ $vehicle->sort_order }}</td>
@@ -174,7 +174,7 @@
                                                         </span>
                                                     @endforeach
                                                 </span>
-                                            @endif
+                                            @endhasanyrole
                                         </td>
 
                                         <td>{{ $vehicle->brand }}</td>
@@ -191,15 +191,15 @@
 
                                         @if($status === "inactive")
                                             <td>{{ $vehicle->termination_date?->format('d/m/Y') ?? '-' }}</td>
-                                        @endif
+                                        @endhasanyrole
                                     </tr>
                                 @endforeach
                             @else
                                 <tr>
-                                    @php $colspan = 12 + ($status === "inactive" ? 1 : 0) + (auth()->user()->isDirector() ? 1 : 0); @endphp
+                                    @php $colspan = 12 + ($status === "inactive" ? 1 : 0) + (auth()->user()->hasAnyRole('director','gerente','administrador') ? 1 : 0); @endphp
                                     <td colspan="{{ $colspan }}">No se encontrarón resultados</td>
                                 </tr>
-                            @endif
+                            @endhasanyrole
                             </tbody>
 
                             {{-- (Opcional) Pie oscuro con totales rápidos
