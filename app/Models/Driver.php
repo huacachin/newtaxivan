@@ -4,9 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Traits\Auditable;
 
 class Driver extends Model
 {
+    use Auditable;
+    protected $auditModule = 'Conductores';
+
     protected $fillable = [
         'name',
         'document_number',

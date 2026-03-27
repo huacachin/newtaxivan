@@ -3,9 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\Auditable;
 
 class Departure extends Model
 {
+    use Auditable;
+    protected $auditModule = 'Salidas';
+
     protected $fillable = [
         'date',
         'hour',

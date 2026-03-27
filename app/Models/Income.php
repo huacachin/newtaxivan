@@ -4,9 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Traits\Auditable;
 
 class Income extends Model
 {
+    use Auditable;
+    protected $auditModule = 'Ingresos';
+
     protected $table = 'incomes';
 
     // Usamos id legacy, NO autoincremental

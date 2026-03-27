@@ -6,9 +6,13 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Traits\Auditable;
 
 class Vehicle extends Model
 {
+    use Auditable;
+    protected $auditModule = 'Vehículos';
+
     protected $fillable = [
         'sort_order',
         'plate',

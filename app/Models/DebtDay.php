@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class DebtDay extends Model
 {
+    use \App\Traits\Auditable;
+    protected $auditModule = 'Deuda por Días';
+
     protected $table = 'debt_days';
 
     protected $fillable = [

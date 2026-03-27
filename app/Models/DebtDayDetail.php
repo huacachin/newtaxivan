@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DebtDayDetail extends Model
 {
+    use \App\Traits\Auditable;
+    protected $auditModule = 'Detalle Deuda';
+
     protected $table = 'debt_days_detail';
 
     // PK legado, no autoincremental

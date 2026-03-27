@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class Concept extends Model
 {
+    use \App\Traits\Auditable;
+    protected $auditModule = 'Conceptos';
+
     protected $fillable = [
         'code','name', 'type', 'status',
     ];

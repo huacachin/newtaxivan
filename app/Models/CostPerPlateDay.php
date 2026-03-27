@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class CostPerPlateDay extends Model
 {
+    use \App\Traits\Auditable;
+    protected $auditModule = 'Costo por Placa Día';
+
     protected $table = 'cost_per_plate_days';
 
     protected $casts = [

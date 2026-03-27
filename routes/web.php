@@ -101,6 +101,9 @@ Route::middleware('auth')->group(function () {
     Route::get('cash/report/est-sal-pag-cont',[CashController::class,'reportEstSalPagCont'])->name('cash.report.est-sal-pag-cont');
     Route::get('cash/report/est-caja-ma',[CashController::class,'reportEstCajaMa'])->name('cash.report.est-caja-ma');
 
+    // Auditoría (solo Director)
+    Route::get('audit-logs', fn() => view('audit-logs.index'))->name('audit.logs.index')->middleware('role:director');
+
     //Exportar a excel
     Route::get('/exports/vehicles', [VehicleController::class, 'export'])
         ->name('exports.vehicles');

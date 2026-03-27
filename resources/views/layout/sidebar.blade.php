@@ -74,6 +74,14 @@
                 ['title' => 'Rep Est Caja M.A',      'route' => 'cash.report.est-caja-ma',     'can' => 'cash.report-caja-ma'],
             ],
         ],
+
+        [
+            'id'    => 'audit-logs',
+            'title' => 'Auditoría',
+            'icon'  => 'ti ti-clipboard-list',
+            'route' => 'audit.logs.index',
+            'role'  => 'director',
+        ],
     ];
 @endphp
 

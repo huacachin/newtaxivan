@@ -4,9 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Traits\Auditable;
 
 class Expense extends Model
 {
+    use Auditable;
+    protected $auditModule = 'Egresos';
+
     protected $table = 'expenses';
 
     // Usamos el ID legacy como PK sin autoincremento

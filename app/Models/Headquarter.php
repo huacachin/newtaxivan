@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class Headquarter extends Model
 {
+    use \App\Traits\Auditable;
+    protected $auditModule = 'Sucursales';
+
     protected $fillable = [
         'name',
         'sort_order',

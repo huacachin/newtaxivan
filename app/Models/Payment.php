@@ -3,9 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\Auditable;
 
 class Payment extends Model
 {
+    use Auditable;
+    protected $auditModule = 'Pagos';
+
     protected $fillable = [
         'id','serie','date_register','date_payment','vehicle_id','amount','type',
         'user_id','headquarter_id','hour','latitude','longitude',

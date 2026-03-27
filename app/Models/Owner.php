@@ -4,9 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Traits\Auditable;
 
 class Owner extends Model
 {
+    use Auditable;
+    protected $auditModule = 'Propietarios';
+
     protected $fillable = [
         'name',
         'document_type',

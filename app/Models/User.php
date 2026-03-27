@@ -7,13 +7,17 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
+use App\Traits\Auditable;
 
 class User extends Authenticatable
 {
-    use HasRoles;
+    use HasRoles, Auditable;
     protected $guard_name = 'web';
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
+
+    protected $auditModule = 'Usuarios';
+    protected $auditExclude = ['password', 'remember_token'];
 
     const ROLE_HIERARCHY = [
         'controlador'   => 1,
