@@ -1,7 +1,7 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title title-modules">ROL & PERMISOS</h4>
+            <h4 class="main-title title-modules">PERMISOS</h4>
             @if($permsUserName)
                 <small class="text-muted d-block">Usuario: {{ $permsUserName }}</small>
             @endif
@@ -20,25 +20,6 @@
 
     <div class="card">
         <div class="card-body">
-
-            {{-- Rol --}}
-            <div class="perm-row">
-                <div class="perm-col-title">Rol</div>
-                <div class="perm-col-controls">
-                    <div class="perm-chips">
-                        @forelse($roles as $r)
-                            <label class="chip-radio" title="{{ __('roles.'.$r->name) }}">
-                                <input type="radio" class="form-check-input" name="role_single_perms"
-                                       value="{{ $r->id }}" wire:model="selectedRoleId">
-                                <span>{{ __('roles.'.$r->name) }}</span>
-                            </label>
-                        @empty
-                            <span class="text-warning small">No hay roles definidos.</span>
-                        @endforelse
-                    </div>
-                    @error('selectedRoleId') <span class="title-modules small">{{ $message }}</span> @enderror
-                </div>
-            </div>
 
             {{-- Permisos --}}
             <div class="perm-grid">

@@ -103,10 +103,10 @@
                                                     <i class="ti ti-edit"></i>
                                                 </a>
 
-                                                {{-- Rol & Permisos (solo Director) --}}
+                                                {{-- Permisos (solo Director) --}}
                                                 @if(auth()->user()->isDirector())
                                                 <a class="btn btn-sm btn-outline-dark"
-                                                   title="Rol & Permisos"
+                                                   title="Permisos"
                                                    href="{{ route('settings.users.perms', $user->id) }}" target="_blank">
                                                     <i class="ti ti-shield-lock"></i>
                                                 </a>
