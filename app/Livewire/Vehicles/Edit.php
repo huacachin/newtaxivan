@@ -58,7 +58,7 @@ class Edit extends Component
     public function rules()
     {
         return [
-            "sort_order" => "nullable|integer",
+            "sort_order" => "required|integer",
             "plate" => "required|string|max:20|unique:vehicles,plate," . $this->vehicle->id,
             "entry_date" => "nullable|date",
             "termination_date" => "nullable|date",

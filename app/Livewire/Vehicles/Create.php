@@ -40,7 +40,7 @@ class Create extends Component
         "technical_review" => "nullable|date",
         "certificate_date" => "nullable|date",
         "detail" => "nullable|string",
-        "sort_order" => "nullable|integer",
+        "sort_order" => "required|integer",
         "seats" => "nullable|integer",
         "passengers" => "nullable|integer"
     ];
