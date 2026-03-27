@@ -63,10 +63,12 @@
                                 </div>
 
                                 <!-- Botones -->
+                                @hasanyrole('director|gerente|administrador')
                                 <a class="btn btn-sm btn-primary flex-shrink-0"
                                    href="{{ route('settings.owners.create') }}" target="_blank">
                                     <i class="ti ti-square-plus f-s-12"></i> Nuevo
                                 </a>
+                                @endhasanyrole
 
                                 <button class="btn btn-sm btn-primary flex-shrink-0"
                                         wire:click="export">
@@ -85,7 +87,7 @@
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">
                             <tr>
-                                @hasanyrole('director|gerente')<th scope="col">Acción</th>@endhasanyrole
+                                @hasanyrole('director|gerente|administrador')<th scope="col">Acción</th>@endhasanyrole
                                 <th>Item</th>
                                 <th>Cod</th>
                                 <th scope="col">Placa</th>
@@ -98,7 +100,7 @@
                             @if($owners->count() > 0)
                                 @foreach ($owners as $owner)
                                     <tr>
-                                        @hasanyrole('director|gerente')
+                                        @hasanyrole('director|gerente|administrador')
                                         <td>
                                             <a href="{{ route('settings.owners.edit', $owner->id) }}">
                                                 <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"></i>
@@ -138,13 +140,13 @@
                                 @endforeach
                             @else
                                 <tr>
-                                    <td colspan="{{ auth()->user()->hasAnyRole('director','gerente') ? 7 : 6 }}">No se encontrarón resultados</td>
+                                    <td colspan="{{ auth()->user()->hasAnyRole('director','gerente','administrador') ? 7 : 6 }}">No se encontrarón resultados</td>
                                 </tr>
                             @endif
                             </tbody>
                             <tfoot>
                             <tr>
-                                <td colspan="{{ auth()->user()->hasAnyRole('director','gerente') ? 7 : 6 }}">Propietarios: {{ $owners->count() }}</td>
+                                <td colspan="{{ auth()->user()->hasAnyRole('director','gerente','administrador') ? 7 : 6 }}">Propietarios: {{ $owners->count() }}</td>
                             </tr>
                             </tfoot>
                         </table>
@@ -154,7 +156,7 @@
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">
                             <tr>
-                                @hasanyrole('director|gerente')<th scope="col">Acción</th>@endhasanyrole
+                                @hasanyrole('director|gerente|administrador')<th scope="col">Acción</th>@endhasanyrole
                                 <th scope="col">Id</th>
                                 <th scope="col">Nombre/Empresa</th>
                                 <th scope="col">DNI/RUC</th>
@@ -164,7 +166,7 @@
                             <tbody>
                             @forelse ($ownersFree as $owner)
                                 <tr>
-                                    @hasanyrole('director|gerente')
+                                    @hasanyrole('director|gerente|administrador')
                                     <td width="50">
                                         <a href="{{ route('settings.owners.edit', $owner->id) }}">
                                             <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"></i>
@@ -200,13 +202,13 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="{{ auth()->user()->hasAnyRole('director','gerente') ? 5 : 4 }}">No se encontrarón resultados</td>
+                                    <td colspan="{{ auth()->user()->hasAnyRole('director','gerente','administrador') ? 5 : 4 }}">No se encontrarón resultados</td>
                                 </tr>
                             @endforelse
                             </tbody>
                             <tfoot>
                             <tr>
-                                <td colspan="{{ auth()->user()->hasAnyRole('director','gerente') ? 5 : 4 }}">Libres: {{ $ownersFree->count() }}</td>
+                                <td colspan="{{ auth()->user()->hasAnyRole('director','gerente','administrador') ? 5 : 4 }}">Libres: {{ $ownersFree->count() }}</td>
                             </tr>
                             </tfoot>
                         </table>

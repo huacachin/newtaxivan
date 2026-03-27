@@ -125,10 +125,12 @@
                                         </button>
 
                                         <!-- Nuevo -->
+                                        @hasanyrole('director|gerente|administrador')
                                         <a href="{{ route('cash.incomes.create') }}"
                                            class="btn btn-sm btn-success flex-shrink-0" target="_blank">
                                             <i class="ti ti-square-plus f-s-12"></i> Nuevo
                                         </a>
+                                        @endhasanyrole
 
                                         <!-- Exportar -->
                                         <button class="btn btn-sm btn-primary flex-shrink-0"
@@ -169,7 +171,7 @@
                             @forelse($incomes as $i)
                                 <tr wire:key="exp-{{ $i->id }}">
                                     <td data-label="Opciones">
-                                        @hasanyrole('director|gerente')
+                                        @hasanyrole('director|gerente|administrador')
                                         <a href="{{ route('cash.incomes.edit', $i->id) }}">
                                             <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"></i>
                                         </a>

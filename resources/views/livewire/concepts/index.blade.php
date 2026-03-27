@@ -56,10 +56,12 @@
                                 </div>
 
                                 <!-- Botón a la derecha (ancho intrínseco) -->
+                                @hasanyrole('director|gerente|administrador')
                                 <a class="btn btn-sm btn-primary flex-shrink-0"
                                    href="{{ route('settings.concepts.create') }}" target="_blank">
                                     <i class="ti ti-square-plus f-s-12"></i> Nuevo
                                 </a>
+                                @endhasanyrole
 
                                 <button class="btn btn-sm btn-primary flex-shrink-0"
                                         wire:click="export">
@@ -90,7 +92,7 @@
                                         <td>{{ $concept->name }}</td>
                                         <td>{{ ucfirst($concept->type) }}</td>
                                         <td>
-                                            @hasanyrole('director|gerente')
+                                            @hasanyrole('director|gerente|administrador')
                                             <a href="{{ route('settings.concepts.edit', $concept->id) }}">
                                                 <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"></i>
                                             </a>
