@@ -65,7 +65,7 @@ class Create extends Component
     {
         $today = Carbon::today()->toDateString();
         $this->entry_date = $today;
-        $this->termination_date = $today;
+        $this->termination_date = null;
         $this->certificate_date = $today;
         $this->soat_date = $today;
         $this->technical_review = $today;
