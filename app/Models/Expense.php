@@ -55,7 +55,7 @@ class Expense extends Model
     public function canBeEditedBy(User $user): bool
     {
         if ($user->hasRole('director')) return true;
-        if (!$user->hasAnyRole(['administrador', 'gerente'])) return false;
+        if (!$user->hasAnyRole(['administrador', 'gerente', 'controlador'])) return false;
         if ($this->user_id !== $user->id) return false;
         if (!$this->created_at || !$this->created_at->timezone(config('app.timezone'))->isToday()) return false;
         return true;
@@ -64,7 +64,7 @@ class Expense extends Model
     public function canBeDeletedBy(User $user): bool
     {
         if ($user->hasRole('director')) return true;
-        if (!$user->hasAnyRole(['administrador', 'gerente'])) return false;
+        if (!$user->hasAnyRole(['administrador', 'gerente', 'controlador'])) return false;
         if ($this->user_id !== $user->id) return false;
         if (!$this->created_at || !$this->created_at->timezone(config('app.timezone'))->isToday()) return false;
         return true;
