@@ -96,6 +96,16 @@
                     </div>
                 </div>
 
+                {{-- Orden --}}
+                <div class="perm-row">
+                    <div class="perm-col-title">Orden</div>
+                    <div class="perm-col-controls">
+                        <input type="number" class="form-control form-control-sm" placeholder="0"
+                               wire:model="sort_order" min="0" @if(!$canFullEdit) disabled style="opacity:.6" @endif>
+                        @error('sort_order') <span class="title-modules small">{{ $message }}</span> @enderror
+                    </div>
+                </div>
+
                 {{-- Sedes --}}
                 @php
                     $selectedRoleName = $selectedRoleId ? collect($roles)->firstWhere('id', $selectedRoleId)?->name : null;

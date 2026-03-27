@@ -18,6 +18,7 @@ class Create extends Component
     public string $document_type = 'dni';
     public string $document_number = '';
     public string $phone = '';
+    public ?int $sort_order = 0;
 
     public $headquartes;
     public $roles = [];
@@ -36,6 +37,7 @@ class Create extends Component
             'document_type'   => ['required','string','max:3'],
             'document_number' => ['required','string','max:11', Rule::unique('users','document_number')->where(fn($q)=>$q->where('document_type',$this->document_type))],
             'phone'           => ['required','string','max:15'],
+            'sort_order'      => ['nullable','integer'],
             'selectedHeadquarters'   => ['array'],
             'selectedHeadquarters.*' => ['integer','exists:headquarters,id'],
             'defaultHeadquarter'     => ['nullable','integer','exists:headquarters,id'],
@@ -82,6 +84,7 @@ class Create extends Component
             "document_type"   => $this->document_type,
             "document_number" => $this->document_number,
             "phone"           => $this->phone,
+            "sort_order"      => $this->sort_order ?? 0,
         ]);
 
         $attach = collect($this->selectedHeadquarters)
@@ -104,7 +107,7 @@ class Create extends Component
 
     public function clean(): void
     {
-        $this->reset(['name', 'username', 'pwd', 'email', 'document_type', 'document_number', 'phone', 'selectedHeadquarters', 'defaultHeadquarter', 'selectedRoleId']);
+        $this->reset(['name', 'username', 'pwd', 'email', 'document_type', 'document_number', 'phone', 'sort_order', 'selectedHeadquarters', 'defaultHeadquarter', 'selectedRoleId']);
     }
 
     public function render()

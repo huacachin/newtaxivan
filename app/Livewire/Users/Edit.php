@@ -20,6 +20,7 @@ class Edit extends Component
     public string $document_type = 'dni';
     public string $document_number = '';
     public string $phone = '';
+    public ?int $sort_order = 0;
 
     public $headquartes;
     public $roles = [];
@@ -52,6 +53,7 @@ class Edit extends Component
         $this->document_type = $this->user->document_type;
         $this->document_number = $this->user->document_number;
         $this->phone = $this->user->phone;
+        $this->sort_order = $this->user->sort_order ?? 0;
 
         $this->selectedHeadquarters = $this->user->headquarters->pluck('id')->map(fn($v)=>(int)$v)->toArray();
         $this->defaultHeadquarter   = optional($this->user->headquarters->firstWhere('pivot.is_default', true))->id
@@ -72,6 +74,7 @@ class Edit extends Component
             'document_type'   => ['required','string','max:3'],
             'document_number' => ['required','string','max:11', Rule::unique('users','document_number')->ignore($id)->where(fn($q)=>$q->where('document_type',$this->document_type))],
             'phone'           => ['required','string','max:15'],
+            'sort_order'      => ['nullable','integer'],
             'selectedHeadquarters'   => ['array'],
             'selectedHeadquarters.*' => ['integer','exists:headquarters,id'],
             'defaultHeadquarter'     => ['nullable','integer','exists:headquarters,id'],
@@ -117,6 +120,7 @@ class Edit extends Component
                 "document_type"   => $this->document_type,
                 "document_number" => $this->document_number,
                 "phone"           => $this->phone,
+                "sort_order"      => $this->sort_order ?? 0,
             ];
             if (!empty($this->pwd)) {
                 $payload["password"] = Hash::make($this->pwd);

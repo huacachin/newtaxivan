@@ -83,6 +83,15 @@
                     </div>
                 </div>
 
+                {{-- Orden --}}
+                <div class="perm-row">
+                    <div class="perm-col-title">Orden</div>
+                    <div class="perm-col-controls">
+                        <input type="number" class="form-control form-control-sm" placeholder="0" wire:model="sort_order" min="0">
+                        @error('sort_order') <span class="title-modules small">{{ $message }}</span> @enderror
+                    </div>
+                </div>
+
                 {{-- Sedes (solo visible para roles no-admin) --}}
                 @php
                     $selectedRoleName = $selectedRoleId ? collect($roles)->firstWhere('id', $selectedRoleId)?->name : null;
