@@ -174,7 +174,6 @@ class MonthlyDebt extends Component
         // Lo dejo con COALESCE por si lo quieres mantener.
         $vehicles = Vehicle::query()
             ->whereIn('id', $vehicleIds)
-            ->orderByRaw('COALESCE(sort_order, 999999) ASC')
             ->get(['id','sort_order','plate','condition'])
             ->keyBy('id');
 
@@ -228,21 +227,7 @@ class MonthlyDebt extends Component
             $tt_pend  += $pending;
         }
 
-        // === Ordena la salida por 'cod' (sort_order), nulos al final, y reenumera 'item' ===
-        $sorted = collect($out)
-            ->sortBy(function ($r) {
-                if ($r['cod'] === '' || $r['cod'] === null) {
-                    return PHP_INT_MAX; // manda nulos/vacíos al final
-                }
-                return (int) $r['cod']; // orden numérico
-            })
-            ->values()
-            ->map(function ($r, $i) {
-                $r['item'] = $i + 1; // reenumerar correlativo según orden final
-                return $r;
-            });
-
-        $this->rows = $sorted->all();
+        $this->rows = collect($out)->values()->all();
         $this->totals = [
             'total'      => $tt_total,
             'exonerated' => $tt_ex,
