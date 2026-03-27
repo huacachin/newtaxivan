@@ -34,7 +34,7 @@ class Edit extends Component
         $this->plate = $this->vehicle->plate;
         $this->headquarter = $this->vehicle->headquarters;
         $this->entry_date = optional($this->vehicle->entry_date)->format('Y-m-d');
-        $this->termination_date = optional($this->vehicle->termination_date)->format('Y-m-d');
+        $this->termination_date = $this->vehicle->termination_date ? $this->vehicle->termination_date->format('Y-m-d') : '0000-00-00';
         $this->class = $this->vehicle->class;
         $this->brand = $this->vehicle->brand;
         $this->year = $this->vehicle->year;
