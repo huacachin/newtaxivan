@@ -11,25 +11,23 @@ class UsersSeeder extends Seeder
 {
     public function run(): void
     {
-        // Roles
-        $admin      = Role::firstOrCreate(['name' => 'admin',      'guard_name' => 'web']);
-        $controller = Role::firstOrCreate(['name' => 'controller', 'guard_name' => 'web']);
+        // Roles nuevos (deben existir vía RoleSetupSeeder)
+        Role::firstOrCreate(['name' => 'director',      'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'gerente',       'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'administrador', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'supervisor',    'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'controlador',   'guard_name' => 'web']);
 
-        // Todos los permisos del rol admin
-        $adminPerms = [
+        // Permisos completos del director
+        $directorPerms = [
             'dashboard', 'departures', 'payments',
             'configuracion.vehicles', 'configuracion.owners', 'configuracion.drivers',
             'configuracion.cost-per-plate', 'configuracion.users', 'configuracion.concepts',
+            'configuracion.headquarters',
             'debts.days', 'debts.monthly',
-            'cash.incomes', 'cash.expenses', 'cash.reports',
+            'cash.incomes', 'cash.expenses',
+            'cash.report-general', 'cash.report-draco', 'cash.report-sal-pag-cont', 'cash.report-caja-ma',
         ];
-
-        foreach ($adminPerms as $perm) {
-            Permission::firstOrCreate(['name' => $perm, 'guard_name' => 'web']);
-        }
-
-        $admin->syncPermissions($adminPerms);
-        // El rol controller no tiene permisos propios; los usuarios tienen permisos directos.
 
         // ----------------------------------------------------------------
         // Usuarios  (contraseñas: hashes reales de producción)
@@ -46,8 +44,8 @@ class UsersSeeder extends Seeder
                 'phone'           => '909532712',
                 'headquarter_id'  => 1,
                 'status'          => 'active',
-                'role'            => 'admin',
-                'direct_perms'    => $adminPerms,
+                'role'            => 'director',
+                'direct_perms'    => $directorPerms,
             ],
             [
                 'id'              => 2,
@@ -60,7 +58,7 @@ class UsersSeeder extends Seeder
                 'phone'           => '976347989',
                 'headquarter_id'  => 2,
                 'status'          => 'active',
-                'role'            => 'controller',
+                'role'            => 'controlador',
                 'direct_perms'    => [
                     'departures', 'payments',
                     'configuracion.vehicles', 'configuracion.owners', 'configuracion.drivers',
@@ -120,7 +118,7 @@ class UsersSeeder extends Seeder
                 'phone'           => '983955785',
                 'headquarter_id'  => 1,
                 'status'          => 'active',
-                'role'            => 'controller',
+                'role'            => 'controlador',
                 'direct_perms'    => [
                     'departures', 'payments',
                     'configuracion.vehicles', 'configuracion.owners', 'configuracion.drivers',
@@ -152,7 +150,7 @@ class UsersSeeder extends Seeder
                 'phone'           => '980010794',
                 'headquarter_id'  => 3,
                 'status'          => 'active',
-                'role'            => 'controller',
+                'role'            => 'controlador',
                 'direct_perms'    => [
                     'departures', 'payments', 'cash.expenses',
                 ],
@@ -168,15 +166,8 @@ class UsersSeeder extends Seeder
                 'phone'           => '915239213',
                 'headquarter_id'  => 1,
                 'status'          => 'active',
-                'role'            => 'admin',
-                // Permisos directos de Licet (sin cash.expenses; lo hereda del rol admin)
-                'direct_perms'    => [
-                    'dashboard', 'departures', 'payments',
-                    'configuracion.vehicles', 'configuracion.owners', 'configuracion.drivers',
-                    'configuracion.cost-per-plate', 'configuracion.users', 'configuracion.concepts',
-                    'debts.days', 'debts.monthly',
-                    'cash.incomes', 'cash.reports',
-                ],
+                'role'            => 'director',
+                'direct_perms'    => $directorPerms,
             ],
         ];
 
@@ -206,5 +197,7 @@ class UsersSeeder extends Seeder
             // Permisos directos
             $user->syncPermissions($data['direct_perms']);
         }
+
+        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
     }
 }
