@@ -16,15 +16,18 @@ class Perms extends Component
     public array $selectedPermissionNames = [];
     public array $aclGroups = [];
     public $roles = [];
+    public bool $canEdit = false;
 
     public function mount(int $id)
     {
         $this->user = User::with(['headquarters','roles'])->findOrFail($id);
 
         $authUser = auth()->user();
-        if (!$authUser->isDirector() || !$authUser->canManageUser($this->user)) {
+        if (!$authUser->canManageUser($this->user)) {
             abort(403);
         }
+
+        $this->canEdit = $authUser->isDirector();
 
         $this->permsUserName = $this->user->name;
         $this->roles = Role::all(['id','name'])->sortBy(fn($r) => User::ROLE_HIERARCHY[$r->name] ?? 0)->values();

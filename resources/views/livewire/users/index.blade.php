@@ -103,14 +103,12 @@
                                                     <i class="ti ti-edit"></i>
                                                 </a>
 
-                                                {{-- Permisos (solo Director) --}}
-                                                @if(auth()->user()->isDirector())
+                                                {{-- Permisos --}}
                                                 <a class="btn btn-sm btn-outline-dark"
                                                    title="Permisos"
                                                    href="{{ route('settings.users.perms', $user->id) }}" target="_blank">
                                                     <i class="ti ti-shield-lock"></i>
                                                 </a>
-                                                @endif
 
                                                 <button class="btn btn-sm btn-outline-danger ms-1"
                                                         title="Desactivar usuario"
