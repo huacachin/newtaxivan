@@ -212,7 +212,7 @@
                             @forelse($payments as $p)
                                 <tr {{ $p->type === 'RETRASO' ? 'class=row-retraso' : '' }}>
                                     <td width="50">
-                                        @hasanyrole('director|gerente|administrador')
+                                        @hasanyrole('director')
                                         <a href="{{ route('payments.edit', $p->id) }}">
                                             <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"></i>
                                         </a>

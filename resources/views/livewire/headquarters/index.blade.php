@@ -68,7 +68,7 @@
                                 <th>Orden</th>
                                 <th>Nombre</th>
                                 <th>Estado</th>
-                                @hasanyrole('director|gerente|administrador')
+                                @hasanyrole('director')
                                 <th>Acción</th>
                                 @endhasanyrole
                             </tr>
@@ -84,13 +84,13 @@
                                             {{ $hq->status === 'active' ? 'Activo' : 'Inactivo' }}
                                         </span>
                                     </td>
-                                    @hasanyrole('director|gerente|administrador')
+                                    @hasanyrole('director')
                                     <td>
                                         <a href="{{ route('settings.headquarters.edit', $hq->id) }}">
                                             <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"></i>
                                         </a>
                                     </td>
-                                    @endhasanyrole
+                                        @endhasanyrole
                                 </tr>
                             @empty
                                 <tr>

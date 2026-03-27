@@ -31,7 +31,7 @@ class EditIncome extends Component
 
     public function mount(int $id): void
     {
-        if (!auth()->user()?->hasAnyRole('director','gerente','administrador')) {
+        if (!auth()->user()?->hasRole('director')) {
             abort(403);
         }
 
@@ -108,7 +108,7 @@ class EditIncome extends Component
     #[On('register_destroy')]
     public function destroy(int $id): void
     {
-        if (!auth()->user()?->hasAnyRole('director','gerente','administrador')) {
+        if (!auth()->user()?->hasRole('director')) {
             abort(403);
         }
 

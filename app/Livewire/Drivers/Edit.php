@@ -177,7 +177,7 @@ class Edit extends Component
     #[On('register_destroy')]
     public function destroy(int $id): void
     {
-        if (!auth()->user()?->hasAnyRole('director','gerente','administrador')) {
+        if (!auth()->user()?->hasRole('director')) {
             abort(403);
         }
         Driver::findOrFail($id)->update(['status' => 'inactive']);

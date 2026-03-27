@@ -92,7 +92,7 @@
                                         <td>{{ $concept->name }}</td>
                                         <td>{{ ucfirst($concept->type) }}</td>
                                         <td>
-                                            @hasanyrole('director|gerente|administrador')
+                                            @hasanyrole('director')
                                             <a href="{{ route('settings.concepts.edit', $concept->id) }}">
                                                 <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"></i>
                                             </a>
