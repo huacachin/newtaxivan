@@ -433,9 +433,9 @@ class Index extends Component
                 });
             })
             ->with(['headquarter','headquarters','roles','permissions'])
-            ->get()
-            ->sortBy(fn($u) => $u->getRoleLevel())
-            ->values();
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
 
         $permissionGroups = Permission::query()
             ->orderBy('module')->orderBy('name')
