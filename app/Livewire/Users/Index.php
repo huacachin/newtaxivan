@@ -419,7 +419,7 @@ class Index extends Component
 
         $users = User::query()
             ->where('status', 'active')
-            ->where('id', '!=', $authUser->id)
+            ->where('id', '!=', auth()->id())
             ->whereHas('roles', fn($q) => $q->whereIn('name', $visibleRoles))
             ->when($term !== '', function ($q) use ($term) {
                 $q->where(function ($w) use ($term) {
