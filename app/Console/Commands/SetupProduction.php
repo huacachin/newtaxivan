@@ -39,11 +39,10 @@ class SetupProduction extends Command
         $this->step('Conceptos');
         $this->call('db:seed', ['--class' => 'ConceptsSeeder', '--force' => true]);
 
-        if ($skipLegacy) {
-            // Solo usuarios sin migración legacy
-            $this->step('Usuarios (roles nuevos)');
-            $this->call('db:seed', ['--class' => 'UsersSeeder', '--force' => true]);
+        $this->step('Usuarios (roles nuevos)');
+        $this->call('db:seed', ['--class' => 'UsersSeeder', '--force' => true]);
 
+        if ($skipLegacy) {
             $this->info('');
             $this->info('✓ Setup completado (sin migración legacy).');
             return self::SUCCESS;
@@ -109,12 +108,6 @@ class SetupProduction extends Command
 
         $this->step('Detalle de deuda por días');
         $this->call('taxivan:migrate-debt-days-detail', ['--chunk' => $chunk]);
-
-        // ─── FASE 6: Usuarios con roles nuevos ──────────────────────
-        $this->phase('FASE 6', 'Usuarios y roles');
-
-        $this->step('Usuarios (roles nuevos: director, controlador, etc.)');
-        $this->call('db:seed', ['--class' => 'UsersSeeder', '--force' => true]);
 
         // ─── Fin ────────────────────────────────────────────────────
         $this->info('');
