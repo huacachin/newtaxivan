@@ -99,7 +99,7 @@
                                 <tr>
                                     <td>{{ $item++ }}</td>
                                     <td>{{ $r['date'] }}</td>
-                                    <td>{{ $r['cliente'] ?? '—' }}</td>  {{-- DATOS CLIENTE --}}
+                                    <td>{{ ($r['cliente'] ?? '—') . ' - ' . \Carbon\Carbon::parse($r['date'])->format('d/m/Y') }}</td>
                                     <td>{{ $r['glosa'] }}</td>
                                     <td class="report-blue">{{ $r['ingreso'] ? number_format($r['ingreso'],2) : '0.00' }}</td>
                                     <td class="title-modules">{{ $r['egreso'] ? number_format($r['egreso'],2) : '0.00' }}</td>
