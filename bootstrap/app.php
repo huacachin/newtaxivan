@@ -21,5 +21,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->respond(function ($response) {
+            if ($response->getStatusCode() === 403) {
+                return redirect()->route('departures.index');
+            }
+            return $response;
+        });
     })->create();
