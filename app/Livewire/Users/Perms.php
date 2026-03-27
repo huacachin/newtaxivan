@@ -27,7 +27,7 @@ class Perms extends Component
         }
 
         $this->permsUserName = $this->user->name;
-        $this->roles = Role::orderBy('name')->get(['id','name']);
+        $this->roles = Role::all(['id','name'])->sortBy(fn($r) => User::ROLE_HIERARCHY[$r->name] ?? 0)->values();
 
         $this->selectedRoleId = $this->user->roles()->value('id');
         $this->selectedPermissionNames = $this->user->permissions()->pluck('name')->toArray();

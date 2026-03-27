@@ -44,7 +44,7 @@ class Edit extends Component
         $this->editedUserRoleName = $this->user->roles->first()?->name ?? '';
 
         $this->headquartes = Headquarter::where('status','active')->get(['id','name']);
-        $this->roles = Role::orderBy('name')->get(['id','name']);
+        $this->roles = Role::all(['id','name'])->sortBy(fn($r) => User::ROLE_HIERARCHY[$r->name] ?? 0)->values();
 
         $this->name = $this->user->name;
         $this->username = $this->user->username;

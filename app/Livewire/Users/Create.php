@@ -51,7 +51,7 @@ class Create extends Component
     public function mount()
     {
         $this->headquartes = Headquarter::where('status','active')->get(['id','name']);
-        $this->roles = Role::orderBy('name')->get(['id','name']);
+        $this->roles = Role::all(['id','name'])->sortBy(fn($r) => User::ROLE_HIERARCHY[$r->name] ?? 0)->values();
     }
 
     public function save()
