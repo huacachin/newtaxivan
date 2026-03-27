@@ -172,9 +172,11 @@
                         @forelse($expenses as $e)
                             <tr  wire:key="exp-{{ $e->id }}">
                                 <td data-label="Opciones">
+                                    @hasanyrole('director|gerente|administrador')
                                     <a href="{{ route('cash.expenses.edit', $e->id) }}">
                                         <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"></i>
                                     </a>
+                                    @endhasanyrole
                                 </td>
                                 <td>{{ $expenses->firstItem() + $loop->index }}</td>
                                 <td>{{ \Carbon\Carbon::parse($e->date)->format('d/m/Y') }}</td>
