@@ -97,7 +97,7 @@ class IncomesExport implements
     public function columnFormats(): array
     {
         return [
-            'B' => NumberFormat::FORMAT_DATE_DDMMYYYY, // dd/mm/aaaa
+            'B' => 'dd/mm/yyyy',
         ];
     }
 
@@ -191,7 +191,7 @@ class IncomesExport implements
                         ->getFont()->setBold(true);
 
                     $ws->getStyle("B{$dataStartRow}:B{$last}")
-                        ->getNumberFormat()->setFormatCode('d/m/yy');
+                        ->getNumberFormat()->setFormatCode('dd/mm/yyyy');
                     $ws->getStyle("F{$dataStartRow}:F{$last}")
                         ->getNumberFormat()->setFormatCode('#,##0.00');
                 }

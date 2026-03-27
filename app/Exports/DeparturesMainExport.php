@@ -157,12 +157,12 @@ class DeparturesMainExport implements
                 'F' => NumberFormat::FORMAT_NUMBER,      // Pasajeros
                 'G' => NumberFormat::FORMAT_NUMBER_00,   // Pasaje
                 'H' => NumberFormat::FORMAT_NUMBER_00,   // Total
-                'I' => NumberFormat::FORMAT_DATE_YYYYMMDD2, // Desde
-                'J' => NumberFormat::FORMAT_DATE_YYYYMMDD2, // Hasta
+                'I' => 'dd/mm/yyyy', // Desde
+                'J' => 'dd/mm/yyyy', // Hasta
             ];
         }
         return [
-            'D' => NumberFormat::FORMAT_DATE_YYYYMMDD2, // Fecha
+            'D' => 'dd/mm/yyyy', // Fecha
             'E' => NumberFormat::FORMAT_DATE_TIME3,     // Hora
             'G' => NumberFormat::FORMAT_NUMBER,         // Veces
             'H' => NumberFormat::FORMAT_NUMBER_00,      // Precio

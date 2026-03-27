@@ -197,7 +197,7 @@ public function title(): string
                         'font'      => ['color' => ['rgb' => '000000']],
                         'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
                     ]);
-                    $ws->getStyle("C{$dataStartRow}:C{$lastRow}")->getNumberFormat()->setFormatCode('yyyy-mm-dd');
+                    $ws->getStyle("C{$dataStartRow}:C{$lastRow}")->getNumberFormat()->setFormatCode('dd/mm/yyyy');
                     $ws->getStyle("F{$dataStartRow}:F{$lastRow}")->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
                 }
 

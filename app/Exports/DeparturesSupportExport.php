@@ -154,12 +154,12 @@ class DeparturesSupportExport implements
                 'F' => NumberFormat::FORMAT_NUMBER,
                 'G' => NumberFormat::FORMAT_NUMBER_00,
                 'H' => NumberFormat::FORMAT_NUMBER_00,
-                'I' => NumberFormat::FORMAT_DATE_YYYYMMDD2,
-                'J' => NumberFormat::FORMAT_DATE_YYYYMMDD2,
+                'I' => 'dd/mm/yyyy',
+                'J' => 'dd/mm/yyyy',
             ];
         }
         return [
-            'D' => NumberFormat::FORMAT_DATE_YYYYMMDD2,
+            'D' => 'dd/mm/yyyy',
             'E' => NumberFormat::FORMAT_DATE_TIME3,
             'G' => NumberFormat::FORMAT_NUMBER,
             'H' => NumberFormat::FORMAT_NUMBER_00,

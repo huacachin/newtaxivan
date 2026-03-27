@@ -462,7 +462,7 @@ class CajaEstadisticaExport implements WithEvents
         for ($day=1; $day <= $days; $day++) {
             $dateObj = Carbon::create($year, $month, $day);
             $d   = $dateObj->toDateString();
-            $lbl = $dateObj->format('d/m/y');
+            $lbl = $dateObj->format('d/m/Y');
 
             $cot = (float)($pagos["{$d}|PAGO"]    ?? 0);
             $ret = (float)($pagos["{$d}|RETRASO"] ?? 0);

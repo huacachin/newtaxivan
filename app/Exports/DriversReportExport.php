@@ -66,8 +66,8 @@ class DriversReportExport implements FromArray, WithColumnFormatting, WithEvents
                 $plates ?: '',                                  // Placa
                 (string)$d->name,                               // Nombre
                 (string)$d->document_number,                    // N° Documento
-                optional($d->contract_start)?->format('Y-m-d') ?: null, // I.Contrato
-                optional($d->contract_end)?->format('Y-m-d') ?: null,   // F.Contrato
+                optional($d->contract_start)?->format('d/m/Y') ?: null, // I.Contrato
+                optional($d->contract_end)?->format('d/m/Y') ?: null,   // F.Contrato
                 (string)$d->phone,                              // Teléfono
                 (string)$d->condition,                          // Condición
             ];
@@ -89,8 +89,8 @@ class DriversReportExport implements FromArray, WithColumnFormatting, WithEvents
                 '—',                                            // Placa
                 (string)$d->name,
                 (string)$d->document_number,
-                optional($d->contract_start)?->format('Y-m-d') ?: null,
-                optional($d->contract_end)?->format('Y-m-d') ?: null,
+                optional($d->contract_start)?->format('d/m/Y') ?: null,
+                optional($d->contract_end)?->format('d/m/Y') ?: null,
                 (string)$d->phone,
                 (string)$d->condition,
             ];
@@ -107,8 +107,8 @@ class DriversReportExport implements FromArray, WithColumnFormatting, WithEvents
     {
         return [
             'E' => '@',
-            'F' => NumberFormat::FORMAT_DATE_YYYYMMDD2,
-            'G' => NumberFormat::FORMAT_DATE_YYYYMMDD2,
+            'F' => 'dd/mm/yyyy',
+            'G' => 'dd/mm/yyyy',
             'H' => '@',
         ];
     }

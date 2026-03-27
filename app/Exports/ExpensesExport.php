@@ -107,7 +107,7 @@ class ExpensesExport implements
     public function columnFormats(): array
     {
         return [
-            'B' => NumberFormat::FORMAT_DATE_DDMMYYYY,
+            'B' => 'dd/mm/yyyy',
             'E' => NumberFormat::FORMAT_NUMBER_00,
         ];
     }
@@ -198,7 +198,7 @@ class ExpensesExport implements
                         ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
                     $ws->getStyle("B{$dataStartRow}:B{$last}")
-                        ->getNumberFormat()->setFormatCode('d/m/yy');
+                        ->getNumberFormat()->setFormatCode('dd/mm/yyyy');
                     $ws->getStyle("E{$dataStartRow}:E{$last}")
                         ->getNumberFormat()->setFormatCode('"S/ " #,##0');
                 }
