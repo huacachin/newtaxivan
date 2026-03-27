@@ -109,6 +109,9 @@ class User extends Authenticatable
 
     public function canManageUser(User $target): bool
     {
+        if ($this->isDirector()) {
+            return $this->getRoleLevel() >= $target->getRoleLevel();
+        }
         return $this->getRoleLevel() > $target->getRoleLevel();
     }
 }

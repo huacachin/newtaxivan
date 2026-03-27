@@ -413,12 +413,13 @@ class Index extends Component
         $authLevel = $authUser->getRoleLevel();
 
         $visibleRoles = collect(User::ROLE_HIERARCHY)
-            ->filter(fn($level) => $level < $authLevel)
+            ->filter(fn($level) => $authUser->isDirector() ? $level <= $authLevel : $level < $authLevel)
             ->keys()
             ->toArray();
 
         $users = User::query()
             ->where('status', 'active')
+            ->where('id', '!=', $authUser->id)
             ->whereHas('roles', fn($q) => $q->whereIn('name', $visibleRoles))
             ->when($term !== '', function ($q) use ($term) {
                 $q->where(function ($w) use ($term) {
