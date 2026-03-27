@@ -154,18 +154,18 @@ class DebtPerDays extends Component
             $costMap[$c->vehicle_id][$c->date] = (float)$c->amount;
         }
 
-        // --- Pagos por día (al menos 1 pago; excluye DEUDA) ---
+        // --- Pagos por día (sum monto; excluye DEUDA) ---
         $payDay = DB::table('payments as p')
-            ->select('p.vehicle_id', DB::raw('DATE(p.date_payment) as date'))
+            ->select('p.vehicle_id', DB::raw('DATE(p.date_payment) as date'), DB::raw('SUM(p.amount) as total_paid'))
             ->whereIn('p.vehicle_id', $vehicleIds)
             ->where('p.type','<>','DEUDA')
             ->whereBetween(DB::raw('DATE(p.date_payment)'), [$from, $toMonthEnd])
             ->groupBy('p.vehicle_id', DB::raw('DATE(p.date_payment)'))
             ->get();
 
-        $payExists = [];
+        $payMap = [];
         foreach ($payDay as $p) {
-            $payExists[$p->vehicle_id][$p->date] = true;
+            $payMap[$p->vehicle_id][$p->date] = (float)$p->total_paid;
         }
 
         // --- Salidas por día (sum(times)) excluyendo Huachipa / Lima ---
@@ -175,7 +175,7 @@ class DebtPerDays extends Component
             ->whereIn('d.vehicle_id', $vehicleIds)
             ->whereBetween('d.date', [$from, $toMonthEnd])
             ->where(function($q){
-                $q->whereNull('h.name')->orWhereNotIn('h.name', ['Huachipa','Lima']);
+                $q->whereNull('h.name')->orWhereNotIn('h.name', ['Huachipa','lima']);
             })
             ->groupBy('d.vehicle_id','d.date')
             ->get();
@@ -236,19 +236,20 @@ class DebtPerDays extends Component
                     continue;
                 }
 
-                // Exonerados: se muestra "NT" como en legacy, sin afectar totales
-                if ($isExempt) {
-                    $row['cells'][] = ['txt'=>'NT', 'class'=>'nopay'];
-                    continue;
+                // Costo esperado: costpla_dia o fallback 10 si fecha <= 2023-04-30
+                $cost = (float)($costMap[$v->id][$date] ?? 0.0);
+                if ($cost == 0.0 && $date <= '2023-04-30') {
+                    $cost = 10.0;
                 }
 
-                $cost = (float)($costMap[$v->id][$date] ?? 0.0);
+                // Monto pagado ese día
+                $paid = (float)($payMap[$v->id][$date] ?? 0.0);
 
-                // 1) Si hay al menos un pago → "P"
-                if (!empty($payExists[$v->id][$date])) {
+                // 1) Si monto pagado >= costo esperado → "P" (pagado)
+                if ($cost > 0 && $paid >= $cost) {
                     $row['cells'][] = ['txt'=>'P', 'class'=>'paid'];
 
-                    if ($date <= $cutoff) {
+                    if ($date <= $cutoff && !$isExempt) {
                         $row['paid_days']++;
                         $row['paid_amount'] += $cost;
                         $sumPaidDays++;
@@ -260,11 +261,12 @@ class DebtPerDays extends Component
                     continue;
                 }
 
-                // 2) Sin pago → ver salidas (mostrar K exacto como informativo)
+                // 2) Pago insuficiente o sin pago → ver salidas (ceil(k/2) vueltas)
                 $k = (int)($depMap[$v->id][$date] ?? 0);
                 if ($k > 0) {
-                    $row['cells'][] = ['txt'=>(string)$k, 'class'=>'freq'];
-                    if ($date <= $cutoff) {
+                    $vueltas = (int)ceil($k / 2);
+                    $row['cells'][] = ['txt'=>(string)$vueltas, 'class'=>'freq'];
+                    if ($date <= $cutoff && !$isExempt) {
                         $row['debt_days']++;
                         $row['debt_amount'] += $cost;
                         $sumDebtDays++;
