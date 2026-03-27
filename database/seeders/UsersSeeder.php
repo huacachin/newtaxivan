@@ -166,8 +166,15 @@ class UsersSeeder extends Seeder
                 'phone'           => '915239213',
                 'headquarter_id'  => 1,
                 'status'          => 'active',
-                'role'            => 'director',
-                'direct_perms'    => $directorPerms,
+                'role'            => 'administrador',
+                'direct_perms'    => [
+                    'dashboard', 'departures', 'payments',
+                    'configuracion.vehicles', 'configuracion.owners', 'configuracion.drivers',
+                    'configuracion.cost-per-plate', 'configuracion.users', 'configuracion.concepts',
+                    'debts.days', 'debts.monthly',
+                    'cash.incomes',
+                    'cash.report-general', 'cash.report-draco', 'cash.report-sal-pag-cont', 'cash.report-caja-ma',
+                ],
             ],
         ];
 
