@@ -51,9 +51,6 @@ class SetupProduction extends Command
         // ─── FASE 1: Maestros ───────────────────────────────────────
         $this->phase('FASE 1', 'Maestros (legacy → nueva BD)');
 
-        $this->step('Vehículos');
-        $this->call('taxivan:migrate-vehicles', ['--chunk' => $chunk]);
-
         $this->step('Conductores');
         $this->call('taxivan:migrate-drivers', ['--chunk' => $chunk]);
 
@@ -64,6 +61,9 @@ class SetupProduction extends Command
         $this->step('Fix: owners → status inactive');
         $affected = DB::table('owners')->where('status', 'active')->update(['status' => 'inactive']);
         $this->line("  → {$affected} propietarios actualizados a inactive.");
+
+        $this->step('Vehículos (depende de conductores y propietarios)');
+        $this->call('taxivan:migrate-vehicles', ['--chunk' => $chunk]);
 
         // ─── FASE 2: Transacciones ──────────────────────────────────
         $this->phase('FASE 2', 'Transacciones');
