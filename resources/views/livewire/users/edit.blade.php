@@ -15,12 +15,20 @@
 
     <div class="card">
         <div class="card-body">
+            @if(!$canFullEdit)
+                <div class="alert alert-info py-2 mb-3">
+                    <i class="ti ti-info-circle"></i>
+                    Solo puedes modificar la contraseña{{ $editedUserRoleName === 'controlador' ? ' y las sucursales' : '' }}.
+                </div>
+            @endif
+
             <div class="perm-grid form-two-cols">
                 {{-- Nombre --}}
                 <div class="perm-row">
                     <div class="perm-col-title">Nombre</div>
                     <div class="perm-col-controls">
-                        <input type="text" class="form-control form-control-sm" placeholder="Ingresar nombre" wire:model.live="name">
+                        <input type="text" class="form-control form-control-sm" placeholder="Ingresar nombre"
+                               wire:model.live="name" @if(!$canFullEdit) disabled style="opacity:.6" @endif>
                         @error('name') <span class="title-modules small">{{ $message }}</span> @enderror
                     </div>
                 </div>
@@ -29,7 +37,8 @@
                 <div class="perm-row">
                     <div class="perm-col-title">Usuario</div>
                     <div class="perm-col-controls">
-                        <input type="text" class="form-control form-control-sm" placeholder="Ingresar usuario" wire:model="username">
+                        <input type="text" class="form-control form-control-sm" placeholder="Ingresar usuario"
+                               wire:model="username" @if(!$canFullEdit) disabled style="opacity:.6" @endif>
                         @error('username') <span class="title-modules small">{{ $message }}</span> @enderror
                     </div>
                 </div>
@@ -47,7 +56,8 @@
                 <div class="perm-row">
                     <div class="perm-col-title">Email</div>
                     <div class="perm-col-controls">
-                        <input type="email" class="form-control form-control-sm" placeholder="Ingresar email" wire:model="email">
+                        <input type="email" class="form-control form-control-sm" placeholder="Ingresar email"
+                               wire:model="email" @if(!$canFullEdit) disabled style="opacity:.6" @endif>
                         @error('email') <span class="title-modules small">{{ $message }}</span> @enderror
                     </div>
                 </div>
@@ -56,7 +66,8 @@
                 <div class="perm-row">
                     <div class="perm-col-title">Tipo Documento</div>
                     <div class="perm-col-controls">
-                        <select class="form-control form-control-sm" wire:model="document_type">
+                        <select class="form-control form-control-sm" wire:model="document_type"
+                                @if(!$canFullEdit) disabled style="opacity:.6" @endif>
                             <option value="dni">DNI</option>
                             <option value="ruc">RUC</option>
                             <option value="ce">CE</option>
@@ -69,7 +80,8 @@
                 <div class="perm-row">
                     <div class="perm-col-title">N° Documento</div>
                     <div class="perm-col-controls">
-                        <input type="text" class="form-control form-control-sm" placeholder="Ingresar número" wire:model="document_number">
+                        <input type="text" class="form-control form-control-sm" placeholder="Ingresar número"
+                               wire:model="document_number" @if(!$canFullEdit) disabled style="opacity:.6" @endif>
                         @error('document_number') <span class="title-modules small">{{ $message }}</span> @enderror
                     </div>
                 </div>
@@ -78,15 +90,17 @@
                 <div class="perm-row">
                     <div class="perm-col-title">Teléfono</div>
                     <div class="perm-col-controls">
-                        <input type="text" class="form-control form-control-sm" placeholder="Ingresar teléfono" wire:model="phone">
+                        <input type="text" class="form-control form-control-sm" placeholder="Ingresar teléfono"
+                               wire:model="phone" @if(!$canFullEdit) disabled style="opacity:.6" @endif>
                         @error('phone') <span class="title-modules small">{{ $message }}</span> @enderror
                     </div>
                 </div>
 
-                {{-- Sedes (solo visible para roles no-admin) --}}
+                {{-- Sedes --}}
                 @php
                     $selectedRoleName = $selectedRoleId ? collect($roles)->firstWhere('id', $selectedRoleId)?->name : null;
                     $isAdminRole = $selectedRoleName && in_array(mb_strtolower($selectedRoleName), ['director', 'gerente']);
+                    $canEditHq = $canFullEdit || $editedUserRoleName === 'controlador';
                 @endphp
                 <div class="perm-row span-2" @if($isAdminRole) style="display:none" @endif>
                     <div class="perm-col-title">Sucursales</div>
@@ -94,7 +108,7 @@
                         @if($isAdminRole)
                             <span class="text-muted small">Admin tiene acceso a todas las sedes automáticamente.</span>
                         @else
-                            <div class="perm-chips">
+                            <div class="perm-chips" @if(!$canEditHq) style="opacity:.6; pointer-events:none" @endif>
                                 @foreach($headquartes as $h)
                                     @php
                                         $isSelected = in_array($h->id, (array)$selectedHeadquarters, true);
@@ -102,12 +116,14 @@
                                     @endphp
                                     <label class="chip-hq {{ $isSelected ? 'is-selected' : '' }} {{ $isDefault ? 'is-default' : '' }}">
                                         <input class="form-check-input" type="checkbox"
-                                               value="{{ $h->id }}" wire:model="selectedHeadquarters">
+                                               value="{{ $h->id }}" wire:model="selectedHeadquarters"
+                                               @if(!$canEditHq) disabled @endif>
                                         <span>{{ $h->name }}</span>
                                         <span class="hq-primary" title="Marcar como sede primaria">
                                             <input class="form-check-input" type="radio"
                                                    name="default_hq_edit"
-                                                   value="{{ $h->id }}" wire:model="defaultHeadquarter">
+                                                   value="{{ $h->id }}" wire:model="defaultHeadquarter"
+                                                   @if(!$canEditHq) disabled @endif>
                                             <small>Primaria</small>
                                         </span>
                                     </label>
@@ -123,11 +139,12 @@
                 <div class="perm-row span-2">
                     <div class="perm-col-title">Rol</div>
                     <div class="perm-col-controls">
-                        <div class="perm-chips">
+                        <div class="perm-chips" @if(!$canFullEdit) style="opacity:.6; pointer-events:none" @endif>
                             @forelse($roles as $r)
                                 <label class="chip-radio" title="{{ __('roles.'.$r->name) }}">
                                     <input type="radio" class="form-check-input"
-                                           name="role_single_edit" value="{{ $r->id }}" wire:model="selectedRoleId">
+                                           name="role_single_edit" value="{{ $r->id }}" wire:model="selectedRoleId"
+                                           @if(!$canFullEdit) disabled @endif>
                                     <span>{{ __('roles.'.$r->name) }}</span>
                                 </label>
                             @empty

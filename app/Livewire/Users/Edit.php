@@ -28,9 +28,21 @@ class Edit extends Component
     public ?int $defaultHeadquarter = null;
     public ?int $selectedRoleId = null;
 
+    public bool $canFullEdit = false;
+    public string $editedUserRoleName = '';
+
     public function mount(int $id)
     {
         $this->user = User::with(['headquarters','roles'])->findOrFail($id);
+
+        $authUser = auth()->user();
+        if (!$authUser->canManageUser($this->user)) {
+            abort(403);
+        }
+
+        $this->canFullEdit = $authUser->isDirector();
+        $this->editedUserRoleName = $this->user->roles->first()?->name ?? '';
+
         $this->headquartes = Headquarter::where('status','active')->get(['id','name']);
         $this->roles = Role::orderBy('name')->get(['id','name']);
 
@@ -74,51 +86,89 @@ class Edit extends Component
 
     public function update()
     {
-        $this->validate();
-
-        // Si el rol es admin, asignar todas las sedes con Huaycan como primaria
-        $roleName = $this->selectedRoleId
-            ? collect($this->roles)->firstWhere('id', $this->selectedRoleId)?->name
-            : null;
-
-        if ($roleName && in_array(mb_strtolower($roleName), ['director', 'gerente'])) {
-            $allHqs = Headquarter::where('status', 'active')->pluck('id')->map(fn($v) => (int)$v)->toArray();
-            $this->selectedHeadquarters = $allHqs;
-            $huaycan = Headquarter::where('name', 'Huaycan')->value('id');
-            $this->defaultHeadquarter = $huaycan ? (int)$huaycan : ($allHqs[0] ?? null);
+        $authUser = auth()->user();
+        if (!$authUser->canManageUser($this->user)) {
+            abort(403);
         }
 
-        if ($this->defaultHeadquarter && !in_array($this->defaultHeadquarter, $this->selectedHeadquarters, true)) {
-            $this->selectedHeadquarters[] = $this->defaultHeadquarter;
+        if ($this->canFullEdit) {
+            $this->validate();
+
+            // Si el rol es admin, asignar todas las sedes con Huaycan como primaria
+            $roleName = $this->selectedRoleId
+                ? collect($this->roles)->firstWhere('id', $this->selectedRoleId)?->name
+                : null;
+
+            if ($roleName && in_array(mb_strtolower($roleName), ['director', 'gerente'])) {
+                $allHqs = Headquarter::where('status', 'active')->pluck('id')->map(fn($v) => (int)$v)->toArray();
+                $this->selectedHeadquarters = $allHqs;
+                $huaycan = Headquarter::where('name', 'Huaycan')->value('id');
+                $this->defaultHeadquarter = $huaycan ? (int)$huaycan : ($allHqs[0] ?? null);
+            }
+
+            if ($this->defaultHeadquarter && !in_array($this->defaultHeadquarter, $this->selectedHeadquarters, true)) {
+                $this->selectedHeadquarters[] = $this->defaultHeadquarter;
+            }
+
+            $payload = [
+                "name"            => $this->name,
+                "username"        => $this->username,
+                "email"           => $this->email,
+                "document_type"   => $this->document_type,
+                "document_number" => $this->document_number,
+                "phone"           => $this->phone,
+            ];
+            if (!empty($this->pwd)) {
+                $payload["password"] = Hash::make($this->pwd);
+            }
+            $this->user->update($payload);
+
+            $attach = collect($this->selectedHeadquarters)
+                ->mapWithKeys(fn($id) => [(int)$id => ['is_default' => (int)$id === (int)$this->defaultHeadquarter]])
+                ->all();
+            $this->user->headquarters()->sync($attach);
+
+            $this->user->headquarter_id = $this->defaultHeadquarter
+                ?: (count($this->selectedHeadquarters) ? (int)$this->selectedHeadquarters[0] : null);
+            $this->user->save();
+
+            $roleName = null;
+            if ($this->selectedRoleId) {
+                $roleName = collect($this->roles)->firstWhere('id', $this->selectedRoleId)?->name;
+            }
+            $this->user->syncRoles($roleName ? [$roleName] : []);
+        } else {
+            // No-Director: solo password y sucursales (sucursales solo si el editado es controlador)
+            $rules = ['pwd' => ['nullable','string','min:8']];
+
+            $isControlador = $this->editedUserRoleName === 'controlador';
+            if ($isControlador) {
+                $rules['selectedHeadquarters']   = ['array'];
+                $rules['selectedHeadquarters.*'] = ['integer','exists:headquarters,id'];
+                $rules['defaultHeadquarter']     = ['nullable','integer','exists:headquarters,id'];
+            }
+
+            $this->validate($rules);
+
+            if (!empty($this->pwd)) {
+                $this->user->update(['password' => Hash::make($this->pwd)]);
+            }
+
+            if ($isControlador) {
+                if ($this->defaultHeadquarter && !in_array($this->defaultHeadquarter, $this->selectedHeadquarters, true)) {
+                    $this->selectedHeadquarters[] = $this->defaultHeadquarter;
+                }
+
+                $attach = collect($this->selectedHeadquarters)
+                    ->mapWithKeys(fn($id) => [(int)$id => ['is_default' => (int)$id === (int)$this->defaultHeadquarter]])
+                    ->all();
+                $this->user->headquarters()->sync($attach);
+
+                $this->user->headquarter_id = $this->defaultHeadquarter
+                    ?: (count($this->selectedHeadquarters) ? (int)$this->selectedHeadquarters[0] : null);
+                $this->user->save();
+            }
         }
-
-        $payload = [
-            "name"            => $this->name,
-            "username"        => $this->username,
-            "email"           => $this->email,
-            "document_type"   => $this->document_type,
-            "document_number" => $this->document_number,
-            "phone"           => $this->phone,
-        ];
-        if (!empty($this->pwd)) {
-            $payload["password"] = Hash::make($this->pwd);
-        }
-        $this->user->update($payload);
-
-        $attach = collect($this->selectedHeadquarters)
-            ->mapWithKeys(fn($id) => [(int)$id => ['is_default' => (int)$id === (int)$this->defaultHeadquarter]])
-            ->all();
-        $this->user->headquarters()->sync($attach);
-
-        $this->user->headquarter_id = $this->defaultHeadquarter
-            ?: (count($this->selectedHeadquarters) ? (int)$this->selectedHeadquarters[0] : null);
-        $this->user->save();
-
-        $roleName = null;
-        if ($this->selectedRoleId) {
-            $roleName = collect($this->roles)->firstWhere('id', $this->selectedRoleId)?->name;
-        }
-        $this->user->syncRoles($roleName ? [$roleName] : []);
 
         session()->flash('success','Usuario actualizado');
         return redirect()->route('settings.users.index');

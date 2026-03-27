@@ -51,9 +51,9 @@ Route::middleware('auth')->group(function () {
 
     // Usuarios
     Route::get('users', [UserController::class,'index'])->name('settings.users.index');
-    Route::get('users/create', [UserController::class,'create'])->name('settings.users.create')->middleware('role:director|gerente');
-    Route::get('users/{user}/edit', [UserController::class,'edit'])->name('settings.users.edit')->middleware('role:director|gerente');
-    Route::get('users/{user}/perms', [UserController::class,'perms'])->name('settings.users.perms')->middleware('role:director|gerente');
+    Route::get('users/create', [UserController::class,'create'])->name('settings.users.create')->middleware('role:director');
+    Route::get('users/{user}/edit', [UserController::class,'edit'])->name('settings.users.edit');
+    Route::get('users/{user}/perms', [UserController::class,'perms'])->name('settings.users.perms')->middleware('role:director');
 
     // Conceptos
     Route::resource('concepts', ConceptController::class)->names('settings.concepts');

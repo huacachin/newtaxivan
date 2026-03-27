@@ -39,10 +39,12 @@
                                    </div>
 
                                    <!-- Botón a la derecha -->
+                                   @if(auth()->user()->isDirector())
                                    <a class="btn btn-sm btn-primary flex-shrink-0"
                                       href="{{ route('settings.users.create') }}" target="_blank">
                                        <i class="ti ti-square-plus f-s-12"></i> Nuevo
                                    </a>
+                                   @endif
 
                                    <button class="btn btn-sm btn-primary flex-shrink-0"
                                            wire:click="export">
@@ -100,20 +102,20 @@
                                                 <i class="ti ti-edit"></i>
                                             </a>
 
-                                            {{-- Rol & Permisos --}}
+                                            {{-- Rol & Permisos (solo Director) --}}
+                                            @if(auth()->user()->isDirector())
                                             <a class="btn btn-sm btn-outline-dark"
                                                title="Rol & Permisos"
                                                href="{{ route('settings.users.perms', $user->id) }}" target="_blank">
                                                 <i class="ti ti-shield-lock"></i>
                                             </a>
+                                            @endif
 
-                                            @hasanyrole('director|gerente')
                                             <button class="btn btn-sm btn-outline-danger ms-1"
                                                     title="Desactivar usuario"
                                                     wire:click="questionDelete({{ $user->id }})">
                                                 <i class="ti ti-trash"></i>
                                             </button>
-                                            @endhasanyrole
                                         </td>
                                     </tr>
                                 @endforeach

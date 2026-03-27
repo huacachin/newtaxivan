@@ -15,6 +15,14 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
+    const ROLE_HIERARCHY = [
+        'controlador'   => 1,
+        'supervisor'    => 2,
+        'administrador' => 3,
+        'gerente'       => 4,
+        'director'      => 5,
+    ];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -88,6 +96,19 @@ class User extends Authenticatable
         return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&size=128&background=0D8ABC&color=fff';
     }
 
+    public function getRoleLevel(): int
+    {
+        $roleName = $this->roles->first()?->name;
+        return self::ROLE_HIERARCHY[$roleName] ?? 0;
+    }
 
+    public function isDirector(): bool
+    {
+        return $this->hasRole('director');
+    }
 
+    public function canManageUser(User $target): bool
+    {
+        return $this->getRoleLevel() > $target->getRoleLevel();
+    }
 }

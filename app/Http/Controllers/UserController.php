@@ -10,7 +10,7 @@ class UserController extends Controller
 {
 
     public function __construct(){
-        $this->middleware(['auth','permission:configuracion.users'])->only(['index','export']);
+        $this->middleware(['auth','permission:configuracion.users'])->only(['index','edit','export']);
     }
     /**
      * Display a listing of the resource.

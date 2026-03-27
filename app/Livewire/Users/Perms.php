@@ -19,7 +19,13 @@ class Perms extends Component
 
     public function mount(int $id)
     {
-        $this->user =  User::with(['headquarters','roles'])->findOrFail($id);
+        $this->user = User::with(['headquarters','roles'])->findOrFail($id);
+
+        $authUser = auth()->user();
+        if (!$authUser->isDirector() || !$authUser->canManageUser($this->user)) {
+            abort(403);
+        }
+
         $this->permsUserName = $this->user->name;
         $this->roles = Role::orderBy('name')->get(['id','name']);
 
@@ -123,6 +129,11 @@ class Perms extends Component
 
     public function savePerms(): void
     {
+        $authUser = auth()->user();
+        if (!$authUser->isDirector() || !$authUser->canManageUser($this->user)) {
+            abort(403);
+        }
+
         $user = $this->user;
 
         // Rol único

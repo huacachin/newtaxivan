@@ -350,15 +350,11 @@ class Index extends Component
     #[On('register_destroy')]
     public function destroy(int $id): void
     {
-        if (!auth()->user()?->hasAnyRole('director','gerente')) {
+        $authUser = auth()->user();
+        $user = User::with('roles')->findOrFail($id);
+
+        if (!$authUser->canManageUser($user)) {
             abort(403);
-        }
-
-        $user = User::findOrFail($id);
-
-        if ($user->hasRole('director')) {
-            $this->dispatch('errorAlert', ['message' => 'No se puede eliminar a un usuario con rol Director']);
-            return;
         }
 
         $user->update(['status' => 'inactive']);
@@ -413,9 +409,17 @@ class Index extends Component
     public function render()
     {
         $term = trim((string) $this->search);
+        $authUser = auth()->user();
+        $authLevel = $authUser->getRoleLevel();
+
+        $visibleRoles = collect(User::ROLE_HIERARCHY)
+            ->filter(fn($level) => $level < $authLevel)
+            ->keys()
+            ->toArray();
 
         $users = User::query()
             ->where('status', 'active')
+            ->whereHas('roles', fn($q) => $q->whereIn('name', $visibleRoles))
             ->when($term !== '', function ($q) use ($term) {
                 $q->where(function ($w) use ($term) {
                     if (str_contains($term, '@')) {
@@ -428,7 +432,9 @@ class Index extends Component
                 });
             })
             ->with(['headquarter','headquarters','roles','permissions'])
-            ->get();
+            ->get()
+            ->sortBy(fn($u) => $u->getRoleLevel())
+            ->values();
 
         $permissionGroups = Permission::query()
             ->orderBy('module')->orderBy('name')
