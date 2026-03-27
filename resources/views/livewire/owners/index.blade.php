@@ -87,7 +87,7 @@
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">
                             <tr>
-                                @hasanyrole('director')<th scope="col">Acción</th>@endhasanyrole
+                                @hasanyrole('director|administrador')<th scope="col">Acción</th>@endhasanyrole
                                 <th>Item</th>
                                 <th>Cod</th>
                                 <th scope="col">Placa</th>
@@ -100,7 +100,7 @@
                             @if($owners->count() > 0)
                                 @foreach ($owners as $owner)
                                     <tr>
-                                        @hasanyrole('director')
+                                        @hasanyrole('director|administrador')
                                         <td>
                                             <a href="{{ route('settings.owners.edit', $owner->id) }}">
                                                 <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"></i>
@@ -140,13 +140,13 @@
                                 @endforeach
                             @else
                                 <tr>
-                                    <td colspan="{{ auth()->user()->isDirector() ? 7 : 6 }}">No se encontrarón resultados</td>
+                                    <td colspan="{{ auth()->user()->hasAnyRole('director','administrador') ? 7 : 6 }}">No se encontrarón resultados</td>
                                 </tr>
                             @endif
                             </tbody>
                             <tfoot>
                             <tr>
-                                <td colspan="{{ auth()->user()->isDirector() ? 7 : 6 }}">Propietarios: {{ $owners->count() }}</td>
+                                <td colspan="{{ auth()->user()->hasAnyRole('director','administrador') ? 7 : 6 }}">Propietarios: {{ $owners->count() }}</td>
                             </tr>
                             </tfoot>
                         </table>
@@ -156,7 +156,7 @@
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">
                             <tr>
-                                @hasanyrole('director')<th scope="col">Acción</th>@endhasanyrole
+                                @hasanyrole('director|administrador')<th scope="col">Acción</th>@endhasanyrole
                                 <th scope="col">Id</th>
                                 <th scope="col">Nombre/Empresa</th>
                                 <th scope="col">DNI/RUC</th>
@@ -166,7 +166,7 @@
                             <tbody>
                             @forelse ($ownersFree as $owner)
                                 <tr>
-                                    @hasanyrole('director')
+                                    @hasanyrole('director|administrador')
                                     <td width="50">
                                         <a href="{{ route('settings.owners.edit', $owner->id) }}">
                                             <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"></i>
@@ -202,13 +202,13 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="{{ auth()->user()->isDirector() ? 5 : 4 }}">No se encontrarón resultados</td>
+                                    <td colspan="{{ auth()->user()->hasAnyRole('director','administrador') ? 5 : 4 }}">No se encontrarón resultados</td>
                                 </tr>
                             @endforelse
                             </tbody>
                             <tfoot>
                             <tr>
-                                <td colspan="{{ auth()->user()->isDirector() ? 5 : 4 }}">Libres: {{ $ownersFree->count() }}</td>
+                                <td colspan="{{ auth()->user()->hasAnyRole('director','administrador') ? 5 : 4 }}">Libres: {{ $ownersFree->count() }}</td>
                             </tr>
                             </tfoot>
                         </table>
