@@ -15,7 +15,7 @@ class Create extends Component
     public $class = '', $brand = '', $year, $model, $bodywork = '';
     public $color, $type, $affiliated_company, $condition;
     public $owner_id, $driver_id, $fuel, $soat_date, $technical_review, $certificate_date;
-    public $detail, $plate, $sort_order = 0, $seats = 0,$passengers = 0;
+    public $detail, $plate, $sort_order, $seats = 0,$passengers = 0;
 
     public $listDrivers, $listOwners, $listHeadquarters;
 
@@ -32,7 +32,7 @@ class Create extends Component
         "color" => "nullable|string|max:255",
         "type"=>"nullable|string|max:255",
         "affiliated_company" => "nullable|string|max:255",
-        "condition" => "required|string|max:255",
+        "condition" => "required|string|min:1|max:255",
         "owner_id" => "nullable|exists:owners,id",
         "driver_id" => "nullable|exists:drivers,id",
         "fuel" => "nullable|string|max:255",

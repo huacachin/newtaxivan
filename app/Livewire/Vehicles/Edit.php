@@ -71,7 +71,7 @@ class Edit extends Component
             "color" => "nullable|string|max:255",
             "type"=>"nullable|string|max:255",
             "affiliated_company" => "nullable|string|max:255",
-            "condition" => "required|string|max:255",
+            "condition" => "required|string|min:1|max:255",
             "owner_id" => "nullable|exists:owners,id",
             "driver_id" => "nullable|exists:drivers,id",
             "fuel" => "nullable|string|max:255",
