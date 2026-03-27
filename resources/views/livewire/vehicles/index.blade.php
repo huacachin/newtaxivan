@@ -94,10 +94,12 @@
                                     </div>
 
                                     <!-- Botones -->
+                                    @if(auth()->user()->isDirector())
                                     <a class="btn btn-sm btn-primary flex-shrink-0"
                                        href="{{ route('settings.vehicles.create') }}" target="_blank">
                                         <i class="ti ti-square-plus f-s-12"></i> Nuevo
                                     </a>
+                                    @endif
 
                                     <button id="down"
                                             class="btn btn-sm btn-primary flex-shrink-0">
@@ -119,9 +121,9 @@
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">
                             <tr>
-                                @hasanyrole('director|gerente')
+                                @if(auth()->user()->isDirector())
                                 <th class="sticky-col">Acción</th>
-                                @endhasanyrole
+                                @endif
                                 <th>Item</th>
                                 <th>Cod</th>
                                 <th class="sticky-col-2">Placa</th>
@@ -151,13 +153,13 @@
                                         elseif ($cond === 'DT') { $condClass .= 'cond-DT'; }
                                     @endphp
                                     <tr>
-                                        @hasanyrole('director|gerente')
+                                        @if(auth()->user()->isDirector())
                                         <td>
                                             <a href="{{ route('settings.vehicles.edit', $vehicle->id) }}">
                                                 <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"></i>
                                             </a>
                                         </td>
-                                        @endhasanyrole
+                                        @endif
 
                                         <td>{{ $loop->iteration }}</td>
                                         <td>{{ $vehicle->sort_order }}</td>
@@ -194,7 +196,7 @@
                                 @endforeach
                             @else
                                 <tr>
-                                    @php $colspan = 12 + ($status === "inactive" ? 1 : 0) + (auth()->user()->hasAnyRole('director','gerente') ? 1 : 0); @endphp
+                                    @php $colspan = 12 + ($status === "inactive" ? 1 : 0) + (auth()->user()->isDirector() ? 1 : 0); @endphp
                                     <td colspan="{{ $colspan }}">No se encontrarón resultados</td>
                                 </tr>
                             @endif
