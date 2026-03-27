@@ -95,27 +95,29 @@
                                             </span>
                                         </td>
                                         <td class="text-nowrap">
-                                            {{-- Editar datos --}}
-                                            <a class="btn btn-sm btn-outline-success me-1"
-                                               title="Editar datos"
-                                               href="{{ route('settings.users.edit', $user->id) }}">
-                                                <i class="ti ti-edit"></i>
-                                            </a>
+                                            @if(auth()->user()->canManageUser($user))
+                                                {{-- Editar datos --}}
+                                                <a class="btn btn-sm btn-outline-success me-1"
+                                                   title="Editar datos"
+                                                   href="{{ route('settings.users.edit', $user->id) }}">
+                                                    <i class="ti ti-edit"></i>
+                                                </a>
 
-                                            {{-- Rol & Permisos (solo Director) --}}
-                                            @if(auth()->user()->isDirector())
-                                            <a class="btn btn-sm btn-outline-dark"
-                                               title="Rol & Permisos"
-                                               href="{{ route('settings.users.perms', $user->id) }}" target="_blank">
-                                                <i class="ti ti-shield-lock"></i>
-                                            </a>
+                                                {{-- Rol & Permisos (solo Director) --}}
+                                                @if(auth()->user()->isDirector())
+                                                <a class="btn btn-sm btn-outline-dark"
+                                                   title="Rol & Permisos"
+                                                   href="{{ route('settings.users.perms', $user->id) }}" target="_blank">
+                                                    <i class="ti ti-shield-lock"></i>
+                                                </a>
+                                                @endif
+
+                                                <button class="btn btn-sm btn-outline-danger ms-1"
+                                                        title="Desactivar usuario"
+                                                        wire:click="questionDelete({{ $user->id }})">
+                                                    <i class="ti ti-trash"></i>
+                                                </button>
                                             @endif
-
-                                            <button class="btn btn-sm btn-outline-danger ms-1"
-                                                    title="Desactivar usuario"
-                                                    wire:click="questionDelete({{ $user->id }})">
-                                                <i class="ti ti-trash"></i>
-                                            </button>
                                         </td>
                                     </tr>
                                 @endforeach
