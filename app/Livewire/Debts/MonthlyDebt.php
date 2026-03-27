@@ -191,7 +191,7 @@ class MonthlyDebt extends Component
             $item++;
 
             $veh      = $row->vehicle_id ? ($vehicles[$row->vehicle_id] ?? null) : null;
-            $cod      = $veh->sort_order ?? '';
+            $cod      = $item;
             $plateStr = $veh ? $veh->plate : ($row->legacy_plate ?? '');
             $cond     = $row->condition ?: ($veh->condition ?? '');
 
