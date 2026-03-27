@@ -128,11 +128,11 @@ class EditExpense extends Component
     #[On('register_destroy')]
     public function destroy(int $id): void
     {
-        if (!auth()->user()?->hasRole('director')) {
+        $expense = Expense::findOrFail($id);
+
+        if (!$expense->canBeDeletedBy(auth()->user())) {
             abort(403);
         }
-
-        $expense = Expense::findOrFail($id);
 
         if ($expense->image_path && Storage::disk('public')->exists($expense->image_path)) {
             Storage::disk('public')->delete($expense->image_path);

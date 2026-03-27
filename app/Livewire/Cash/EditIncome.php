@@ -108,11 +108,11 @@ class EditIncome extends Component
     #[On('register_destroy')]
     public function destroy(int $id): void
     {
-        if (!auth()->user()?->hasRole('director')) {
+        $income = Income::findOrFail($id);
+
+        if (!$income->canBeDeletedBy(auth()->user())) {
             abort(403);
         }
-
-        $income = Income::findOrFail($id);
 
         if ($income->image_path && Storage::disk('public')->exists($income->image_path)) {
             Storage::disk('public')->delete($income->image_path);

@@ -53,4 +53,13 @@ class Income extends Model
         if (!$this->created_at || !$this->created_at->timezone(config('app.timezone'))->isToday()) return false;
         return true;
     }
+
+    public function canBeDeletedBy(User $user): bool
+    {
+        if ($user->hasRole('director')) return true;
+        if (!$user->hasAnyRole(['administrador', 'gerente'])) return false;
+        if ($this->user_id !== $user->id) return false;
+        if (!$this->created_at || !$this->created_at->timezone(config('app.timezone'))->isToday()) return false;
+        return true;
+    }
 }
