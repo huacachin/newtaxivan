@@ -48,13 +48,26 @@ class Index extends Component
             $status = $this->status = 'active';
         }
 
+        $today = now()->toDateString();
+
         $query = Vehicle::query()
-            ->when(in_array($status, ['active', 'inactive'], true),
-                fn($q) => $q->whereRaw('LOWER(TRIM(status)) = ?', [$status])
-            )
-            ->when($status === 'inactive',
-                fn($q) => $q->whereNotNull('termination_date')
-            )
+            ->when($status === 'active', function ($q) use ($today) {
+                $q->where('status', 'active')
+                  ->where(function ($w) use ($today) {
+                      $w->whereNull('termination_date')
+                        ->orWhere('termination_date', '>', $today);
+                  });
+            })
+            ->when($status === 'inactive', function ($q) use ($today) {
+                $q->where(function ($w) use ($today) {
+                    $w->where('status', 'inactive')
+                      ->orWhere(function ($sub) use ($today) {
+                          $sub->where('status', 'active')
+                              ->whereNotNull('termination_date')
+                              ->where('termination_date', '<=', $today);
+                      });
+                });
+            })
             ->when($search !== '' && $filter !== '', function ($q) use ($filter, $search) {
                 return match ($filter) {
                     'plate' => $q->where('plate', 'like', "%{$search}%"),
