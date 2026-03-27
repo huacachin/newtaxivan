@@ -122,7 +122,7 @@
                         <button type="button" class="btn btn-sm btn-primary" wire:click="update" wire:loading.attr="disabled">
                             Guardar
                         </button>
-                        @hasanyrole('director|gerente')
+                        @hasanyrole('director|gerente|administrador')
                         <button type="button" class="btn btn-sm btn-danger" wire:click="questionDelete({{ $depId }})">Eliminar</button>
                         @endhasanyrole
                         <a href="{{ route('departures.index') }}" class="btn btn-sm btn-secondary">Volver</a>

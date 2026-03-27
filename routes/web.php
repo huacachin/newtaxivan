@@ -32,14 +32,14 @@ Route::middleware('auth')->group(function () {
 
     // Configuraciones
     Route::get('vehicles', [VehicleController::class,'index'])->name('settings.vehicles.index');
-    Route::get('vehicles/create', [VehicleController::class,'create'])->name('settings.vehicles.create')->middleware('role:director|gerente');
-    Route::get('vehicles/{id}/edit', [VehicleController::class,'edit'])->name('settings.vehicles.edit')->middleware('role:director|gerente');
+    Route::get('vehicles/create', [VehicleController::class,'create'])->name('settings.vehicles.create')->middleware('role:director|gerente|administrador');
+    Route::get('vehicles/{id}/edit', [VehicleController::class,'edit'])->name('settings.vehicles.edit')->middleware('role:director|gerente|administrador');
     Route::get('owners', [OwnerController::class,'index'])->name('settings.owners.index');
-    Route::get('owners/create', [OwnerController::class,'create'])->name('settings.owners.create')->middleware('role:director|gerente');
-    Route::get('owners/{id}/edit', [OwnerController::class,'edit'])->name('settings.owners.edit')->middleware('role:director|gerente');
+    Route::get('owners/create', [OwnerController::class,'create'])->name('settings.owners.create')->middleware('role:director|gerente|administrador');
+    Route::get('owners/{id}/edit', [OwnerController::class,'edit'])->name('settings.owners.edit')->middleware('role:director|gerente|administrador');
     Route::get('drivers', [DriverController::class,'index'])->name('settings.drivers.index');
-    Route::get('drivers/create', [DriverController::class,'create'])->name('settings.drivers.create')->middleware('role:director|gerente');
-    Route::get('drivers/{id}/edit', [DriverController::class,'edit'])->name('settings.drivers.edit')->middleware('role:director|gerente');
+    Route::get('drivers/create', [DriverController::class,'create'])->name('settings.drivers.create')->middleware('role:director|gerente|administrador');
+    Route::get('drivers/{id}/edit', [DriverController::class,'edit'])->name('settings.drivers.edit')->middleware('role:director|gerente|administrador');
 
     // Costo por placa
     Route::get('cost-per-plate', [CostPerPlateController::class,'index'])->name('settings.cost-per-plate.index');
@@ -60,8 +60,8 @@ Route::middleware('auth')->group(function () {
 
     // Sucursales
     Route::get('headquarters', [HeadquarterController::class,'index'])->name('settings.headquarters.index');
-    Route::get('headquarters/create', [HeadquarterController::class,'create'])->name('settings.headquarters.create')->middleware('role:director|gerente');
-    Route::get('headquarters/{id}/edit', [HeadquarterController::class,'edit'])->name('settings.headquarters.edit')->middleware('role:director|gerente');
+    Route::get('headquarters/create', [HeadquarterController::class,'create'])->name('settings.headquarters.create')->middleware('role:director|gerente|administrador');
+    Route::get('headquarters/{id}/edit', [HeadquarterController::class,'edit'])->name('settings.headquarters.edit')->middleware('role:director|gerente|administrador');
 
     // Salidas
     Route::get('departures', [DepartureController::class,'index'])->name('departures.index');
@@ -70,7 +70,7 @@ Route::middleware('auth')->group(function () {
     Route::get('departures/stats', [DepartureController::class,'stats'])->name('departures.stats');
     Route::get('departures/by-debt',[DepartureController::class,'byDebt'])->name('departures.by-debt');
     Route::get('departures/add',[DepartureController::class,'add'])->name('departures.add');
-    Route::get('departures/edit/{id}',[DepartureController::class,'edit'])->name('departures.edit')->middleware('role:director|gerente');
+    Route::get('departures/edit/{id}',[DepartureController::class,'edit'])->name('departures.edit')->middleware('role:director|gerente|administrador');
 
     // Pagos
     Route::get('payments', [PaymentController::class,'index'])->name('payments.index');
@@ -78,7 +78,7 @@ Route::middleware('auth')->group(function () {
     Route::get('payments/monthly', [PaymentController::class,'monthly'])->name('payments.monthly');
     Route::get('payments/stats', [PaymentController::class,'stats'])->name('payments.stats');
     Route::get('payments/add',[PaymentController::class,'add'])->name('payments.add');
-    Route::get('payments/edit/{id}',[PaymentController::class,'edit'])->name('payments.edit')->middleware('role:director|gerente');
+    Route::get('payments/edit/{id}',[PaymentController::class,'edit'])->name('payments.edit')->middleware('role:director|gerente|administrador');
 
     // Deudas
     Route::get('debts-per-days', [DebtController::class,'debtPerDays'])->name('debts.debt-per-days');
@@ -91,11 +91,11 @@ Route::middleware('auth')->group(function () {
     Route::get('cash/open',[CashController::class,'open'])->name('cash.open');
     Route::get('cash/report/movement',[CashController::class,'movementReport'])->name('cash.report.movement');
     Route::get('cash/incomes',[CashController::class,'incomes'])->name('cash.incomes');
-    Route::get('cash/incomes/create',[CashController::class,'createIncome'])->name('cash.incomes.create')->middleware('role:director|gerente');
-    Route::get('cash/incomes/{id}/edit',[CashController::class,'editIncome'])->name('cash.incomes.edit')->middleware('role:director|gerente');
+    Route::get('cash/incomes/create',[CashController::class,'createIncome'])->name('cash.incomes.create')->middleware('role:director|gerente|administrador');
+    Route::get('cash/incomes/{id}/edit',[CashController::class,'editIncome'])->name('cash.incomes.edit')->middleware('role:director|gerente|administrador');
     Route::get('cash/expenses',[CashController::class,'expenses'])->name('cash.expenses');
-    Route::get('cash/expenses/create',[CashController::class,'createExpense'])->name('cash.expenses.create')->middleware('role:director|gerente');
-    Route::get('cash/expenses/{id}/edit',[CashController::class,'editExpense'])->name('cash.expenses.edit')->middleware('role:director|gerente');
+    Route::get('cash/expenses/create',[CashController::class,'createExpense'])->name('cash.expenses.create')->middleware('role:director|gerente|administrador');
+    Route::get('cash/expenses/{id}/edit',[CashController::class,'editExpense'])->name('cash.expenses.edit')->middleware('role:director|gerente|administrador');
     Route::get('cash/report/general',[CashController::class,'generalReport'])->name('cash.report.general');
     Route::get('cash/report/est-draco-base',[CashController::class,'reportEstDracoBase'])->name('cash.report.est-draco-base');
     Route::get('cash/report/est-sal-pag-cont',[CashController::class,'reportEstSalPagCont'])->name('cash.report.est-sal-pag-cont');

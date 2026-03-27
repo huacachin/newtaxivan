@@ -28,7 +28,7 @@
                 <div class="card-body pb-2">
                     <div class="my-2 d-flex align-items-center justify-content-end">
 
-                        @hasanyrole('director|gerente')
+                        @hasanyrole('director|gerente|administrador')
                         <button class="btn btn-sm btn-primary mg-e-2" wire:click="questionGenerate">
                             <i class="ti ti-square-rounded-plus f-s-12"></i> Generar
                         </button>

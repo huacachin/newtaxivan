@@ -29,7 +29,7 @@
 
             <div class="mt-3 d-flex gap-2 justify-content-end">
                 <button type="button" class="btn btn-sm btn-primary" wire:click="update">Guardar</button>
-                @hasanyrole('director|gerente')
+                @hasanyrole('director|gerente|administrador')
                 <button type="button" class="btn btn-sm btn-danger" wire:click="questionDelete({{ $owner->id }})">Eliminar</button>
                 @endhasanyrole
                 <a href="{{ route('settings.owners.index') }}" class="btn btn-sm btn-secondary">Cancelar</a>

@@ -45,7 +45,7 @@
                                            wire:model.live="search">
                                 </div>
 
-                                @hasanyrole('director|gerente')
+                                @hasanyrole('director|gerente|administrador')
                                 <a class="btn btn-sm btn-primary flex-shrink-0"
                                    href="{{ route('settings.headquarters.create') }}" target="_blank">
                                     <i class="ti ti-square-plus f-s-12"></i> Nuevo
@@ -68,7 +68,7 @@
                                 <th>Orden</th>
                                 <th>Nombre</th>
                                 <th>Estado</th>
-                                @hasanyrole('director|gerente')
+                                @hasanyrole('director|gerente|administrador')
                                 <th>Acción</th>
                                 @endhasanyrole
                             </tr>
@@ -84,7 +84,7 @@
                                             {{ $hq->status === 'active' ? 'Activo' : 'Inactivo' }}
                                         </span>
                                     </td>
-                                    @hasanyrole('director|gerente')
+                                    @hasanyrole('director|gerente|administrador')
                                     <td>
                                         <a href="{{ route('settings.headquarters.edit', $hq->id) }}">
                                             <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"></i>

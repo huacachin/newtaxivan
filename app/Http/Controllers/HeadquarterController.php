@@ -12,7 +12,7 @@ class HeadquarterController extends Controller
     public function __construct()
     {
         $this->middleware(['auth', 'permission:configuracion.headquarters']);
-        $this->middleware(['auth', 'role:director|gerente'])->only(['create', 'edit']);
+        $this->middleware(['auth', 'role:director|gerente|administrador'])->only(['create', 'edit']);
     }
 
     public function index()

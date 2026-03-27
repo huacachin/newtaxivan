@@ -168,7 +168,7 @@
                                 <a class="btn btn-sm btn-success" href="{{ route('payments.add') }}" target="_blank">
                                     <i class="ti ti-square-plus f-s-12"></i> Nuevo
                                 </a>
-                                @hasanyrole('director|gerente')
+                                @hasanyrole('director|gerente|administrador')
                                 <button class="btn btn-sm btn-primary" wire:click="daily">
                                     <i class="ti ti-report-analytics f-s-12"></i> Diario
                                 </button>
@@ -195,7 +195,7 @@
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="text-center bg-primary">
                             <tr>
-                                @hasanyrole('director|gerente')<th>Acción</th>@endhasanyrole
+                                @hasanyrole('director|gerente|administrador')<th>Acción</th>@endhasanyrole
                                 <th>Ítem</th>
                                 <th>Placa</th>
                                 <th>Serie</th>
@@ -213,7 +213,7 @@
                             <tbody>
                             @forelse($payments as $p)
                                 <tr {{ $p->type === 'RETRASO' ? 'class=row-retraso' : '' }}>
-                                    @hasanyrole('director|gerente')
+                                    @hasanyrole('director|gerente|administrador')
                                     <td width="50">
                                         <a href="{{ route('payments.edit', $p->id) }}">
                                             <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"></i>
@@ -241,14 +241,14 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="{{ auth()->user()->hasAnyRole('director','gerente') ? 12 : 11 }}" class="text-muted">No se encontraron resultados</td>
+                                    <td colspan="{{ auth()->user()->hasAnyRole('director','gerente','administrador') ? 12 : 11 }}" class="text-muted">No se encontraron resultados</td>
                                 </tr>
                             @endforelse
                             </tbody>
 
                             <tfoot class="fw-semibold bg-primary">
                             <tr>
-                                <th colspan="{{ auth()->user()->hasAnyRole('director','gerente') ? 10 : 9 }}">Total general:</th>
+                                <th colspan="{{ auth()->user()->hasAnyRole('director','gerente','administrador') ? 10 : 9 }}">Total general:</th>
                                 <th>{{ number_format($total_general, 2) }}</th>
                                 <th></th>
                             </tr>
