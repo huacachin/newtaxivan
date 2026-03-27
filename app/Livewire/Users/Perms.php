@@ -33,7 +33,14 @@ class Perms extends Component
         $this->roles = Role::all(['id','name'])->sortBy(fn($r) => User::ROLE_HIERARCHY[$r->name] ?? 0)->values();
 
         $this->selectedRoleId = $this->user->roles()->value('id');
-        $this->selectedPermissionNames = $this->user->permissions()->pluck('name')->toArray();
+
+        $editedUserRole = $this->user->roles->first()?->name;
+        if ($editedUserRole === 'director') {
+            $this->selectedPermissionNames = Permission::where('guard_name', 'web')->pluck('name')->toArray();
+            $this->canEdit = false;
+        } else {
+            $this->selectedPermissionNames = $this->user->permissions()->pluck('name')->toArray();
+        }
 
         $this->buildAclGroups();
     }
