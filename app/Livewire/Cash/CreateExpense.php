@@ -31,7 +31,7 @@ class CreateExpense extends Component
     public function mount(): void
     {
         $this->date  = now()->toDateString();
-        $this->users = DB::table('users')->pluck('name', 'id');
+        $this->users = DB::table('users')->where('status', 'active')->pluck('username', 'id');
         $this->refreshConcepts();
         $this->loadControladores();
     }
