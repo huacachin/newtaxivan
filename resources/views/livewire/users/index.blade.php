@@ -110,11 +110,13 @@
                                                     <i class="ti ti-shield-lock"></i>
                                                 </a>
 
+                                                @if(!$user->hasRole('director'))
                                                 <button class="btn btn-sm btn-outline-danger ms-1"
                                                         title="Desactivar usuario"
-                                                        wire:click="questionDelete({{ $user->id }})">
+                                                        wire:click="questionDelete({{ $user->id }}, '{{ __('roles.' . ($user->roles->first()->name ?? '')) }}', '{{ $user->name }}')">
                                                     <i class="ti ti-trash"></i>
                                                 </button>
+                                                @endif
                                             @endif
                                         </td>
                                     </tr>

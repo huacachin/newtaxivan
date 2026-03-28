@@ -140,10 +140,13 @@ function alertError() {
     });
 }
 
-function questionDelete(id) {
+function questionDelete(id, role, name) {
+    var msg = (role && name)
+        ? "¿Está seguro de eliminar al " + role + " " + name + "?"
+        : "¿Está seguro que desea eliminar el registro?";
     Swal.fire({
         title: "Se va a eliminar el registro",
-        text: "Esta seguro que desea eliminar el registro?",
+        text: msg,
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
@@ -214,7 +217,8 @@ window.addEventListener('successAlert', function (event) {
 });
 
 window.addEventListener('questionDelete', function (event) {
-    questionDelete(event.detail[0]['id']);
+    var data = event.detail[0];
+    questionDelete(data['id'], data['role'] || '', data['name'] || '');
 });
 
 window.addEventListener('questionGenerate', function (event) {

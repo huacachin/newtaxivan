@@ -342,9 +342,9 @@ class Index extends Component
         $this->dispatch('successAlert', ["message" => "Usuario actualizado correctamente"]);
     }
 
-    public function questionDelete(int $id): void
+    public function questionDelete(int $id, string $role = '', string $name = ''): void
     {
-        $this->dispatch('questionDelete', ['id' => $id]);
+        $this->dispatch('questionDelete', ['id' => $id, 'role' => $role, 'name' => $name]);
     }
 
     #[On('register_destroy')]
