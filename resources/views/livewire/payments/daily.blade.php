@@ -80,6 +80,10 @@
                                     <i class="ti ti-arrow-back-up"></i> Regresar
                                 </a>
 
+                                <button class="btn btn-sm btn-primary flex-shrink-0 align-self-end" id="down" type="button">
+                                    <i class="fa-solid fa-angle-down"></i>
+                                </button>
+
                             </div>
                         </div>
                     </div>
