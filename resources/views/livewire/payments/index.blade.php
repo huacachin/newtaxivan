@@ -214,9 +214,11 @@
                                 <tr @class(['row-retraso' => $p->type === 'RETRASO', 'row-deuda' => $p->type === 'DEUDA'])>
                                     <td width="50">
                                         @hasanyrole('director|gerente|administrador')
+                                        @if(strtoupper($p->type) === 'RETRASO')
                                         <a href="{{ route('payments.edit', $p->id) }}">
                                             <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"></i>
                                         </a>
+                                        @endif
                                         @endhasanyrole
                                     </td>
                                     <td>{{ $payments->firstItem() + $loop->index }}</td>
