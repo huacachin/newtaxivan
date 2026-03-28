@@ -59,6 +59,7 @@
                 <table class="table table-bordered table-striped table-hover">
                     <thead class="bg-primary">
                         <tr>
+                            <th>Item</th>
                             <th>Fecha/Hora</th>
                             <th>Usuario</th>
                             <th>Rol</th>
@@ -71,6 +72,7 @@
                     <tbody>
                         @forelse($logs as $log)
                             <tr>
+                                <td>{{ $loop->iteration }}</td>
                                 <td class="text-nowrap">{{ $log->created_at->format('d/m/Y H:i:s') }}</td>
                                 <td>{{ $log->user_name ?? '—' }}</td>
                                 <td>{{ $log->user_role ? __('roles.' . $log->user_role) : '—' }}</td>
@@ -93,7 +95,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="text-muted py-4">No se encontraron registros de auditoría</td>
+                                <td colspan="8" class="text-muted py-4">No se encontraron registros de auditoría</td>
                             </tr>
                         @endforelse
                     </tbody>
