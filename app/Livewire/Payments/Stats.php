@@ -81,25 +81,6 @@ class Stats extends Component
             'DEUDA'   => ['days'=>array_fill(1,$this->daysInMonth,0.0), 'total'=>0.0],
         ];
 
-        // Pre-armar estructura con TODOS los controllers y sus sedes
-        $controllers = User::role('controlador')
-            ->with('headquarters:id,name')
-            ->orderBy('name')
-            ->get(['id','name']);
-
-        foreach ($controllers as $u) {
-            $ctrl = (string)$u->name;
-            $this->rows[$ctrl] = [];
-            $hqs = $u->headquarters->sortBy('name');
-            foreach ($hqs as $hq) {
-                $this->rows[$ctrl][(string)$hq->name] = $emptyBlock();
-            }
-            // Si no tiene sedes, asegurar al menos una entrada vacía
-            if ($hqs->isEmpty()) {
-                $this->rows[$ctrl]['-'] = $emptyBlock();
-            }
-        }
-
         // Agregación por controlador, sucursal, tipo y día
         $aggs = DB::table('payments as p')
             ->leftJoin('users as u', 'u.id', '=', 'p.user_id')
