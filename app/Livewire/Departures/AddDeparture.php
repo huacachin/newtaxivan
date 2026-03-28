@@ -15,6 +15,7 @@ class AddDeparture extends Component
     // Campos del formulario (idénticos al modal original)
     // ==============================
     public ?string $plate = null;
+    public bool $plateExists = true;
     public ?string $date = null;
     public ?int    $headquarter_id = null;
     public ?float  $price;
@@ -166,6 +167,19 @@ class AddDeparture extends Component
     }
 
     // ==============================
+    public function updatedPlate(): void
+    {
+        $plate = strtoupper(trim($this->plate ?? ''));
+        if (strlen($plate) >= 6) {
+            $this->plateExists = \Illuminate\Support\Facades\DB::table('vehicles')
+                ->where('status', 'active')
+                ->whereRaw('UPPER(REPLACE(plate," ","")) = ?', [str_replace(' ', '', $plate)])
+                ->exists();
+        } else {
+            $this->plateExists = true;
+        }
+    }
+
     // Persistencia: guardar (misma lógica del modal original, sin dispatch)
     // ==============================
     public function save(): void

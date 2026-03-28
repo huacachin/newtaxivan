@@ -40,7 +40,7 @@
                         </div>
                     @endif
 
-                    <div class="row">
+                    <div class="row" @if(!$plateExists) style="color:red;font-weight:bold" @endif>
                         <div class="col-md-2 col-12">
                             <div class="mb-3">
                                 <label for="dep_plate" class="form-label">Placa</label>
@@ -48,10 +48,11 @@
                                        type="text"
                                        class="form-control form-control-sm input-uppercase"
                                        placeholder="ABC123"
-                                       wire:model.defer="plate"
+                                       wire:model.live.debounce.300ms="plate"
                                        autocapitalize="characters"
                                        data-upper-plate>
                                 @error('plate') <span class="title-modules">{{ $message }}</span> @enderror
+                                @if(!$plateExists) <span class="small" style="color:red">Placa no registrada en vehículos</span> @endif
                             </div>
                         </div>
 
