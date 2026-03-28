@@ -32,6 +32,7 @@ class CreateExpense extends Component
     {
         $this->date  = now()->toDateString();
         $this->users = DB::table('users')->where('status', 'active')->pluck('username', 'id');
+        $this->in_charge = auth()->user()?->username ?? '';
         $this->refreshConcepts();
         $this->loadControladores();
     }
