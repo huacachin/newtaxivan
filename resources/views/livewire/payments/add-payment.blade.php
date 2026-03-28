@@ -74,12 +74,10 @@
                         <div class="col-md-auto">
                             <div class="mb-3">
                                 <label class="form-label">Fecha Pago</label>
-                                <input type="date" class="form-control form-control-sm {{ $type_form === 'PAGO' ? 'input-readonly' : '' }}"
+                                <input type="date" class="form-control form-control-sm {{ $type_form !== 'RETRASO' ? 'input-readonly' : '' }}"
                                        wire:model.live="date_payment"
-                                       @if($type_form === 'PAGO')
+                                       @if($type_form !== 'RETRASO')
                                            readonly
-                                           min="{{ now()->toDateString() }}"
-                                           max="{{ now()->toDateString() }}"
                                        @endif
                                 >
                                 @error('date_payment') <span class="title-modules">{{ $message }}</span> @enderror

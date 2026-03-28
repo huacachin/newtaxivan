@@ -77,9 +77,9 @@
                             <div class="mb-3">
                                 <label class="form-label">Fecha Pago (*)</label>
                                 <input id="pay_date_payment" type="text"
-                                       class="form-control form-control-sm {{ $type_form === 'PAGO' ? 'input-readonly' : '' }}"
+                                       class="form-control form-control-sm {{ $type_form !== 'RETRASO' ? 'input-readonly' : '' }}"
                                        wire:model.defer="date_payment"
-                                       @if($type_form === 'PAGO') readonly @endif>
+                                       @if($type_form !== 'RETRASO') readonly @endif>
                                 @error('date_payment') <span class="title-modules">{{ $message }}</span> @enderror
                             </div>
                         </div>
