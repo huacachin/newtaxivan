@@ -57,7 +57,7 @@ class Index extends Component
             if ($plate) {
                 foreach (['old_data', 'new_data'] as $key) {
                     if (isset($detail[$key]['vehicle_id'])) {
-                        $detail[$key]['vehicle_id'] = $detail[$key]['vehicle_id'] . ' - ' . $plate;
+                        $detail[$key]['vehicle_id'] = $plate . ' - ' . $detail[$key]['vehicle_id'];
                     }
                 }
                 if (is_array($detail['changed_fields']) && in_array('vehicle_id', $detail['changed_fields'])) {
