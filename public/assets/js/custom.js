@@ -142,7 +142,7 @@ function alertError() {
 
 function questionDelete(id, role, name) {
     var msg = (role && name)
-        ? '¿Está seguro de eliminar al <span style="color:red;font-weight:bold">' + role + ' ' + name + '</span>?'
+        ? '¿Está seguro de eliminar al ' + role + ' <span style="color:red;font-weight:bold">' + name + '</span>?'
         : "¿Está seguro que desea eliminar el registro?";
     Swal.fire({
         title: "Se va a eliminar el registro",
