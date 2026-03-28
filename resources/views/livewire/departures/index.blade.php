@@ -139,15 +139,15 @@
                         <a class="btn btn-sm btn-success" href="{{ route('departures.add') }}" target="_blank">
                             <i class="ti ti-square-plus f-s-12"></i> Nuevo
                         </a>
-                        <button wire:click="reportMonthly" class="btn btn-sm btn-primary">
+                        <a href="{{ route('departures.monthly') }}" class="btn btn-sm btn-primary">
                             <i class="ti ti-report-analytics f-s-12"></i> Mensual
-                        </button>
-                        <button wire:click="reportRmp" class="btn btn-sm btn-primary">
+                        </a>
+                        <a href="{{ route('departures.rmp') }}" class="btn btn-sm btn-primary">
                             <i class="ti ti-report-analytics f-s-12"></i> RMP V.T
-                        </button>
-                        <button wire:click="reportStats" class="btn btn-sm btn-primary">
+                        </a>
+                        <a href="{{ route('departures.stats') }}" class="btn btn-sm btn-primary">
                             <i class="ti ti-report-analytics f-s-12"></i> Estadis.
-                        </button>
+                        </a>
 
                         <button class="btn btn-sm btn-primary" wire:click="export">
                             <i class="ti ti-file-analytics f-s-12"></i>

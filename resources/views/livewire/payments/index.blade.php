@@ -169,15 +169,15 @@
                                 <a class="btn btn-sm btn-success" href="{{ route('payments.add') }}" target="_blank">
                                     <i class="ti ti-square-plus f-s-12"></i> Nuevo
                                 </a>
-                                <button class="btn btn-sm btn-primary" wire:click="daily">
+                                <a href="{{ route('payments.daily') }}" class="btn btn-sm btn-primary">
                                     <i class="ti ti-report-analytics f-s-12"></i> Diario
-                                </button>
-                                <button class="btn btn-sm btn-primary" wire:click="monthly">
+                                </a>
+                                <a href="{{ route('payments.monthly') }}" class="btn btn-sm btn-primary">
                                     <i class="ti ti-report-analytics f-s-12"></i> Mensual
-                                </button>
-                                <button class="btn btn-sm btn-primary" wire:click="stats">
+                                </a>
+                                <a href="{{ route('payments.stats') }}" class="btn btn-sm btn-primary">
                                     <i class="ti ti-report-analytics f-s-12"></i> Estadis.
-                                </button>
+                                </a>
 
                                 <button class="btn btn-sm btn-primary" wire:click="export">
                                     <i class="ti ti-file-analytics f-s-12"></i>
