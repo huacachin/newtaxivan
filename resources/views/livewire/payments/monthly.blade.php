@@ -135,7 +135,9 @@
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
                                     <td>{{ $r['order'] ?: '-' }}</td>
-                                    <td class="green_modules">{{ $r['plate'] }}</td>
+                                    <td class="green_modules">
+                                        <a href="{{ route('settings.vehicles.index', ['search' => $r['plate'], 'filter' => 'plate']) }}" target="_blank">{{ $r['plate'] }}</a>
+                                    </td>
 
                                     {{-- Deuda anterior (debt_days) --}}
                                     <td>{{ number_format($r['prev_debt'], 2) }}</td>
