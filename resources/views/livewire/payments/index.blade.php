@@ -227,7 +227,7 @@
                                     <td>{{ $p->hour }}</td>
                                     <td>{{ $p->type }}</td>
                                     <td>{{ $p->headquarter->name ?? '-' }}</td>
-                                    <td>{{ $p->user->name ?? '-' }}</td>
+                                    <td>{{ $p->user->username ?? '-' }}</td>
                                     <td class="text-end">{{ number_format($p->amount, 2) }}</td>
                                     <td>
                                         @if(!empty($p->latitude) && !empty($p->longitude))

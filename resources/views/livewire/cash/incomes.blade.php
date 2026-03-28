@@ -179,7 +179,7 @@
                                     </td>
                                     <td>{{ $incomes->firstItem() + $loop->index }}</td>
                                     <td data-label="Fecha">{{ \Carbon\Carbon::parse($i->date)->format('d/m/Y') }}</td>
-                                    <td data-label="Usuario">{{ $i->user->name ?? '-' }}</td>
+                                    <td data-label="Usuario">{{ $i->user->username ?? '-' }}</td>
                                     <td data-label="A">{{ $i->reason }}</td>
                                     <td data-label="Motivo">{{ $i->detail }}</td>
                                     <td class="text-end" data-label="S/">{{ number_format($i->total, 2) }}</td>

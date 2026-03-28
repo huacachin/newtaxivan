@@ -180,7 +180,7 @@
                                 </td>
                                 <td>{{ $expenses->firstItem() + $loop->index }}</td>
                                 <td>{{ \Carbon\Carbon::parse($e->date)->format('d/m/Y') }}</td>
-                                <td>{{ $e->user->name ?? '-' }}</td>
+                                <td>{{ $e->user->username ?? '-' }}</td>
                                 <td>{{ $e->reason }}</td>
                                 <td>{{ $e->detail }}</td>
                                 <td class="text-end">{{ number_format($e->total, 2) }}</td>

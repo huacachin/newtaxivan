@@ -86,7 +86,7 @@ class Stats extends Component
             ->leftJoin('users as u', 'u.id', '=', 'p.user_id')
             ->leftJoin('headquarters as h', 'h.id', '=', 'p.headquarter_id')
             ->selectRaw("
-                COALESCE(u.name,'-')  as controller,
+                COALESCE(u.username,'-')  as controller,
                 COALESCE(h.name,'-')  as headquarter,
                 UPPER(p.type)         as t,
                 DAY(p.date_register)  as d,

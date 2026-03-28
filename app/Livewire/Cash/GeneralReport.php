@@ -66,10 +66,10 @@ class GeneralReport extends Component
         // HQs
         $this->hqNames = Headquarter::pluck('name', 'id')->toArray();
 
-        // Users: solo nombre
-        $this->userMap = User::select('id', 'name')
+        // Users: username
+        $this->userMap = User::select('id', 'username')
             ->get()
-            ->mapWithKeys(fn($u) => [$u->id => $u->name ?: '—'])
+            ->mapWithKeys(fn($u) => [$u->id => $u->username ?: '—'])
             ->all();
 
         // Reset de totales

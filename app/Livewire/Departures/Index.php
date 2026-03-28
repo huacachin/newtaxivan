@@ -576,7 +576,7 @@ class Index extends Component
                 ->selectRaw('
                     v.plate as plate,
                     ANY_VALUE(h.name) as headquarter_name,
-                    ANY_VALUE(u.name) as user_name,
+                    ANY_VALUE(u.username) as user_name,
                     COALESCE(SUM(d.times), 0)  as k1,
                     COALESCE(SUM(d.price), 0)  as p1,
                     COALESCE(SUM(d.passenger), 0) as pasajeros,
@@ -601,7 +601,7 @@ class Index extends Component
                     d.id, d.date, d.hour, d.times, d.price, d.passenger, d.passage,
                     d.latitude, d.longitude,
                     v.plate as plate,
-                    h.name as headquarter_name, u.name as user_name,
+                    h.name as headquarter_name, u.username as user_name,
                     COALESCE(d.passenger,0)*COALESCE(d.passage,0) as total_pasaje,
                     LAG(CONCAT(d.date, " ", d.hour)) OVER (ORDER BY d.date, d.hour, d.id) as prev_dt
                 ')
@@ -622,7 +622,7 @@ class Index extends Component
                 ->selectRaw('
                     d.legacy_plate as plate,
                     ANY_VALUE(h.name) as headquarter_name,
-                    ANY_VALUE(u.name) as user_name,
+                    ANY_VALUE(u.username) as user_name,
                     COALESCE(SUM(d.times), 0)  as k1,
                     COALESCE(SUM(d.price), 0)  as p1,
                     COALESCE(SUM(d.passenger), 0) as pasajeros,
@@ -646,7 +646,7 @@ class Index extends Component
                     d.id, d.date, d.hour, d.times, d.price, d.passenger, d.passage,
                     d.latitude, d.longitude,
                     d.legacy_plate as plate,
-                    h.name as headquarter_name, u.name as user_name,
+                    h.name as headquarter_name, u.username as user_name,
                     COALESCE(d.passenger,0)*COALESCE(d.passage,0) as total_pasaje,
                     LAG(CONCAT(d.date, " ", d.hour)) OVER (ORDER BY d.date, d.hour, d.id) as prev_dt
                 ')
@@ -698,7 +698,7 @@ class Index extends Component
         if ($term !== '') {
             switch ((int)$this->searchType) {
                 case 1: $q->where('d.legacy_plate', 'like', '%'.strtoupper($term).'%'); break;
-                case 2: $q->where('u.name', 'like', '%'.$term.'%'); break;
+                case 2: $q->where('u.username', 'like', '%'.$term.'%'); break;
                 case 3:
                     if (is_numeric($term)) $q->where('h.id', (int)$term);
                     else $q->where('h.name', 'like', '%'.$term.'%');
@@ -787,7 +787,7 @@ class Index extends Component
         if ($term !== '') {
             switch ((int)$this->searchType) {
                 case 1: $q->where('v.plate', 'like', '%'.strtoupper($term).'%'); break;
-                case 2: $q->where('u.name', 'like', '%'.$term.'%'); break;
+                case 2: $q->where('u.username', 'like', '%'.$term.'%'); break;
                 case 3:
                     if (is_numeric($term)) $q->where('h.id', (int)$term);
                     else $q->where('h.name', 'like', '%'.$term.'%');
