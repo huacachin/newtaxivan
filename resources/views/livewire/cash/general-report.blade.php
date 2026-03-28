@@ -54,7 +54,7 @@
                                 </div>
 
                                 <!-- Actualizar -->
-                                <button class="btn btn-sm btn-success flex-shrink-0 align-self-end"
+                                <button class="btn btn-sm btn-dark flex-shrink-0 align-self-end"
                                         wire:click="$refresh">
                                     <i class="ti ti-refresh f-s-12"></i> Actualizar
                                 </button>
