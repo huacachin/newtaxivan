@@ -78,7 +78,10 @@ class CreateExpense extends Component
 
     public function updatedExpenseKind($val): void
     {
-        if ($val === 'Fijos') $this->refreshConcepts();
+        if ($val === 'Fijos') {
+            $this->refreshConcepts();
+            $this->concept_id = $this->concepts[0]['id'] ?? null;
+        }
         if (in_array($val, ['Otros', 'Planilla'])) $this->concept_id = null;
     }
 
