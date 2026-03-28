@@ -114,8 +114,15 @@
                                         <td class="fw-semibold bg-primary text-white">Pago</td>
 
                                         @foreach($days as $d)
-                                            @php $v = (float)($blocks['PAGO']['days'][$d] ?? 0); @endphp
-                                            <td class="num-val">{{ $v > 0 ? number_format($v, 2) : '' }}</td>
+                                            @php
+                                                $v = (float)($blocks['PAGO']['days'][$d] ?? 0);
+                                                $dateStr = sprintf('%04d-%02d-%02d', $year, $month, $d);
+                                            @endphp
+                                            <td class="num-val">
+                                                @if($v > 0)
+                                                    <a href="{{ route('payments.index', ['q' => $controller, 'filter' => '2', 'from' => $dateStr, 'to' => $dateStr, 'type' => 'PAGO']) }}" target="_blank">{{ number_format($v, 2) }}</a>
+                                                @endif
+                                            </td>
                                         @endforeach
                                         @php $vt = (float)$blocks['PAGO']['total']; @endphp
                                         <td class="num-total fw-semibold">{{ $vt > 0 ? number_format($vt, 2) : '' }}</td>
@@ -125,8 +132,15 @@
                                     <tr>
                                         <td class="fw-semibold bg-primary text-white">Retraso</td>
                                         @foreach($days as $d)
-                                            @php $v = (float)($blocks['RETRASO']['days'][$d] ?? 0); @endphp
-                                            <td class="num-val">{{ $v > 0 ? number_format($v, 2) : '' }}</td>
+                                            @php
+                                                $v = (float)($blocks['RETRASO']['days'][$d] ?? 0);
+                                                $dateStr = sprintf('%04d-%02d-%02d', $year, $month, $d);
+                                            @endphp
+                                            <td class="num-val">
+                                                @if($v > 0)
+                                                    <a href="{{ route('payments.index', ['q' => $controller, 'filter' => '2', 'from' => $dateStr, 'to' => $dateStr, 'type' => 'RETRASO']) }}" target="_blank">{{ number_format($v, 2) }}</a>
+                                                @endif
+                                            </td>
                                         @endforeach
                                         @php $vt = (float)$blocks['RETRASO']['total']; @endphp
                                         <td class="num-total fw-semibold">{{ $vt > 0 ? number_format($vt, 2) : '' }}</td>
@@ -136,8 +150,15 @@
                                     <tr>
                                         <td class="fw-semibold bg-primary text-white">Deuda</td>
                                         @foreach($days as $d)
-                                            @php $v = (float)($blocks['DEUDA']['days'][$d] ?? 0); @endphp
-                                            <td class="num-val">{{ $v > 0 ? number_format($v, 2) : '' }}</td>
+                                            @php
+                                                $v = (float)($blocks['DEUDA']['days'][$d] ?? 0);
+                                                $dateStr = sprintf('%04d-%02d-%02d', $year, $month, $d);
+                                            @endphp
+                                            <td class="num-val">
+                                                @if($v > 0)
+                                                    <a href="{{ route('payments.index', ['q' => $controller, 'filter' => '2', 'from' => $dateStr, 'to' => $dateStr, 'type' => 'DEUDA']) }}" target="_blank">{{ number_format($v, 2) }}</a>
+                                                @endif
+                                            </td>
                                         @endforeach
                                         @php $vt = (float)$blocks['DEUDA']['total']; @endphp
                                         <td class="num-total fw-semibold">{{ $vt > 0 ? number_format($vt, 2) : '' }}</td>
