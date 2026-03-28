@@ -17,6 +17,7 @@ class CreateExpense extends Component
     public ?int   $concept_id  = null;
     public array  $concepts    = [];
     public string $reason_text = '';
+    public array  $controladores = [];
 
     public ?string $date          = null;
     public string  $detail        = '';
@@ -32,6 +33,16 @@ class CreateExpense extends Component
         $this->date  = now()->toDateString();
         $this->users = DB::table('users')->pluck('name', 'id');
         $this->refreshConcepts();
+        $this->loadControladores();
+    }
+
+    private function loadControladores(): void
+    {
+        $this->controladores = \App\Models\User::role('controlador')
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->pluck('name')
+            ->all();
     }
 
     private function refreshConcepts(): void
@@ -67,7 +78,7 @@ class CreateExpense extends Component
             'date'          => ['required', 'date'],
             'expenseKind'   => ['required', 'in:Fijos,Otros,Planilla'],
             'concept_id'    => [$this->expenseKind === 'Fijos' ? 'required' : 'nullable', 'integer'],
-            'reason_text'   => [$this->expenseKind === 'Otros' ? 'required' : 'nullable', 'string', 'max:150'],
+            'reason_text'   => [in_array($this->expenseKind, ['Otros', 'Planilla']) ? 'required' : 'nullable', 'string', 'max:150'],
             'detail'        => ['required', 'string', 'max:500'],
             'total'         => ['required', 'numeric', 'min:0.01'],
             'document_type' => ['nullable', 'string', 'max:100'],
@@ -82,7 +93,14 @@ class CreateExpense extends Component
             $this->refreshConcepts();
             $this->concept_id = $this->concepts[0]['id'] ?? null;
         }
-        if (in_array($val, ['Otros', 'Planilla'])) $this->concept_id = null;
+        if ($val === 'Planilla') {
+            $this->concept_id = null;
+            $this->reason_text = $this->controladores[0] ?? '';
+        }
+        if ($val === 'Otros') {
+            $this->concept_id = null;
+            $this->reason_text = '';
+        }
     }
 
     public function clear(): void
