@@ -165,7 +165,7 @@
                                 <thead><tr><th>Campo</th><th>Valor</th></tr></thead>
                                 <tbody>
                                     @foreach($detail['new_data'] ?? [] as $field => $value)
-                                        <tr>
+                                        <tr @if($field === 'vehicle_id') style="background:#dc3545;color:#fff" @endif>
                                             <td class="fw-semibold">{{ $field }}</td>
                                             <td>{{ is_array($value) ? json_encode($value) : ($value ?? '—') }}</td>
                                         </tr>
@@ -180,7 +180,7 @@
                                 <thead><tr><th>Campo</th><th>Antes</th><th>Después</th></tr></thead>
                                 <tbody>
                                     @foreach($detail['changed_fields'] ?? [] as $field)
-                                        <tr class="table-warning">
+                                        <tr @if($field === 'vehicle_id') style="background:#dc3545;color:#fff" @else class="table-warning" @endif>
                                             <td class="fw-semibold">{{ $field }}</td>
                                             <td>{{ is_array($detail['old_data'][$field] ?? null) ? json_encode($detail['old_data'][$field]) : ($detail['old_data'][$field] ?? '—') }}</td>
                                             <td>{{ is_array($detail['new_data'][$field] ?? null) ? json_encode($detail['new_data'][$field]) : ($detail['new_data'][$field] ?? '—') }}</td>
@@ -196,7 +196,7 @@
                                 <thead><tr><th>Campo</th><th>Valor</th></tr></thead>
                                 <tbody>
                                     @foreach($detail['old_data'] ?? [] as $field => $value)
-                                        <tr>
+                                        <tr @if($field === 'vehicle_id') style="background:#dc3545;color:#fff" @endif>
                                             <td class="fw-semibold">{{ $field }}</td>
                                             <td>{{ is_array($value) ? json_encode($value) : ($value ?? '—') }}</td>
                                         </tr>
