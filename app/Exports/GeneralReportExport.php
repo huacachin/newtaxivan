@@ -150,7 +150,7 @@ class GeneralReportExport implements FromArray, WithEvents, WithColumnFormatting
         $rows[] = ['', '', '', 'TOTAL GENERAL', (float)$totalIncomes, (float)$totalExpenses];
         $this->totalRow = count($rows);
 
-        $rows[] = ['', '', '', 'UTILIDAD', (float)($totalIncomes - $totalExpenses), ''];
+        $rows[] = ['', '', '', 'UTILIDAD', (float)($totalIncomes - $totalExpenses), 0.0];
         $this->utilidadRow = count($rows);
 
         $this->lastRow = count($rows);
