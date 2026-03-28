@@ -48,7 +48,25 @@ class Index extends Component
         $log = ActivityLog::find($id);
         if (!$log) return;
 
-        $this->detail = $log->toArray();
+        $detail = $log->toArray();
+
+        // Resolver vehicle_id → placa
+        $vehicleId = $detail['new_data']['vehicle_id'] ?? $detail['old_data']['vehicle_id'] ?? null;
+        if ($vehicleId) {
+            $plate = \Illuminate\Support\Facades\DB::table('vehicles')->where('id', $vehicleId)->value('plate');
+            if ($plate) {
+                foreach (['old_data', 'new_data'] as $key) {
+                    if (isset($detail[$key]['vehicle_id'])) {
+                        $detail[$key]['vehicle_id'] = $detail[$key]['vehicle_id'] . ' - ' . $plate;
+                    }
+                }
+                if (is_array($detail['changed_fields']) && in_array('vehicle_id', $detail['changed_fields'])) {
+                    // mantener vehicle_id en changed_fields sin modificar
+                }
+            }
+        }
+
+        $this->detail = $detail;
         $this->dispatch('open-modal', ['name' => 'modalAuditDetail']);
     }
 
