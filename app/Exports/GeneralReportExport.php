@@ -365,8 +365,8 @@ class GeneralReportExport implements FromArray, WithEvents, WithColumnFormatting
     public function columnFormats(): array
     {
         return [
-            'E' => NumberFormat::FORMAT_NUMBER_00,
-            'F' => NumberFormat::FORMAT_NUMBER_00,
+            'E' => '#,##0.00',
+            'F' => '#,##0.00',
         ];
     }
 }
