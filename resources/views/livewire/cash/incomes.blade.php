@@ -200,8 +200,9 @@
                             </tbody>
                             <tfoot class="bg-primary">
                             <tr style="font-size: 1.3rem; color: #000 !important;">
-                                <td colspan="7" class="fw-bold text-end" style="padding: 4px 8px !important;">Total General</td>
-                                <td class="fw-bold" style="padding: 4px 8px !important;">{{ number_format($totalGeneral, 2) }}</td>
+                                <td colspan="6" class="fw-bold text-end" style="padding: 4px 8px !important;">Total General</td>
+                                <td class="fw-bold text-end" style="padding: 4px 8px !important;">{{ number_format($totalGeneral, 2) }}</td>
+                                <td></td>
                             </tr>
                             </tfoot>
                         </table>
