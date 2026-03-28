@@ -57,11 +57,6 @@ class SetupProduction extends Command
         $this->step('Propietarios');
         $this->call('taxivan:migrate-owners', ['--chunk' => $chunk]);
 
-        // Fix: owners migrados deben quedar como inactive
-        $this->step('Fix: owners → status inactive');
-        $affected = DB::table('owners')->whereIn('status', ['active', 'activo'])->update(['status' => 'inactive']);
-        $this->line("  → {$affected} propietarios actualizados a inactive.");
-
         $this->step('Vehículos (depende de conductores y propietarios)');
         $this->call('taxivan:migrate-vehicles', ['--chunk' => $chunk]);
 
