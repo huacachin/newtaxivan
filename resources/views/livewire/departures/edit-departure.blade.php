@@ -40,6 +40,9 @@
                     @endif
 
                     <div id="edit-departure-form" class="row" @if(!$plateExists) style="color:red;font-weight:bold" @endif>
+                    @if(!$plateExists)
+                    <style>#edit-departure-form input,#edit-departure-form select,#edit-departure-form textarea{color:red !important;font-weight:bold !important;}</style>
+                    @endif
                         <div class="col-md-2 col-12">
                             <div class="mb-3">
                                 <label for="dep_plate_edit" class="form-label">Placa</label>

@@ -41,6 +41,9 @@
                     @endif
 
                     <div class="row" @if(!$plateExists) style="color:red;font-weight:bold" @endif>
+                    @if(!$plateExists)
+                    <style>.row input,.row select,.row textarea{color:red !important;font-weight:bold !important;}</style>
+                    @endif
                         <div class="col-md-2 col-12">
                             <div class="mb-3">
                                 <label for="dep_plate" class="form-label">Placa</label>
