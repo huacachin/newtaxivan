@@ -161,9 +161,12 @@
                                         @php
                                             $val = (float)($r['days'][$d] ?? 0);
                                             $isSunday = \Carbon\Carbon::create($year, $month, $d)->isSunday();
+                                            $dateStr = sprintf('%04d-%02d-%02d', $year, $month, $d);
                                         @endphp
                                         <td class="{{ $isSunday ? 'cell-sunday' : ($val > 0 ? 'cell-paid' : 'cell-zero') }} text-end">
-                                            {{ (!$isSunday && $val > 0) ? number_format($val, 2) : '' }}
+                                            @if(!$isSunday && $val > 0)
+                                                <a href="{{ route('payments.index', ['q' => $r['plate'], 'filter' => '1', 'from' => $dateStr, 'to' => $dateStr]) }}" target="_blank" style="color:white">{{ number_format($val, 2) }}</a>
+                                            @endif
                                         </td>
                                     @endforeach
 
