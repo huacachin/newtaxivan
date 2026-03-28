@@ -128,7 +128,6 @@
                             <div class="mb-3">
                                 <label class="form-label">Responsable</label>
                                 <select class="form-select form-select-sm" wire:model.defer="in_charge">
-                                    <option value="">-- Seleccionar --</option>
                                     @foreach($users as $u)
                                         <option value="{{ $u }}">{{ $u }}</option>
                                     @endforeach
