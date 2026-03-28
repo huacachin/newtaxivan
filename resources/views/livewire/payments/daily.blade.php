@@ -11,7 +11,7 @@
     <div class="row align-items-center mb-3">
         <div class="col-sm-6">
             <h4 class="main-title mb-0 title-modules">
-                REPORTE DIARIO DE PAGO {{ mb_strtoupper(\Carbon\Carbon::create($year,$month,1)->translatedFormat('F Y'), 'UTF-8') }} DEL {{$year}}
+                REPORTE DIARIO DE PAGO {{ mb_strtoupper(\Carbon\Carbon::create($year,$month,1)->translatedFormat('F Y'), 'UTF-8') }}
             </h4>
         </div>
         <div class="col-sm-6 mt-2 mt-sm-0">
