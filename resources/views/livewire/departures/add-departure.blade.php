@@ -52,7 +52,6 @@
                                        autocapitalize="characters"
                                        data-upper-plate>
                                 @error('plate') <span class="title-modules">{{ $message }}</span> @enderror
-                                @if(!$plateExists) <span class="small" style="color:red">Placa no registrada en vehículos</span> @endif
                             </div>
                         </div>
 
