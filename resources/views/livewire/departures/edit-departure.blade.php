@@ -41,7 +41,7 @@
 
                     <div id="edit-departure-form" class="row" @if(!$plateExists) style="color:red;font-weight:bold" @endif>
                     @if(!$plateExists)
-                    <style>#edit-departure-form input,#edit-departure-form select,#edit-departure-form textarea{color:red !important;font-weight:bold !important;}</style>
+                    <style>#edit-departure-form input[type=text],#edit-departure-form input[type=number],#edit-departure-form input[type=date],#edit-departure-form select,#edit-departure-form textarea,#edit-departure-form label{color:red !important;font-weight:bold !important;}</style>
                     @endif
                         <div class="col-md-2 col-12">
                             <div class="mb-3">

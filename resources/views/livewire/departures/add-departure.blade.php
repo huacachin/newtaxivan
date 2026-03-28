@@ -42,7 +42,7 @@
 
                     <div class="row" @if(!$plateExists) style="color:red;font-weight:bold" @endif>
                     @if(!$plateExists)
-                    <style>.row input,.row select,.row textarea{color:red !important;font-weight:bold !important;}</style>
+                    <style>.row input[type=text],.row input[type=number],.row input[type=date],.row select,.row textarea,.row label{color:red !important;font-weight:bold !important;}</style>
                     @endif
                         <div class="col-md-2 col-12">
                             <div class="mb-3">
