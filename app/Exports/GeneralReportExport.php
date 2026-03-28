@@ -89,7 +89,7 @@ class GeneralReportExport implements FromArray, WithEvents, WithColumnFormatting
                     $item++, $d,
                     $cliente,
                     strtoupper($p->type).'-'.$this->hqNames->get($p->headquarter_id, '—'),
-                    (float)$p->amount, 0.0,
+                    (float)$p->amount, '0.00',
                 ];
                 $sumI += (float)$p->amount;
             }
@@ -100,7 +100,7 @@ class GeneralReportExport implements FromArray, WithEvents, WithColumnFormatting
                     $item++, $d,
                     $cliente,
                     'Salidas-'.$this->hqNames->get($dep->headquarter_id, '—'),
-                    (float)$dep->amount, 0.0,
+                    (float)$dep->amount, '0.00',
                 ];
                 $sumI += (float)$dep->amount;
             }
@@ -111,7 +111,7 @@ class GeneralReportExport implements FromArray, WithEvents, WithColumnFormatting
                 $rows[] = [
                     $item++, $d,
                     $cliente,
-                    $glosa, (float)$inc->total, 0.0,
+                    $glosa, (float)$inc->total, '0.00',
                 ];
                 $sumI += (float)$inc->total;
             }
@@ -122,7 +122,7 @@ class GeneralReportExport implements FromArray, WithEvents, WithColumnFormatting
                 $rows[] = [
                     $item++, $d,
                     $cliente,
-                    $glosa, 0.0, (float)$exp->total,
+                    $glosa, '0.00', (float)$exp->total,
                 ];
                 $sumE += (float)$exp->total;
             }
@@ -150,7 +150,7 @@ class GeneralReportExport implements FromArray, WithEvents, WithColumnFormatting
         $rows[] = ['', '', '', 'TOTAL GENERAL', (float)$totalIncomes, (float)$totalExpenses];
         $this->totalRow = count($rows);
 
-        $rows[] = ['', '', '', 'UTILIDAD', (float)($totalIncomes - $totalExpenses), 0.0];
+        $rows[] = ['', '', '', 'UTILIDAD', (float)($totalIncomes - $totalExpenses), '0.00'];
         $this->utilidadRow = count($rows);
 
         $this->lastRow = count($rows);
