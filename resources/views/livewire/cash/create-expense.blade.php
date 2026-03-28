@@ -68,7 +68,6 @@
                                 @if($expenseKind === 'Fijos')
                                     <select class="form-select form-select-sm @error('concept_id') is-invalid @enderror"
                                             wire:model.live="concept_id">
-                                        <option value="">-- Seleccionar concepto --</option>
                                         @foreach($concepts as $c)
                                             <option value="{{ $c['id'] }}">{{ $c['name'] }}</option>
                                         @endforeach
@@ -77,7 +76,6 @@
                                 @elseif($expenseKind === 'Planilla')
                                     <select class="form-select form-select-sm @error('reason_text') is-invalid @enderror"
                                             wire:model.defer="reason_text">
-                                        <option value="">-- Seleccionar controlador --</option>
                                         @foreach($controladores as $nombre)
                                             <option value="{{ $nombre }}">{{ $nombre }}</option>
                                         @endforeach
@@ -173,6 +171,7 @@
         </div>
     </div>
 
-    {{-- Overlay de carga --}}
+    {{-- Overlay de carga --}}
+
 
 </div>

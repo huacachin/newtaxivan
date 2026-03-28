@@ -18,7 +18,22 @@
       "Bash(awk NR>=145 && NR<=155:*)",
       "Bash(grep -l \"expenses\" /Users/antonyalfredoculquicarranza/projects/laravel_taxivan/database/migrations/*.php)",
       "Bash(grep -l \"income\" /Users/antonyalfredoculquicarranza/projects/laravel_taxivan/database/migrations/*.php)",
-      "Bash(grep -l \"DriverController\" /Users/antonyalfredoculquicarranza/projects/laravel_taxivan/app/Http/Controllers/*.php)"
+      "Bash(grep -l \"DriverController\" /Users/antonyalfredoculquicarranza/projects/laravel_taxivan/app/Http/Controllers/*.php)",
+      "Bash(lsof -ti:8000)",
+      "Bash(xargs kill:*)",
+      "Bash(npm run:*)",
+      "Bash(find /Users/antonyalfredoculquicarranza/projects/laravel_taxivan/resources/views -name \"*.blade.php\" -exec grep -l \"@role\\(''''admin''''\\)\" {})",
+      "Bash(find /Users/antonyalfredoculquicarranza/projects/laravel_taxivan/resources/views -name \"*.blade.php\" -exec grep -l \"hasRole\\(''''admin''''\\)\" {})",
+      "Bash(xargs sed:*)",
+      "Bash(find app/Livewire -name \"*.php\" -exec grep -l \"hasAnyRole\\(''''superadmin'''',''''admin''''\\)\" {})",
+      "Bash(grep -rn \"url-open\\\\|url_open\\\\|urlOpen\" resources/ public/assets/ --include=*.js --include=*.blade.php --include=*.scss)",
+      "Bash(chmod:*)",
+      "Bash(find resources/views/livewire -name \"*.blade.php\" -exec grep -l \"hasAnyRole\\(''''director'''',''''gerente''''\\)\" {})",
+      "Bash(xargs perl:*)",
+      "Bash(for f:*)",
+      "Bash(do php:*)",
+      "Bash(done)",
+      "Bash(git commit:*)"
     ]
   }
 }
