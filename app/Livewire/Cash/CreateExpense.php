@@ -63,7 +63,7 @@ class CreateExpense extends Component
         $rows = DB::table('concepts')
             ->select('id', 'name')
             ->selectRaw("$expr as def_amount")
-            ->orderBy('name')
+            ->orderBy('id')
             ->get();
 
         $this->concepts = $rows->map(fn($r) => [
