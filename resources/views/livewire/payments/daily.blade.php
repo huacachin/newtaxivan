@@ -5,6 +5,7 @@
         .cell-paid { background: #00b050 !important; color: #fff; font-weight: 600; }
         .cell-zero { background: #ff0000 !important; }
         .cell-sunday { background: #fff !important; }
+        #mitabla td, #mitabla th { padding: 6px 4px !important; line-height: 1.6; }
     </style>
 
     {{-- Encabezado --}}
@@ -99,7 +100,7 @@
                     @endphp
 
                     <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%">
-                        <table class="table table-bordered table-hover" style="min-width:1800px;white-space:nowrap">
+                        <table id="mitabla" class="table table-bordered table-hover" style="min-width:1800px;white-space:nowrap">
                             <thead class="bg-primary text-white">
                             {{-- Fila 1 de encabezados (agrupadores) --}}
                             <tr>
