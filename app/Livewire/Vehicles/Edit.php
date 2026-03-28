@@ -59,7 +59,7 @@ class Edit extends Component
     {
         return [
             "sort_order" => "required|integer",
-            "plate" => "required|string|max:20|unique:vehicles,plate," . $this->vehicle->id,
+            "plate" => "required|string|min:6|max:20|unique:vehicles,plate," . $this->vehicle->id,
             "entry_date" => "nullable|date",
             "termination_date" => "nullable|date",
             "headquarter" => "nullable|string|max:255",

@@ -173,7 +173,7 @@ class Index extends Component
     protected function rules()
     {
         return [
-            'plate'          => ['required','string','max:20'],
+            'plate' => ['required','string','min:6','max:20'],
             'date'           => ['required','date'],
             'headquarter_id' => ['required','integer','exists:headquarters,id'],
             'price'          => ['required','numeric'],

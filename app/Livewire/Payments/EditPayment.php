@@ -50,7 +50,7 @@ class EditPayment extends Component
     protected function rules(): array
     {
         $rules = [
-            'plate'               => ['required','string','max:20'],
+            'plate' => ['required','string','min:6','max:20'],
             'serie'               => ['nullable','string','max:50'],
             'date_register'       => ['required','date'],
             'date_payment'        => ['nullable','date'],

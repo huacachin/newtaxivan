@@ -20,7 +20,7 @@ class Create extends Component
     public $listDrivers, $listOwners, $listHeadquarters;
 
     protected $rules = [
-        "plate" => "required|string|max:20|unique:vehicles,plate",
+        "plate" => "required|string|min:6|max:20|unique:vehicles,plate",
         "entry_date" => "nullable|date",
         "termination_date" => "nullable|date",
         "headquarter" => "nullable|string|max:255",
