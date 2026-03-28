@@ -127,7 +127,7 @@ class Expenses extends Component
         $user = Auth::user();
 
         $q = Expense::query()
-            ->with(['user:id,name'])
+            ->with(['user:id,name,username'])
             ->orderBy('date')
             ->orderBy('id');
 

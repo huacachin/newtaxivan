@@ -764,7 +764,7 @@ class Index extends Component
         $total_general = (clone $q)->sum('amount');
 
         // Datos paginados con eager loading
-        $payments = $q->with(['vehicle:id,plate', 'user:id,name', 'headquarter:id,name'])
+        $payments = $q->with(['vehicle:id,plate', 'user:id,name,username', 'headquarter:id,name'])
             ->orderBy('date_register')
             ->orderBy('hour')
             ->paginate(50);

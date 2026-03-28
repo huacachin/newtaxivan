@@ -117,7 +117,7 @@ class Incomes extends Component
         $user = Auth::user();
 
         $q = Income::query()
-            ->with(['user:id,name'])
+            ->with(['user:id,name,username'])
             ->orderBy('date')
             ->orderBy('id');
 
@@ -177,7 +177,7 @@ class Incomes extends Component
         $this->resetForm();
 
         // Refuerzo: si es controller, solo puede abrir sus registros
-        $query = Income::with('user:id,name');
+        $query = Income::with('user:id,name,username');
         $user  = Auth::user();
         if ($user && method_exists($user, 'hasRole') && $user->hasRole('controlador')) {
             $query->where('user_id', $user->id);
