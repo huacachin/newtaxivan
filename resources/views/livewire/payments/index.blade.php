@@ -6,7 +6,8 @@
 
 <div class="container-fluid">
     <style>
-        tr.row-retraso td, tr.row-retraso th { color: #cc0000 !important; font-weight: 600; }
+        tr.row-retraso td, tr.row-retraso th,
+        tr.row-deuda td, tr.row-deuda th { color: #cc0000 !important; font-weight: 600; }
     </style>
     <!-- Header -->
     <div class="row">
@@ -210,7 +211,7 @@
 
                             <tbody>
                             @forelse($payments as $p)
-                                <tr {{ $p->type === 'RETRASO' ? 'class=row-retraso' : '' }}>
+                                <tr @class(['row-retraso' => $p->type === 'RETRASO', 'row-deuda' => $p->type === 'DEUDA'])>
                                     <td width="50">
                                         @hasanyrole('director')
                                         <a href="{{ route('payments.edit', $p->id) }}">
