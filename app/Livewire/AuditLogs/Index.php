@@ -12,7 +12,7 @@ class Index extends Component
     use WithPagination;
 
     public string $module = '';
-    public string $action = 'updated';
+    public string $action = 'deleted';
     public string $userId = '';
     public string $dateFrom = '';
     public string $dateTo = '';
@@ -37,7 +37,7 @@ class Index extends Component
     {
         $today = now()->toDateString();
         $this->reset(['module', 'userId']);
-        $this->action = 'updated';
+        $this->action = 'deleted';
         $this->dateFrom = $today;
         $this->dateTo = $today;
         $this->resetPage();
