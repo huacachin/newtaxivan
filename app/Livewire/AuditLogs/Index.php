@@ -21,15 +21,25 @@ class Index extends Component
 
     protected $paginationTheme = 'bootstrap';
 
-    public function updatingModule() { $this->resetPage(); }
-    public function updatingAction() { $this->resetPage(); }
-    public function updatingUserId() { $this->resetPage(); }
-    public function updatingDateFrom() { $this->resetPage(); }
-    public function updatingDateTo() { $this->resetPage(); }
+    public function mount(): void
+    {
+        $today = now()->toDateString();
+        $this->dateFrom = $today;
+        $this->dateTo = $today;
+    }
+
+    public function search(): void
+    {
+        $this->resetPage();
+    }
 
     public function clearFilters(): void
     {
-        $this->reset(['module', 'action', 'userId', 'dateFrom', 'dateTo']);
+        $today = now()->toDateString();
+        $this->reset(['module', 'userId']);
+        $this->action = 'updated';
+        $this->dateFrom = $today;
+        $this->dateTo = $today;
         $this->resetPage();
     }
 

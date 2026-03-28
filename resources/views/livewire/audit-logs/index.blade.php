@@ -20,7 +20,7 @@
             <!-- Filtros -->
             <div class="row g-2 mb-3">
                 <div class="col-md-2">
-                    <select class="form-select form-select-sm" wire:model.live="module">
+                    <select class="form-select form-select-sm" wire:model="module">
                         <option value="">Todos los módulos</option>
                         @foreach($modules as $m)
                             <option value="{{ $m }}">{{ $m }}</option>
@@ -28,7 +28,7 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <select class="form-select form-select-sm" wire:model.live="action">
+                    <select class="form-select form-select-sm" wire:model="action">
                         <option value="">Todas las acciones</option>
                         <option value="created">Creación</option>
                         <option value="updated">Edición</option>
@@ -36,7 +36,7 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <select class="form-select form-select-sm" wire:model.live="userId">
+                    <select class="form-select form-select-sm" wire:model="userId">
                         <option value="">Todos los usuarios</option>
                         @foreach($users as $u)
                             <option value="{{ $u->id }}">{{ $u->name }}</option>
@@ -44,12 +44,15 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <input type="date" class="form-control form-control-sm" wire:model.live="dateFrom" placeholder="Desde">
+                    <input type="date" class="form-control form-control-sm" wire:model="dateFrom">
                 </div>
                 <div class="col-md-2">
-                    <input type="date" class="form-control form-control-sm" wire:model.live="dateTo" placeholder="Hasta">
+                    <input type="date" class="form-control form-control-sm" wire:model="dateTo">
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-1">
+                    <button class="btn btn-sm btn-primary w-100" wire:click="search">Buscar</button>
+                </div>
+                <div class="col-md-1">
                     <button class="btn btn-sm btn-secondary w-100" wire:click="clearFilters">Limpiar</button>
                 </div>
             </div>
