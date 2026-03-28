@@ -115,7 +115,7 @@
                             @forelse($rows as $r)
                                 <tr wire:key="row-{{ $r['item'] }}">
                                     <td>
-                                        @hasanyrole('director')
+                                        @hasanyrole('director|gerente|administrador')
                                         @if(($r['total'] ?? 0) > 0)
                                             <a href="#" title="Editar" wire:click.prevent="detail({{ $r['id'] }})">
                                                 <i class="ti ti-edit f-s-12 text-success"></i>

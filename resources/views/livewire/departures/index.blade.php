@@ -207,7 +207,7 @@
                                     <tr>
                                             @if(!$groupMode)
                                                 <td class="text-center ">
-                                                    @hasanyrole('director')
+                                                    @hasanyrole('director|gerente|administrador')
                                                     <a href="{{ route('departures.edit', $d->id) }}"><i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"></i></a>
                                                     @endhasanyrole
                                                 </td>
@@ -329,7 +329,7 @@
                                 <tr class="text-center ">
                                         @if(!$groupMode)
                                             <td class="text-center title-modules">
-                                                @hasanyrole('director')
+                                                @hasanyrole('director|gerente|administrador')
                                                 <a href="{{ route('departures.edit', $d->id) }}"><i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"></i></a>
                                                 @endhasanyrole
                                             </td>
