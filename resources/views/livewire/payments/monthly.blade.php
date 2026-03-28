@@ -145,7 +145,9 @@
                                     <td>{{ number_format($r['prev_paid_debt'], 2) }}</td>
 
                                     {{-- Mes actual --}}
-                                    <td class="green_modules">{{ number_format($r['month_amount'], 2) }}</td>
+                                    <td class="green_modules">
+                                        <a href="{{ route('payments.index', ['q' => $r['plate'], 'filter' => '1', 'from' => $year.'-'.str_pad($month,2,'0',STR_PAD_LEFT).'-01', 'to' => \Carbon\Carbon::create($year,$month,1)->endOfMonth()->format('Y-m-d')]) }}" target="_blank">{{ number_format($r['month_amount'], 2) }}</a>
+                                    </td>
                                     <td>{{ $laborableDays }}</td>
                                     <td>{{ $r['dt_days'] }}</td>
                                     <td>{{ $r['dnt_days'] }}</td>
