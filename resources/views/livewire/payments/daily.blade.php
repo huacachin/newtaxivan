@@ -5,7 +5,7 @@
         .cell-paid { background: green !important; color: #fff; font-weight: 600; }
         .cell-zero { background: #ff0000 !important; }
         .cell-sunday { background: #fff !important; }
-        #mitabla { border-spacing: 2px !important; border-collapse: separate !important; }
+        #mitabla { border-spacing: 1px !important; border-collapse: separate !important; }
         #mitabla td, #mitabla th { padding: 3px !important; line-height: 1.6; }
     </style>
 
