@@ -81,11 +81,13 @@ class GeneralReportExport implements FromArray, WithEvents, WithColumnFormatting
 
         foreach ($this->days as $d) {
             $sumI = 0.0; $sumE = 0.0;
+            $dateFormatted = Carbon::parse($d)->format('d/m/Y');
 
             foreach (($payments[$d] ?? collect()) as $p) {
+                $cliente = $this->userMap->get($p->user_id, '—') . ' - ' . $dateFormatted;
                 $rows[] = [
                     $item++, $d,
-                    $this->userMap->get($p->user_id, '—'),
+                    $cliente,
                     strtoupper($p->type).'-'.$this->hqNames->get($p->headquarter_id, '—'),
                     (float)$p->amount, 0.0,
                 ];
@@ -93,9 +95,10 @@ class GeneralReportExport implements FromArray, WithEvents, WithColumnFormatting
             }
 
             foreach (($departures[$d] ?? collect()) as $dep) {
+                $cliente = $this->userMap->get($dep->user_id, '—') . ' - ' . $dateFormatted;
                 $rows[] = [
                     $item++, $d,
-                    $this->userMap->get($dep->user_id, '—'),
+                    $cliente,
                     'Salidas-'.$this->hqNames->get($dep->headquarter_id, '—'),
                     (float)$dep->amount, 0.0,
                 ];
@@ -103,20 +106,22 @@ class GeneralReportExport implements FromArray, WithEvents, WithColumnFormatting
             }
 
             foreach (($incomes[$d] ?? collect()) as $inc) {
+                $cliente = $this->userMap->get($inc->user_id, '—') . ' - ' . $dateFormatted;
                 $glosa = trim(($inc->reason ?? '').' - '.($inc->detail ?? ''), ' -');
                 $rows[] = [
                     $item++, $d,
-                    $this->userMap->get($inc->user_id, '—'),
+                    $cliente,
                     $glosa, (float)$inc->total, 0.0,
                 ];
                 $sumI += (float)$inc->total;
             }
 
             foreach (($expenses[$d] ?? collect()) as $exp) {
+                $cliente = $this->userMap->get($exp->user_id, '—') . ' - ' . $dateFormatted;
                 $glosa = trim(($exp->reason ?? '') . ' - ' . ($exp->detail ?? ''), ' -');
                 $rows[] = [
                     $item++, $d,
-                    $this->userMap->get($exp->user_id, '—'),
+                    $cliente,
                     $glosa, 0.0, (float)$exp->total,
                 ];
                 $sumE += (float)$exp->total;
@@ -165,13 +170,9 @@ class GeneralReportExport implements FromArray, WithEvents, WithColumnFormatting
         $this->hqNames = Headquarter::query()->pluck('name', 'id');
 
         $this->userMap = User::query()
-            ->select('id','name','document_type','document_number')
+            ->select('id','username')
             ->get()
-            ->mapWithKeys(function ($u) {
-                $doc = trim(($u->document_type ?? '').' '.($u->document_number ?? ''));
-                $label = trim($u->name . ($doc ? " · $doc" : ''));
-                return [$u->id => ($label !== '' ? $label : '—')];
-            });
+            ->mapWithKeys(fn($u) => [$u->id => $u->username ?: '—']);
     }
 
     protected function loadMonthBatches(): array
