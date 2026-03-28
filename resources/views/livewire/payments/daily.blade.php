@@ -2,10 +2,10 @@
 
     <style>
         .sunday { background: #ff0000 !important; color: #fff !important; }
-        .cell-paid { background: #00b050 !important; color: #fff; font-weight: 600; }
+        .cell-paid { background: green !important; color: #fff; font-weight: 600; }
         .cell-zero { background: #ff0000 !important; }
         .cell-sunday { background: #fff !important; }
-        #mitabla td, #mitabla th { padding: 6px 4px !important; line-height: 1.6; }
+        #mitabla td, #mitabla th { padding: 3px !important; line-height: 1.6; }
     </style>
 
     {{-- Encabezado --}}
