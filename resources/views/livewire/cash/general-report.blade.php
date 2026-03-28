@@ -139,9 +139,10 @@
                         {{-- FOOTER del mes --}}
                         <tfoot>
                         <tr style="background-color: #d4edda;">
+                            <td></td>
                             <td class="fw-bold text-primary">UTILIDAD</td>
                             <td class="fw-bold">{{ number_format($finalBalance,2) }}</td>
-                            <td colspan="2" class="fw-bold text-center">
+                            <td class="fw-bold text-center">
                                 <span class="text-dark">TOTAL </span><span class="text-success fw-bold">GENERAL</span>
                             </td>
                             <td class="fw-bold report-blue">{{ number_format($totalIncomes,2) }}</td>
