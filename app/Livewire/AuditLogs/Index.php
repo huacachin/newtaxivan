@@ -12,7 +12,7 @@ class Index extends Component
     use WithPagination;
 
     public string $module = '';
-    public string $action = '';
+    public string $action = 'updated';
     public string $userId = '';
     public string $dateFrom = '';
     public string $dateTo = '';
