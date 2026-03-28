@@ -151,9 +151,9 @@
                                     }
                                 @endphp
                                 <tr>
-                                    <td>{{ $i }}</td>
-                                    <td>{{ $r['plate'] }}</td>
-                                    <td>
+                                    <td style="background:#D0CECE">{{ $i }}</td>
+                                    <td style="background:#D0CECE">{{ $r['plate'] }}</td>
+                                    <td style="background:#D0CECE">
                                         <span class="{{ $condClass }}">{{ $cond ?: '-' }}</span>
                                     </td>
 
@@ -168,17 +168,17 @@
                                     @endforeach
 
                                     {{-- TOTAL PAGOS --}}
-                                    <td>{{ number_format($r['days_paid']) }}</td>
-                                    <td>{{ number_format($r['total'], 2) }}</td>
+                                    <td style="background:#D0CECE">{{ number_format($r['days_paid']) }}</td>
+                                    <td style="background:#D0CECE">{{ number_format($r['total'], 2) }}</td>
 
                                     @if($mode === 'Pago')
                                         {{-- TOTAL DEUDA --}}
-                                        <td>{{ number_format($r['debt_days']) }}</td>
-                                        <td>{{ number_format($r['debt_amount'], 2) }}</td>
+                                        <td style="background:#D0CECE">{{ number_format($r['debt_days']) }}</td>
+                                        <td style="background:#D0CECE">{{ number_format($r['debt_amount'], 2) }}</td>
 
                                         {{-- TOTAL D. REAL --}}
-                                        <td>{{ number_format($r['real_debt_days']) }}</td>
-                                        <td>{{ number_format($r['real_debt_amount'], 2) }}</td>
+                                        <td style="background:#D0CECE">{{ number_format($r['real_debt_days']) }}</td>
+                                        <td style="background:#D0CECE">{{ number_format($r['real_debt_amount'], 2) }}</td>
                                     @endif
                                 </tr>
                             @empty
