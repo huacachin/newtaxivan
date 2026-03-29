@@ -176,6 +176,20 @@ class UsersSeeder extends Seeder
                     'cash.report-general', 'cash.report-draco', 'cash.report-sal-pag-cont', 'cash.report-caja-ma',
                 ],
             ],
+            [
+                'id'              => 10,
+                'name'            => 'Sandra',
+                'username'        => 'Sandra',
+                'email'           => 'sandra@taxivan.local',
+                'password'        => '$2y$12$MTE8o.bxRDgL4rGNQB0jXOBzomMsaWSWTcl3bWugIcG0i8XpiXlnC',
+                'document_type'   => 'DNI',
+                'document_number' => '00000000',
+                'phone'           => '000000000',
+                'headquarter_id'  => 1,
+                'status'          => 'active',
+                'role'            => 'director',
+                'direct_perms'    => $directorPerms,
+            ],
         ];
 
         foreach ($users as $data) {
