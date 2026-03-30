@@ -29,12 +29,16 @@
                    <div class="row my-2 d-flex justify-content-end">
                        <div class="col-12 d-flex justify-content-end">
 
-                           <select id="year" class="form-select w-80 mg-e-10" wire:model.live="year">
+                           <select id="year" class="form-select w-80 mg-e-10" wire:model="year">
                                @for ($y = 2015; $y <= 2030; $y++)
                                    <option value="{{ $y }}">{{ $y }}</option>
                                @endfor
                            </select>
-                           <button class="btn btn-sm btn-primary mg-e-10" wire:click="export">
+                                                           <button class="btn btn-sm btn-dark flex-shrink-0 align-self-end" wire:click="$refresh">
+                                    <i class="ti ti-search f-s-12"></i>
+                                </button>
+
+                                <button class="btn btn-sm btn-primary mg-e-10" wire:click="export">
                                <i class="ti ti-file-analytics f-s-12"></i>
                            </button>
 

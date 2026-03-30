@@ -31,12 +31,16 @@
                     <div class="row my-2">
 
                         <div class="col-12 d-flex align-items-end justify-content-end">
-                            <select class="form-select form-select-sm w-80 mg-e-10" wire:model.live="year">
+                            <select class="form-select form-select-sm w-80 mg-e-10" wire:model="year">
                                 @for($y = now()->year + 1; $y >= 2015; $y--)
                                     <option value="{{ $y }}">{{ $y }}</option>
                                 @endfor
                             </select>
-                            <button class="btn btn-sm btn-primary" wire:click="export">
+                                                            <button class="btn btn-sm btn-dark flex-shrink-0 align-self-end" wire:click="$refresh">
+                                    <i class="ti ti-search f-s-12"></i>
+                                </button>
+
+                                <button class="btn btn-sm btn-primary" wire:click="export">
                                 <i class="ti ti-file-analytics f-s-12"></i>
                             </button>
                             <a href="{{ route('departures.index') }}" class="btn btn-sm btn-primary ms-2">

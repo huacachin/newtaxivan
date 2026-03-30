@@ -43,7 +43,7 @@
                                 <!-- Año -->
                                 <div class="flex-shrink-0" style="min-width: 120px;">
                                     <label class="form-label mb-1">Año</label>
-                                    <select class="form-select form-select-sm" wire:model.live="year">
+                                    <select class="form-select form-select-sm" wire:model="year">
                                         @foreach($years as $y)
                                             <option value="{{ $y }}">{{ $y }}</option>
                                         @endforeach
@@ -53,7 +53,7 @@
                                 <!-- Mes -->
                                 <div class="flex-shrink-0" style="min-width: 160px;">
                                     <label class="form-label mb-1">Mes</label>
-                                    <select class="form-select form-select-sm" wire:model.live="month">
+                                    <select class="form-select form-select-sm" wire:model="month">
                                         @foreach($months as $mVal => $mName)
                                             <option value="{{ $mVal }}">{{ $mName }}</option>
                                         @endforeach
@@ -63,11 +63,15 @@
                                 <!-- Modo -->
                                 <div class="flex-shrink-0" style="min-width: 140px;">
                                     <label class="form-label mb-1">Modo</label>
-                                    <select class="form-select form-select-sm" wire:model.live="mode">
+                                    <select class="form-select form-select-sm" wire:model="mode">
                                         <option value="Pago">Pago</option>
                                         <option value="Caja">Caja</option>
                                     </select>
                                 </div>
+
+                                                                <button class="btn btn-sm btn-dark flex-shrink-0 align-self-end" wire:click="$refresh">
+                                    <i class="ti ti-search f-s-12"></i>
+                                </button>
 
                                 <!-- Exportar -->
                                 <a href="#"

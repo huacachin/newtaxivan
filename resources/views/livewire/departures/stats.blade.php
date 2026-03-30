@@ -40,7 +40,7 @@
                                 <!-- Mes -->
                                 <div class="flex-shrink-0" >
                                     <label class="form-label mb-1">Mes</label>
-                                    <select class="form-select form-select-sm" wire:model.live="month">
+                                    <select class="form-select form-select-sm" wire:model="month">
                                         @foreach($months as $mVal => $mName)
                                             <option value="{{ $mVal }}">{{ $mName }}</option>
                                         @endforeach
@@ -50,7 +50,7 @@
                                 <!-- Año -->
                                 <div class="flex-shrink-0" >
                                     <label class="form-label mb-1">Año</label>
-                                    <select class="form-select form-select-sm" wire:model.live="year">
+                                    <select class="form-select form-select-sm" wire:model="year">
                                         @foreach($years as $y)
                                             <option value="{{ $y }}">{{ $y }}</option>
                                         @endforeach
@@ -61,6 +61,10 @@
                                    class="btn btn-sm btn-primary flex-shrink-0 align-self-end">
                                     <i class="ti ti-rotate-2 f-s-12"></i> Regresar
                                 </a>
+                                                                <button class="btn btn-sm btn-dark flex-shrink-0 align-self-end" wire:click="$refresh">
+                                    <i class="ti ti-search f-s-12"></i>
+                                </button>
+
                                 <!-- Exportar -->
                                 <a href="#"
                                    wire:click.prevent="export"

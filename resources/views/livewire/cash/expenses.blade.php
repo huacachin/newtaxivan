@@ -63,7 +63,7 @@
                                                        name="rbFilter"
                                                        id="rbA"
                                                        value="1"
-                                                       wire:model.live="filterType">  {{-- sin .live ni wire:click --}}
+                                                       wire:model="filterType">  {{-- sin .live ni wire:click --}}
                                                 <label class="form-check-label" for="rbA">A</label>
                                             </div>
 
@@ -73,7 +73,7 @@
                                                        name="rbFilter"
                                                        id="rbMotive"
                                                        value="2"
-                                                       wire:model.live="filterType">
+                                                       wire:model="filterType">
                                                 <label class="form-check-label" for="rbMotive">Motivo</label>
                                             </div>
 
@@ -83,7 +83,7 @@
                                                        name="rbFilter"
                                                        id="rbUser"
                                                        value="3"
-                                                       wire:model.live="filterType">
+                                                       wire:model="filterType">
                                                 <label class="form-check-label" for="rbUser">Usuario</label>
                                             </div>
 
@@ -93,7 +93,7 @@
                                                        name="rbFilter"
                                                        id="rbRespons"
                                                        value="4"
-                                                       wire:model.live="filterType">
+                                                       wire:model="filterType">
                                                 <label class="form-check-label" for="rbRespons">Respons.</label>
                                             </div>
                                         </div>
@@ -104,7 +104,7 @@
                                     class="form-control form-control-sm"
                                     placeholder="Buscar..."
                                     aria-label="Buscar"
-                                    wire:model.live.debounce.400ms="search">
+                                    wire:model="search">
                             </div>
 
                             <!-- Fecha Inicio -->

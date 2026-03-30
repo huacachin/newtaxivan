@@ -34,7 +34,7 @@
                                 <!-- Mes -->
                                 <div class="flex-shrink-0" style="min-width: 220px;">
                                     <label class="form-label mb-1">Mes</label>
-                                    <select wire:model.live="month" class="form-select form-select-sm">
+                                    <select wire:model="month" class="form-select form-select-sm">
                                         @for($m=1;$m<=12;$m++)
                                             <option value="{{ $m }}">
                                                 {{ \Carbon\Carbon::create(null, $m, 1)->locale('es')->translatedFormat('F') }}
@@ -46,7 +46,7 @@
                                 <!-- Año -->
                                 <div class="flex-shrink-0" style="min-width: 160px;">
                                     <label class="form-label mb-1">Año</label>
-                                    <select wire:model.live="year" class="form-select form-select-sm">
+                                    <select wire:model="year" class="form-select form-select-sm">
                                         @for($y=now()->year-5;$y<=now()->year+1;$y++)
                                             <option value="{{ $y }}">{{ $y }}</option>
                                         @endfor

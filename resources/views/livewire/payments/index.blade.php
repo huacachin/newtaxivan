@@ -116,7 +116,7 @@
                                     @default Buscar...
                                 @endswitch"
                                    aria-label="Buscar"
-                                   wire:model.live.debounce.400ms="search">
+                                   wire:model="search">
                         </div>
 
                         <div class="col-auto">
@@ -132,7 +132,7 @@
                         <div class="col-auto">
                             <label class="form-label mb-1">Sucursal</label>
                             <select class="form-select form-select-sm"
-                                    wire:model.live="headquarter_id"
+                                    wire:model="headquarter_id"
                                     aria-label="Selecciona sucursal"
                                     wire:key="hq-select">
                                 <option value="">Todos</option>
@@ -145,7 +145,7 @@
                         <div class="col-auto">
                             <label class="form-label mb-1">Tipo</label>
                             <select class="form-select form-select-sm"
-                                    wire:model.live="type"
+                                    wire:model="type"
                                     aria-label="Selecciona tipo">
                                 <option value="">Todos</option>
                                 <option value="PAGO">Pago</option>

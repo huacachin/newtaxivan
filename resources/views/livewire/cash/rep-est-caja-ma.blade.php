@@ -30,7 +30,7 @@
                             <!-- Mes -->
                             <div class="flex-shrink-0" style="min-width: 200px;">
                                 <label class="form-label mb-1">Mes</label>
-                                <select wire:model.live="month" class="form-select form-select-sm">
+                                <select wire:model="month" class="form-select form-select-sm">
                                     @for ($m=1; $m<=12; $m++)
                                         <option value="{{ $m }}">{{ \App\Livewire\Cash\RepEstCajaMa::monthName($m) }}</option>
                                     @endfor
@@ -40,7 +40,7 @@
                             <!-- Año -->
                             <div class="flex-shrink-0" style="min-width: 140px;">
                                 <label class="form-label mb-1">Año</label>
-                                <select wire:model.live="year" class="form-select form-select-sm">
+                                <select wire:model="year" class="form-select form-select-sm">
                                     @for ($y = 2015; $y <= 2030; $y++)
                                         <option value="{{ $y }}">{{ $y }}</option>
                                     @endfor
@@ -50,7 +50,7 @@
                             <!-- Sede -->
                             <div class="flex-shrink-0" style="min-width: 220px;">
                                 <label class="form-label mb-1">Sede</label>
-                                <select wire:model.live="headquarterId" class="form-select form-select-sm">
+                                <select wire:model="headquarterId" class="form-select form-select-sm">
                                     <option value="">Todas</option>
                                     @foreach ($headquarters as $hq)
                                         <option value="{{ $hq['id'] }}">{{ $hq['name'] }}</option>
@@ -58,7 +58,11 @@
                                 </select>
                             </div>
 
-                            <!-- Exportar -->
+                                                            <button class="btn btn-sm btn-dark flex-shrink-0 align-self-end" wire:click="$refresh">
+                                    <i class="ti ti-search f-s-12"></i>
+                                </button>
+
+                                <!-- Exportar -->
                             <button class="btn btn-sm btn-primary flex-shrink-0 align-self-end"
                                     wire:click="export">
                                 <i class="ti ti-file-analytics f-s-12"></i>
