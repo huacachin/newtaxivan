@@ -39,7 +39,8 @@
                                                 @php $day = \Carbon\Carbon::parse($date)->day; @endphp
                                                 <div class="d-flex align-items-center justify-content-center gap-1">
                                                     <span class="fw-semibold">{{ $day }}</span>
-                                                    <input type="number" step="0.01" min="0"
+                                                    <input type="text" inputmode="decimal"
+                                                           onkeypress="return (event.charCode >= 48 && event.charCode <= 57) || event.charCode == 46"
                                                            wire:key="day-{{ $date }}"
                                                            wire:model.defer="values.{{ $date }}"
                                                            class="form-control form-control-sm text-end w-amt" />
