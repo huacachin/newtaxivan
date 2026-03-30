@@ -52,8 +52,12 @@
                                            class="form-control form-control-sm"
                                            placeholder="Buscar por nombre"
                                            aria-label="Buscar"
-                                           wire:model.live="search">
+                                           wire:model="search">
                                 </div>
+
+                                <button class="btn btn-sm btn-dark flex-shrink-0" wire:click="$refresh">
+                                    <i class="ti ti-search f-s-12"></i>
+                                </button>
 
                                 <!-- Botón a la derecha (ancho intrínseco) -->
                                 @hasanyrole('director|gerente|administrador')

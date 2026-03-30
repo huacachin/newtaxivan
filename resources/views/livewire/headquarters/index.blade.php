@@ -42,8 +42,12 @@
                                     <input type="search"
                                            class="form-control form-control-sm"
                                            placeholder="Buscar por nombre"
-                                           wire:model.live="search">
+                                           wire:model="search">
                                 </div>
+
+                                <button class="btn btn-sm btn-dark flex-shrink-0" wire:click="$refresh">
+                                    <i class="ti ti-search f-s-12"></i>
+                                </button>
 
                                 @hasanyrole('director|gerente|administrador')
                                 <a class="btn btn-sm btn-primary flex-shrink-0"

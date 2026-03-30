@@ -38,8 +38,12 @@
                                     <input type="search"
                                            class="form-control form-control-sm"
                                            placeholder="ABC123"
-                                           wire:model.live.debounce.750ms="search">
+                                           wire:model="search">
                                 </div>
+
+                                <button class="btn btn-sm btn-dark flex-shrink-0 align-self-end" wire:click="$refresh">
+                                    <i class="ti ti-search f-s-12"></i>
+                                </button>
 
                                 <!-- Mes -->
                                 <div class="flex-shrink-0" >

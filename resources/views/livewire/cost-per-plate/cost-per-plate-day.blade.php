@@ -28,7 +28,10 @@
                         <h5> Fecha: {{ $now->format('d/m/Y') }} </h5>
                             <div class="d-flex">
                                 <input type="text" class="form-control form-control-sm w-120 mg-e-10" placeholder="Buscar por placa"
-                                       wire:model.live="plate" aria-label="Buscar por placa">
+                                       wire:model="plate" aria-label="Buscar por placa">
+                                <button class="btn btn-sm btn-dark mg-e-10" wire:click="$refresh">
+                                    <i class="ti ti-search f-s-12"></i>
+                                </button>
                                 <button class="btn btn-sm btn-primary mg-e-10" wire:click="goBack">
                                     <i class="ti ti-arrow-back-up f-s-12"></i> Regresar
                                 </button>

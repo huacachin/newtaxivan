@@ -49,7 +49,7 @@
                                 <div class="flex-shrink-0" style="min-width: 160px;">
                                     <select class="form-select form-select-sm"
                                             aria-label="Selecciona item a filtrar"
-                                            wire:model.live="filter">
+                                            wire:model="filter">
                                         <option value="plate">Placa</option>
                                         <option value="name">Nombre</option>
                                         <option value="code">Código</option>
@@ -62,8 +62,12 @@
                                            class="form-control form-control-sm"
                                            placeholder="Buscar..."
                                            aria-label="Buscar"
-                                           wire:model.live="search">
+                                           wire:model="search">
                                 </div>
+
+                                <button class="btn btn-sm btn-dark flex-shrink-0" wire:click="$refresh">
+                                    <i class="ti ti-search f-s-12"></i>
+                                </button>
 
                                 <!-- Botones -->
                                 @hasanyrole('director|gerente|administrador')

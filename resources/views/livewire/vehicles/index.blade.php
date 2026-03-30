@@ -61,7 +61,7 @@
                                     <div class="flex-shrink-0" style="min-width: 160px;">
                                         <select class="form-select form-select-sm"
                                                 aria-label="Estado del vehiculo"
-                                                wire:model.live="status">
+                                                wire:model="status">
                                             <option value="active">Activo</option>
                                             <option value="inactive">Cesado</option>
                                         </select>
@@ -71,7 +71,7 @@
                                     <div class="flex-shrink-0" style="min-width: 180px;">
                                         <select class="form-select form-select-sm"
                                                 aria-label="Filtro"
-                                                wire:model.live="filter">
+                                                wire:model="filter">
                                             <option value="plate">Placa</option>
                                             <option value="brand">Marca</option>
                                             <option value="year">Año</option>
@@ -90,8 +90,12 @@
                                                class="form-control form-control-sm"
                                                placeholder="Buscar..."
                                                aria-label="Buscar"
-                                               wire:model.live="search">
+                                               wire:model="search">
                                     </div>
+
+                                    <button class="btn btn-sm btn-dark flex-shrink-0" wire:click="$refresh">
+                                        <i class="ti ti-search f-s-12"></i>
+                                    </button>
 
                                     <!-- Botones -->
                                     @hasanyrole('director|gerente|administrador')
