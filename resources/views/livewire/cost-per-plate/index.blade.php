@@ -54,7 +54,7 @@
                             @forelse($result as $item)
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
-                                    <td>{{ $item->month }}</td>
+                                    <td>{{ \Carbon\Carbon::create(null, $item->month, 1)->locale('es')->translatedFormat('F') }}</td>
                                     <td>{{ $item->year }}</td>
                                     <td>{{ number_format($item->plates) }}</td>
                                     <td>{{ number_format($item->amount, 2) }}</td>
