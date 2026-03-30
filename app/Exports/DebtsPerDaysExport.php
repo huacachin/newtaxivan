@@ -349,10 +349,10 @@ class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTi
                 for ($c = $dayStartColIndex; $c <= $dayEndColIndex; $c++) {
                     $ws->getColumnDimension($this->colLetter($c))->setWidth(4.0); // días compactos
                 }
-                $ws->getColumnDimension($this->colLetter($dayEndColIndex + 1))->setWidth(9.0);   // P días
-                $ws->getColumnDimension($this->colLetter($dayEndColIndex + 2))->setWidth(12.5);  // P S/
-                $ws->getColumnDimension($this->colLetter($dayEndColIndex + 3))->setWidth(9.0);   // D días
-                $ws->getColumnDimension($this->colLetter($dayEndColIndex + 4))->setWidth(12.5);  // D S/
+                $ws->getColumnDimension($this->colLetter($dayEndColIndex + 1))->setWidth(10.0);   // P días
+                $ws->getColumnDimension($this->colLetter($dayEndColIndex + 2))->setWidth(10.0);  // P S/
+                $ws->getColumnDimension($this->colLetter($dayEndColIndex + 3))->setWidth(10.0);  // D días
+                $ws->getColumnDimension($this->colLetter($dayEndColIndex + 4))->setWidth(10.0);  // D S/
 
                 // Alineaciones básicas
                 if ($lastDataRow >= $dataStartRow) {
