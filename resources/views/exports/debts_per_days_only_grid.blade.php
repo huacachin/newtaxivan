@@ -5,7 +5,7 @@
 <body topmargin="0" leftmargin="0" rightmargin="0" bottommargin="0">
 <table cellspacing="0" border="1">
     <thead>
-    <tr><td colspan="40" align="center" style="font-weight:bold;color:red;font-size:11pt;">REPORTE DE RETRASO {{ strtoupper($monthLabel) }}</td></tr>
+    <tr><td colspan="{{ 4 + count($days) + 4 }}" align="center" style="font-weight:bold;color:red;font-size:11pt;">REPORTE DE RETRASO {{ strtoupper($monthLabel) }}</td></tr>
     <tr>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Item</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Cod</b></th>
