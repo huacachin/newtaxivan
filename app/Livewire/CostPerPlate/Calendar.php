@@ -6,6 +6,7 @@ use App\Models\CostPerPlateDay as CostPerPlateDayModel;
 use App\Models\Vehicle;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 class Calendar extends Component
@@ -104,83 +105,73 @@ class Calendar extends Component
         return $vals;
     }
 
-    /** Aplica monto a todo el mes en memoria */
-    public function fillAll(): void
+    public function confirmChange(string $date, $value): void
     {
-        if ($this->bulk === null) return;
-        $v = (float)$this->bulk;
-        foreach ($this->weeks as $week) {
-            foreach ($week as $date) if ($date) $this->values[$date] = $v;
+        $value = (float) $value;
+        $this->dispatch('confirmCostChange', ['date' => $date, 'value' => $value]);
+    }
+
+    #[On('applySingleFromJs')]
+    public function applySingle(string $date, float $value): void
+    {
+        if (!$this->vehicleId) return;
+        $this->saveDay($date, $value);
+        $this->refreshValues();
+        $this->dispatch('successAlert', ['message' => 'Guardado']);
+    }
+
+    #[On('applyForwardFromJs')]
+    public function applyForward(string $date, float $value): void
+    {
+        if (!$this->vehicleId) return;
+
+        $from = Carbon::parse($date);
+        $end  = Carbon::create($this->year, $this->month, 1)->endOfMonth();
+
+        for ($d = $from->copy(); $d->lte($end); $d->addDay()) {
+            if ($d->isSunday()) continue;
+            $this->saveDay($d->toDateString(), $value);
         }
+
+        $this->refreshValues();
+        $this->dispatch('successAlert', ['message' => 'Guardado']);
+    }
+
+    private function saveDay(string $date, float $amount): void
+    {
+        $table = (new CostPerPlateDayModel)->getTable();
+        $dt = Carbon::parse($date);
+
+        $affected = DB::table($table)
+            ->where('vehicle_id', $this->vehicleId)
+            ->whereDate('date', $date)
+            ->update([
+                'amount'     => round($amount, 2),
+                'updated_at' => now(),
+            ]);
+
+        if ($affected === 0) {
+            DB::table($table)->insert([
+                'vehicle_id' => $this->vehicleId,
+                'year'       => $dt->year,
+                'month'      => $dt->month,
+                'date'       => $date,
+                'amount'     => round($amount, 2),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+    }
+
+    private function refreshValues(): void
+    {
+        $loaded = $this->fetchValuesFromDb();
+        $this->values   = $loaded;
+        $this->original = $loaded;
     }
 
     public function goBack()
     {
         $this->redirect(route('settings.cost-per-plate.cost-per-plate-day', ["year" => $this->year, "month" => $this->month]));
-    }
-
-    /** Guarda SOLO los días que cambiaron vs $original */
-    public function saveAll(): void
-    {
-        if (!$this->vehicleId) return;
-
-        $table = (new \App\Models\CostPerPlateDay)->getTable();
-
-        // Construimos la lista de días QUE CAMBIARON vs $original
-        $changes = [];
-        foreach ($this->values as $date => $newVal) {
-            // Valida clave fecha
-            if (!is_string($date) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) continue;
-
-            // Ignora nulos/vacíos (evita escribir 0 por accidente)
-            if ($newVal === '' || $newVal === null) continue;
-
-            $new = round((float)$newVal, 2);
-            $old = round((float)($this->original[$date] ?? 0.0), 2);
-            if ($new === $old) continue; // no cambió → no tocar
-
-            $changes[$date] = $new;
-        }
-
-        if (empty($changes)) {
-            $this->dispatch('toast', body: 'No hubo cambios');
-            return;
-        }
-
-        \DB::transaction(function () use ($table, $changes) {
-            foreach ($changes as $date => $amount) {
-                $dt = \Carbon\Carbon::parse($date);
-
-                // 1) UPDATE por (vehicle_id, date)
-                $affected = \DB::table($table)
-                    ->where('vehicle_id', $this->vehicleId)
-                    ->whereDate('date', $date)
-                    ->update([
-                        'year'       => $dt->year,
-                        'month'      => $dt->month,
-                        'amount'     => $amount,
-                        'updated_at' => now(),
-                    ]);
-
-                // 2) Si no existía, INSERT
-                if ($affected === 0) {
-                    \DB::table($table)->insert([
-                        'vehicle_id' => $this->vehicleId,
-                        'year'       => $dt->year,
-                        'month'      => $dt->month,
-                        'date'       => $date,
-                        'amount'     => $amount,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                }
-            }
-        });
-
-        // Refresca snapshot para que no se vuelvan a escribir en la próxima
-        $this->original = $this->fetchValuesFromDb();
-        $this->values   = $this->original;
-
-        $this->dispatch('successAlert', ["message" => 'Guardado']);
     }
 }

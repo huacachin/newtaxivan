@@ -41,10 +41,10 @@
                                                     <span class="fw-semibold">{{ $day }}</span>
                                                     <input type="text" inputmode="decimal"
                                                            onkeypress="return (event.charCode >= 48 && event.charCode <= 57) || event.charCode == 46"
-                                                           wire:key="day-{{ $date }}"
-                                                           wire:model.defer="values.{{ $date }}"
+                                                           id="cost-{{ $date }}"
+                                                           value="{{ $values[$date] ?? 0 }}"
                                                            class="form-control form-control-sm text-end w-amt"
-                                                           @if($isSun) readonly style="opacity:.6" @endif />
+                                                           @if($isSun) readonly style="opacity:.6" @else onchange="@this.confirmChange('{{ $date }}', this.value)" @endif />
                                                 </div>
                                             @endif
                                         </td>
@@ -59,12 +59,43 @@
                         <button class="btn btn-sm btn-primary" wire:click="goBack">
                             <i class="ti ti-arrow-back-up f-s-12"></i> Regresar
                         </button>
-                        <button class="btn btn-sm btn-primary" wire:click="saveAll">
-                            <i class="ti ti-device-floppy f-s-12"></i> Guardar
-                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+window.addEventListener('confirmCostChange', function (event) {
+    var data = event.detail[0];
+    var date = data.date;
+    var value = data.value;
+
+    Swal.fire({
+        title: 'Cambio de costo',
+        html: '¿Cómo desea aplicar el cambio de <b style="color:red">' + value + '</b>?',
+        icon: 'question',
+        showCancelButton: true,
+        showDenyButton: true,
+        confirmButtonText: 'Solo este día',
+        denyButtonText: 'De aquí en adelante',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#3085d6',
+        denyButtonColor: '#28a745',
+        cancelButtonColor: '#d33',
+    }).then(function (result) {
+        if (result.isConfirmed) {
+            Livewire.dispatch('applySingleFromJs', [date, value]);
+        } else if (result.isDenied) {
+            Livewire.dispatch('applyForwardFromJs', [date, value]);
+        } else {
+            // Cancelar: restaurar valor original
+            var input = document.getElementById('cost-' + date);
+            if (input) input.value = input.defaultValue;
+        }
+    });
+});
+</script>
+@endpush
