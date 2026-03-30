@@ -191,14 +191,26 @@ public function title(): string
                     $borders->getVertical()->setBorderStyle(Border::BORDER_THIN)->getColor()->setRGB('000000');
                 }
 
-                // Datos: bold negro, centrado
+                // Datos: centrado + formato
                 if ($lastRow >= $dataStartRow) {
                     $ws->getStyle("A{$dataStartRow}:{$lastColLetter}{$lastRow}")->applyFromArray([
-                        'font'      => ['color' => ['rgb' => '000000']],
                         'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
                     ]);
                     $ws->getStyle("C{$dataStartRow}:C{$lastRow}")->getNumberFormat()->setFormatCode('dd/mm/yyyy');
                     $ws->getStyle("F{$dataStartRow}:F{$lastRow}")->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
+
+                    // Alternar color de texto por placa (columna D)
+                    $prevPlate = null;
+                    $useRed = false;
+                    for ($r = $dataStartRow; $r <= $lastRow; $r++) {
+                        $plate = (string) $ws->getCell("D{$r}")->getValue();
+                        if ($prevPlate !== null && $plate !== $prevPlate) {
+                            $useRed = !$useRed;
+                        }
+                        $color = $useRed ? 'FF0000' : '000000';
+                        $ws->getStyle("A{$r}:{$lastColLetter}{$r}")->getFont()->getColor()->setRGB($color);
+                        $prevPlate = $plate;
+                    }
                 }
 
                 // ===== Footer (celeste #CEE7FF, texto negro) =====
