@@ -105,6 +105,7 @@
                                 <td></td>
                                 <td></td>
                                 <td class="text-start">TOTAL</td>
+                                <td></td>
                                 <td colspan="2" class="num">{{ $headquarters->count() }}</td>
                             </tr>
                             </tfoot>
