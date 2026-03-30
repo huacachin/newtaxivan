@@ -214,18 +214,17 @@ class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTi
                 $ws->getParent()->getDefaultStyle()->getFont()->setSize(10);
                 $ws->setShowGridlines(false);
 
-                // ===== Insertar 2 filas (título + subheader) =====
-                $ws->insertNewRowBefore(1, 2);
+                // ===== Insertar SOLO 1 fila (título) =====
+                $ws->insertNewRowBefore(1, 1);
 
-                $subHeaderRow = 2;           // fila con "Total Pagos" / "Total Deuda"
-                $headerRow    = 3;           // thead real (Item, Cod, Placa...)
-                $dataStartRow = 4;           // primer dato
+                $headerRow    = 2;           // thead real
+                $dataStartRow = 3;           // primer dato
                 $dayStartColIndex = 5;       // E (A:Item, B:Cod, C:Placa, D:Condición)
                 $dayEndColIndex   = $dayStartColIndex + max(0, $this->dayCols - 1);
                 // +4 columnas finales: P días, P S/, D días, D S/
                 $lastColIndex     = $dayEndColIndex + 4;
                 $lastColLetter    = $this->colLetter($lastColIndex);
-                $lastColIdx       = $lastColIndex; // numérico para bucles
+                $lastColIdx       = $lastColIndex;
 
                 // Letras de las 4 columnas finales
                 $pDaysCol = $this->colLetter($dayEndColIndex + 1);
@@ -247,25 +246,19 @@ class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTi
                     'borders' => ['allBorders' => ['borderStyle'=>Border::BORDER_THIN,'color'=>['argb'=>'FF000000']]],
                 ]);
 
-                // ===== SUB-HEADER (fila 2) — "Total Pagos" y "Total Deuda" combinados =====
-                $ws->mergeCells("{$pDaysCol}{$subHeaderRow}:{$pAmtCol}{$subHeaderRow}");
-                $ws->setCellValue("{$pDaysCol}{$subHeaderRow}", 'Total Pagos');
-                $ws->mergeCells("{$dDaysCol}{$subHeaderRow}:{$dAmtCol}{$subHeaderRow}");
-                $ws->setCellValue("{$dDaysCol}{$subHeaderRow}", 'Total Deuda');
-                $ws->getStyle("A{$subHeaderRow}:{$lastColLetter}{$subHeaderRow}")->applyFromArray([
-                    'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$white]],
-                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
-                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blue]],
-                ]);
-                $ws->getRowDimension($subHeaderRow)->setRowHeight(16);
-
-                // ===== THEAD (fila 3) azul =====
+                // ===== THEAD (fila 2) azul =====
                 $ws->getStyle("A{$headerRow}:{$lastColLetter}{$headerRow}")->applyFromArray([
                     'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$white]],
                     'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
                     'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blue]],
                 ]);
                 $ws->getRowDimension($headerRow)->setRowHeight(16);
+
+                // Combinar headers: "Total Pagos" y "Total Deuda"
+                $ws->mergeCells("{$pDaysCol}{$headerRow}:{$pAmtCol}{$headerRow}");
+                $ws->setCellValue("{$pDaysCol}{$headerRow}", 'Total Pagos');
+                $ws->mergeCells("{$dDaysCol}{$headerRow}:{$dAmtCol}{$headerRow}");
+                $ws->setCellValue("{$dDaysCol}{$headerRow}", 'Total Deuda');
 
                 // Domingos en rojo (solo header de días)
                 foreach ($this->days as $i => $d) {
