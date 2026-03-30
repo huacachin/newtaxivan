@@ -767,7 +767,7 @@ class Index extends Component
         $payments = $q->with(['vehicle:id,plate', 'user:id,name,username', 'headquarter:id,name'])
             ->orderBy('date_register')
             ->orderBy('hour')
-            ->paginate(50);
+            ->get();
 
         return view('livewire.payments.index', [
             'payments'      => $payments,

@@ -219,7 +219,7 @@
                                         </a>
                                         @endhasanyrole
                                     </td>
-                                    <td>{{ $payments->firstItem() + $loop->index }}</td>
+                                    <td>{{ $loop->iteration }}</td>
                                     <td>{{ $p->legacy_plate }}</td>
                                     <td>{{ $p->serie }}</td>
                                     <td>{{ optional($p->date_register)->format('Y-m-d') }}</td>
@@ -253,9 +253,6 @@
                             </tr>
                             </tfoot>
                         </table>
-                    </div>
-                    <div class="d-flex justify-content-center mt-2">
-                        {{ $payments->links() }}
                     </div>
                 </div>
             </div>
