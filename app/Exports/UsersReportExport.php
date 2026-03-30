@@ -9,7 +9,6 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithEvents;
-use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
@@ -17,7 +16,7 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
 class UsersReportExport implements
-    FromQuery, WithHeadings, WithMapping, WithStyles, WithEvents, WithColumnWidths
+    FromQuery, WithHeadings, WithMapping, WithStyles, WithEvents
 {
     public function __construct(
         protected ?string $search = null
@@ -67,17 +66,6 @@ class UsersReportExport implements
         ];
     }
 
-    public function columnWidths(): array
-    {
-        return [
-            'A' => 5.0,
-            'B' => 32.0,
-            'C' => 14.0,
-            'D' => 32.0,
-            'E' => 22.0,
-            'F' => 14.0,
-        ];
-    }
 
     public function styles(Worksheet $sheet)
     {
@@ -186,6 +174,11 @@ class UsersReportExport implements
                 }
 
                 $ws->getStyle("A1:{$lastCol}{$last}")->getFont()->setSize(10);
+
+                // Autosize dinámico
+                foreach (range('A', $lastCol) as $col) {
+                    $ws->getColumnDimension($col)->setAutoSize(true);
+                }
             },
         ];
     }
