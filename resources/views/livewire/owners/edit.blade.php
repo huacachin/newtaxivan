@@ -32,7 +32,7 @@
                 @hasanyrole('director')
                 <button type="button" class="btn btn-sm btn-danger" wire:click="questionDelete({{ $owner->id }})">Eliminar</button>
                 @endhasanyrole
-                <a href="{{ route('settings.owners.index') }}" class="btn btn-sm btn-secondary">Cancelar</a>
+                <a href="{{ route('settings.owners.index') }}" class="btn btn-sm btn-secondary"><i class="ti ti-arrow-back-up"></i> Regresar</a>
             </div>
 
         </div>
