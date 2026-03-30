@@ -19,6 +19,11 @@ class Headquarter extends Model
         return $this->hasMany(User::class);
     }
 
+    public function activeUsers()
+    {
+        return $this->belongsToMany(User::class)->where('users.status', 'active');
+    }
+
     public function departures()
     {
         return $this->hasMany(\App\Models\Departure::class);

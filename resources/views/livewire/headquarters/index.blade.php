@@ -80,7 +80,7 @@
                                     <td>{{ $loop->iteration }}</td>
                                     <td>{{ $hq->sort_order }}</td>
                                     <td>{{ $hq->name }}</td>
-                                    <td>{{ $hq->users->pluck('username')->implode(', ') ?: '—' }}</td>
+                                    <td>{{ $hq->activeUsers->pluck('username')->implode(', ') ?: '—' }}</td>
                                     <td>
                                         <span class="badge {{ $hq->status === 'active' ? 'bg-success' : 'bg-secondary' }}">
                                             {{ $hq->status === 'active' ? 'Activo' : 'Inactivo' }}
