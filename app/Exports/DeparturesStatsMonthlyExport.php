@@ -170,7 +170,7 @@ class DeparturesStatsMonthlyExport implements FromArray, WithHeadings, WithStyle
                 }
 
                 // Freeze
-                $s->freezePane('D3');
+                // $s->freezePane(...); // removido
 
                 // ===== Bordes =====
                 $lastRow  = (int)$s->getHighestRow();

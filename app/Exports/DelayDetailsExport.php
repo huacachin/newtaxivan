@@ -169,7 +169,7 @@ public function title(): string
                 $ws->getRowDimension($headerRow)->setRowHeight(18);
 
                 // Congelar debajo del thead
-                $ws->freezePane("A{$dataStartRow}");
+                // $ws->freezePane(...); // removido
 
                 // ===== Anchos =====
                 $ws->getColumnDimension('A')->setWidth(7.3);   // Item

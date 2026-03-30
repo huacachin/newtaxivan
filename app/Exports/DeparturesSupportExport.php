@@ -176,7 +176,7 @@ class DeparturesSupportExport implements
         return [
             AfterSheet::class => function (AfterSheet $e) {
                 $ws = $e->sheet->getDelegate();
-                $ws->freezePane('A2');
+                // $ws->freezePane(...); // removido
                 $ws->setAutoFilter($ws->calculateWorksheetDimension());
 
                 if ($this->groupMode) {

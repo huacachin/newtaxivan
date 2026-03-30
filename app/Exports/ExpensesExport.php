@@ -191,7 +191,7 @@ class ExpensesExport implements
                     $ws->getColumnDimension($col)->setVisible(false);
                 }
 
-                $ws->freezePane("A{$dataStartRow}");
+                // $ws->freezePane(...); // removido
 
                 if ($last >= $dataStartRow) {
                     $ws->getStyle("A{$dataStartRow}:G{$last}")

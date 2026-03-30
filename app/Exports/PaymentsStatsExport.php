@@ -119,7 +119,7 @@ class PaymentsStatsExport implements FromArray, WithHeadings, WithEvents, WithTi
                 }
 
                 // Congelar
-                $sheet->freezePane('D3');
+                // $sheet->freezePane(...); // removido
 
                 // ======= Posiciones =======
                 $firstDataRow   = 3;

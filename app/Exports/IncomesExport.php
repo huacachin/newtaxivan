@@ -199,7 +199,7 @@ class IncomesExport implements
                 }
 
                 // ===== Congelar bajo encabezado
-                $ws->freezePane("A{$dataStartRow}");
+                // $ws->freezePane(...); // removido
 
                 // ===== Bordes
                 $ws->getStyle("A{$headerRow}:F" . max($headerRow, $last))

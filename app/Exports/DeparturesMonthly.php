@@ -337,7 +337,7 @@ class DeparturesMonthly implements FromArray, WithStyles, WithEvents
                 ]);
 
                 // Freeze pane on main table
-                $ws->freezePane('C3');
+                // $ws->freezePane(...); // removido
 
                 // ===== Style per-HQ tables =====
                 foreach ($this->sections['hq_sections'] as $sec) {

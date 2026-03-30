@@ -344,7 +344,7 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
                 $ws->getRowDimension($headerRow)->setRowHeight(17);
 
                 // Congelar bajo encabezado
-                $ws->freezePane("A{$dataStartRow}");
+                // $ws->freezePane(...); // removido
 
                 // ===== Anchos fijos =====
                 foreach (range('A', 'O') as $c) {

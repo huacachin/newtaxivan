@@ -175,7 +175,7 @@ class PaymentsDailyExport implements FromArray, WithHeadings, WithEvents, WithTi
                 }
 
                 // congelar encabezado + 3 primeras columnas
-                $sheet->freezePane('D3');
+                // $sheet->freezePane(...); // removido
 
                 // bordes finos en toda la tabla
                 $highestRow = (int)$sheet->getHighestRow();
