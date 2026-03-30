@@ -9,7 +9,6 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithEvents;
-use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
@@ -17,7 +16,7 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
 class VehiclesReportExport implements
-    FromQuery, WithHeadings, WithMapping, WithStyles, WithEvents, WithColumnWidths
+    FromQuery, WithHeadings, WithMapping, WithStyles, WithEvents
 {
     public function __construct(
         protected ?string $status = 'active',
@@ -89,15 +88,6 @@ class VehiclesReportExport implements
             $v->fuel,
             $v->condition,
             $v->affiliated_company,
-        ];
-    }
-
-    public function columnWidths(): array
-    {
-        return [
-            'A' => 4.2,'B' => 5.2,'C' => 9.2,'D' => 10.0,'E' => 5.8,
-            'F' => 10.6,'G' => 29.0,'H' => 29.0,'I' => 12.5,'J' => 6.0,
-            'K' => 7.0,'L' => 29.0,
         ];
     }
 
@@ -246,6 +236,11 @@ class VehiclesReportExport implements
                     $lastRow = $totalRow;
                 } else {
                     $lastRow = $last;
+                }
+
+                // ===== Autosize columnas usadas =====
+                foreach (range('A', 'L') as $col) {
+                    $ws->getColumnDimension($col)->setAutoSize(true);
                 }
 
                 // ===== Ocultar columnas vacías (M en adelante) =====

@@ -9,7 +9,6 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithEvents;
-use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
@@ -17,7 +16,7 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
 class ConceptsReportExport implements
-    FromQuery, WithHeadings, WithMapping, WithStyles, WithEvents, WithColumnWidths
+    FromQuery, WithHeadings, WithMapping, WithStyles, WithEvents
 {
     public function __construct(
         protected ?string $search = null
@@ -48,16 +47,6 @@ class ConceptsReportExport implements
             $concept->code,
             $concept->name,
             ucfirst($concept->type),
-        ];
-    }
-
-    public function columnWidths(): array
-    {
-        return [
-            'A' => 6.0,
-            'B' => 10.0,
-            'C' => 40.0,
-            'D' => 14.0,
         ];
     }
 
@@ -146,6 +135,11 @@ class ConceptsReportExport implements
                     $borders->getBottom()->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB('FF000000');
                     $borders->getHorizontal()->setBorderStyle(Border::BORDER_DASHED)->getColor()->setARGB('FF000000');
                     $borders->getVertical()->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB('FF000000');
+                }
+
+                // ===== Autosize columnas usadas =====
+                foreach (range('A', 'D') as $col) {
+                    $ws->getColumnDimension($col)->setAutoSize(true);
                 }
 
                 $ws->getStyle("A1:{$lastCol}{$last}")->getFont()->setSize(10);

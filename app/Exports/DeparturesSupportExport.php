@@ -179,14 +179,10 @@ class DeparturesSupportExport implements
                 // $ws->freezePane(...); // removido
                 $ws->setAutoFilter($ws->calculateWorksheetDimension());
 
-                if ($this->groupMode) {
-                    $ws->getColumnDimension('I')->setAutoSize(false);
-                    $ws->getColumnDimension('I')->setWidth(13.0);
-                    $ws->getColumnDimension('J')->setAutoSize(false);
-                    $ws->getColumnDimension('J')->setWidth(13.0);
-                } else {
-                    $ws->getColumnDimension('D')->setAutoSize(false);
-                    $ws->getColumnDimension('D')->setWidth(13.0);
+                // ===== Autosize columnas usadas =====
+                $lastCol = $this->groupMode ? 'J' : 'M';
+                foreach (range('A', $lastCol) as $col) {
+                    $ws->getColumnDimension($col)->setAutoSize(true);
                 }
             },
         ];

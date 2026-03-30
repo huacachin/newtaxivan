@@ -6,7 +6,6 @@ use App\Models\Driver;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
-use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
@@ -15,7 +14,7 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
-class DriversReportExport implements FromArray, WithColumnFormatting, WithEvents, WithColumnWidths
+class DriversReportExport implements FromArray, WithColumnFormatting, WithEvents
 {
     public function __construct(
         protected ?string $search = null,
@@ -113,19 +112,6 @@ class DriversReportExport implements FromArray, WithColumnFormatting, WithEvents
         ];
     }
 
-
-    public function columnWidths(): array
-    {
-        return [
-            'A' => 4.2,  // Item
-            'B' => 5.2,  // Cod
-            'E' => 12.0, // N° Documento
-            'F' => 9.0,  // I.Contrato
-            'G' => 9.0,  // F.Contrato
-            'H' => 11.0, // Teléfono
-            'I' => 7.0,  // Condición
-        ];
-    }
 
     public function registerEvents(): array
     {
@@ -258,16 +244,10 @@ class DriversReportExport implements FromArray, WithColumnFormatting, WithEvents
                 $ws->getStyle("A{$foot2}:{$lastCol}{$foot2}")->applyFromArray($footerStyle);
                 $ws->getRowDimension($foot2)->setRowHeight(16);
 
-                // ===== Anchos de columna =====
-                $ws->getColumnDimension('A')->setWidth(4.2);
-                $ws->getColumnDimension('B')->setWidth(5.2);
-                $ws->getColumnDimension('C')->setAutoSize(true);
-                $ws->getColumnDimension('D')->setAutoSize(true);
-                $ws->getColumnDimension('E')->setWidth(12.0);
-                $ws->getColumnDimension('F')->setWidth(13.0);
-                $ws->getColumnDimension('G')->setWidth(13.0);
-                $ws->getColumnDimension('H')->setWidth(11.0);
-                $ws->getColumnDimension('I')->setWidth(10.0);
+                // ===== Autosize columnas usadas =====
+                foreach (range('A', 'I') as $col) {
+                    $ws->getColumnDimension($col)->setAutoSize(true);
+                }
 
                 // ===== Ocultar columnas vacías (J en adelante) =====
                 foreach (range('J', 'Z') as $col) {

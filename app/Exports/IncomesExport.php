@@ -12,7 +12,6 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithEvents;
-use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
@@ -21,7 +20,7 @@ use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 
 class IncomesExport implements
     FromQuery, WithHeadings, WithMapping,
-    WithColumnFormatting, WithStyles, WithEvents, WithColumnWidths, WithTitle
+    WithColumnFormatting, WithStyles, WithEvents, WithTitle
 {
     /** contador de item (1..n) */
     private int $i = 0;
@@ -112,18 +111,6 @@ class IncomesExport implements
         return [1 => ['font' => ['bold' => true]]];
     }
 
-    public function columnWidths(): array
-    {
-        return [
-            'A' => 5.0,
-            'B' => 10.0,
-            'C' => 14.0,
-            'D' => 8.5,
-            'E' => 32.0,
-            'F' => 9.5,
-        ];
-    }
-
     /* ========================= ESTILOS AVANZADOS ========================= */
     public function registerEvents(): array
     {
@@ -176,6 +163,11 @@ class IncomesExport implements
                 ]);
                 $ws->getRowDimension($headerRow)->setRowHeight(16);
 
+                // ===== Autosize columnas usadas =====
+                foreach (range('A', 'F') as $col) {
+                    $ws->getColumnDimension($col)->setAutoSize(true);
+                }
+
                 // ===== Ocultar columnas vacías (G en adelante) =====
                 foreach (range('G', 'Z') as $col) {
                     $ws->getColumnDimension($col)->setVisible(false);
@@ -190,8 +182,6 @@ class IncomesExport implements
                     $ws->getStyle("A{$dataStartRow}:A{$last}")
                         ->getFont()->setBold(true);
 
-                    $ws->getColumnDimension('B')->setAutoSize(false);
-                    $ws->getColumnDimension('B')->setWidth(13.0);
                     $ws->getStyle("B{$dataStartRow}:B{$last}")
                         ->getNumberFormat()->setFormatCode('dd/mm/yyyy');
                     $ws->getStyle("F{$dataStartRow}:F{$last}")

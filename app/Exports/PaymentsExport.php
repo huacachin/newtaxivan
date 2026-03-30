@@ -12,7 +12,6 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithEvents;
-use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
@@ -23,7 +22,7 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
 class PaymentsExport implements
     FromQuery, WithHeadings, WithMapping,
-    WithColumnFormatting, WithStyles, WithEvents, WithColumnWidths,WithTitle
+    WithColumnFormatting, WithStyles, WithEvents, WithTitle
 {
     private int $seq = 0; // Item 1..n
 
@@ -162,15 +161,6 @@ class PaymentsExport implements
     {
         $sheet->getParent()->getDefaultStyle()->getFont()->setSize(10);
         return [1 => ['font' => ['bold' => true]]];
-    }
-
-    /** ====== Compactación base (A y B) ====== */
-    public function columnWidths(): array
-    {
-        return [
-            'A' => 2.2,
-            'B' => 9.0,
-        ];
     }
 
     public function title(): string
@@ -330,17 +320,10 @@ class PaymentsExport implements
                     $lastRow = $last;
                 }
 
-                // ===== Anchos de columna =====
-                $ws->getColumnDimension('A')->setWidth(5);
-                $ws->getColumnDimension('B')->setWidth(9.5);
-                $ws->getColumnDimension('C')->setWidth(8);
-                $ws->getColumnDimension('D')->setWidth(13.0);
-                $ws->getColumnDimension('E')->setWidth(13.0);
-                $ws->getColumnDimension('F')->setWidth(7.5);
-                $ws->getColumnDimension('G')->setWidth(8.5);
-                $ws->getColumnDimension('H')->setWidth(8.0);
-                $ws->getColumnDimension('I')->setWidth(6.5);
-                $ws->getColumnDimension('J')->setWidth(13.0);
+                // ===== Autosize columnas usadas =====
+                foreach (range('A', 'J') as $col) {
+                    $ws->getColumnDimension($col)->setAutoSize(true);
+                }
 
                 // ===== Ocultar columnas vacías (K en adelante) =====
                 foreach (range('K', 'Z') as $col) {

@@ -238,16 +238,10 @@ class OwnersReportExport implements
                 // ===== Actualizar total en título =====
                 $ws->setCellValue('A1', "LISTADO GENERAL DE PROPIETARIO ( {$countActive} )");
 
-                // ===== Anchos de columna =====
-                foreach (['A', 'B', 'C', 'D', 'E', 'F'] as $col) {
-                    $ws->getColumnDimension($col)->setAutoSize(false);
+                // ===== Autosize columnas usadas =====
+                foreach (range('A', 'F') as $col) {
+                    $ws->getColumnDimension($col)->setAutoSize(true);
                 }
-                $ws->getColumnDimension('A')->setWidth(4.2);
-                $ws->getColumnDimension('B')->setWidth(5.2);
-                $ws->getColumnDimension('C')->setWidth(9.5);
-                $ws->getColumnDimension('D')->setWidth(30.0);
-                $ws->getColumnDimension('E')->setWidth(12.0);
-                $ws->getColumnDimension('F')->setWidth(11.0);
 
                 // ===== Ocultar columnas vacías (G en adelante) =====
                 foreach (range('G', 'Z') as $col) {
