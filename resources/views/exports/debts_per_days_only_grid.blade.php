@@ -1,71 +1,54 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<style>
-    table { border-collapse: collapse; border: 1px solid #000; }
-    th, td { border: 1px dotted #000; border-left: 1px solid #000; border-right: 1px solid #000; text-align: center; vertical-align: middle; font-size: 10pt; }
-    th { background-color: #2874A6; color: white; font-weight: bold; border: 1px solid #000; }
-    .sun { background-color: red; }
-    .sun-cell { background-color: white; }
-    .paid { color: black; }
-    .nopay { color: #FF8C00; }
-    .freq { color: blue; font-weight: bold; }
-    .footer { background-color: #CEE7FF; font-weight: bold; }
-    .title { color: red; font-weight: bold; font-size: 11pt; }
-</style>
 </head>
-<body>
-<div class="title">DEUDA POR DÍA – {{ $monthLabel }}</div>
-<br>
-<table cellspacing="0" border="1">
+<body topmargin="0" leftmargin="0" rightmargin="0" bottommargin="0">
+<b style="color:red; font-size:11pt;">REPORTE DE RETRASO {{ strtoupper($monthLabel) }}</b>
+<br><br>
+<table cellspacing="0" border="1" style="border-collapse:collapse;">
     <thead>
     <tr>
-        <th>Item</th>
-        <th>Cod</th>
-        <th>Placa</th>
-        <th>Cond.</th>
+        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Item</b></th>
+        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Cod</b></th>
+        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Placa</b></th>
+        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Condicion</b></th>
         @foreach($days as $d)
-            <th @if($d['isSunday']) class="sun" @endif>{{ $d['n'] }}</th>
+            <th bgcolor="#2874A6" align="center" style="color:white;{{ $d['isSunday'] ? 'background:red;' : '' }}"><b>{{ $d['n'] }}</b></th>
         @endforeach
-        <th colspan="2">Total Pagos</th>
-        <th colspan="2">Total Deuda</th>
+        <th bgcolor="#2874A6" align="center" style="color:white;" colspan="2"><b>Total Pagos</b></th>
+        <th bgcolor="#2874A6" align="center" style="color:white;" colspan="2"><b>Total Deuda</b></th>
     </tr>
     </thead>
     <tbody>
     @php
         $sumPaidDays = 0; $sumPaidAmount = 0;
         $sumDebtDays = 0; $sumDebtAmount = 0;
-        $dayTotals = [];
     @endphp
     @foreach($rows as $r)
         <tr>
-            <td>{{ $r['item'] }}</td>
-            <td>{{ $r['cod'] }}</td>
-            <td>{{ $r['plate'] }}</td>
-            <td>{{ $r['condition'] }}</td>
+            <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;">{{ $r['item'] }}</td>
+            <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;">{{ $r['cod'] }}</td>
+            <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;">{{ $r['plate'] }}</td>
+            <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;">{{ $r['condition'] }}</td>
 
-            @foreach($r['cells'] as $ci => $cell)
-                @php
-                    $dayKey = $days[$ci]['d'] ?? '';
-                    if (!isset($dayTotals[$dayKey])) $dayTotals[$dayKey] = 0;
-                @endphp
+            @foreach($r['cells'] as $cell)
                 @if($cell['type'] === 'sun')
-                    <td class="sun-cell"></td>
+                    <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;background:white;"></td>
                 @elseif($cell['type'] === 'paid')
-                    <td class="paid">{{ $cell['txt'] }}</td>
+                    <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;color:black;">{{ $cell['txt'] }}</td>
                 @elseif($cell['type'] === 'nopay')
-                    <td class="nopay">{{ $cell['txt'] }}</td>
+                    <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;color:black;">{{ $cell['txt'] }}</td>
                 @elseif($cell['type'] === 'freq')
-                    <td class="freq">{{ $cell['txt'] }}</td>
+                    <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;color:red;font-weight:bold;">{{ $cell['txt'] }}</td>
                 @else
-                    <td>{{ $cell['txt'] }}</td>
+                    <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;">{{ $cell['txt'] }}</td>
                 @endif
             @endforeach
 
-            <td>{{ $r['paid_days'] }}</td>
-            <td>{{ number_format($r['paid_amount'], 2) }}</td>
-            <td>{{ $r['debt_days'] }}</td>
-            <td>{{ number_format($r['debt_amount'], 2) }}</td>
+            <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;">{{ $r['paid_days'] }}</td>
+            <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;">{{ number_format($r['paid_amount'], 2) }}</td>
+            <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;">{{ $r['debt_days'] }}</td>
+            <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;">{{ number_format($r['debt_amount'], 2) }}</td>
 
             @php
                 $sumPaidDays += $r['paid_days'];
@@ -75,18 +58,18 @@
             @endphp
         </tr>
     @endforeach
-    <tr class="footer">
+    <tr style="background:#CEE7FF">
         <td></td>
         <td></td>
-        <td><b>Total</b></td>
+        <td align="center"><b>Total</b></td>
         <td></td>
         @foreach($days as $d)
             <td></td>
         @endforeach
-        <td>{{ $sumPaidDays }}</td>
-        <td>{{ number_format($sumPaidAmount, 2) }}</td>
-        <td>{{ $sumDebtDays }}</td>
-        <td>{{ number_format($sumDebtAmount, 2) }}</td>
+        <td>{{ number_format($sumPaidDays, 2) }}</td>
+        <td align="center">{{ number_format($sumPaidAmount, 2) }}</td>
+        <td align="center">{{ $sumDebtDays }}</td>
+        <td align="center">{{ number_format($sumDebtAmount, 2) }}</td>
     </tr>
     </tbody>
 </table>
