@@ -347,8 +347,8 @@ class RepEstCajaMa extends Component
         $this->anualTotales = $sum;
         $this->anualMesesMostrados = $mesesMostrados;
 
-        // Promedios anuales divididos entre meses mostrados (>0)
-        $divisorAnual = max(1, $mesesMostrados);
+        // Promedios anuales divididos entre el mes seleccionado (como legacy)
+        $divisorAnual = max(1, (int) $this->month);
         $this->anualPromedios = array_map(fn($v) => $v / $divisorAnual, $this->anualTotales);
     }
 
