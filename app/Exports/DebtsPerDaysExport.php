@@ -305,9 +305,9 @@ class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTi
                         ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
                     $ws->getStyle("{$paidAmtColLetter}{$dataStartRow}:{$paidAmtColLetter}{$lastDataRow}")
-                        ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
+                        ->getNumberFormat()->setFormatCode('#,##0.00');
                     $ws->getStyle("{$debtAmtColLetter}{$dataStartRow}:{$debtAmtColLetter}{$lastDataRow}")
-                        ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
+                        ->getNumberFormat()->setFormatCode('#,##0.00');
                 }
 
                 // ===== Colores por celda (formato legacy) =====
@@ -349,10 +349,10 @@ class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTi
                 for ($c = $dayStartColIndex; $c <= $dayEndColIndex; $c++) {
                     $ws->getColumnDimension($this->colLetter($c))->setWidth(4.0); // días compactos
                 }
-                $ws->getColumnDimension($this->colLetter($dayEndColIndex + 1))->setWidth(10.0);   // P días
-                $ws->getColumnDimension($this->colLetter($dayEndColIndex + 2))->setWidth(10.0);  // P S/
-                $ws->getColumnDimension($this->colLetter($dayEndColIndex + 3))->setWidth(10.0);  // D días
-                $ws->getColumnDimension($this->colLetter($dayEndColIndex + 4))->setWidth(10.0);  // D S/
+                $ws->getColumnDimension($this->colLetter($dayEndColIndex + 1))->setWidth(7.0);   // P días
+                $ws->getColumnDimension($this->colLetter($dayEndColIndex + 2))->setWidth(7.0);   // P S/
+                $ws->getColumnDimension($this->colLetter($dayEndColIndex + 3))->setWidth(7.0);   // D días
+                $ws->getColumnDimension($this->colLetter($dayEndColIndex + 4))->setWidth(7.0);   // D S/
 
                 // Alineaciones básicas
                 if ($lastDataRow >= $dataStartRow) {
@@ -393,8 +393,8 @@ class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTi
                         'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$footerBg]],
                         'borders' => ['allBorders' => ['borderStyle'=>Border::BORDER_THIN,'color'=>['rgb'=>$borderC]]],
                     ]);
-                    $ws->getStyle("{$paidAmtColLetter}{$totalRow}")->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
-                    $ws->getStyle("{$debtAmtColLetter}{$totalRow}")->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
+                    $ws->getStyle("{$paidAmtColLetter}{$totalRow}")->getNumberFormat()->setFormatCode('#,##0.00');
+                    $ws->getStyle("{$debtAmtColLetter}{$totalRow}")->getNumberFormat()->setFormatCode('#,##0.00');
                     $ws->getStyle("{$paidDaysColLetter}{$totalRow}:{$debtDaysColLetter}{$totalRow}")
                         ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 }
