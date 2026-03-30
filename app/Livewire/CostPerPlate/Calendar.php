@@ -93,6 +93,14 @@ class Calendar extends Component
             ->pluck('amount', 'date');
 
         foreach ($rows as $date => $amount) $vals[$date] = (float)$amount;
+
+        // Domingos siempre 0
+        foreach ($vals as $date => $val) {
+            if (Carbon::parse($date)->isSunday()) {
+                $vals[$date] = 0.0;
+            }
+        }
+
         return $vals;
     }
 

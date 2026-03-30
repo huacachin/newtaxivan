@@ -44,7 +44,7 @@
                                                            wire:key="day-{{ $date }}"
                                                            wire:model.defer="values.{{ $date }}"
                                                            class="form-control form-control-sm text-end w-amt"
-                                                           @if($isSun) value="0" readonly @endif />
+                                                           @if($isSun) readonly style="opacity:.6" @endif />
                                                 </div>
                                             @endif
                                         </td>
