@@ -14,6 +14,7 @@ class Index extends Component
     {
         $term = trim($this->search);
         $this->headquarters = Headquarter::query()
+            ->with('users:id,username')
             ->when($term !== '', fn ($q) =>
                 $q->where('name', 'like', "%{$term}%")
             )

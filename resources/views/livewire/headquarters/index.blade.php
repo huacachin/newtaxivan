@@ -67,6 +67,7 @@
                                 <th>#</th>
                                 <th>Orden</th>
                                 <th>Nombre</th>
+                                <th>Usuarios</th>
                                 <th>Estado</th>
                                 @hasanyrole('director')
                                 <th>Acción</th>
@@ -79,6 +80,7 @@
                                     <td>{{ $loop->iteration }}</td>
                                     <td>{{ $hq->sort_order }}</td>
                                     <td>{{ $hq->name }}</td>
+                                    <td>{{ $hq->users->pluck('username')->implode(', ') ?: '—' }}</td>
                                     <td>
                                         <span class="badge {{ $hq->status === 'active' ? 'bg-success' : 'bg-secondary' }}">
                                             {{ $hq->status === 'active' ? 'Activo' : 'Inactivo' }}
@@ -94,7 +96,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="py-4 text-muted">No se encontraron resultados</td>
+                                    <td colspan="6" class="py-4 text-muted">No se encontraron resultados</td>
                                 </tr>
                             @endforelse
                             </tbody>
