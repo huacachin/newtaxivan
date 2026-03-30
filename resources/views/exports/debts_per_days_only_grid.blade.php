@@ -48,13 +48,7 @@
         </tr>
     @endforeach
     <tr style="background:#CEE7FF">
-        <td></td>
-        <td></td>
-        <td align="center"><b>Total</b></td>
-        <td></td>
-        @foreach($days as $d)
-            <td></td>
-        @endforeach
+        <td colspan="{{ 4 + count($days) }}" align="center"><b>Total</b></td>
         <td>{{ number_format($sumPaidDays, 2) }}</td>
         <td align="center">{{ number_format($sumPaidAmount, 2) }}</td>
         <td align="center">{{ $sumDebtDays }}</td>
