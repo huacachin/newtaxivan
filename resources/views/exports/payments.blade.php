@@ -36,9 +36,9 @@
     @endforeach
     </tbody>
     <tfoot>
-    <tr style="background:#CEE7FF">
-        <td colspan="9" align="center" style="font-weight:bold;">TOTAL</td>
-        <td align="center" style="font-weight:bold;">{{ number_format($total, 2) }}</td>
+    <tr>
+        <td colspan="9" align="center" style="font-weight:bold;background:#CEE7FF;">TOTAL</td>
+        <td align="center" style="font-weight:bold;background:#CEE7FF;">{{ number_format($total, 2) }}</td>
     </tr>
     </tfoot>
 </table>
