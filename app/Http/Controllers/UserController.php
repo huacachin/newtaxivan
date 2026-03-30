@@ -35,8 +35,13 @@ class UserController extends Controller
     public function export(Request $request)
     {
         $search   = $request->query('search');
-        $filename = 'usuarios_' . now()->format('Ymd_His') . '.xlsx';
+        $filename = 'usuarios_' . now()->format('Ymd_His') . '.xls';
 
-        return Excel::download(new UsersReportExport($search), $filename);
+        $export = new UsersReportExport($search);
+        $html = view('exports.users', ['rows' => $export->htmlData()])->render();
+
+        return response($html)
+            ->header('Content-Type', 'application/vnd.ms-excel')
+            ->header('Content-Disposition', "attachment; filename=\"{$filename}\"");
     }
 }

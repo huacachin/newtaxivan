@@ -31,12 +31,15 @@ class VehicleController extends Controller
         $search = $request->query('search');
         $filter = $request->query('filter', 'plate');
 
-        $filename = 'vehiculos_' . now()->format('Ymd_His') . '.xlsx';
+        $filename = 'vehiculos_' . now()->format('Ymd_His') . '.xls';
 
-        return Excel::download(
-            new VehiclesReportExport($status, $search, $filter),
-            $filename
-        );
+        $export = new VehiclesReportExport($status, $search, $filter);
+        $data = $export->htmlData();
+        $html = view('exports.vehicles', $data)->render();
+
+        return response($html)
+            ->header('Content-Type', 'application/vnd.ms-excel')
+            ->header('Content-Disposition', "attachment; filename=\"{$filename}\"");
     }
 
 

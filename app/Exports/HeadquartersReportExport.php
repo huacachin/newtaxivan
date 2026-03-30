@@ -51,6 +51,22 @@ class HeadquartersReportExport implements
         ];
     }
 
+    public function htmlData(): array
+    {
+        $rows = [];
+        $i = 0;
+        foreach ($this->query()->get() as $hq) {
+            $i++;
+            $rows[] = [
+                'item'       => $i,
+                'sort_order' => $hq->sort_order,
+                'name'       => $hq->name,
+                'status'     => $hq->status === 'active' ? 'Activo' : 'Inactivo',
+            ];
+        }
+        return $rows;
+    }
+
     public function styles(Worksheet $sheet)
     {
         return [];

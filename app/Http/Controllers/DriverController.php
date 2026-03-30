@@ -30,11 +30,14 @@ class DriverController extends Controller
         $search = $request->query('search');
         $filter = $request->query('filter', 'plate');
 
-        $filename = 'conductores_' . now()->format('Ymd_His') . '.xlsx';
+        $filename = 'conductores_' . now()->format('Ymd_His') . '.xls';
 
-        return Excel::download(
-            new DriversReportExport($search, $filter),
-            $filename
-        );
+        $export = new DriversReportExport($search, $filter);
+        $data = $export->htmlData();
+        $html = view('exports.drivers', $data)->render();
+
+        return response($html)
+            ->header('Content-Type', 'application/vnd.ms-excel')
+            ->header('Content-Disposition', "attachment; filename=\"{$filename}\"");
     }
 }

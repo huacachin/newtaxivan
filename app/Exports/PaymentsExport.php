@@ -148,6 +148,29 @@ class PaymentsExport implements
         ];
     }
 
+    public function htmlData(): array
+    {
+        $rows = [];
+        $i = 0;
+        foreach ($this->query()->get() as $row) {
+            $i++;
+            $plate = $row->legacy_plate ?: optional($row->vehicle)->plate;
+            $rows[] = [
+                'item'          => $i,
+                'plate'         => $plate,
+                'serie'         => $row->serie,
+                'date_register' => $row->date_register ? \Carbon\Carbon::parse($row->date_register)->format('d/m/Y') : '',
+                'date_payment'  => $row->date_payment ? \Carbon\Carbon::parse($row->date_payment)->format('d/m/Y') : '',
+                'hour'          => $row->hour,
+                'type'          => $row->type,
+                'headquarter'   => optional($row->headquarter)->name,
+                'user'          => optional($row->user)->name,
+                'amount'        => (float) $row->amount,
+            ];
+        }
+        return $rows;
+    }
+
     public function columnFormats(): array
     {
         return [

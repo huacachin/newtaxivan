@@ -30,12 +30,15 @@ class OwnerController extends Controller
         $search = $request->query('search');
         $filter = $request->query('filter', 'plate');
 
-        $filename = 'propietarios_' . now()->format('Ymd_His') . '.xlsx';
+        $filename = 'propietarios_' . now()->format('Ymd_His') . '.xls';
 
-        return Excel::download(
-            new OwnersReportExport($search, $filter),
-            $filename
-        );
+        $export = new OwnersReportExport($search, $filter);
+        $data = $export->htmlData();
+        $html = view('exports.owners', $data)->render();
+
+        return response($html)
+            ->header('Content-Type', 'application/vnd.ms-excel')
+            ->header('Content-Disposition', "attachment; filename=\"{$filename}\"");
     }
 
 }

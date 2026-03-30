@@ -104,6 +104,62 @@ class DriversReportExport implements FromArray, WithColumnFormatting, WithEvents
     }
 
 
+    public function htmlData(): array
+    {
+        [$active, $free] = $this->fetchData();
+
+        $activeRows = [];
+        $i = 0;
+        foreach ($active as $d) {
+            $i++;
+            $plates = $d->relationLoaded('vehicles')
+                ? $d->vehicles
+                    ->sortBy([
+                        fn($a, $b) => ($a->sort_order === null ? 1 : 0) <=> ($b->sort_order === null ? 1 : 0),
+                        ['sort_order', 'asc'],
+                        ['plate', 'asc'],
+                    ])
+                    ->pluck('plate')->filter()->unique()->values()->implode(', ')
+                : '';
+
+            $activeRows[] = [
+                'item'           => $i,
+                'cod'            => $d->sort_order_min ?? $d->id,
+                'plates'         => $plates ?: '',
+                'name'           => (string)$d->name,
+                'document'       => (string)$d->document_number,
+                'contract_start' => optional($d->contract_start)?->format('d/m/Y') ?: '',
+                'contract_end'   => optional($d->contract_end)?->format('d/m/Y') ?: '',
+                'phone'          => (string)$d->phone,
+                'condition'      => (string)$d->condition,
+            ];
+        }
+
+        $freeRows = [];
+        $j = 0;
+        foreach ($free as $d) {
+            $j++;
+            $freeRows[] = [
+                'item'           => $j,
+                'cod'            => '—',
+                'plates'         => '—',
+                'name'           => (string)$d->name,
+                'document'       => (string)$d->document_number,
+                'contract_start' => optional($d->contract_start)?->format('d/m/Y') ?: '',
+                'contract_end'   => optional($d->contract_end)?->format('d/m/Y') ?: '',
+                'phone'          => (string)$d->phone,
+                'condition'      => (string)$d->condition,
+            ];
+        }
+
+        return [
+            'activeRows'  => $activeRows,
+            'freeRows'    => $freeRows,
+            'totalActive' => count($activeRows),
+            'totalFree'   => count($freeRows),
+        ];
+    }
+
     public function columnFormats(): array
     {
         return [

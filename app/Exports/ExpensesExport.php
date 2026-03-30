@@ -104,6 +104,25 @@ class ExpensesExport implements
         ];
     }
 
+    public function htmlData(): array
+    {
+        $rows = [];
+        $i = 0;
+        foreach ($this->query()->get() as $row) {
+            $i++;
+            $rows[] = [
+                'item'      => $i,
+                'date'      => $row->date ? \Carbon\Carbon::parse($row->date)->format('d/m/Y') : '',
+                'reason'    => $row->reason,
+                'detail'    => $row->detail,
+                'total'     => $row->total,
+                'user'      => optional($row->user)->name,
+                'in_charge' => $row->in_charge,
+            ];
+        }
+        return $rows;
+    }
+
     public function columnFormats(): array
     {
         return [

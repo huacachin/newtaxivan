@@ -93,6 +93,25 @@ class IncomesExport implements
         ];
     }
 
+    public function htmlData(): array
+    {
+        $rows = [];
+        $i = 0;
+        foreach ($this->query()->get() as $row) {
+            $i++;
+            $colA = $row->reason === 'DEUDA' ? 'DEUDA' : 'Taxi Van';
+            $rows[] = [
+                'item'   => $i,
+                'date'   => $row->date ? Carbon::parse($row->date)->format('d/m/Y') : '',
+                'user'   => optional($row->user)->name,
+                'a'      => $colA,
+                'motivo' => trim($row->detail ?: $row->reason),
+                'total'  => $row->total,
+            ];
+        }
+        return $rows;
+    }
+
     public function columnFormats(): array
     {
         return [

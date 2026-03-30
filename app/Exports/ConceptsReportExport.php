@@ -51,6 +51,22 @@ class ConceptsReportExport implements
         ];
     }
 
+    public function htmlData(): array
+    {
+        $rows = [];
+        $i = 0;
+        foreach ($this->query()->get() as $concept) {
+            $i++;
+            $rows[] = [
+                'item' => $i,
+                'code' => $concept->code,
+                'name' => $concept->name,
+                'type' => ucfirst($concept->type),
+            ];
+        }
+        return $rows;
+    }
+
     public function styles(Worksheet $sheet)
     {
         return [];

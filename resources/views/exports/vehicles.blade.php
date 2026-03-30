@@ -1,0 +1,51 @@
+<html>
+<head><meta charset="UTF-8"></head>
+<body>
+<b style="color:red; font-size:11pt;">{{ $title }}</b>
+<br>
+<i>{{ $resume }}</i>
+<br>
+<table cellspacing="0" border="1" style="border-collapse:collapse;">
+    <thead>
+    <tr>
+        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Item</b></th>
+        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Cod</b></th>
+        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Placa</b></th>
+        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Marca</b></th>
+        <th bgcolor="#2874A6" align="center" style="color:white;"><b>A&ntilde;o</b></th>
+        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Categor&iacute;a</b></th>
+        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Propietario</b></th>
+        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Conductor</b></th>
+        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Modalidad</b></th>
+        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Comb.</b></th>
+        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Condici&oacute;n</b></th>
+        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Empresa Afil.</b></th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach($rows as $row)
+        <tr>
+            <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;">{{ $row['item'] }}</td>
+            <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;">{{ $row['cod'] }}</td>
+            <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;">{{ $row['plate'] }}</td>
+            <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;">{{ $row['brand'] }}</td>
+            <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;">{{ $row['year'] }}</td>
+            <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;">{{ $row['class'] }}</td>
+            <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;">{{ $row['owner'] }}</td>
+            <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;">{{ $row['driver'] }}</td>
+            <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;">{{ $row['type'] }}</td>
+            <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;">{{ $row['fuel'] }}</td>
+            <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;">{{ $row['condition'] }}</td>
+            <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;">{{ $row['company'] }}</td>
+        </tr>
+    @endforeach
+    </tbody>
+    <tfoot>
+    <tr style="background:#CEE7FF">
+        <td colspan="11" align="center" style="font-weight:bold;">TOTAL VEH&Iacute;CULOS</td>
+        <td align="center" style="font-weight:bold;">{{ count($rows) }}</td>
+    </tr>
+    </tfoot>
+</table>
+</body>
+</html>

@@ -31,9 +31,11 @@ class ConceptController extends Controller
 
     public function export(Request $request)
     {
-        return Excel::download(
-            new ConceptsReportExport($request->get('search')),
-            'conceptos.xlsx'
-        );
+        $export = new ConceptsReportExport($request->get('search'));
+        $html = view('exports.concepts', ['rows' => $export->htmlData()])->render();
+
+        return response($html)
+            ->header('Content-Type', 'application/vnd.ms-excel')
+            ->header('Content-Disposition', 'attachment; filename="conceptos.xls"');
     }
 }

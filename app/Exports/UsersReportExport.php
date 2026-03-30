@@ -68,6 +68,29 @@ class UsersReportExport implements
     }
 
 
+    public function htmlData(): array
+    {
+        $rows = [];
+        $i = 0;
+        foreach ($this->query()->get() as $user) {
+            $i++;
+            $sedes = $user->headquarters->pluck('name')->implode(', ') ?: '—';
+            $sedePrimaria = optional($user->headquarter)->name ?? '—';
+            $rolKey = optional($user->roles->first())->name;
+            $rol    = $rolKey ? __('roles.' . $rolKey, [], 'es') : '—';
+
+            $rows[] = [
+                'item'          => $i,
+                'name'          => $user->name,
+                'phone'         => $user->phone ?: '—',
+                'sedes'         => $sedes,
+                'sede_primaria' => $sedePrimaria,
+                'nivel'         => $rol,
+            ];
+        }
+        return $rows;
+    }
+
     public function styles(Worksheet $sheet)
     {
         return [];

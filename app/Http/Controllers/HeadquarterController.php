@@ -32,9 +32,11 @@ class HeadquarterController extends Controller
 
     public function export(Request $request)
     {
-        return Excel::download(
-            new HeadquartersReportExport($request->get('search')),
-            'sucursales.xlsx'
-        );
+        $export = new HeadquartersReportExport($request->get('search'));
+        $html = view('exports.headquarters', ['rows' => $export->htmlData()])->render();
+
+        return response($html)
+            ->header('Content-Type', 'application/vnd.ms-excel')
+            ->header('Content-Disposition', 'attachment; filename="sucursales.xls"');
     }
 }

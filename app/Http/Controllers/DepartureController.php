@@ -57,11 +57,14 @@ class DepartureController extends Controller
         $toDate = $request->query('toDate');
         $groupMode = filter_var($request->query('groupMode', false), FILTER_VALIDATE_BOOLEAN);
 
-        $filename = 'salidas_' . now()->format('Ymd_His') . '.xlsx';
-        return Excel::download(
-            new DeparturesExport($searchType, $searchText, $fromDate, $toDate, $groupMode),
-            $filename
-        );
+        $filename = 'salidas_' . now()->format('Ymd_His') . '.xls';
+
+        $export = new DeparturesExport($searchType, $searchText, $fromDate, $toDate, $groupMode);
+        $html = $export->view()->render();
+
+        return response($html)
+            ->header('Content-Type', 'application/vnd.ms-excel')
+            ->header('Content-Disposition', "attachment; filename=\"{$filename}\"");
     }
 
     public function exportRmp(Request $request){

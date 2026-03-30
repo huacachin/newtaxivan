@@ -92,6 +92,38 @@ class VehiclesReportExport implements
         ];
     }
 
+    public function htmlData(): array
+    {
+        $s = $this->stats();
+        $title = sprintf(
+            'VEHÍCULOS %d · D2: %d · Gas: %d · V.T: %d · V.Q.N.T: %d',
+            $s['total'], $s['d2'], $s['gas'], $s['vt'], $s['vqnt']
+        );
+        $resume = sprintf('Propietario: %d · Conductor: %d', $s['prop'], $s['cond']);
+
+        $rows = [];
+        $i = 0;
+        foreach ($this->query()->get() as $v) {
+            $i++;
+            $rows[] = [
+                'item'      => $i,
+                'cod'       => $v->sort_order ?? $v->id,
+                'plate'     => $v->plate,
+                'brand'     => $v->brand,
+                'year'      => $v->year,
+                'class'     => $v->class,
+                'owner'     => optional($v->owner)->name ?? '—',
+                'driver'    => optional($v->driver)->name ?? '—',
+                'type'      => $v->type,
+                'fuel'      => $v->fuel,
+                'condition' => $v->condition,
+                'company'   => $v->affiliated_company,
+            ];
+        }
+
+        return compact('title', 'resume', 'rows');
+    }
+
     public function styles(Worksheet $sheet)
     {
         return [3 => ['font' => ['bold' => true, 'size' => 10]]];

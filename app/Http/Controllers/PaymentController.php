@@ -49,12 +49,14 @@ class PaymentController extends Controller
         $headquarterId = $request->query('headquarter_id', '');
         $type          = $request->query('type', '');
 
-        $filename = 'pagos_' . now()->format('Ymd_His') . '.xlsx';
+        $filename = 'pagos_' . now()->format('Ymd_His') . '.xls';
 
-        return Excel::download(
-            new PaymentsExport($search, $filter, $date_start, $date_end, $headquarterId, $type),
-            $filename
-        );
+        $export = new PaymentsExport($search, $filter, $date_start, $date_end, $headquarterId, $type);
+        $html = view('exports.payments', ['rows' => $export->htmlData()])->render();
+
+        return response($html)
+            ->header('Content-Type', 'application/vnd.ms-excel')
+            ->header('Content-Disposition', "attachment; filename=\"{$filename}\"");
     }
 
     public function exportMonthly(Request $request){

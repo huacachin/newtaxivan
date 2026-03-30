@@ -67,6 +67,32 @@ class OwnersReportExport implements
         ];
     }
 
+    public function htmlData(): array
+    {
+        $activeRows = [];
+        $i = 0;
+        foreach ($this->query()->get() as $r) {
+            $i++;
+            $activeRows[] = [
+                $i,
+                $r->sort_order ?? $r->id,
+                strtoupper((string)$r->plate),
+                (string)$r->name,
+                (string)$r->document_number,
+                (string)$r->phone,
+            ];
+        }
+
+        $freeRows = $this->fetchFreeOwners();
+
+        return [
+            'activeRows'  => $activeRows,
+            'freeRows'    => $freeRows,
+            'countActive' => count($activeRows),
+            'countFree'   => count($freeRows),
+        ];
+    }
+
     public function columnFormats(): array
     {
         return [

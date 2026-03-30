@@ -87,12 +87,14 @@ class CashController extends Controller
         $date_start = $request->query('date_start');
         $date_end   = $request->query('date_end');
 
-        $filename = 'ingresos_' . now()->format('Ymd_His') . '.xlsx';
+        $filename = 'ingresos_' . now()->format('Ymd_His') . '.xls';
 
-        return Excel::download(
-            new IncomesExport($search, $filterType, $date_start, $date_end),
-            $filename
-        );
+        $export = new IncomesExport($search, $filterType, $date_start, $date_end);
+        $html = view('exports.incomes', ['rows' => $export->htmlData()])->render();
+
+        return response($html)
+            ->header('Content-Type', 'application/vnd.ms-excel')
+            ->header('Content-Disposition', "attachment; filename=\"{$filename}\"");
     }
 
     public function exportExpenses(Request $request){
@@ -101,12 +103,14 @@ class CashController extends Controller
         $date_start = $request->query('date_start');
         $date_end   = $request->query('date_end');
 
-        $filename = 'egresos_' . now()->format('Ymd_His') . '.xlsx';
+        $filename = 'egresos_' . now()->format('Ymd_His') . '.xls';
 
-        return Excel::download(
-            new ExpensesExport($search, $filterType, $date_start, $date_end),
-            $filename
-        );
+        $export = new ExpensesExport($search, $filterType, $date_start, $date_end);
+        $html = view('exports.expenses', ['rows' => $export->htmlData()])->render();
+
+        return response($html)
+            ->header('Content-Type', 'application/vnd.ms-excel')
+            ->header('Content-Disposition', "attachment; filename=\"{$filename}\"");
     }
 
     public function exportGeneralReport(Request $request){
