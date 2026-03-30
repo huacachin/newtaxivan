@@ -41,8 +41,10 @@ class Calendar extends Component
 
     public function render()
     {
-        // NO tocar $values aquí
-        return view('livewire.cost-per-plate.calendar');
+        $order = $this->vehicleId
+            ? Vehicle::where('id', $this->vehicleId)->value('sort_order') ?? ''
+            : '';
+        return view('livewire.cost-per-plate.calendar', compact('order'));
     }
 
     private function resolveVehicleId(): void
