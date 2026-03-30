@@ -21,7 +21,9 @@ class Headquarter extends Model
 
     public function activeUsers()
     {
-        return $this->belongsToMany(User::class)->where('users.status', 'active');
+        return $this->belongsToMany(User::class)
+            ->where('users.status', 'active')
+            ->whereHas('roles', fn($q) => $q->where('name', 'controlador'));
     }
 
     public function departures()
