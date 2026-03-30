@@ -44,6 +44,7 @@ class CostPerPlateDay extends Component
         $result = CostPerPlateDayModel::query()
             ->from("$table as d")
             ->join('vehicles as v', 'v.id', '=', 'd.vehicle_id')
+            ->where('v.status', 'active')
             ->when($plate, fn($q) => $q->where('v.plate','like', '%'.$plate.'%'))
             ->where('d.year',  $this->year)
             ->where('d.month', $this->month)
