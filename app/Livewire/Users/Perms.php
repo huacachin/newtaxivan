@@ -151,11 +151,22 @@ class Perms extends Component
         if ($this->selectedRoleId) {
             $roleName = collect($this->roles)->firstWhere('id', $this->selectedRoleId)?->name;
         }
+
+        // Si el rol cambió, limpiar permisos y sucursales
+        $currentRole = $user->roles->first()?->name;
+        if ($roleName !== $currentRole) {
+            $user->syncPermissions([]);
+            $user->headquarters()->sync([]);
+            $user->update(['headquarter_id' => null]);
+        }
+
         $user->syncRoles($roleName ? [$roleName] : []);
 
-        // Permisos por NOMBRE
-        $names = Permission::whereIn('name', $this->selectedPermissionNames)->pluck('name')->all();
-        $user->syncPermissions($names);
+        // Permisos por NOMBRE (si el rol no cambió, aplica los seleccionados; si cambió, ya se limpiaron)
+        if ($roleName === $currentRole) {
+            $names = Permission::whereIn('name', $this->selectedPermissionNames)->pluck('name')->all();
+            $user->syncPermissions($names);
+        }
 
         app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
 

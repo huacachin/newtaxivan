@@ -141,6 +141,15 @@ class Edit extends Component
             if ($this->selectedRoleId) {
                 $roleName = collect($this->roles)->firstWhere('id', $this->selectedRoleId)?->name;
             }
+
+            // Si el rol cambió, limpiar permisos y sucursales
+            $currentRole = $this->user->roles->first()?->name;
+            if ($roleName !== $currentRole) {
+                $this->user->syncPermissions([]);
+                $this->user->headquarters()->sync([]);
+                $this->user->update(['headquarter_id' => null]);
+            }
+
             $this->user->syncRoles($roleName ? [$roleName] : []);
         } else {
             // No-Director: solo password y sucursales (sucursales solo si el editado es controlador)
