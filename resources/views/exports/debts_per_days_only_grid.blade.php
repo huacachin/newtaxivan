@@ -31,17 +31,7 @@
             <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;">{{ $r['condition'] }}</td>
 
             @foreach($r['cells'] as $cell)
-                @if($cell['type'] === 'sun')
-                    <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;background:white;"></td>
-                @elseif($cell['type'] === 'paid')
-                    <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;color:black;">{{ $cell['txt'] }}</td>
-                @elseif($cell['type'] === 'nopay')
-                    <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;color:black;">{{ $cell['txt'] }}</td>
-                @elseif($cell['type'] === 'freq')
-                    <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;color:red;font-weight:bold;">{{ $cell['txt'] }}</td>
-                @else
-                    <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;">{{ $cell['txt'] }}</td>
-                @endif
+                <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;">{{ $cell['txt'] }}</td>
             @endforeach
 
             <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;">{{ $r['paid_days'] }}</td>
