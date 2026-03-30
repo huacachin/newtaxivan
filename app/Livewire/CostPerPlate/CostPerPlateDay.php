@@ -50,7 +50,7 @@ class CostPerPlateDay extends Component
             ->where('d.month', $this->month)
             ->whereDate('d.date', $targetDate)
             ->groupBy('v.plate','d.year','d.month')
-            ->orderBy('v.plate')
+            ->orderByRaw('COALESCE(v.sort_order, 999999)')
             ->get([
                 'v.plate',
                 'd.year',
