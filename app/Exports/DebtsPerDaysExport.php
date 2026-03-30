@@ -25,6 +25,7 @@ class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTi
 
     // para styling
     private array $days = [];
+    private array $cellRows = []; // filas con celdas para colorear
     private int $rowCount = 0;  // filas de datos
     private int $dayCols  = 0;  // cantidad de días (columnas dinámicas)
 
@@ -187,6 +188,7 @@ class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTi
         }
 
         $this->rowCount = count($rows);
+        $this->cellRows = $rows;
 
         return view('exports.debts_per_days_only_grid', [
             'rows'       => $rows,
@@ -306,6 +308,32 @@ class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTi
                         ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
                     $ws->getStyle("{$debtAmtColLetter}{$dataStartRow}:{$debtAmtColLetter}{$lastDataRow}")
                         ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
+                }
+
+                // ===== Colores por celda (formato legacy) =====
+                if ($lastDataRow >= $dataStartRow && !empty($this->days)) {
+                    $rowIdx = $dataStartRow;
+                    foreach ($this->cellRows as $r) {
+                        foreach ($r['cells'] as $ci => $cell) {
+                            $colLetter = $this->colLetter($dayStartColIndex + $ci);
+                            $ref = "{$colLetter}{$rowIdx}";
+                            if ($cell['type'] === 'paid') {
+                                // P = negro
+                                $ws->getStyle($ref)->getFont()->getColor()->setRGB('000000');
+                            } elseif ($cell['type'] === 'nopay') {
+                                // NT = naranja
+                                $ws->getStyle($ref)->getFont()->getColor()->setRGB('FF8C00');
+                            } elseif ($cell['type'] === 'freq') {
+                                // Vueltas = azul bold
+                                $ws->getStyle($ref)->getFont()->getColor()->setRGB('0000FF');
+                                $ws->getStyle($ref)->getFont()->setBold(true);
+                            } elseif ($cell['type'] === 'sun') {
+                                // Domingo = fondo blanco
+                                $ws->getStyle($ref)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('FFFFFF');
+                            }
+                        }
+                        $rowIdx++;
+                    }
                 }
 
                 // ===== Anchos compactos =====
