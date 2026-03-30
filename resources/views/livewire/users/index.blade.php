@@ -66,7 +66,7 @@
                                 <th>Sede</th>
                                 <th>Rol</th>
                                 <th>Permisos</th>
-                                <th>Acción</th>
+                                <th></th>
                             </tr>
                             </thead>
 

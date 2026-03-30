@@ -66,7 +66,7 @@
                             <th>Fecha/Hora</th>
                             <th>Usuario</th>
                             <th>Rol</th>
-                            <th>Acción</th>
+                            <th></th>
                             <th>Módulo</th>
                             <th>Registro</th>
                             <th>Detalle</th>

@@ -79,7 +79,7 @@
                                 <th>Código</th>
                                 <th>Nombre</th>
                                 <th>Tipo</th>
-                                <th>Acción</th>
+                                <th></th>
                             </tr>
                             </thead>
 

@@ -48,7 +48,7 @@
                                 <th>Año</th>
                                 <th>Placa</th>
                                 <th>Monto ({{ $now->format('d/m/Y') }})</th>
-                                <th width="10">Modificar</th>
+                                <th width="10"></th>
                             </tr>
                             </thead>
 

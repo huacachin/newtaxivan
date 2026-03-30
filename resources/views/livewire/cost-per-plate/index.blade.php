@@ -46,7 +46,7 @@
                                 <th>Año</th>
                                 <th>Placas</th>
                                 <th>Monto</th>
-                                <th width="10" >Modificar</th>
+                                <th width="10"></th>
                             </tr>
                             </thead>
 

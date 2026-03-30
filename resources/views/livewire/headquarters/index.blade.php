@@ -70,7 +70,7 @@
                                 <th>Usuarios</th>
                                 <th>Estado</th>
                                 @hasanyrole('director')
-                                <th>Acción</th>
+                                <th></th>
                                 @endhasanyrole
                             </tr>
                             </thead>

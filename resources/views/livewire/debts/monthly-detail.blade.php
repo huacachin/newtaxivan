@@ -149,7 +149,7 @@
                 <table class="table table-bordered table-striped table-hover">
                     <thead class="bg-primary">
                     <tr>
-                        <th>Acción</th>
+                        <th></th>
                         <th>ID</th>
                         <th>Fecha</th>
                         <th>Detalle</th>

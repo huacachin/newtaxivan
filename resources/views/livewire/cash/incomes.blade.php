@@ -156,7 +156,7 @@
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">
                             <tr>
-                                <th>Op</th>
+                                <th></th>
                                 <th>Item</th>
                                 <th>Fecha</th>
                                 <th>Usuario</th>

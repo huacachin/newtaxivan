@@ -122,7 +122,7 @@
                             <thead class="bg-primary">
                             <tr>
                                 @hasanyrole('director|gerente|administrador')
-                                <th class="sticky-col">Acción</th>
+                                <th class="sticky-col"></th>
                                 @endhasanyrole
                                 <th>Item</th>
                                 <th>Cod</th>

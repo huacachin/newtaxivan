@@ -194,7 +194,7 @@
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="text-center bg-primary">
                             <tr>
-                                <th>Acción</th>
+                                <th></th>
                                 <th>Ítem</th>
                                 <th>Placa</th>
                                 <th>Serie</th>

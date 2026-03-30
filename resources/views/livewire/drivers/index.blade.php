@@ -90,7 +90,7 @@
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">
                             <tr>
-                                @hasanyrole('director|gerente|administrador')<th>Acción</th>@endhasanyrole
+                                @hasanyrole('director|gerente|administrador')<th></th>@endhasanyrole
                                 <th>Item</th>
                                 <th>Cod</th>
                                 <th>Placa</th>
@@ -176,7 +176,7 @@
                             <table class="table table-bordered table-striped table-hover">
                                 <thead class="bg-primary">
                                 <tr>
-                                    @hasanyrole('director|gerente|administrador')<th>Acción</th>@endhasanyrole
+                                    @hasanyrole('director|gerente|administrador')<th></th>@endhasanyrole
                                     <th>Id</th>
                                     <th>Nombre</th>
                                     <th>DNI</th>
