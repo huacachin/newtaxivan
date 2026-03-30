@@ -103,22 +103,26 @@
                             @php
                                 $isSunday = \Carbon\Carbon::createFromFormat('d/m/Y',$r['fecha'])->isSunday();
                             @endphp
+                            @php
+                                $dateObj = \Carbon\Carbon::createFromFormat('d/m/Y', $r['fecha']);
+                                $dateStr = $dateObj->format('Y-m-d');
+                            @endphp
                             <tr>
                                 <td @if($isSunday) style="background-color: var(--bs-danger) !important; color: #fff !important;" @else style="color: #000;" @endif>{{ $r['fecha'] }}</td>
 
-                                <td style="color: #3e9281;">{{ $fmt($r['cotizacion']) }}</td>
-                                <td style="color: #3e9281;">{{ $fmt($r['retraso']) }}</td>
-                                <td style="color: #3e9281;">{{ $fmt($r['deuda']) }}</td>
-                                <td style="color: #3e9281;">{{ $fmt($r['pago_total']) }}</td>
+                                <td style="color: #3e9281;">@if($r['cotizacion'] != 0)<a href="{{ route('payments.index', ['from' => $dateStr, 'to' => $dateStr, 'type' => 'PAGO']) }}" target="_blank">{{ $fmt($r['cotizacion']) }}</a>@endif</td>
+                                <td style="color: #3e9281;">@if($r['retraso'] != 0)<a href="{{ route('payments.index', ['from' => $dateStr, 'to' => $dateStr, 'type' => 'RETRASO']) }}" target="_blank">{{ $fmt($r['retraso']) }}</a>@endif</td>
+                                <td style="color: #3e9281;">@if($r['deuda'] != 0)<a href="{{ route('payments.index', ['from' => $dateStr, 'to' => $dateStr, 'type' => 'DEUDA']) }}" target="_blank">{{ $fmt($r['deuda']) }}</a>@endif</td>
+                                <td style="color: #3e9281;">@if($r['pago_total'] != 0)<a href="{{ route('payments.index', ['from' => $dateStr, 'to' => $dateStr]) }}" target="_blank">{{ $fmt($r['pago_total']) }}</a>@endif</td>
 
-                                <td style="color: #3e9281;">{{ $fmt($r['empresa']) }}</td>
-                                <td style="color: #3e9281;">{{ $fmt($r['apoyo']) }}</td>
-                                <td style="color: #3e9281;">{{ $fmt($r['salidas_total']) }}</td>
+                                <td style="color: #3e9281;">@if($r['empresa'] != 0)<a href="{{ route('departures.index') }}" target="_blank">{{ $fmt($r['empresa']) }}</a>@endif</td>
+                                <td style="color: #3e9281;">@if($r['apoyo'] != 0)<a href="{{ route('departures.index') }}" target="_blank">{{ $fmt($r['apoyo']) }}</a>@endif</td>
+                                <td style="color: #3e9281;">@if($r['salidas_total'] != 0)<a href="{{ route('departures.index') }}" target="_blank">{{ $fmt($r['salidas_total']) }}</a>@endif</td>
 
-                                <td style="color: #3e9281;">{{ $fmt($r['otros']) }}</td>
+                                <td style="color: #3e9281;">@if($r['otros'] != 0)<a href="{{ route('cash.incomes') }}" target="_blank">{{ $fmt($r['otros']) }}</a>@endif</td>
                                 <td style="color: red;">{{ $fmt($r['ingresos_total']) }}</td>
 
-                                <td style="color: #3e9281;">{{ $fmt($r['egreso']) }}</td>
+                                <td style="color: #3e9281;">@if($r['egreso'] != 0)<a href="{{ route('cash.expenses') }}" target="_blank">{{ $fmt($r['egreso']) }}</a>@endif</td>
                                 <td style="color: red;">{{ $fmt($r['utilidad']) }}</td>
                             </tr>
                         @empty
