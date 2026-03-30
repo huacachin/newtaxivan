@@ -115,14 +115,14 @@
                                 <td style="color: #3e9281;">@if($r['deuda'] != 0)<a href="{{ route('payments.index', ['from' => $dateStr, 'to' => $dateStr, 'type' => 'DEUDA']) }}" target="_blank">{{ $fmt($r['deuda']) }}</a>@endif</td>
                                 <td style="color: #3e9281;">@if($r['pago_total'] != 0)<a href="{{ route('payments.index', ['from' => $dateStr, 'to' => $dateStr]) }}" target="_blank">{{ $fmt($r['pago_total']) }}</a>@endif</td>
 
-                                <td style="color: #3e9281;">@if($r['empresa'] != 0)<a href="{{ route('departures.index') }}" target="_blank">{{ $fmt($r['empresa']) }}</a>@endif</td>
-                                <td style="color: #3e9281;">@if($r['apoyo'] != 0)<a href="{{ route('departures.index') }}" target="_blank">{{ $fmt($r['apoyo']) }}</a>@endif</td>
-                                <td style="color: #3e9281;">@if($r['salidas_total'] != 0)<a href="{{ route('departures.index') }}" target="_blank">{{ $fmt($r['salidas_total']) }}</a>@endif</td>
+                                <td style="color: #3e9281;">@if($r['empresa'] != 0)<a href="{{ route('departures.index', ['fromDate' => $dateStr, 'toDate' => $dateStr]) }}" target="_blank">{{ $fmt($r['empresa']) }}</a>@endif</td>
+                                <td style="color: #3e9281;">@if($r['apoyo'] != 0)<a href="{{ route('departures.index', ['fromDate' => $dateStr, 'toDate' => $dateStr]) }}" target="_blank">{{ $fmt($r['apoyo']) }}</a>@endif</td>
+                                <td style="color: #3e9281;">@if($r['salidas_total'] != 0)<a href="{{ route('departures.index', ['fromDate' => $dateStr, 'toDate' => $dateStr]) }}" target="_blank">{{ $fmt($r['salidas_total']) }}</a>@endif</td>
 
-                                <td style="color: #3e9281;">@if($r['otros'] != 0)<a href="{{ route('cash.incomes') }}" target="_blank">{{ $fmt($r['otros']) }}</a>@endif</td>
+                                <td style="color: #3e9281;">@if($r['otros'] != 0)<a href="{{ route('cash.incomes', ['date_start' => $dateStr, 'date_end' => $dateStr]) }}" target="_blank">{{ $fmt($r['otros']) }}</a>@endif</td>
                                 <td style="color: red;">{{ $fmt($r['ingresos_total']) }}</td>
 
-                                <td style="color: #3e9281;">@if($r['egreso'] != 0)<a href="{{ route('cash.expenses') }}" target="_blank">{{ $fmt($r['egreso']) }}</a>@endif</td>
+                                <td style="color: #3e9281;">@if($r['egreso'] != 0)<a href="{{ route('cash.expenses', ['date_start' => $dateStr, 'date_end' => $dateStr]) }}" target="_blank">{{ $fmt($r['egreso']) }}</a>@endif</td>
                                 <td style="color: red;">{{ $fmt($r['utilidad']) }}</td>
                             </tr>
                         @empty
