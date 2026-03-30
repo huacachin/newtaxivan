@@ -6,7 +6,7 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 trait CompactColumnWidths
 {
-    protected function applyCompactWidths(Worksheet $ws, string $firstCol, string $lastCol, float $factor = 0.85, float $min = 3.0, float $max = 40.0): void
+    protected function applyCompactWidths(Worksheet $ws, string $firstCol, string $lastCol, float $factor = 1.05, float $min = 3.0, float $max = 40.0): void
     {
         $lastRow = (int) $ws->getHighestRow();
         if ($lastRow < 1) return;
