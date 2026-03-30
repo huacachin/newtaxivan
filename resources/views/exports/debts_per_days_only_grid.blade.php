@@ -47,12 +47,12 @@
             @endphp
         </tr>
     @endforeach
-    <tr style="background:#CEE7FF">
-        <td colspan="{{ 4 + count($days) }}" align="center"><b>Total</b></td>
-        <td>{{ number_format($sumPaidDays, 2) }}</td>
-        <td align="center">{{ number_format($sumPaidAmount, 2) }}</td>
-        <td align="center">{{ $sumDebtDays }}</td>
-        <td align="center">{{ number_format($sumDebtAmount, 2) }}</td>
+    <tr>
+        <td colspan="{{ 4 + count($days) }}" align="center" style="background:#CEE7FF;"><b>Total</b></td>
+        <td style="background:#CEE7FF;">{{ number_format($sumPaidDays, 2) }}</td>
+        <td align="center" style="background:#CEE7FF;">{{ number_format($sumPaidAmount, 2) }}</td>
+        <td align="center" style="background:#CEE7FF;">{{ $sumDebtDays }}</td>
+        <td align="center" style="background:#CEE7FF;">{{ number_format($sumDebtAmount, 2) }}</td>
     </tr>
     </tbody>
 </table>
