@@ -1,8 +1,7 @@
 <html>
 <head><meta charset="UTF-8"></head>
 <body>
-<b style="color:red; font-size:11pt;">LISTADO GENERAL DE PROPIETARIO ( {{ $countActive }} )</b>
-<br>
+<center><b style="color:red; font-size:11pt;">LISTADO GENERAL DE PROPIETARIO ( {{ $countActive }} )</b></center><br>
 <table cellspacing="0" border="1" style="border-collapse:collapse;">
     <thead>
     <tr>
@@ -35,8 +34,7 @@
 </table>
 
 <br>
-<b style="color:red; font-size:10pt;">PROPIETARIOS LIBRES</b>
-<br>
+<center><b style="color:red; font-size:10pt;">PROPIETARIOS LIBRES</b></center><br>
 <table cellspacing="0" border="1" style="border-collapse:collapse;">
     <thead>
     <tr>

@@ -1,8 +1,7 @@
 <html>
 <head><meta charset="UTF-8"></head>
 <body>
-<b style="color:red; font-size:11pt;">{{ $title }}</b>
-<br>
+<center><b style="color:red; font-size:11pt;">{{ $title }}</b></center><br>
 <i>{{ $resume }}</i>
 <br>
 <table cellspacing="0" border="1" style="border-collapse:collapse;">
