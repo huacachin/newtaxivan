@@ -214,17 +214,24 @@ class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTi
                 $ws->getParent()->getDefaultStyle()->getFont()->setSize(10);
                 $ws->setShowGridlines(false);
 
-                // ===== Insertar SOLO 1 fila (título). Ya NO usamos la fila 2 =====
-                $ws->insertNewRowBefore(1, 1);
+                // ===== Insertar 2 filas (título + subheader) =====
+                $ws->insertNewRowBefore(1, 2);
 
-                $headerRow    = 2;           // thead real (se corrió 1 fila)
-                $dataStartRow = 3;           // primer dato
+                $subHeaderRow = 2;           // fila con "Total Pagos" / "Total Deuda"
+                $headerRow    = 3;           // thead real (Item, Cod, Placa...)
+                $dataStartRow = 4;           // primer dato
                 $dayStartColIndex = 5;       // E (A:Item, B:Cod, C:Placa, D:Condición)
                 $dayEndColIndex   = $dayStartColIndex + max(0, $this->dayCols - 1);
                 // +4 columnas finales: P días, P S/, D días, D S/
                 $lastColIndex     = $dayEndColIndex + 4;
                 $lastColLetter    = $this->colLetter($lastColIndex);
                 $lastColIdx       = $lastColIndex; // numérico para bucles
+
+                // Letras de las 4 columnas finales
+                $pDaysCol = $this->colLetter($dayEndColIndex + 1);
+                $pAmtCol  = $this->colLetter($dayEndColIndex + 2);
+                $dDaysCol = $this->colLetter($dayEndColIndex + 3);
+                $dAmtCol  = $this->colLetter($dayEndColIndex + 4);
 
                 // ===== TÍTULO (fila 1) =====
                 $monthLabel = !empty($this->days)
@@ -240,7 +247,19 @@ class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTi
                     'borders' => ['allBorders' => ['borderStyle'=>Border::BORDER_THIN,'color'=>['argb'=>'FF000000']]],
                 ]);
 
-                // ===== THEAD (fila 2) azul =====
+                // ===== SUB-HEADER (fila 2) — "Total Pagos" y "Total Deuda" combinados =====
+                $ws->mergeCells("{$pDaysCol}{$subHeaderRow}:{$pAmtCol}{$subHeaderRow}");
+                $ws->setCellValue("{$pDaysCol}{$subHeaderRow}", 'Total Pagos');
+                $ws->mergeCells("{$dDaysCol}{$subHeaderRow}:{$dAmtCol}{$subHeaderRow}");
+                $ws->setCellValue("{$dDaysCol}{$subHeaderRow}", 'Total Deuda');
+                $ws->getStyle("A{$subHeaderRow}:{$lastColLetter}{$subHeaderRow}")->applyFromArray([
+                    'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$white]],
+                    'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
+                    'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$blue]],
+                ]);
+                $ws->getRowDimension($subHeaderRow)->setRowHeight(16);
+
+                // ===== THEAD (fila 3) azul =====
                 $ws->getStyle("A{$headerRow}:{$lastColLetter}{$headerRow}")->applyFromArray([
                     'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$white]],
                     'alignment' => ['horizontal'=>Alignment::HORIZONTAL_CENTER,'vertical'=>Alignment::VERTICAL_CENTER],
@@ -304,7 +323,7 @@ class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTi
 
                 $ws->getColumnDimension('A')->setWidth(4.0);   // Item
                 $ws->getColumnDimension('B')->setWidth(3.0);   // Cod
-                $ws->getColumnDimension('C')->setWidth(6.0);  // Placa
+                $ws->getColumnDimension('C')->setWidth(10.0);  // Placa
                 $ws->getColumnDimension('D')->setWidth(6.5);   // Condición
                 for ($c = $dayStartColIndex; $c <= $dayEndColIndex; $c++) {
                     $ws->getColumnDimension($this->colLetter($c))->setWidth(4.0); // días compactos
