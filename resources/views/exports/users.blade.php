@@ -1,9 +1,9 @@
 <html>
 <head><meta charset="UTF-8"></head>
 <body>
-<center><b style="color:red; font-size:11pt;">LISTADO GENERAL DE USUARIO</b></center><br>
 <table cellspacing="0" border="1" style="border-collapse:collapse;">
     <thead>
+    <tr><td colspan="6" align="center" style="font-weight:bold;color:red;font-size:11pt;">LISTADO GENERAL DE USUARIO</td></tr>
     <tr>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Item</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Nombres</b></th>
