@@ -22,6 +22,7 @@ class ExpensesExport implements
     FromQuery, WithHeadings, WithMapping,
     WithColumnFormatting, WithStyles, WithEvents, WithTitle
 {
+    use \App\Traits\CompactColumnWidths;
     /** contador de item (1..n) */
     private int $i = 0;
 
@@ -172,10 +173,7 @@ class ExpensesExport implements
                 ]);
                 $ws->getRowDimension($headerRow)->setRowHeight(16);
 
-                // ===== Autosize columnas usadas =====
-                foreach (range('A', 'G') as $col) {
-                    $ws->getColumnDimension($col)->setAutoSize(true);
-                }
+                $this->applyCompactWidths($ws, 'A', 'G');
 
                 // Ocultar columnas vacías (H en adelante)
                 foreach (range('H', 'Z') as $col) {

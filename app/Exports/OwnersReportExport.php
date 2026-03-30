@@ -22,6 +22,7 @@ class OwnersReportExport implements
     FromQuery, ShouldAutoSize, WithHeadings, WithMapping,
     WithColumnFormatting, WithStyles, WithEvents
 {
+    use \App\Traits\CompactColumnWidths;
     public function __construct(
         protected ?string $search = null,
         protected string  $filter = 'plate'
@@ -238,10 +239,7 @@ class OwnersReportExport implements
                 // ===== Actualizar total en título =====
                 $ws->setCellValue('A1', "LISTADO GENERAL DE PROPIETARIO ( {$countActive} )");
 
-                // ===== Autosize columnas usadas =====
-                foreach (range('A', 'F') as $col) {
-                    $ws->getColumnDimension($col)->setAutoSize(true);
-                }
+                $this->applyCompactWidths($ws, 'A', 'F');
 
                 // ===== Ocultar columnas vacías (G en adelante) =====
                 foreach (range('G', 'Z') as $col) {

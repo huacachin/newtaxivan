@@ -16,6 +16,8 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
 class DriversReportExport implements FromArray, WithColumnFormatting, WithEvents
 {
+    use \App\Traits\CompactColumnWidths;
+
     public function __construct(
         protected ?string $search = null,
         protected ?string $filter = 'plate' // plate | name | code
@@ -244,10 +246,7 @@ class DriversReportExport implements FromArray, WithColumnFormatting, WithEvents
                 $ws->getStyle("A{$foot2}:{$lastCol}{$foot2}")->applyFromArray($footerStyle);
                 $ws->getRowDimension($foot2)->setRowHeight(16);
 
-                // ===== Autosize columnas usadas =====
-                foreach (range('A', 'I') as $col) {
-                    $ws->getColumnDimension($col)->setAutoSize(true);
-                }
+                $this->applyCompactWidths($ws, 'A', 'I');
 
                 // ===== Ocultar columnas vacías (J en adelante) =====
                 foreach (range('J', 'Z') as $col) {

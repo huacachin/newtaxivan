@@ -20,6 +20,7 @@ class DeparturesMainExport implements
     FromQuery, ShouldAutoSize, WithHeadings, WithMapping,
     WithColumnFormatting, WithStyles, WithEvents, WithTitle
 {
+    use \App\Traits\CompactColumnWidths;
     public function __construct(
         protected ?int $searchType = 1,
         protected ?string $searchText = null,
@@ -182,11 +183,8 @@ class DeparturesMainExport implements
                 // $ws->freezePane(...); // removido
                 $ws->setAutoFilter($ws->calculateWorksheetDimension());
 
-                // ===== Autosize columnas usadas =====
                 $lastCol = $this->groupMode ? 'J' : 'M';
-                foreach (range('A', $lastCol) as $col) {
-                    $ws->getColumnDimension($col)->setAutoSize(true);
-                }
+                $this->applyCompactWidths($ws, 'A', $lastCol);
             },
         ];
     }

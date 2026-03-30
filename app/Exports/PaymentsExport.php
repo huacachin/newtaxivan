@@ -320,10 +320,7 @@ class PaymentsExport implements
                     $lastRow = $last;
                 }
 
-                // ===== Autosize columnas usadas =====
-                foreach (range('A', 'J') as $col) {
-                    $ws->getColumnDimension($col)->setAutoSize(true);
-                }
+                $this->applyCompactWidths($ws, 'A', 'J');
 
                 // ===== Ocultar columnas vacías (K en adelante) =====
                 foreach (range('K', 'Z') as $col) {

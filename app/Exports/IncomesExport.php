@@ -163,10 +163,7 @@ class IncomesExport implements
                 ]);
                 $ws->getRowDimension($headerRow)->setRowHeight(16);
 
-                // ===== Autosize columnas usadas =====
-                foreach (range('A', 'F') as $col) {
-                    $ws->getColumnDimension($col)->setAutoSize(true);
-                }
+                $this->applyCompactWidths($ws, 'A', 'F');
 
                 // ===== Ocultar columnas vacías (G en adelante) =====
                 foreach (range('G', 'Z') as $col) {

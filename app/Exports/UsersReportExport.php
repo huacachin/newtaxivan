@@ -18,6 +18,7 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 class UsersReportExport implements
     FromQuery, WithHeadings, WithMapping, WithStyles, WithEvents
 {
+    use \App\Traits\CompactColumnWidths;
     public function __construct(
         protected ?string $search = null
     ) {}
@@ -175,10 +176,7 @@ class UsersReportExport implements
 
                 $ws->getStyle("A1:{$lastCol}{$last}")->getFont()->setSize(10);
 
-                // Autosize dinámico
-                foreach (range('A', $lastCol) as $col) {
-                    $ws->getColumnDimension($col)->setAutoSize(true);
-                }
+                $this->applyCompactWidths($ws, 'A', $lastCol);
             },
         ];
     }

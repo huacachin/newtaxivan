@@ -18,6 +18,7 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 class VehiclesReportExport implements
     FromQuery, WithHeadings, WithMapping, WithStyles, WithEvents
 {
+    use \App\Traits\CompactColumnWidths;
     public function __construct(
         protected ?string $status = 'active',
         protected ?string $search = null,
@@ -238,10 +239,7 @@ class VehiclesReportExport implements
                     $lastRow = $last;
                 }
 
-                // ===== Autosize columnas usadas =====
-                foreach (range('A', 'L') as $col) {
-                    $ws->getColumnDimension($col)->setAutoSize(true);
-                }
+                $this->applyCompactWidths($ws, 'A', 'L');
 
                 // ===== Ocultar columnas vacías (M en adelante) =====
                 foreach (range('M', 'Z') as $col) {

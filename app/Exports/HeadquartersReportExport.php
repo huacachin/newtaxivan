@@ -18,6 +18,7 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 class HeadquartersReportExport implements
     FromQuery, WithHeadings, WithMapping, WithStyles, WithEvents
 {
+    use \App\Traits\CompactColumnWidths;
     public function __construct(
         protected ?string $search = null
     ) {}
@@ -114,10 +115,7 @@ class HeadquartersReportExport implements
                     $borders->getVertical()->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB('FF000000');
                 }
 
-                // ===== Autosize columnas usadas =====
-                foreach (range('A', 'D') as $col) {
-                    $ws->getColumnDimension($col)->setAutoSize(true);
-                }
+                $this->applyCompactWidths($ws, 'A', 'D');
 
                 $ws->getStyle("A1:{$lastCol}{$last}")->getFont()->setSize(10);
             },
