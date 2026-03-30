@@ -43,7 +43,8 @@
                                                            onkeypress="return (event.charCode >= 48 && event.charCode <= 57) || event.charCode == 46"
                                                            wire:key="day-{{ $date }}"
                                                            wire:model.defer="values.{{ $date }}"
-                                                           class="form-control form-control-sm text-end w-amt" />
+                                                           class="form-control form-control-sm text-end w-amt"
+                                                           @if($isSun) value="0" readonly @endif />
                                                 </div>
                                             @endif
                                         </td>
