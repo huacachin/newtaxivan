@@ -233,6 +233,16 @@ window.addEventListener('alertError', function (event) {
     alertError();
 });
 
+window.addEventListener('errorAlert', function (event) {
+    var data = event.detail[0] || {};
+    Swal.fire({
+        icon: 'warning',
+        title: 'Atención',
+        text: data.message || 'Hubo un error',
+        confirmButtonColor: '#3085d6',
+    });
+});
+
 document.addEventListener('click', function (e) {
     var btn = e.target.closest('#down');
     if (!btn) return;
