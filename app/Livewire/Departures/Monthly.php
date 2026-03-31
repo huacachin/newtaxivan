@@ -189,123 +189,45 @@ class Monthly extends Component
 
         $dateCol = $this->dateColumn;
 
-        // Raw por sede/vehículo/día (SIN dividir por 2)
-        if ($this->countColumn) {
-            $selectRaw = "headquarter_id, vehicle_id, DAY({$dateCol}) as d, SUM({$this->countColumn}) as s";
-        } else {
-            $selectRaw = "headquarter_id, vehicle_id, DAY({$dateCol}) as d, COUNT(*) as s";
-        }
-
-        $aggregates = DB::table('departures')
-            ->selectRaw($selectRaw)
-            ->whereBetween($dateCol, [$start, $end])
-            ->groupBy('headquarter_id', 'vehicle_id', 'd')
+        // Apoyo: departures con is_support=1, agrupados por sede/placa/día
+        $supportAggs = DB::table('departures as d')
+            ->join('headquarters as h', 'h.id', '=', 'd.headquarter_id')
+            ->selectRaw("d.headquarter_id, h.name as hq_name, d.legacy_plate as plate, DAY(d.{$dateCol}) as day_num, SUM(d.times) as raw_sum")
+            ->where('d.is_support', 1)
+            ->whereBetween("d.{$dateCol}", [$start, $end])
+            ->groupBy('d.headquarter_id', 'h.name', 'd.legacy_plate', 'day_num')
             ->get();
 
-        // Indexar raw: [hq_id][vid][d] = raw_sum
+        // Indexar: [hq_id => ['name'=>..., 'plates'=>[plate => [d => raw]]]]
         $byHQ = [];
-        foreach ($aggregates as $r) {
+        foreach ($supportAggs as $r) {
             $hqId = (int)$r->headquarter_id;
-            $vid  = (int)$r->vehicle_id;
-            $d    = (int)$r->d;
-            $s    = (float)$r->s;
-            $byHQ[$hqId][$vid][$d] = ($byHQ[$hqId][$vid][$d] ?? 0) + $s;
+            $byHQ[$hqId]['name'] = $r->hq_name;
+            $byHQ[$hqId]['plates'][$r->plate][(int)$r->day_num] =
+                ($byHQ[$hqId]['plates'][$r->plate][(int)$r->day_num] ?? 0) + (int)$r->raw_sum;
         }
 
-        // Raw global por vehículo/día (para calcular proporciones)
-        $globalRaw = []; // [vid][d] = raw_sum
-        foreach ($byHQ as $hqId => $vids) {
-            foreach ($vids as $vid => $days) {
-                foreach ($days as $d => $s) {
-                    $globalRaw[$vid][$d] = ($globalRaw[$vid][$d] ?? 0) + $s;
-                }
-            }
-        }
-
-        // Mapa de vehículos
-        $vehicleMap = [];
-        foreach ($vehicles as $v) {
-            $vehicleMap[(int)$v->id] = [
-                'sort_order' => (string)($v->sort_order ?? ''),
-                'plate'      => (string)$v->plate,
-            ];
-        }
-
-        // Nombres de sedes (incluir todas las que aparecen en los datos)
-        $hqIds = array_keys($byHQ);
-        $hqNames = [];
-        if (!empty($hqIds)) {
-            $hqNames = DB::table('headquarters')
-                ->whereIn('id', $hqIds)
-                ->orderBy('name')
-                ->pluck('name', 'id')
-                ->all();
-        }
-
-        // Para cada sede, distribuir los valores ya divididos de la tabla principal
-        foreach ($hqNames as $hqId => $hqName) {
-            if (!isset($byHQ[$hqId])) continue;
-
+        foreach ($byHQ as $hqId => $hqData) {
             $hqRows = [];
             $totalPerDay = array_fill(1, $this->daysInMonth, 0);
             $vtPerDay    = array_fill(1, $this->daysInMonth, 0);
+            $item = 0;
 
-            foreach ($vehicleMap as $vid => $vInfo) {
-                if (!isset($byHQ[$hqId][$vid])) continue;
-                if (!isset($this->rows[$vid])) continue;
-
-                $mainDaily = $this->rows[$vid]['daily']; // valores ya con ÷2
+            foreach ($hqData['plates'] as $plate => $days) {
+                $item++;
                 $daily = array_fill(1, $this->daysInMonth, 0);
 
-                foreach ($byHQ[$hqId][$vid] as $d => $rawHQ) {
+                foreach ($days as $d => $raw) {
                     if ($d < 1 || $d > $this->daysInMonth) continue;
-                    $rawGlobal = $globalRaw[$vid][$d] ?? 0;
-                    $mainVal   = $mainDaily[$d] ?? 0;
-
-                    if ($rawGlobal > 0 && $mainVal > 0) {
-                        // Proporción de esta sede sobre el total
-                        $daily[$d] = (int) round($mainVal * ($rawHQ / $rawGlobal), 0, PHP_ROUND_HALF_UP);
-                    }
-                }
-
-                // Ajuste: asegurar que la suma por sede = valor de la tabla principal
-                // Corregir residuos de redondeo en el HQ con mayor contribución
-                foreach ($mainDaily as $d => $mainVal) {
-                    if ($mainVal <= 0) continue;
-                    $rawGlobal = $globalRaw[$vid][$d] ?? 0;
-                    if ($rawGlobal <= 0) continue;
-
-                    // Sumar lo asignado a TODAS las sedes para este vid/d
-                    $assignedTotal = 0;
-                    foreach ($byHQ as $otherHqId => $otherVids) {
-                        if (!isset($otherVids[$vid][$d])) continue;
-                        $otherRaw = $otherVids[$vid][$d];
-                        $assignedTotal += (int) round($mainVal * ($otherRaw / $rawGlobal), 0, PHP_ROUND_HALF_UP);
-                    }
-
-                    // Si hay diferencia, ajustar en esta sede si es la de mayor contribución
-                    $diff = $mainVal - $assignedTotal;
-                    if ($diff !== 0 && isset($byHQ[$hqId][$vid][$d])) {
-                        $maxHq = $hqId;
-                        $maxRaw = 0;
-                        foreach ($byHQ as $otherHqId => $otherVids) {
-                            if (isset($otherVids[$vid][$d]) && $otherVids[$vid][$d] > $maxRaw) {
-                                $maxRaw = $otherVids[$vid][$d];
-                                $maxHq  = $otherHqId;
-                            }
-                        }
-                        if ($maxHq === $hqId) {
-                            $daily[$d] += $diff;
-                        }
-                    }
+                    $daily[$d] = (int)$raw;
                 }
 
                 $total = array_sum($daily);
                 if ($total === 0) continue;
 
                 $hqRows[] = [
-                    'sort_order' => $vInfo['sort_order'],
-                    'plate'      => $vInfo['plate'],
+                    'sort_order' => '',
+                    'plate'      => (string)$plate,
                     'daily'      => $daily,
                     'total'      => $total,
                 ];
@@ -319,7 +241,7 @@ class Monthly extends Component
             if (empty($hqRows)) continue;
 
             $this->hqTables[$hqId] = [
-                'name'        => $hqName,
+                'name'        => $hqData['name'],
                 'rows'        => $hqRows,
                 'totalPerDay' => $totalPerDay,
                 'vtPerDay'    => $vtPerDay,
@@ -329,7 +251,7 @@ class Monthly extends Component
             $totalVT      = array_sum($vtPerDay);
 
             $this->hqSummary[$hqId] = [
-                'name'          => $hqName,
+                'name'          => $hqData['name'],
                 'totalVueltas'  => $totalVueltas,
                 'totalVT'       => $totalVT,
             ];
@@ -337,7 +259,6 @@ class Monthly extends Component
             $this->grandTotalVueltas += $totalVueltas;
         }
 
-        // V.T general = el de la tabla principal (un vehículo cuenta 1 solo aunque opere en varias sedes)
         $this->grandTotalVT = array_sum($this->vehiclesWorkedPerDay);
     }
 
