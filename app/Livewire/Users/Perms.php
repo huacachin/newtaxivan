@@ -155,14 +155,20 @@ class Perms extends Component
         // Si el rol cambió, limpiar permisos y sucursales
         $currentRole = $user->roles->first()?->name;
         if ($roleName !== $currentRole) {
-            $user->syncPermissions([]);
             $user->headquarters()->sync([]);
             $user->update(['headquarter_id' => null]);
+
+            if ($roleName === 'director') {
+                $allPerms = Permission::where('guard_name', 'web')->pluck('name')->toArray();
+                $user->syncPermissions($allPerms);
+            } else {
+                $user->syncPermissions([]);
+            }
         }
 
         $user->syncRoles($roleName ? [$roleName] : []);
 
-        // Permisos por NOMBRE (si el rol no cambió, aplica los seleccionados; si cambió, ya se limpiaron)
+        // Permisos por NOMBRE (si el rol no cambió, aplica los seleccionados; si cambió, ya se asignaron)
         if ($roleName === $currentRole) {
             $names = Permission::whereIn('name', $this->selectedPermissionNames)->pluck('name')->all();
             $user->syncPermissions($names);

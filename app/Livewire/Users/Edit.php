@@ -145,9 +145,15 @@ class Edit extends Component
             // Si el rol cambió, limpiar permisos y sucursales
             $currentRole = $this->user->roles->first()?->name;
             if ($roleName !== $currentRole) {
-                $this->user->syncPermissions([]);
                 $this->user->headquarters()->sync([]);
                 $this->user->update(['headquarter_id' => null]);
+
+                if ($roleName === 'director') {
+                    $allPerms = \App\Models\Permission::where('guard_name', 'web')->pluck('name')->toArray();
+                    $this->user->syncPermissions($allPerms);
+                } else {
+                    $this->user->syncPermissions([]);
+                }
             }
 
             $this->user->syncRoles($roleName ? [$roleName] : []);
