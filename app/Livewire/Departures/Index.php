@@ -340,6 +340,11 @@ class Index extends Component
      */
     public function save(): void
     {
+        if (empty($this->latitude) || empty($this->longitude)) {
+            $this->dispatch('errorAlert', ['message' => 'Activa tu ubicación para poder agregar']);
+            return;
+        }
+
         $this->validate();
 
         // === INTEGRACIÓN ROLES/SEDES: controller solo puede usar sedes asignadas

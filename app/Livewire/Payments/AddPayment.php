@@ -416,6 +416,11 @@ class AddPayment extends Component
     // ===== Guardar (misma lógica del modal, sin dispatch/redirect) =====
     public function save(): void
     {
+        if (empty($this->latitude) || empty($this->longitude)) {
+            $this->dispatch('errorAlert', ['message' => 'Activa tu ubicación para poder agregar']);
+            return;
+        }
+
         $tz    = config('app.timezone','America/Lima');
         $now   = now($tz);
         $today = $now->toDateString();

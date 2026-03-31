@@ -553,6 +553,11 @@ class Index extends Component
     // ===== Guardar / Actualizar =====
     public function save(): void
     {
+        if (empty($this->latitude) || empty($this->longitude)) {
+            $this->dispatch('errorAlert', ['message' => 'Activa tu ubicación para poder agregar']);
+            return;
+        }
+
         $today = now(config('app.timezone','America/Lima'))->toDateString();
         $this->date_register = $today;
         if ($this->type_form === 'PAGO') {

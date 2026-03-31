@@ -186,6 +186,11 @@ class AddDeparture extends Component
     // ==============================
     public function save(): void
     {
+        if (empty($this->latitude) || empty($this->longitude)) {
+            $this->dispatch('errorAlert', ['message' => 'Activa tu ubicación para poder agregar']);
+            return;
+        }
+
         $this->validate();
 
         // Validación de acceso a sede para no-admin (unificada)
