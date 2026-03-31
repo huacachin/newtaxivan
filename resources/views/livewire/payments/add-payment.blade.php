@@ -215,7 +215,7 @@
 
             // ---- Geolocalización al cargar pantalla ----
             function fillGeo(latId, lngId) {
-                if (!navigator.geolocation) return;
+                if (!navigator.geolocation) { Swal.fire({icon:'warning',title:'Ubicación requerida',text:'Activa tu ubicación para poder agregar',confirmButtonColor:'#3085d6'}); return; }
                 navigator.geolocation.getCurrentPosition(
                     (pos) => {
                         const lat = pos.coords.latitude.toFixed(6);
@@ -229,7 +229,7 @@
                             lngInput.dispatchEvent(new Event('input', { bubbles: true }));
                         }
                     },
-                    () => {},
+                    () => { Swal.fire({icon:'warning',title:'Ubicación requerida',text:'Activa tu ubicación para poder agregar',confirmButtonColor:'#3085d6'}); },
                     { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
                 );
             }

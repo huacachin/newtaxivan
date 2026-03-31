@@ -297,10 +297,10 @@
                 comp.set('longitude', Number(lng.toFixed(6)));
             }
             function getGeoAndSet() {
-                if (!navigator.geolocation) return;
+                if (!navigator.geolocation) { Swal.fire({icon:'warning',title:'Ubicación requerida',text:'Activa tu ubicación para poder agregar',confirmButtonColor:'#3085d6'}); return; }
                 navigator.geolocation.getCurrentPosition(
                     (pos) => setGeoOnComponent(pos.coords.latitude, pos.coords.longitude),
-                    () => {},
+                    () => { Swal.fire({icon:'warning',title:'Ubicación requerida',text:'Activa tu ubicación para poder agregar',confirmButtonColor:'#3085d6'}); },
                     { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
                 );
             }
