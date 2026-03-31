@@ -52,8 +52,8 @@ class AddPayment extends Component
             'type_form'           => ['required','in:PAGO,DEUDA,RETRASO'],
             'headquarter_id_form' => ['required','integer','exists:headquarters,id'],
             'amount'              => ['required','numeric','gt:0'],
-            'latitude'            => ['nullable','numeric'],
-            'longitude'           => ['nullable','numeric'],
+            'latitude'            => ['required','numeric'],
+            'longitude'           => ['required','numeric'],
         ];
 
         // PAGO/RETRASO: si hay costo, el monto debe coincidir

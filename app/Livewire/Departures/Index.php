@@ -179,6 +179,8 @@ class Index extends Component
             'price'          => ['required','numeric'],
             'passenger'      => ['required','integer'],
             'passage'        => ['required','numeric'],
+            'latitude'       => ['required','string'],
+            'longitude'      => ['required','string'],
         ];
     }
 
