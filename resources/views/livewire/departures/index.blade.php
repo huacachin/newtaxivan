@@ -207,9 +207,9 @@
                                     <tr>
                                             @if(!$groupMode)
                                                 <td class="text-center ">
-                                                    @hasanyrole('director|gerente|administrador')
+                                                    @if(auth()->user()->hasRole('director') || (auth()->user()->hasAnyRole(['administrador','gerente']) && \Carbon\Carbon::parse($d->date)->isToday()))
                                                     <a href="{{ route('departures.edit', $d->id) }}"><i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"></i></a>
-                                                    @endhasanyrole
+                                                    @endif
                                                 </td>
                                             @endif
 
@@ -329,9 +329,9 @@
                                 <tr class="text-center ">
                                         @if(!$groupMode)
                                             <td class="text-center title-modules">
-                                                @hasanyrole('director|gerente|administrador')
+                                                @if(auth()->user()->hasRole('director') || (auth()->user()->hasAnyRole(['administrador','gerente']) && \Carbon\Carbon::parse($d->date)->isToday()))
                                                 <a href="{{ route('departures.edit', $d->id) }}"><i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"></i></a>
-                                                @endhasanyrole
+                                                @endif
                                             </td>
                                         @endif
 

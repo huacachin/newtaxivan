@@ -213,11 +213,11 @@
                             @forelse($payments as $p)
                                 <tr @class(['row-retraso' => $p->type === 'RETRASO', 'row-deuda' => $p->type === 'DEUDA'])>
                                     <td width="50">
-                                        @hasanyrole('director|gerente|administrador')
+                                        @if($p->canBeEditedBy(auth()->user()))
                                         <a href="{{ route('payments.edit', $p->id) }}">
                                             <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"></i>
                                         </a>
-                                        @endhasanyrole
+                                        @endif
                                     </td>
                                     <td>{{ $loop->iteration }}</td>
                                     <td>{{ $p->legacy_plate }}</td>

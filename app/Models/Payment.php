@@ -39,6 +39,26 @@ class Payment extends Model
         return $this->belongsTo(Headquarter::class)->withDefault();
     }
 
+    /* ---------- Permisos ---------- */
+
+    public function canBeEditedBy(User $user): bool
+    {
+        if ($user->hasRole('director')) return true;
+        if ($user->hasAnyRole(['administrador', 'gerente'])) {
+            return $this->created_at && $this->created_at->timezone(config('app.timezone'))->isToday();
+        }
+        return false;
+    }
+
+    public function canBeDeletedBy(User $user): bool
+    {
+        if ($user->hasRole('director')) return true;
+        if ($user->hasAnyRole(['administrador', 'gerente'])) {
+            return $this->created_at && $this->created_at->timezone(config('app.timezone'))->isToday();
+        }
+        return false;
+    }
+
     /* ---------- Scopes ---------- */
 
     /** Por rango usando date_register (modo "Caja") */
