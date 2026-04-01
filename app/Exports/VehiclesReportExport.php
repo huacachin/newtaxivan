@@ -95,11 +95,8 @@ class VehiclesReportExport implements
     public function htmlData(): array
     {
         $s = $this->stats();
-        $title = sprintf(
-            'VEHÍCULOS %d · D2: %d · Gas: %d · V.T: %d · V.Q.N.T: %d',
-            $s['total'], $s['d2'], $s['gas'], $s['vt'], $s['vqnt']
-        );
-        $resume = sprintf('Propietario: %d · Conductor: %d', $s['prop'], $s['cond']);
+        $title = 'LISTADO GENERAL DE VEHÍCULOS';
+        $stats = $s;
 
         $rows = [];
         $i = 0;
@@ -121,7 +118,7 @@ class VehiclesReportExport implements
             ];
         }
 
-        return compact('title', 'resume', 'rows');
+        return compact('title', 'stats', 'rows');
     }
 
     public function styles(Worksheet $sheet)

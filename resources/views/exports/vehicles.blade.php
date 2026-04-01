@@ -5,6 +5,16 @@
     <thead>
     <tr><td colspan="12" align="center" style="font-weight:bold;color:red;font-size:11pt;">{{ $title }}</td></tr>
     <tr>
+        <td colspan="12" align="center" style="font-weight:bold;font-size:10pt;">
+            <b>D2:</b> <b style="color:red">{{ $stats['d2'] }}</b> ·
+            <b>Gas:</b> <b style="color:red">{{ $stats['gas'] }}</b> ·
+            <b>V.T:</b> <b style="color:red">{{ $stats['vt'] }}</b> ·
+            <b>V.Q.N.T:</b> <b style="color:red">{{ $stats['vqnt'] }}</b> ·
+            <b>Propietario:</b> <b style="color:red">{{ $stats['prop'] }}</b> ·
+            <b>Conductor:</b> <b style="color:red">{{ $stats['cond'] }}</b>
+        </td>
+    </tr>
+    <tr>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Nº</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Cod</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Placa</b></th>
