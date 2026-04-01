@@ -158,6 +158,8 @@ class Index extends Component
     {
 
         $result = CostPerPlate::from('cost_per_plates as c')
+            ->join('vehicles as v', 'v.id', '=', 'c.vehicle_id')
+            ->where('v.status', 'active')
             ->selectRaw('
             c.year,
             c.month,
