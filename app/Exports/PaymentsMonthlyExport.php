@@ -258,8 +258,11 @@ class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, With
 
         $start = CarbonImmutable::create($this->year, $this->month, 1);
         $end   = $start->endOfMonth();
+        $startStr = $start->toDateString();
+        $endStr   = $end->toDateString();
         $laborables = $this->laborablesSinDomingo($start);
 
+        // Vehículos activos (misma lógica que la vista)
         $vehCols = ['id','plate','status'];
         if (Schema::hasColumn($this->vehiclesTable,'sort_order')) $vehCols[] = 'sort_order';
         if (Schema::hasColumn($this->vehiclesTable,'condition'))  $vehCols[] = 'condition';
@@ -294,7 +297,7 @@ class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, With
             ];
         }
 
-        // Deuda mes anterior (debt_days)
+        // Deuda mes anterior (debt_days) — misma lógica que la vista
         if (Schema::hasTable($this->debtDaysTable)) {
             $prev = $start->subMonth()->startOfMonth();
             $prevAgg = DB::table($this->debtDaysTable)
@@ -322,28 +325,25 @@ class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, With
             }
         }
 
-        // Pagos del mes (PAGO/RETRASO)
+        // Pagos del mes (PAGO/RETRASO) — misma query que la vista (sin JOIN legacy)
         $paidAgg = DB::table($this->paymentsTable.' as p')
-            ->leftJoin($this->vehiclesTable.' as v2', function ($join) {
-                $join->on('v2.plate', '=', 'p.legacy_plate')->where('v2.status','active');
-            })
             ->selectRaw("
-                COALESCE(p.vehicle_id, v2.id) as vid,
-                SUM(p.amount) as sum_paid,
-                COUNT(DISTINCT DAY(p.date_payment)) as cdays
+                p.vehicle_id as vid,
+                SUM(p.amount) as s,
+                COUNT(*) as kt
             ")
             ->whereIn(DB::raw('UPPER(p.type)'), ['PAGO','RETRASO'])
             ->whereNotNull('p.date_payment')
-            ->whereBetween('p.date_payment', [$start->toDateString(), $end->toDateString()])
-            ->whereRaw('DAYOFWEEK(p.date_payment) <> 1')
+            ->whereBetween('p.date_payment', [$startStr, $endStr])
+            ->where(DB::raw('UPPER(p.type)'), '<>', 'DEUDA')
             ->groupBy('vid')
             ->get();
 
         foreach ($paidAgg as $r) {
-            $vid = (int)$r->vid;
+            $vid = (int) $r->vid;
             if (!isset($map[$vid])) continue;
-            $map[$vid]['month_amount'] = round((float)$r->sum_paid, 2);
-            $map[$vid]['dt_days']      = (int)$r->cdays;
+            $map[$vid]['month_amount'] = round((float)$r->s, 2);
+            $map[$vid]['dt_days']      = (int) $r->kt;
         }
 
         // DNT
@@ -352,37 +352,111 @@ class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, With
         }
         unset($row);
 
-        // Días con pago (para separar costos pagados/no pagados)
-        $paidDays = DB::table($this->paymentsTable.' as p')
-            ->leftJoin($this->vehiclesTable.' as v2', function ($join) {
-                $join->on('v2.plate', '=', 'p.legacy_plate')->where('v2.status','active');
-            })
-            ->selectRaw("COALESCE(p.vehicle_id, v2.id) as vid, DAY(p.date_payment) as d")
-            ->whereIn(DB::raw('UPPER(p.type)'), ['PAGO','RETRASO'])
-            ->whereNotNull('p.date_payment')
-            ->whereBetween('p.date_payment', [$start->toDateString(), $end->toDateString()])
-            ->whereRaw('DAYOFWEEK(p.date_payment) <> 1')
-            ->groupBy('vid','d')
-            ->get();
+        // T.Deuda — misma lógica que la vista
 
-        $paidByVid = [];
-        foreach ($paidDays as $pd) {
-            $paidByVid[(int)$pd->vid][(int)$pd->d] = true;
+        // 1) Fechas con pago por vehículo
+        $paidDatesByVid = [];
+        $paidDatesRaw = DB::table($this->paymentsTable)
+            ->selectRaw("vehicle_id as vid, DATE(date_payment) as pd")
+            ->whereIn(DB::raw('UPPER(type)'), ['PAGO','RETRASO'])
+            ->whereNotNull('date_payment')
+            ->whereBetween('date_payment', [$startStr, $endStr])
+            ->groupBy('vid', 'pd')
+            ->get();
+        foreach ($paidDatesRaw as $r) {
+            $paidDatesByVid[(int)$r->vid][] = $r->pd;
         }
 
-        // Costos por día (sin domingos)
-        $costByVid = [];
-        $costs = DB::table($this->costTable)
-            ->selectRaw("vehicle_id, DAY(`date`) as d, SUM(amount) as a")
+        // 2) Fechas con salidas por vehículo (para DT)
+        $depDatesByVid = [];
+        $depDatesRaw = DB::table('departures')
+            ->selectRaw("vehicle_id as vid, DATE(date) as dd")
+            ->whereBetween('date', [$startStr, $endStr])
+            ->groupBy('vid', 'dd')
+            ->get();
+        foreach ($depDatesRaw as $r) {
+            $depDatesByVid[(int)$r->vid][] = $r->dd;
+        }
+
+        // 3) Costos totales del mes por vehículo (sin domingos)
+        $costTotalByVid = [];
+        $costTotals = DB::table($this->costTable)
+            ->selectRaw("vehicle_id, SUM(amount) as total_cost")
             ->whereYear('date', $start->year)
             ->whereMonth('date', $start->month)
-            ->whereRaw('DAYOFWEEK(`date`) <> 1')
-            ->groupBy('vehicle_id','d')
+            ->whereRaw("DAYOFWEEK(`date`) <> 1")
+            ->groupBy('vehicle_id')
             ->get();
-
-        foreach ($costs as $c) {
-            $costByVid[(int)$c->vehicle_id][(int)$c->d] = (float)$c->a;
+        foreach ($costTotals as $c) {
+            $costTotalByVid[(int)$c->vehicle_id] = (float)$c->total_cost;
         }
+
+        // 4) Aplicar reglas (misma lógica que la vista)
+        foreach ($map as $vid => &$row) {
+            $cond      = strtoupper(trim($row['condition'] ?? ''));
+            $paidTotal = (float)$row['month_amount'];
+            $kt        = (int)$row['dt_days'];
+
+            if ($cond === 'EX') {
+                $row['tdebt'] = 0.0;
+            } elseif ($cond === 'DT') {
+                $depDates = $depDatesByVid[$vid] ?? [];
+                if (empty($depDates)) {
+                    $row['tdebt'] = 0.0;
+                } else {
+                    $costOnDepDays = (float) DB::table($this->costTable)
+                        ->where('vehicle_id', $vid)
+                        ->whereYear('date', $start->year)
+                        ->whereMonth('date', $start->month)
+                        ->whereIn('date', $depDates)
+                        ->whereRaw("DAYOFWEEK(`date`) <> 1")
+                        ->sum('amount');
+                    $row['tdebt'] = round(max(0.0, $costOnDepDays - $paidTotal), 2);
+                }
+            } elseif ($cond === 'GN') {
+                $paidDates = $paidDatesByVid[$vid] ?? [];
+                $q = DB::table($this->costTable)
+                    ->where('vehicle_id', $vid)
+                    ->whereYear('date', $start->year)
+                    ->whereMonth('date', $start->month)
+                    ->whereRaw("DAYOFWEEK(`date`) <> 1");
+                if (!empty($paidDates)) {
+                    $q->whereNotIn('date', $paidDates);
+                }
+                $row['tdebt'] = round((float) $q->sum('amount'), 2);
+            } elseif ($cond === 'EX5') {
+                $dnt = $laborables - $kt;
+                if (($dnt - 5) <= 0) {
+                    $row['tdebt'] = 0.0;
+                } else {
+                    $costTotal = $costTotalByVid[$vid] ?? 0.0;
+                    $costDias = 0;
+                    if (isset($costTotalByVid[$vid])) {
+                        $costDias = (int) DB::table($this->costTable)
+                            ->where('vehicle_id', $vid)
+                            ->whereYear('date', $start->year)
+                            ->whereMonth('date', $start->month)
+                            ->whereRaw("DAYOFWEEK(`date`) <> 1")
+                            ->count();
+                    }
+                    $costUnit = $costDias > 0 ? round($costTotal / $costDias, 2) : 0;
+                    $row['tdebt'] = round(($dnt - 5) * $costUnit, 2);
+                }
+            } else {
+                // Otros: misma lógica que GN
+                $paidDates = $paidDatesByVid[$vid] ?? [];
+                $q = DB::table($this->costTable)
+                    ->where('vehicle_id', $vid)
+                    ->whereYear('date', $start->year)
+                    ->whereMonth('date', $start->month)
+                    ->whereRaw("DAYOFWEEK(`date`) <> 1");
+                if (!empty($paidDates)) {
+                    $q->whereNotIn('date', $paidDates);
+                }
+                $row['tdebt'] = round((float) $q->sum('amount'), 2);
+            }
+        }
+        unset($row);
 
         // Construcción de filas + totales
         $sumPrevDebt = $sumPrevExo = $sumPrevPaid = 0.0;
@@ -395,28 +469,6 @@ class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, With
         foreach ($map as $vid => $r) {
             $item++;
 
-            $cond = strtoupper(trim($r['condition'] ?? ''));
-            $isEX = str_starts_with($cond, 'EX');
-            $isDT = ($cond === 'DT');
-
-            // separar costos
-            $costOnPaid = 0.0; $costOnUnpaid = 0.0;
-            if (isset($costByVid[$vid])) {
-                foreach ($costByVid[$vid] as $day => $amt) {
-                    if (isset($paidByVid[$vid][$day])) $costOnPaid += (float)$amt;
-                    else                                $costOnUnpaid += (float)$amt;
-                }
-            }
-
-            if ($isEX) {
-                $tdebt = 0.0;
-            } elseif ($isDT) {
-                $tdebt = max(0.0, $costOnPaid - (float)$r['month_amount']);
-            } else {
-                $tdebt = $costOnUnpaid;
-            }
-            $tdebt = round($tdebt, 2);
-
             $this->rows[] = [
                 $item,
                 (string)$r['order'],
@@ -428,8 +480,8 @@ class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, With
                 $laborables,
                 (int)$r['dt_days'],
                 (int)$r['dnt_days'],
-                $cond ?: '-',
-                $tdebt,
+                strtoupper(trim($r['condition'] ?? '')) ?: '-',
+                round((float)$r['tdebt'], 2),
             ];
 
             $sumPrevDebt += (float)$r['prev_debt'];
@@ -438,7 +490,7 @@ class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, With
             $sumMonth    += (float)$r['month_amount'];
             $sumDt       += (int)$r['dt_days'];
             $sumDnt      += (int)$r['dnt_days'];
-            $sumTdebt    += $tdebt;
+            $sumTdebt    += (float)$r['tdebt'];
         }
 
         $this->footer1 = [
