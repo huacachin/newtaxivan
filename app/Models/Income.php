@@ -49,17 +49,21 @@ class Income extends Model
     {
         if ($user->hasRole('director')) return true;
         if (!$user->hasAnyRole(['gerente', 'administrador'])) return false;
-        $date = $this->date ?? $this->created_at?->timezone(config('app.timezone'))->toDateString();
-        if ($date !== now(config('app.timezone'))->toDateString()) return false;
-        return true;
+        $today = now(config('app.timezone'))->toDateString();
+        $date  = $this->date instanceof \Carbon\Carbon
+            ? $this->date->toDateString()
+            : ($this->created_at?->timezone(config('app.timezone'))->toDateString());
+        return $date === $today;
     }
 
     public function canBeDeletedBy(User $user): bool
     {
         if ($user->hasRole('director')) return true;
         if (!$user->hasAnyRole(['gerente', 'administrador'])) return false;
-        $date = $this->date ?? $this->created_at?->timezone(config('app.timezone'))->toDateString();
-        if ($date !== now(config('app.timezone'))->toDateString()) return false;
-        return true;
+        $today = now(config('app.timezone'))->toDateString();
+        $date  = $this->date instanceof \Carbon\Carbon
+            ? $this->date->toDateString()
+            : ($this->created_at?->timezone(config('app.timezone'))->toDateString());
+        return $date === $today;
     }
 }

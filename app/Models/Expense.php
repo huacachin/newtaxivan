@@ -56,7 +56,9 @@ class Expense extends Model
     {
         if ($user->hasRole('director')) return true;
         $today = now(config('app.timezone'))->toDateString();
-        $date  = $this->date ?? $this->created_at?->timezone(config('app.timezone'))->toDateString();
+        $date  = $this->date instanceof \Carbon\Carbon
+            ? $this->date->toDateString()
+            : ($this->created_at?->timezone(config('app.timezone'))->toDateString());
         if ($user->hasAnyRole(['gerente', 'administrador'])) {
             return $date === $today;
         }
@@ -70,7 +72,9 @@ class Expense extends Model
     {
         if ($user->hasRole('director')) return true;
         $today = now(config('app.timezone'))->toDateString();
-        $date  = $this->date ?? $this->created_at?->timezone(config('app.timezone'))->toDateString();
+        $date  = $this->date instanceof \Carbon\Carbon
+            ? $this->date->toDateString()
+            : ($this->created_at?->timezone(config('app.timezone'))->toDateString());
         if ($user->hasAnyRole(['gerente', 'administrador'])) {
             return $date === $today;
         }
