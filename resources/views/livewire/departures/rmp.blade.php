@@ -181,10 +181,30 @@
                                     </td>
 
                                     @for($d = 1; $d <= $daysInMonth; $d++)
-                                        <td class="green_modules">{{ $r['days'][$d] ?? 0 }}</td>
+                                        @php
+                                            $cnt = $r['days'][$d] ?? 0;
+                                            $dayDate = sprintf('%04d-%02d-%02d', $year, $month, $d);
+                                        @endphp
+                                        <td class="green_modules">
+                                            @if($cnt > 0)
+                                                <a href="{{ route('departures.index', ['fromDate' => $dayDate, 'toDate' => $dayDate]) }}" target="_blank">{{ $cnt }}</a>
+                                            @else
+                                                0
+                                            @endif
+                                        </td>
                                     @endfor
 
-                                    <td>{{ $r['total'] }}</td>
+                                    @php
+                                        $mStart = sprintf('%04d-%02d-01', $year, $month);
+                                        $mEnd = sprintf('%04d-%02d-%02d', $year, $month, $daysInMonth);
+                                    @endphp
+                                    <td>
+                                        @if($r['total'] > 0)
+                                            <a href="{{ route('departures.index', ['fromDate' => $mStart, 'toDate' => $mEnd]) }}" target="_blank">{{ $r['total'] }}</a>
+                                        @else
+                                            0
+                                        @endif
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
@@ -201,21 +221,35 @@
                                 <td rowspan="3" colspan="2">TOTAL GENERAL</td>
                                 <td>T.E</td>
                                 @for($d=1; $d<=$daysInMonth; $d++)
-                                    <td>{{ $totalsTE[$d] }}</td>
+                                    @php $dayDate = sprintf('%04d-%02d-%02d', $year, $month, $d); @endphp
+                                    <td>
+                                        @if(($totalsTE[$d] ?? 0) > 0)
+                                            <a href="{{ route('departures.index', ['fromDate' => $dayDate, 'toDate' => $dayDate]) }}" target="_blank">{{ $totalsTE[$d] }}</a>
+                                        @else
+                                            0
+                                        @endif
+                                    </td>
                                 @endfor
                                 <td>{{ $grandTE }}</td>
                             </tr>
                             <tr class="striped-cond">
                                 <td>T.A</td>
                                 @for($d=1; $d<=$daysInMonth; $d++)
-                                    <td class="day-col">{{ $totalsTA[$d] }}</td>
+                                    @php $dayDate = sprintf('%04d-%02d-%02d', $year, $month, $d); @endphp
+                                    <td class="day-col">
+                                        @if(($totalsTA[$d] ?? 0) > 0)
+                                            <a href="{{ route('departures.index', ['fromDate' => $dayDate, 'toDate' => $dayDate]) }}" target="_blank">{{ $totalsTA[$d] }}</a>
+                                        @else
+                                            0
+                                        @endif
+                                    </td>
                                 @endfor
                                 <td>{{ $grandTA }}</td>
                             </tr>
                             <tr>
                                 <td>V.T</td>
                                 @for($d=1; $d<=$daysInMonth; $d++)
-                                    <td class="day-col">{{ $totalsVT[$d] }}</td>
+                                    <td class="day-col">{{ $totalsVT[$d] ?? 0 }}</td>
                                 @endfor
                                 <td>{{ $grandVT }}</td>
                             </tr>
