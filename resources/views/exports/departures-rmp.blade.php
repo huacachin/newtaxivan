@@ -1,9 +1,9 @@
 @php
-    $ds  = 'border:1px dotted #808080;border-left:1px solid #000;border-right:1px solid #000;text-align:center;vertical-align:middle;font-size:10pt;';
-    $hdr = 'background:#2874A6;color:white;font-weight:bold;text-align:center;vertical-align:middle;font-size:10pt;border:1px solid #000;';
-    $sun = 'background:#FF0000;color:white;font-weight:bold;text-align:center;vertical-align:middle;font-size:10pt;border:1px solid #000;';
-    $ftr = 'background:#CEE7FF;font-weight:bold;text-align:center;vertical-align:middle;font-size:10pt;border:1px solid #000;';
-    $ttl = 'font-weight:bold;color:red;text-align:center;vertical-align:middle;font-size:11pt;border:1px solid #000;';
+    $ds  = 'border:1px dotted #808080;border-left:1px solid #000;border-right:1px solid #000;text-align:center;vertical-align:middle;font-size:9pt;';
+    $hdr = 'background:#2874A6;color:white;font-weight:bold;text-align:center;vertical-align:middle;font-size:9pt;border:1px solid #000;';
+    $sun = 'background:#FF0000;color:white;font-weight:bold;text-align:center;vertical-align:middle;font-size:9pt;border:1px solid #000;';
+    $ftr = 'background:#CEE7FF;font-weight:bold;text-align:center;vertical-align:middle;font-size:9pt;border:1px solid #000;';
+    $ttl = 'font-weight:bold;color:red;text-align:center;vertical-align:middle;font-size:10pt;border:1px solid #000;';
     $totalCols = 3 + $daysInMonth + 1;
 @endphp
 <html>
@@ -11,28 +11,33 @@
 <body topmargin="0" leftmargin="0" rightmargin="0" bottommargin="0">
 
 <table cellspacing="0" border="1" style="border-collapse:collapse;">
+    <col width="80">
+    <col width="70">
+    <col width="40">
+    @for($d = 1; $d <= $daysInMonth; $d++)
+        <col width="25">
+    @endfor
+    <col width="30">
+
     <tr>
         <td colspan="{{ $totalCols }}" style="{{ $ttl }}">
             REPORTE MENSUAL POR PARADERO V.T. {{ mb_strtoupper($monthName) }} {{ $year }}
         </td>
     </tr>
     <tr>
-        <th style="{{ $hdr }}width:10;">CONTROLADOR</th>
-        <th style="{{ $hdr }}width:8;">PARADERO</th>
-        <th style="{{ $hdr }}width:4;">TIPO</th>
+        <th style="{{ $hdr }}">CONTROLADOR</th>
+        <th style="{{ $hdr }}">PARADERO</th>
+        <th style="{{ $hdr }}">TIPO</th>
         @for($d = 1; $d <= $daysInMonth; $d++)
-            <th style="{{ $sundays[$d] ? $sun : $hdr }}width:3;">{{ $d }}</th>
+            <th style="{{ $sundays[$d] ? $sun : $hdr }}">{{ $d }}</th>
         @endfor
-        <th style="{{ $hdr }}width:3;">V.T</th>
+        <th style="{{ $hdr }}">V.T</th>
     </tr>
 
     @php
-        $prevController = null;
-        $prevStop = null;
         $controllerSpans = [];
         $stopSpans = [];
 
-        // Calcular rowspans
         $rowCount = count($rows);
         $i = 0;
         while ($i < $rowCount) {
@@ -72,7 +77,6 @@
         </tr>
     @endforeach
 
-    {{-- Totales --}}
     <tr>
         <td colspan="2" rowspan="3" style="{{ $hdr }}">TOTAL GENERAL</td>
         <td style="{{ $ftr }}">T.E</td>

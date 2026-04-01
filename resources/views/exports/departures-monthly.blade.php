@@ -1,10 +1,14 @@
 @php
-    $ds  = 'border:1px dotted #808080;border-left:1px solid #000;border-right:1px solid #000;text-align:center;vertical-align:middle;font-size:10pt;';
-    $hdr = 'background:#2874A6;color:white;font-weight:bold;text-align:center;vertical-align:middle;font-size:10pt;border:1px solid #000;';
-    $sun = 'background:#FF0000;color:white;font-weight:bold;text-align:center;vertical-align:middle;font-size:10pt;border:1px solid #000;';
-    $ftr = 'background:#CEE7FF;font-weight:bold;text-align:center;vertical-align:middle;font-size:10pt;border:1px solid #000;';
-    $ttl = 'font-weight:bold;color:red;text-align:center;vertical-align:middle;font-size:11pt;border:1px solid #000;';
+    $ds  = 'border:1px dotted #808080;border-left:1px solid #000;border-right:1px solid #000;text-align:center;vertical-align:middle;font-size:9pt;';
+    $hdr = 'background:#2874A6;color:white;font-weight:bold;text-align:center;vertical-align:middle;font-size:9pt;border:1px solid #000;';
+    $sun = 'background:#FF0000;color:white;font-weight:bold;text-align:center;vertical-align:middle;font-size:9pt;border:1px solid #000;';
+    $ftr = 'background:#CEE7FF;font-weight:bold;text-align:center;vertical-align:middle;font-size:9pt;border:1px solid #000;';
+    $ttl = 'font-weight:bold;color:red;text-align:center;vertical-align:middle;font-size:10pt;border:1px solid #000;';
     $totalCols = 2 + $daysInMonth + 1;
+
+    $colDefs = '<col width="25"><col width="55">';
+    for ($x = 1; $x <= $daysInMonth; $x++) $colDefs .= '<col width="25">';
+    $colDefs .= '<col width="35">';
 @endphp
 <html>
 <head><meta charset="UTF-8"></head>
@@ -12,18 +16,19 @@
 
 {{-- ===== TABLA GENERAL ===== --}}
 <table cellspacing="0" border="1" style="border-collapse:collapse;">
+    {!! $colDefs !!}
     <tr>
         <td colspan="{{ $totalCols }}" style="{{ $ttl }}">
             REPORTE MENSUAL POR PLACA - V.T {{ mb_strtoupper($monthName) }} {{ $year }}
         </td>
     </tr>
     <tr>
-        <th style="{{ $hdr }}width:3;">Item</th>
-        <th style="{{ $hdr }}width:6;">Placa</th>
+        <th style="{{ $hdr }}">Item</th>
+        <th style="{{ $hdr }}">Placa</th>
         @for($d = 1; $d <= $daysInMonth; $d++)
-            <th style="{{ $sundays[$d] ? $sun : $hdr }}width:3;">{{ $d }}</th>
+            <th style="{{ $sundays[$d] ? $sun : $hdr }}">{{ $d }}</th>
         @endfor
-        <th style="{{ $hdr }}width:4;">T. Salida</th>
+        <th style="{{ $hdr }}">T. Salida</th>
     </tr>
 
     @php $i = 0; @endphp
@@ -60,18 +65,19 @@
 {{-- ===== TABLAS POR SEDE ===== --}}
 @foreach($hqTables as $hqId => $hq)
 <table cellspacing="0" border="1" style="border-collapse:collapse;">
+    {!! $colDefs !!}
     <tr>
         <td colspan="{{ $totalCols }}" style="{{ $ttl }}">
             {{ mb_strtoupper($hq['name']) }} - V.T {{ mb_strtoupper($monthName) }} {{ $year }}
         </td>
     </tr>
     <tr>
-        <th style="{{ $hdr }}width:3;">Item</th>
-        <th style="{{ $hdr }}width:6;">Placa</th>
+        <th style="{{ $hdr }}">Item</th>
+        <th style="{{ $hdr }}">Placa</th>
         @for($d = 1; $d <= $daysInMonth; $d++)
-            <th style="{{ $sundays[$d] ? $sun : $hdr }}width:3;">{{ $d }}</th>
+            <th style="{{ $sundays[$d] ? $sun : $hdr }}">{{ $d }}</th>
         @endfor
-        <th style="{{ $hdr }}width:4;">T. Salida</th>
+        <th style="{{ $hdr }}">T. Salida</th>
     </tr>
 
     @php $hi = 0; @endphp
@@ -109,15 +115,18 @@
 {{-- ===== RESUMEN POR SEDE ===== --}}
 @if(count($hqSummary) > 0)
 <table cellspacing="0" border="1" style="border-collapse:collapse;">
+    <col width="120">
+    <col width="80">
+    <col width="80">
     <tr>
         <td colspan="3" style="{{ $ttl }}">
             RESUMEN POR SEDE - {{ mb_strtoupper($monthName) }} {{ $year }}
         </td>
     </tr>
     <tr>
-        <th style="{{ $hdr }}width:20;">Sede</th>
-        <th style="{{ $hdr }}width:10;">Total Vueltas</th>
-        <th style="{{ $hdr }}width:10;">Total V.T</th>
+        <th style="{{ $hdr }}">Sede</th>
+        <th style="{{ $hdr }}">Total Vueltas</th>
+        <th style="{{ $hdr }}">Total V.T</th>
     </tr>
     @foreach($hqSummary as $s)
         <tr>
