@@ -139,13 +139,13 @@
                         <a class="btn btn-sm btn-success" href="{{ route('departures.add') }}" target="_blank">
                             <i class="ti ti-square-plus f-s-12"></i> Nuevo
                         </a>
-                        <a href="{{ route('departures.monthly') }}" class="btn btn-sm btn-primary">
+                        <a href="{{ route('departures.monthly') }}" class="btn btn-sm btn-primary" target="_blank">
                             <i class="ti ti-report-analytics f-s-12"></i> Mensual
                         </a>
-                        <a href="{{ route('departures.rmp') }}" class="btn btn-sm btn-primary">
+                        <a href="{{ route('departures.rmp') }}" class="btn btn-sm btn-primary" target="_blank">
                             <i class="ti ti-report-analytics f-s-12"></i> RMP V.T
                         </a>
-                        <a href="{{ route('departures.stats') }}" class="btn btn-sm btn-primary">
+                        <a href="{{ route('departures.stats') }}" class="btn btn-sm btn-primary" target="_blank">
                             <i class="ti ti-report-analytics f-s-12"></i> Estadis.
                         </a>
 
