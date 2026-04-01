@@ -55,18 +55,28 @@ class Expense extends Model
     public function canBeEditedBy(User $user): bool
     {
         if ($user->hasRole('director')) return true;
-        if (!$user->hasAnyRole(['gerente', 'administrador'])) return false;
-        $date = $this->date ?? $this->created_at?->timezone(config('app.timezone'))->toDateString();
-        if ($date !== now(config('app.timezone'))->toDateString()) return false;
-        return true;
+        $today = now(config('app.timezone'))->toDateString();
+        $date  = $this->date ?? $this->created_at?->timezone(config('app.timezone'))->toDateString();
+        if ($user->hasAnyRole(['gerente', 'administrador'])) {
+            return $date === $today;
+        }
+        if ($user->hasRole('controlador')) {
+            return $date === $today && $this->user_id === $user->id;
+        }
+        return false;
     }
 
     public function canBeDeletedBy(User $user): bool
     {
         if ($user->hasRole('director')) return true;
-        if (!$user->hasAnyRole(['gerente', 'administrador'])) return false;
-        $date = $this->date ?? $this->created_at?->timezone(config('app.timezone'))->toDateString();
-        if ($date !== now(config('app.timezone'))->toDateString()) return false;
-        return true;
+        $today = now(config('app.timezone'))->toDateString();
+        $date  = $this->date ?? $this->created_at?->timezone(config('app.timezone'))->toDateString();
+        if ($user->hasAnyRole(['gerente', 'administrador'])) {
+            return $date === $today;
+        }
+        if ($user->hasRole('controlador')) {
+            return $date === $today && $this->user_id === $user->id;
+        }
+        return false;
     }
 }
