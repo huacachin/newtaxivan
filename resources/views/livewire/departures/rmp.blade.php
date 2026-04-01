@@ -148,8 +148,7 @@
                             <thead class="text-center bg-primary">
                             <tr>
                                 <th>CONTROLADOR</th>
-                                <th>PARADERO</th>
-                                <th>TIPO</th>
+                                <th colspan="2">PARADERO</th>
                                 @for($d=1; $d<=$daysInMonth; $d++)
                                     @php $isSun = \Illuminate\Support\Carbon::create($year, $month, $d)->isSunday(); @endphp
                                     <th class="{{ $isSun ? 'bg-danger' : '' }}">{{ $d }}</th>
