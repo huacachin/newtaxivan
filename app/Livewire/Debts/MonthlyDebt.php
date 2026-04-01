@@ -141,7 +141,12 @@ class MonthlyDebt extends Component
         [$from, $to] = $this->monthRange();
 
         $q = DebtDay::query()
-            ->whereBetween('date', [$from, $to]);
+            ->whereBetween('date', [$from, $to])
+            ->whereExists(function ($sub) {
+                $sub->from('vehicles as v')
+                    ->whereColumn('v.id', 'debt_days.vehicle_id')
+                    ->where('v.status', 'active');
+            });
 
         // Filtro por condición
         if ($this->condition === 'Exonerado') {
