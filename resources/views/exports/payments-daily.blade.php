@@ -22,19 +22,19 @@
 <body topmargin="0" leftmargin="0" rightmargin="0" bottommargin="0">
 
 <table cellspacing="0" border="1" style="border-collapse:collapse;">
-    <col width="28">
-    <col width="58">
-    <col width="33">
+    <col width="31">
+    <col width="61">
+    <col width="36">
     @for($d = 1; $d <= $daysInMonth; $d++)
         <col width="35">
     @endfor
-    <col width="34">
-    <col width="49">
+    <col width="37">
+    <col width="52">
     @if($mode === 'Pago')
-        <col width="34">
-        <col width="49">
-        <col width="34">
-        <col width="49">
+        <col width="37">
+        <col width="52">
+        <col width="37">
+        <col width="52">
     @endif
 
     {{-- Título --}}
