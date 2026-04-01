@@ -33,7 +33,13 @@
       "Bash(for f:*)",
       "Bash(do php:*)",
       "Bash(done)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(do echo:*)",
+      "Bash(do)",
+      "Read(//Users/antonyalfredoculquicarranza/projects/laravel_taxivan/**)",
+      "Bash(echo \"OK: $f\")",
+      "Bash(echo \"FALTA: $f\")",
+      "Bash(grep:*)"
     ]
   }
 }

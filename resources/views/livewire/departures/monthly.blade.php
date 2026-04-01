@@ -66,14 +66,15 @@
                                 </div>
 
                                 <!-- Regresar -->
+                                <button class="btn btn-sm btn-dark flex-shrink-0 align-self-end" wire:click="$refresh">
+                                    <i class="ti ti-search f-s-12"></i>
+                                </button>
                                 <a href="{{ route('departures.index') }}"
                                    class="btn btn-sm btn-primary flex-shrink-0 align-self-end">
                                     <i class="ti ti-rotate-2 f-s-12"></i> Regresar
                                 </a>
 
-                                                                <button class="btn btn-sm btn-dark flex-shrink-0 align-self-end" wire:click="$refresh">
-                                    <i class="ti ti-search f-s-12"></i>
-                                </button>
+
 
                                 <!-- Exportar -->
                                 <a href="#"
