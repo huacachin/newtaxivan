@@ -271,6 +271,10 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithColumnWidths, Wi
 
                 // ===== Totales y total general =====
                 foreach ([$rSec1Total, $rSec2Total, $rGrand] as $ft) {
+                    // Combinar A-G para el label
+                    $s->mergeCells("A{$ft}:G{$ft}");
+
+                    // Fondo celeste solo de A a M
                     $s->getStyle("A{$ft}:M{$ft}")->applyFromArray([
                         'fill' => [
                             'fillType'   => Fill::FILL_SOLID,
@@ -292,6 +296,10 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithColumnWidths, Wi
                             ],
                         ],
                     ]);
+
+                    // Label alineado a la derecha
+                    $s->getStyle("A{$ft}:G{$ft}")->getAlignment()
+                        ->setHorizontal(Alignment::HORIZONTAL_RIGHT);
                 }
 
                 // ===== Números centrados en columnas H..M =====

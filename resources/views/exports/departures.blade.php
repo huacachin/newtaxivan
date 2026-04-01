@@ -70,15 +70,14 @@
     @endforelse
 
     {{-- Total sección 1 --}}
-    <tr style="background:#CEE7FF;">
-        <th></th><th></th><th></th><th></th><th></th><th></th>
-        <th><b>TOTAL</b></th>
-        <th>{{ number_format((int)($totals->times_total ?? 0)) }}</th>
-        <th>{{ number_format((int)($totals->times_total ?? 0)) }}</th>
-        <th>{{ number_format((float)($totals->price_total ?? 0), 2) }}</th>
-        <th>{{ number_format((int)($totals->passengers_total ?? 0)) }}</th>
-        <th>{{ number_format((float)($totals->passage_total ?? 0), 2) }}</th>
-        <th>{{ number_format((float)($totals->total_pasaje_total ?? 0), 2) }}</th>
+    <tr>
+        <th colspan="7" style="background:#CEE7FF;text-align:right;"><b>TOTAL</b></th>
+        <th style="background:#CEE7FF;">{{ number_format((int)($totals->times_total ?? 0)) }}</th>
+        <th style="background:#CEE7FF;">{{ number_format((int)($totals->times_total ?? 0)) }}</th>
+        <th style="background:#CEE7FF;">{{ number_format((float)($totals->price_total ?? 0), 2) }}</th>
+        <th style="background:#CEE7FF;">{{ number_format((int)($totals->passengers_total ?? 0)) }}</th>
+        <th style="background:#CEE7FF;">{{ number_format((float)($totals->passage_total ?? 0), 2) }}</th>
+        <th style="background:#CEE7FF;">{{ number_format((float)($totals->total_pasaje_total ?? 0), 2) }}</th>
     </tr>
 
     {{-- Título Apoyo --}}
@@ -139,27 +138,25 @@
     @endforelse
 
     {{-- Total Apoyo --}}
-    <tr style="background:#CEE7FF;">
-        <th></th><th></th><th></th><th></th><th></th><th></th>
-        <th><b>TOTAL</b></th>
-        <th>{{ number_format((int)($supTotals->times_total ?? 0)) }}</th>
-        <th>{{ number_format((int)($supTotals->times_total ?? 0)) }}</th>
-        <th>{{ number_format((float)($supTotals->price_total ?? 0), 2) }}</th>
-        <th>{{ number_format((int)($supTotals->passengers_total ?? 0)) }}</th>
-        <th>{{ number_format((float)($supTotals->passage_total ?? 0), 2) }}</th>
-        <th>{{ number_format((float)($supTotals->total_pasaje_total ?? 0), 2) }}</th>
+    <tr>
+        <th colspan="7" style="background:#CEE7FF;text-align:right;"><b>V.APOYO TOTAL</b></th>
+        <th style="background:#CEE7FF;">{{ number_format((int)($supTotals->times_total ?? 0)) }}</th>
+        <th style="background:#CEE7FF;">{{ number_format((int)($supTotals->times_total ?? 0)) }}</th>
+        <th style="background:#CEE7FF;">{{ number_format((float)($supTotals->price_total ?? 0), 2) }}</th>
+        <th style="background:#CEE7FF;">{{ number_format((int)($supTotals->passengers_total ?? 0)) }}</th>
+        <th style="background:#CEE7FF;">{{ number_format((float)($supTotals->passage_total ?? 0), 2) }}</th>
+        <th style="background:#CEE7FF;">{{ number_format((float)($supTotals->total_pasaje_total ?? 0), 2) }}</th>
     </tr>
 
     {{-- Total General --}}
-    <tr style="background:#CEE7FF;">
-        <th></th><th></th><th></th><th></th><th></th><th></th>
-        <th><b>TOTAL General</b></th>
-        <th>{{ number_format((int)($grand->times_total ?? 0)) }}</th>
-        <th>{{ number_format((int)($grand->times_total ?? 0)) }}</th>
-        <th>{{ number_format((float)($grand->price_total ?? 0), 2) }}</th>
-        <th>{{ number_format((int)($grand->passengers_total ?? 0)) }}</th>
-        <th>{{ number_format((float)($grand->passage_total ?? 0), 2) }}</th>
-        <th>{{ number_format((float)($grand->total_pasaje_total ?? 0), 2) }}</th>
+    <tr>
+        <th colspan="7" style="background:#CEE7FF;text-align:right;"><b>TOTAL GENERAL</b></th>
+        <th style="background:#CEE7FF;">{{ number_format((int)($grand->times_total ?? 0)) }}</th>
+        <th style="background:#CEE7FF;">{{ number_format((int)($grand->times_total ?? 0)) }}</th>
+        <th style="background:#CEE7FF;">{{ number_format((float)($grand->price_total ?? 0), 2) }}</th>
+        <th style="background:#CEE7FF;">{{ number_format((int)($grand->passengers_total ?? 0)) }}</th>
+        <th style="background:#CEE7FF;">{{ number_format((float)($grand->passage_total ?? 0), 2) }}</th>
+        <th style="background:#CEE7FF;">{{ number_format((float)($grand->total_pasaje_total ?? 0), 2) }}</th>
     </tr>
 
 </table>
