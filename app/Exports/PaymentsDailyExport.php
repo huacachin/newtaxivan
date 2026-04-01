@@ -50,7 +50,7 @@ class PaymentsDailyExport implements FromArray, WithHeadings, WithEvents, WithTi
 
     public function headings(): array
     {
-        $heads = ['Item', 'Placa', 'Cond.'];
+        $heads = ['Nº', 'Placa', 'Cond.'];
         for ($d = 1; $d <= $this->daysInMonth; $d++) $heads[] = (string)$d;
         $heads[] = 'Total (S/)';
         $heads[] = 'Días Pag.';
