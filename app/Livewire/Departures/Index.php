@@ -43,6 +43,12 @@ class Index extends Component
     public ?string $searchText = null;
 
     /**
+     * Filtro adicional por nombre de usuario (independiente de searchType).
+     * @var string|null
+     */
+    public ?string $searchUser = null;
+
+    /**
      * Fecha inicial del rango (YYYY-MM-DD).
      * @var string|null
      */
@@ -89,6 +95,7 @@ class Index extends Component
     protected $queryString = [
         'searchType' => ['except' => 1],
         'searchText' => ['except' => null],
+        'searchUser' => ['except' => null],
         'fromDate'   => ['except' => null],
         'toDate'     => ['except' => null],
         'groupMode'  => ['except' => false]
@@ -713,6 +720,12 @@ class Index extends Component
             }
         }
 
+        // Filtro adicional por nombre de usuario
+        $userTerm = trim((string)($this->searchUser ?? ''));
+        if ($userTerm !== '') {
+            $q->where('u.name', 'like', '%'.$userTerm.'%');
+        }
+
         // === INTEGRACIÓN ROLES/SEDES: admin ve todo; controller solo lo suyo
         if (!$this->isAdmin()) {
             $q->where('d.user_id', Auth::id());
@@ -800,6 +813,12 @@ class Index extends Component
                     else $q->where('h.name', 'like', '%'.$term.'%');
                     break;
             }
+        }
+
+        // Filtro adicional por nombre de usuario
+        $userTerm = trim((string)($this->searchUser ?? ''));
+        if ($userTerm !== '') {
+            $q->where('u.name', 'like', '%'.$userTerm.'%');
         }
 
         // === INTEGRACIÓN ROLES/SEDES: admin ve todo; controller solo lo suyo
