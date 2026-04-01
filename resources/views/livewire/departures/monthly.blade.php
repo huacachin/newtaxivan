@@ -119,7 +119,7 @@
                                             $count = $row['daily'][$d] ?? 0;
                                             $dayDate = sprintf('%04d-%02d-%02d', $year, $month, $d);
                                         @endphp
-                                        <td>
+                                        <td class="green_modules">
                                             @if($count > 0)
                                                 <a href="{{ route('departures.index', ['searchType' => 1, 'searchText' => $row['plate'], 'fromDate' => $dayDate, 'toDate' => $dayDate]) }}" target="_blank">{{ $count }}</a>
                                             @else
@@ -216,7 +216,7 @@
                                             $count = $row['daily'][$d] ?? 0;
                                             $dayDate = sprintf('%04d-%02d-%02d', $year, $month, $d);
                                         @endphp
-                                        <td>
+                                        <td class="green_modules">
                                             @if($count > 0)
                                                 <a href="{{ route('departures.index', ['searchType' => 1, 'searchText' => $row['plate'], 'fromDate' => $dayDate, 'toDate' => $dayDate]) }}" target="_blank">{{ $count }}</a>
                                             @else
