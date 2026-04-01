@@ -147,20 +147,41 @@
 
                                     {{-- Días --}}
                                     @foreach($days as $d)
-                                        @php $val = $r['days'][$d] ?? 0; @endphp
+                                        @php
+                                            $val = $r['days'][$d] ?? 0;
+                                            $dayDate = sprintf('%04d-%02d-%02d', $year, $month, $d);
+                                            $linkDay = route('departures.index', ['searchType' => 3, 'searchText' => $r['stop'], 'searchUser' => $r['controller'], 'fromDate' => $dayDate, 'toDate' => $dayDate]);
+                                        @endphp
                                         @if($r['type'] === 'S/')
-                                            <td class="title-modules f-w-600">{{ $val != 0 ? number_format($val, 2) : '' }}</td>
+                                            <td class="title-modules f-w-600">
+                                                @if($val != 0)
+                                                    <a href="{{ $linkDay }}" target="_blank">{{ number_format($val, 2) }}</a>
+                                                @endif
+                                            </td>
                                         @else
-                                            <td class="green_modules">{{ $val != 0 ? number_format($val) : '' }}</td>
+                                            <td class="green_modules">
+                                                @if($val != 0)
+                                                    <a href="{{ $linkDay }}" target="_blank">{{ number_format($val) }}</a>
+                                                @endif
+                                            </td>
                                         @endif
                                     @endforeach
 
                                     {{-- Totales por fila --}}
+                                    @php
+                                        $mStart = sprintf('%04d-%02d-01', $year, $month);
+                                        $mEnd = sprintf('%04d-%02d-%02d', $year, $month, $daysInMonth);
+                                        $linkMonth = route('departures.index', ['searchType' => 3, 'searchText' => $r['stop'], 'searchUser' => $r['controller'], 'fromDate' => $mStart, 'toDate' => $mEnd]);
+                                    @endphp
                                     <td>
-                                        {{ $r['total_sal'] !== null ? number_format($r['total_sal']) : '' }}
+                                        @if($r['total_sal'] !== null && $r['total_sal'] > 0)
+                                            <a href="{{ $linkMonth }}" target="_blank">{{ number_format($r['total_sal']) }}</a>
+                                        @endif
                                     </td>
                                     <td class="title-modules">
-                                        {{ $r['total_soles'] !== null ? number_format($r['total_soles'], 2) : '' }}
+                                        @if($r['total_soles'] !== null && $r['total_soles'] > 0)
+                                            <a href="{{ $linkMonth }}" target="_blank">{{ number_format($r['total_soles'], 2) }}</a>
+                                        @endif
                                     </td>
                                 </tr>
                             @empty
@@ -182,18 +203,39 @@
                                     <td>Salidas</td>
 
                                     @foreach($days as $d)
-                                        @php $vs = $totalsSalidas[$d] ?? 0; @endphp
-                                        <td class="striped-cond">{{ $vs != 0 ? number_format($vs) : '' }}</td>
+                                        @php
+                                            $vs = $totalsSalidas[$d] ?? 0;
+                                            $dayDate = sprintf('%04d-%02d-%02d', $year, $month, $d);
+                                            $linkDayAll = route('departures.index', ['fromDate' => $dayDate, 'toDate' => $dayDate]);
+                                        @endphp
+                                        <td class="striped-cond">
+                                            @if($vs != 0)
+                                                <a href="{{ $linkDayAll }}" target="_blank">{{ number_format($vs) }}</a>
+                                            @endif
+                                        </td>
                                     @endforeach
 
-                                    {{-- 🔹 Total Salidas (rowspan 2) --}}
-                                    <td  rowspan="2">
-                                        {{ number_format($grandSalidas) }}
+                                    {{-- Total Salidas (rowspan 2) --}}
+                                    @php
+                                        $mStart = sprintf('%04d-%02d-01', $year, $month);
+                                        $mEnd = sprintf('%04d-%02d-%02d', $year, $month, $daysInMonth);
+                                        $linkMonthAll = route('departures.index', ['fromDate' => $mStart, 'toDate' => $mEnd]);
+                                    @endphp
+                                    <td rowspan="2">
+                                        @if($grandSalidas > 0)
+                                            <a href="{{ $linkMonthAll }}" target="_blank">{{ number_format($grandSalidas) }}</a>
+                                        @else
+                                            0
+                                        @endif
                                     </td>
 
-                                    {{-- 🔹 Total S/ (rowspan 2) --}}
-                                    <td  rowspan="2">
-                                        {{ number_format($grandMonto, 2) }}
+                                    {{-- Total S/ (rowspan 2) --}}
+                                    <td rowspan="2">
+                                        @if($grandMonto > 0)
+                                            <a href="{{ $linkMonthAll }}" target="_blank">{{ number_format($grandMonto, 2) }}</a>
+                                        @else
+                                            0
+                                        @endif
                                     </td>
                                 </tr>
 
@@ -202,8 +244,16 @@
                                     <td>S/</td>
 
                                     @foreach($days as $d)
-                                        @php $vm = $totalsMonto[$d] ?? 0; @endphp
-                                        <td>{{ $vm != 0 ? number_format($vm, 2) : '' }}</td>
+                                        @php
+                                            $vm = $totalsMonto[$d] ?? 0;
+                                            $dayDate = sprintf('%04d-%02d-%02d', $year, $month, $d);
+                                            $linkDayAll = route('departures.index', ['fromDate' => $dayDate, 'toDate' => $dayDate]);
+                                        @endphp
+                                        <td>
+                                            @if($vm != 0)
+                                                <a href="{{ $linkDayAll }}" target="_blank">{{ number_format($vm, 2) }}</a>
+                                            @endif
+                                        </td>
                                     @endforeach
                                     {{-- OJO: aquí ya NO agregamos celdas al final porque las de arriba están con rowspan --}}
                                 </tr>
