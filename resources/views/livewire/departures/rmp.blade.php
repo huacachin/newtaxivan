@@ -187,7 +187,7 @@
                                         @endphp
                                         <td class="green_modules">
                                             @if($cnt > 0)
-                                                <a href="{{ route('departures.index', ['fromDate' => $dayDate, 'toDate' => $dayDate]) }}" target="_blank">{{ $cnt }}</a>
+                                                <a href="{{ route('departures.index', ['searchType' => 3, 'searchText' => $r['stop'], 'fromDate' => $dayDate, 'toDate' => $dayDate]) }}" target="_blank">{{ $cnt }}</a>
                                             @else
                                                 0
                                             @endif
@@ -200,7 +200,7 @@
                                     @endphp
                                     <td>
                                         @if($r['total'] > 0)
-                                            <a href="{{ route('departures.index', ['fromDate' => $mStart, 'toDate' => $mEnd]) }}" target="_blank">{{ $r['total'] }}</a>
+                                            <a href="{{ route('departures.index', ['searchType' => 3, 'searchText' => $r['stop'], 'fromDate' => $mStart, 'toDate' => $mEnd]) }}" target="_blank">{{ $r['total'] }}</a>
                                         @else
                                             0
                                         @endif
@@ -222,27 +222,14 @@
                                 <td>T.E</td>
                                 @for($d=1; $d<=$daysInMonth; $d++)
                                     @php $dayDate = sprintf('%04d-%02d-%02d', $year, $month, $d); @endphp
-                                    <td>
-                                        @if(($totalsTE[$d] ?? 0) > 0)
-                                            <a href="{{ route('departures.index', ['fromDate' => $dayDate, 'toDate' => $dayDate]) }}" target="_blank">{{ $totalsTE[$d] }}</a>
-                                        @else
-                                            0
-                                        @endif
-                                    </td>
+                                    <td>{{ $totalsTE[$d] ?? 0 }}</td>
                                 @endfor
                                 <td>{{ $grandTE }}</td>
                             </tr>
                             <tr class="striped-cond">
                                 <td>T.A</td>
                                 @for($d=1; $d<=$daysInMonth; $d++)
-                                    @php $dayDate = sprintf('%04d-%02d-%02d', $year, $month, $d); @endphp
-                                    <td class="day-col">
-                                        @if(($totalsTA[$d] ?? 0) > 0)
-                                            <a href="{{ route('departures.index', ['fromDate' => $dayDate, 'toDate' => $dayDate]) }}" target="_blank">{{ $totalsTA[$d] }}</a>
-                                        @else
-                                            0
-                                        @endif
-                                    </td>
+                                    <td class="day-col">{{ $totalsTA[$d] ?? 0 }}</td>
                                 @endfor
                                 <td>{{ $grandTA }}</td>
                             </tr>
