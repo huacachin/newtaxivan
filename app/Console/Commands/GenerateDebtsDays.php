@@ -133,9 +133,6 @@ class GenerateDebtsDays extends Command
             $plate = (string)$v->plate;
             $cond  = strtoupper(trim($v->condition ?? ''));
 
-            // EX: se excluye completamente (legacy no lo inserta)
-            if ($cond === 'EX') continue;
-
             // Fecha de inicio: si entry_date está en el mismo mes/año, empezar desde ese día
             $startDay = 1;
             if ($v->entry_date) {
