@@ -37,7 +37,7 @@ class ExpensesExport implements
     public function query(): Builder
     {
         $q = Expense::query()
-            ->with(['user:id,name'])
+            ->with(['user:id,username'])
             ->orderBy('date')
             ->orderBy('id');
 
@@ -99,7 +99,7 @@ class ExpensesExport implements
             $row->reason,
             $row->detail,
             is_null($row->total) ? null : (float)$row->total,
-            optional($row->user)->name,
+            optional($row->user)->username,
             $row->in_charge,
         ];
     }
@@ -116,7 +116,7 @@ class ExpensesExport implements
                 'reason'    => $row->reason,
                 'detail'    => $row->detail,
                 'total'     => $row->total,
-                'user'      => optional($row->user)->name,
+                'user'      => optional($row->user)->username,
                 'in_charge' => $row->in_charge,
             ];
         }
