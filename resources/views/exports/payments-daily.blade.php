@@ -5,7 +5,7 @@
     $ftr  = 'background:#2874A6;color:white;font-weight:bold;text-align:center;vertical-align:middle;font-size:9pt;border:1px solid #000;white-space:nowrap;';
     $ttl  = 'font-weight:bold;color:red;text-align:center;vertical-align:middle;font-size:10pt;border:1px solid #000;white-space:nowrap;';
     $grey = 'background:#D0CECE;text-align:center;vertical-align:middle;font-size:9pt;border:1px solid #000;white-space:nowrap;';
-    $paid = 'background:green;color:white;font-weight:600;text-align:right;font-size:9pt;border:1px solid #000;white-space:nowrap;';
+    $paid = 'background:green;color:white;font-weight:600;text-align:center;font-size:9pt;border:1px solid #000;white-space:nowrap;';
     $zero = 'background:#FF0000;text-align:center;font-size:9pt;border:1px solid #000;white-space:nowrap;';
     $sunC = 'background:#FFFFFF;text-align:center;font-size:9pt;border:1px solid #000;white-space:nowrap;';
 
@@ -23,8 +23,8 @@
 
 <table cellspacing="0" border="1" style="border-collapse:collapse;">
     <col width="31">
-    <col width="61">
-    <col width="36">
+    <col width="64">
+    <col width="39">
     @for($d = 1; $d <= $daysInMonth; $d++)
         <col width="35">
     @endfor
@@ -46,7 +46,7 @@
 
     {{-- Header fila 1 --}}
     <tr>
-        <th rowspan="2" style="{{ $hdr }}">Item</th>
+        <th rowspan="2" style="{{ $hdr }}">Nº</th>
         <th rowspan="2" style="{{ $hdr }}">Placa</th>
         <th rowspan="2" style="{{ $hdr }}">Cond.</th>
         @for($d = 1; $d <= $daysInMonth; $d++)
