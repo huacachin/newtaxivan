@@ -53,7 +53,7 @@
     @for($d = 1; $d <= $daysInMonth; $d++)
         <col width="35">
     @endfor
-    <col width="50">
+    <col width="53">
 
     <tr>
         <td colspan="{{ $totalCols }}" style="{{ $ttl }}">
