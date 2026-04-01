@@ -101,7 +101,22 @@ class GenerateDebtsDays extends Command
             $costByVidDate[(int)$r->vehicle_id][$r->date] = (float)$r->amount;
         }
 
-        // ===== 5) Borrar previos =====
+        // ===== 5) Preservar exoneraciones/amortizaciones existentes =====
+        $this->line('- Preservando exoneraciones y amortizaciones...');
+        $prevData = DB::table('debt_days')
+            ->whereYear('date', $year)
+            ->whereMonth('date', $month)
+            ->where(function ($q) {
+                $q->where('exonerated', '>', 0)
+                  ->orWhere('amortized', '>', 0)
+                  ->orWhereNotNull('detail_exonerated');
+            })
+            ->get(['vehicle_id', 'exonerated', 'detail_exonerated', 'amortized'])
+            ->keyBy('vehicle_id');
+
+        $this->line("  Encontrados: " . $prevData->count() . " registros con exoneración/amortización");
+
+        // ===== 6) Borrar previos =====
         $this->line('- Eliminando registros previos...');
         DB::table('debt_days')
             ->whereYear('date', $year)
@@ -217,6 +232,14 @@ class GenerateDebtsDays extends Command
             $row['days']      = $daysCount;
             $row['days_late'] = $daysCount;
             $row['total']     = round($totalDebt, 2);
+
+            // Restaurar exoneraciones/amortizaciones previas
+            if (isset($prevData[$vid])) {
+                $prev = $prevData[$vid];
+                $row['exonerated']        = (float) $prev->exonerated;
+                $row['detail_exonerated'] = $prev->detail_exonerated;
+                $row['amortized']         = (float) $prev->amortized;
+            }
 
             $payload[] = $row;
         }
