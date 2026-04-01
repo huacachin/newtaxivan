@@ -43,12 +43,12 @@
 
                         <h5 class="mb-1">Total vehículos: <span class="title-modules">{{ $vehicles->count() }}</span></h5>
                         <p class="mb-0">
-                            <strong class="title-modules">D2:</strong> <span class="title-modules">{{ $vehicles->where('fuel','D2')->count() }}</span> ·
-                            <strong>Gas:</strong> {{ $vehicles->where('fuel','GAS')->count() }} ·
-                            <strong class="title-modules">V.T:</strong> <span class="title-modules">{{ $vehicles->whereIn('fuel', ['GAS','D2'])->count() }}</span> ·
-                            <strong>V.Q.N.T:</strong> <span class="title-modules">{{ $vehicles->whereNotIn('fuel', ['GAS','D2'])->count() }}</span> ·
-                            <strong>Propietario:</strong> {{ $owners }} ·
-                            <strong>Conductor:</strong> <span class="title-modules">{{ $drivers }}</span>
+                            <strong>D2:</strong> <strong style="color:red">{{ $vehicles->where('fuel','D2')->count() }}</strong> ·
+                            <strong>Gas:</strong> <strong style="color:red">{{ $vehicles->where('fuel','GAS')->count() }}</strong> ·
+                            <strong>V.T:</strong> <strong style="color:red">{{ $vehicles->whereIn('fuel', ['GAS','D2'])->count() }}</strong> ·
+                            <strong>V.Q.N.T:</strong> <strong style="color:red">{{ $vehicles->whereNotIn('fuel', ['GAS','D2'])->count() }}</strong> ·
+                            <strong>Propietario:</strong> <strong style="color:red">{{ $owners }}</strong> ·
+                            <strong>Conductor:</strong> <strong style="color:red">{{ $drivers }}</strong>
                         </p>
                         <div class="row my-2">
                             <div class="col-12">
