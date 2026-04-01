@@ -674,6 +674,31 @@ class DeparturesMonthly implements FromArray, WithStyles, WithEvents
         $this->grandTotalVT = array_sum($this->vehiclesWorkedPerDay);
     }
 
+    public function htmlData(): array
+    {
+        $this->prepare();
+
+        $sundays = [];
+        for ($d = 1; $d <= $this->daysInMonth; $d++) {
+            $sundays[$d] = Carbon::create($this->year, $this->month, $d)->isSunday();
+        }
+
+        return [
+            'year'                 => $this->year,
+            'month'                => $this->month,
+            'monthName'            => $this->monthName(),
+            'daysInMonth'          => $this->daysInMonth,
+            'sundays'              => $sundays,
+            'rows'                 => $this->rows,
+            'totalPerDay'          => $this->totalPerDay,
+            'vehiclesWorkedPerDay' => $this->vehiclesWorkedPerDay,
+            'hqTables'             => $this->hqTables,
+            'hqSummary'            => $this->hqSummary,
+            'grandTotalVueltas'    => $this->grandTotalVueltas,
+            'grandTotalVT'         => $this->grandTotalVT,
+        ];
+    }
+
     protected function monthName(): string
     {
         $m = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',7=>'Julio',8=>'Agosto',9=>'Septiembre',10=>'Octubre',11=>'Noviembre',12=>'Diciembre'];
