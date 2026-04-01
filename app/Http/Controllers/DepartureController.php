@@ -72,9 +72,15 @@ class DepartureController extends Controller
         $year  = (int) ($request->integer('year') ?: $now->year);
         $month = (int) ($request->integer('month') ?: $now->month);
 
-        $file = sprintf('Reporte_Mensual_Por_Paradero.VT.xlsx', $year, $month);
+        $export = new DeparturesMonthlyByStopExport($year, $month);
+        $data   = $export->htmlData();
+        $html   = view('exports.departures-rmp', $data)->render();
 
-        return Excel::download(new DeparturesMonthlyByStopExport($year, $month), $file);
+        $file = sprintf('Reporte_Mensual_Por_Paradero_VT_%04d_%02d.xls', $year, $month);
+
+        return response($html)
+            ->header('Content-Type', 'application/vnd.ms-excel')
+            ->header('Content-Disposition', "attachment; filename=\"{$file}\"");
     }
 
     public function exportMonthly(Request $request){

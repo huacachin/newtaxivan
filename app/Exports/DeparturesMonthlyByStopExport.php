@@ -323,6 +323,31 @@ class DeparturesMonthlyByStopExport implements FromArray, WithHeadings, WithStyl
 
     /* ====================== Helpers / Datos ====================== */
 
+    public function htmlData(): array
+    {
+        $this->prepareDataIfNeeded();
+
+        $start = CarbonImmutable::create($this->year, $this->month, 1);
+        $sundays = [];
+        for ($d = 1; $d <= $this->daysInMonth; $d++) {
+            $sundays[$d] = $start->day($d)->isSunday();
+        }
+
+        return [
+            'year'        => $this->year,
+            'monthName'   => $this->monthName(),
+            'daysInMonth' => $this->daysInMonth,
+            'sundays'     => $sundays,
+            'rows'        => $this->rows,
+            'totalsTE'    => $this->totalsTE,
+            'totalsTA'    => $this->totalsTA,
+            'totalsVT'    => $this->totalsVT,
+            'grandTE'     => $this->grandTE,
+            'grandTA'     => $this->grandTA,
+            'grandVT'     => $this->grandVT,
+        ];
+    }
+
     protected function monthName(): string
     {
         $m = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',7=>'Julio',8=>'Agosto',9=>'Septiembre',10=>'Octubre',11=>'Noviembre',12=>'Diciembre'];
