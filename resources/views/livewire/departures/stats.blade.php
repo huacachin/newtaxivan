@@ -87,8 +87,7 @@
                             <thead class="bg-primary">
                             <tr>
                                 <th>CONTROLADOR</th>
-                                <th>PARADERO</th>
-                                <th>TIPO</th>
+                                <th colspan="2">PARADERO</th>
                                 @foreach($days as $d)
                                     @php $isSun = \Carbon\Carbon::create($year,$month,$d)->isSunday(); @endphp
                                     <th class="{{ $isSun ? 'bg-danger' : '' }}">{{ $d }}</th>
