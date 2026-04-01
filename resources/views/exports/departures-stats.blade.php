@@ -46,14 +46,14 @@
 <body topmargin="0" leftmargin="0" rightmargin="0" bottommargin="0">
 
 <table cellspacing="0" border="1" style="border-collapse:collapse;">
-    <col width="75">
-    <col width="65">
-    <col width="40">
+    <col width="108">
+    <col width="90">
+    <col width="55">
     @for($d = 1; $d <= $daysInMonth; $d++)
-        <col width="28">
+        <col width="35">
     @endfor
-    <col width="35">
-    <col width="40">
+    <col width="46">
+    <col width="53">
 
     <tr>
         <td colspan="{{ $totalCols }}" style="{{ $ttl }}">
