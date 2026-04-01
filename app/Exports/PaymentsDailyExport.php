@@ -27,6 +27,7 @@ class PaymentsDailyExport implements FromArray, WithHeadings, WithEvents, WithTi
     protected int $sumDaysPaid = 0;
     protected int $sumDebtDays = 0;
     protected float $sumDebtAmount = 0.0;
+    protected int $sumRealDebtDays = 0;
     protected float $sumRealDebtAmount = 0.0;
 
     // tablas/columnas
@@ -327,6 +328,7 @@ class PaymentsDailyExport implements FromArray, WithHeadings, WithEvents, WithTi
         $this->sumDaysPaid = 0;
         $this->sumDebtDays = 0;
         $this->sumDebtAmount = 0.0;
+        $this->sumRealDebtDays = 0;
         $this->sumRealDebtAmount = 0.0;
 
         if (!Schema::hasTable('vehicles') || !Schema::hasTable('payments')) return;
@@ -334,191 +336,185 @@ class PaymentsDailyExport implements FromArray, WithHeadings, WithEvents, WithTi
         $start = CarbonImmutable::create($this->year, $this->month, 1);
         $end   = $start->endOfMonth();
         $this->daysInMonth = (int) $start->daysInMonth;
+        $startStr = $start->toDateString();
+        $endStr   = $end->toDateString();
 
-        // Vehículos activos
-        $orderCol = Schema::hasColumn('vehicles','sort_order')
-            ? 'sort_order'
-            : (Schema::hasColumn('vehicles','plate') ? 'plate' : 'id');
-
-        $vehCols = ['id','plate','status'];
-        if (Schema::hasColumn('vehicles','sort_order')) $vehCols[] = 'sort_order';
-        if (Schema::hasColumn('vehicles','condition'))  $vehCols[] = 'condition';
-
+        // Vehículos activos (misma lógica que la vista)
         $vehicles = DB::table('vehicles')
             ->where('status', 'active')
-            ->select($vehCols)
-            ->orderBy($orderCol)
+            ->select(['id', 'plate', 'sort_order', 'condition'])
+            ->orderBy('sort_order')
             ->get();
 
         foreach ($vehicles as $v) {
             $this->rows[(int)$v->id] = [
-                'order'     => (string)($v->sort_order ?? ''),
-                'plate'     => (string)$v->plate,
-                'cond'      => (string)($v->condition ?? ''),
-                'days'      => array_fill(1, $this->daysInMonth, 0.0),
-                'total'     => 0.0,
-                'days_paid' => 0,
-                'debt_days' => 0,
-                'debt_amount' => 0.0,
+                'order'            => (string)($v->sort_order ?? ''),
+                'plate'            => (string)$v->plate,
+                'cond'             => (string)($v->condition ?? ''),
+                'days'             => array_fill(1, $this->daysInMonth, 0.0),
+                'total'            => 0.0,
+                'days_paid'        => 0,
+                'debt_days'        => 0,
+                'debt_amount'      => 0.0,
+                'real_debt_days'   => 0,
                 'real_debt_amount' => 0.0,
             ];
         }
 
-        $amountCol = $this->amountCol;
+        $dateCol    = $this->mode === 'Pago' ? 'date_payment' : 'date_register';
+        $typeFilter = $this->mode === 'Pago' ? ['PAGO','RETRASO'] : ['PAGO','RETRASO','DEUDA'];
 
-        // Importes por día
-        if ($this->mode === 'Pago') {
-            $dateCol = 'date_payment';
-            $aggs = DB::table('payments as p')
-                ->leftJoin('vehicles as v2', function ($join) {
-                    $join->on('v2.plate', '=', 'p.legacy_plate')
-                        ->where('v2.status', 'active');
-                })
-                ->selectRaw("
-                    COALESCE(p.vehicle_id, v2.id) as vid,
-                    DAY($dateCol) as d,
-                    SUM(p.$amountCol) as s
-                ")
-                ->whereIn(DB::raw('UPPER(p.type)'), ['PAGO','RETRASO'])
-                ->whereNotNull($dateCol)
-                ->whereBetween($dateCol, [$start->toDateString(), $end->toDateString()])
-                ->groupBy('vid', 'd')
-                ->get();
-        } else {
-            $dateCol = 'date_register';
-            $aggs = DB::table('payments as p')
-                ->leftJoin('vehicles as v2', function ($join) {
-                    $join->on('v2.plate', '=', 'p.legacy_plate')
-                        ->where('v2.status', 'active');
-                })
-                ->selectRaw("
-                    COALESCE(p.vehicle_id, v2.id) as vid,
-                    DAY($dateCol) as d,
-                    SUM(p.$amountCol) as s
-                ")
-                ->whereIn(DB::raw('UPPER(p.type)'), ['PAGO','RETRASO','DEUDA'])
-                ->whereNotNull($dateCol)
-                ->whereBetween($dateCol, [$start->toDateString(), $end->toDateString()])
-                ->groupBy('vid', 'd')
-                ->get();
-        }
+        // Importes por día (misma query que la vista)
+        $aggs = DB::table('payments')
+            ->selectRaw("vehicle_id as vid, DAY($dateCol) as d, SUM(amount) as s")
+            ->whereIn(DB::raw('UPPER(type)'), $typeFilter)
+            ->whereNotNull($dateCol)
+            ->whereBetween($dateCol, [$startStr, $endStr])
+            ->groupBy('vid', 'd')
+            ->get();
 
         foreach ($aggs as $r) {
             $vid = (int) $r->vid;
-            $d   = (int) $r->d;
-            $s   = (float) $r->s;
-            if (!isset($this->rows[$vid])) continue;
-            if ($d < 1 || $d > $this->daysInMonth) continue;
-            $this->rows[$vid]['days'][$d] = $s;
+            $day = (int) $r->d;
+            if (!isset($this->rows[$vid]) || $day < 1 || $day > $this->daysInMonth) continue;
+            $this->rows[$vid]['days'][$day] = (float) $r->s;
         }
 
-        // Días pagados (PAGO/RETRASO) sin domingos
-        $paidDateCol = $this->mode === 'Pago' ? 'date_payment' : 'date_register';
-        $paidDaysAgg = DB::table('payments as p')
-            ->leftJoin('vehicles as v2', function ($join) {
-                $join->on('v2.plate', '=', 'p.legacy_plate')
-                    ->where('v2.status', 'active');
-            })
-            ->selectRaw("COALESCE(p.vehicle_id, v2.id) as vid, DAY($paidDateCol) as d")
-            ->whereIn(DB::raw('UPPER(p.type)'), ['PAGO','RETRASO'])
-            ->whereNotNull($paidDateCol)
-            ->whereBetween($paidDateCol, [$start->toDateString(), $end->toDateString()])
-            ->whereRaw("DAYOFWEEK($paidDateCol) <> 1")
-            ->groupBy('vid','d')
-            ->get();
-
-        $paidDaysByVehicle = [];
-        foreach ($paidDaysAgg as $p) {
-            $paidDaysByVehicle[(int)$p->vid][(int)$p->d] = true;
-        }
-
-        // Suma de pagos del mes (PAGO/RETRASO), sin excluir domingos
-        $paidSumAgg = DB::table('payments as p')
-            ->leftJoin('vehicles as v2', function ($join) {
-                $join->on('v2.plate', '=', 'p.legacy_plate')
-                    ->where('v2.status', 'active');
-            })
-            ->selectRaw("COALESCE(p.vehicle_id, v2.id) as vid, SUM(p.$amountCol) as s")
-            ->whereIn(DB::raw('UPPER(p.type)'), ['PAGO','RETRASO'])
-            ->whereNotNull($paidDateCol)
-            ->whereBetween($paidDateCol, [$start->toDateString(), $end->toDateString()])
+        // Total Pagos: count registros + sum monto
+        $paidTotals = DB::table('payments')
+            ->selectRaw("vehicle_id as vid, COUNT(*) as kt, SUM(amount) as montox")
+            ->whereIn(DB::raw('UPPER(type)'), ['PAGO','RETRASO'])
+            ->whereNotNull($dateCol)
+            ->whereBetween($dateCol, [$startStr, $endStr])
             ->groupBy('vid')
             ->get();
 
+        $paidCountByVehicle = [];
         $paidSumByVehicle = [];
-        foreach ($paidSumAgg as $pa) {
-            $paidSumByVehicle[(int)$pa->vid] = (float)$pa->s;
+        foreach ($paidTotals as $pt) {
+            $vid = (int) $pt->vid;
+            $paidCountByVehicle[$vid] = (int) $pt->kt;
+            $paidSumByVehicle[$vid] = (float) $pt->montox;
         }
 
-        // Costos por día (sin domingos)
-        $costsByVehicle = [];
-        if (Schema::hasTable($this->costTable)) {
-            $costs = DB::table($this->costTable)
-                ->selectRaw("vehicle_id, DAY(`date`) as d, SUM(amount) as a")
-                ->where('year', $this->year)
-                ->where('month', $this->month)
-                ->whereRaw("DAYOFWEEK(`date`) <> 1")
-                ->groupBy('vehicle_id','d')
-                ->get();
+        // Costos por vehículo (sin domingos)
+        $costTotals = DB::table('cost_per_plate_days')
+            ->selectRaw("vehicle_id, COUNT(*) as dias, SUM(amount) as total_costo")
+            ->where('year', $this->year)
+            ->where('month', $this->month)
+            ->whereRaw("DAYOFWEEK(`date`) <> 1")
+            ->groupBy('vehicle_id')
+            ->get();
 
-            foreach ($costs as $c) {
-                $costsByVehicle[(int)$c->vehicle_id][(int)$c->d] = (float)$c->a;
-            }
+        $costDaysByVehicle = [];
+        $costSumByVehicle = [];
+        foreach ($costTotals as $ct) {
+            $vid = (int) $ct->vehicle_id;
+            $costDaysByVehicle[$vid] = (int) $ct->dias;
+            $costSumByVehicle[$vid] = (float) $ct->total_costo;
         }
 
-        // Totales por día
-        for ($d=1; $d <= $this->daysInMonth; $d++) $this->totalsPerDay[$d] = 0.0;
+        // Deuda Real DT: días con salidas (excluyendo Huachipa/lima, sin domingos)
+        $dtDepartures = DB::table('departures as d')
+            ->leftJoin('headquarters as h', 'h.id', '=', 'd.headquarter_id')
+            ->selectRaw("d.vehicle_id as vid, COUNT(DISTINCT DATE(d.date)) as dias_trab,
+                         (SELECT SUM(cpd.amount) FROM cost_per_plate_days cpd
+                          WHERE cpd.vehicle_id = d.vehicle_id
+                          AND cpd.year = ? AND cpd.month = ?
+                          AND DAYOFWEEK(cpd.date) <> 1
+                          AND cpd.date IN (SELECT DISTINCT DATE(d2.date) FROM departures d2
+                              LEFT JOIN headquarters h2 ON h2.id = d2.headquarter_id
+                              WHERE d2.vehicle_id = d.vehicle_id
+                              AND DATE(d2.date) BETWEEN ? AND ?
+                              AND (h2.name IS NULL OR h2.name NOT IN ('Huachipa','lima'))
+                              AND DAYOFWEEK(d2.date) <> 1)
+                         ) as monto_pen", [$this->year, $this->month, $startStr, $endStr])
+            ->whereBetween(DB::raw('DATE(d.date)'), [$startStr, $endStr])
+            ->where(function($q) {
+                $q->whereNull('h.name')->orWhereNotIn('h.name', ['Huachipa','lima']);
+            })
+            ->whereRaw('DAYOFWEEK(d.date) <> 1')
+            ->groupBy('d.vehicle_id')
+            ->get();
+
+        $dtDataByVehicle = [];
+        foreach ($dtDepartures as $dt) {
+            $dtDataByVehicle[(int)$dt->vid] = [
+                'dias_trab' => (int) $dt->dias_trab,
+                'monto_pen' => (float) ($dt->monto_pen ?? 0),
+            ];
+        }
+
+        // Totales por fila (misma lógica que la vista)
+        for ($d = 1; $d <= $this->daysInMonth; $d++) {
+            $this->totalsPerDay[$d] = 0;
+        }
 
         foreach ($this->rows as $vid => &$row) {
             $row['total'] = array_sum($row['days']);
 
-            $cond = strtoupper(trim($row['cond'] ?? ''));
-            $isEx = str_starts_with($cond, 'EX');
-            $isDt = ($cond === 'DT');
-            $isGn = ($cond === 'GN');
+            $cond  = strtoupper(trim($row['cond'] ?? ''));
+            $isEx  = str_starts_with($cond, 'EX');
+            $isEx5 = ($cond === 'EX5');
+            $isDt  = ($cond === 'DT');
+            $isGn  = ($cond === 'GN');
 
-            $row['days_paid'] = isset($paidDaysByVehicle[$vid]) ? count($paidDaysByVehicle[$vid]) : 0;
+            $kt     = $paidCountByVehicle[$vid] ?? 0;
+            $montox = $paidSumByVehicle[$vid] ?? 0.0;
 
-            // Total Deuda (no pagados, sin domingos) - EX=0
-            $debtDays   = 0;
-            $debtAmount = 0.0;
-            if (isset($costsByVehicle[$vid])) {
-                foreach ($costsByVehicle[$vid] as $d => $amt) {
-                    $isPaid = isset($paidDaysByVehicle[$vid][$d]);
-                    if (!$isPaid) {
-                        $debtDays++;
-                        $debtAmount += (float)$amt;
-                    }
-                }
-            }
-            if ($isEx) {
+            $row['days_paid'] = $kt;
+
+            // Total Deuda
+            $costDias = $costDaysByVehicle[$vid] ?? 0;
+            $costSum  = $costSumByVehicle[$vid] ?? 0.0;
+            $costUnit = $costDias > 0 ? round($costSum / $costDias, 2) : 10.0;
+
+            if ($isEx && !$isEx5) {
                 $row['debt_days']   = 0;
                 $row['debt_amount'] = 0.0;
             } else {
-                $row['debt_days']   = $debtDays;
-                $row['debt_amount'] = round($debtAmount, 2);
+                $debtDays = $costDias > 0 ? round(($costSum - $montox) / $costUnit, 0) : 0;
+                $debtAmount = round($debtDays * $costUnit, 2);
+                if ($debtDays < 0) { $debtDays = 0; $debtAmount = 0.0; }
+                $row['debt_days']   = (int) $debtDays;
+                $row['debt_amount'] = $debtAmount;
             }
 
-            // suma de pagos del mes (PAGO/RETRASO)
-            $paidSum = $paidSumByVehicle[$vid] ?? 0.0;
+            // Deuda Real
+            $realDays = 0;
+            $realAmount = 0.0;
 
-            // Deuda REAL
-            if ($isEx) {
-                $row['real_debt_amount'] = 0.0;
-            } elseif ($isGn) {
-                $row['real_debt_amount'] = round(max(0.0, ($row['total'] + $row['debt_amount']) - $paidSum), 2);
+            if ($isEx && !$isEx5) {
+                $realDays = 0;
+                $realAmount = 0.0;
+            } elseif ($isEx5) {
+                $debtRaw = $costDias > 0 ? ($costSum - $montox) / $costUnit : 0;
+                if ($debtRaw > 5) {
+                    $realDays = (int) round($debtRaw - 5, 0);
+                    $realAmount = round($realDays * $costUnit, 2);
+                }
             } elseif ($isDt) {
-                $row['real_debt_amount'] = round(max(0.0, $row['total'] - $paidSum), 2);
+                $dtData = $dtDataByVehicle[$vid] ?? ['dias_trab' => 0, 'monto_pen' => 0];
+                $realDays = max(0, $dtData['dias_trab'] - $kt);
+                $realAmount = max(0, round($dtData['monto_pen'] - $montox, 2));
+            } elseif ($isGn) {
+                $realDays = max(0, $costDias - $kt);
+                $realAmount = max(0, round($costSum - $montox, 2));
             } else {
-                $row['real_debt_amount'] = round(max(0.0, $row['debt_amount'] - $paidSum), 2);
+                $realDays = (int) $row['debt_days'];
+                $realAmount = $row['debt_amount'];
             }
+
+            $row['real_debt_days']   = (int) $realDays;
+            $row['real_debt_amount'] = round($realAmount, 2);
 
             $this->sumDaysPaid       += (int)$row['days_paid'];
             $this->sumDebtDays       += (int)$row['debt_days'];
             $this->sumDebtAmount     += (float)$row['debt_amount'];
+            $this->sumRealDebtDays   += (int)$row['real_debt_days'];
             $this->sumRealDebtAmount += (float)$row['real_debt_amount'];
 
-            for ($d=1; $d <= $this->daysInMonth; $d++) {
+            for ($d = 1; $d <= $this->daysInMonth; $d++) {
                 $this->totalsPerDay[$d] += (float)$row['days'][$d];
             }
             $this->grandTotal += (float)$row['total'];
@@ -527,6 +523,34 @@ class PaymentsDailyExport implements FromArray, WithHeadings, WithEvents, WithTi
     }
 
     /* ======================= helpers ======================= */
+
+    public function htmlData(): array
+    {
+        $start = CarbonImmutable::create($this->year, $this->month, 1);
+        $sundays = [];
+        for ($d = 1; $d <= $this->daysInMonth; $d++) {
+            $sundays[$d] = $start->day($d)->isSunday();
+        }
+
+        $months = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
+            7=>'Julio',8=>'Agosto',9=>'Septiembre',10=>'Octubre',11=>'Noviembre',12=>'Diciembre'];
+
+        return [
+            'year'              => $this->year,
+            'monthName'         => $months[$this->month] ?? '',
+            'daysInMonth'       => $this->daysInMonth,
+            'sundays'           => $sundays,
+            'mode'              => $this->mode,
+            'rows'              => $this->rows,
+            'totalsPerDay'      => $this->totalsPerDay,
+            'grandTotal'        => $this->grandTotal,
+            'sumDaysPaid'       => $this->sumDaysPaid,
+            'sumDebtDays'       => $this->sumDebtDays,
+            'sumDebtAmount'     => $this->sumDebtAmount,
+            'sumRealDebtDays'   => $this->sumRealDebtDays,
+            'sumRealDebtAmount' => $this->sumRealDebtAmount,
+        ];
+    }
 
     protected function titleText(): string
     {

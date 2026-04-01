@@ -72,10 +72,17 @@ class PaymentController extends Controller
     public function exportDaily (Request $request){
         $year = (int) $request->integer('year', now()->year);
         $month = (int) $request->integer('month', now()->month);
-        $mode = $request->get('mode', 'Pago'); // 'Pago' | 'Caja'
+        $mode = $request->get('mode', 'Pago');
 
-        $file = sprintf('reporte-diario-%d-%02d-%s.xlsx', $year, $month, strtolower($mode));
-        return Excel::download(new PaymentsDailyExport($year, $month, $mode), $file);
+        $export = new PaymentsDailyExport($year, $month, $mode);
+        $data   = $export->htmlData();
+        $html   = view('exports.payments-daily', $data)->render();
+
+        $file = sprintf('reporte-diario-%d-%02d-%s.xls', $year, $month, strtolower($mode));
+
+        return response($html)
+            ->header('Content-Type', 'application/vnd.ms-excel')
+            ->header('Content-Disposition', "attachment; filename=\"{$file}\"");
     }
 
     public function exportStats(Request $request){
