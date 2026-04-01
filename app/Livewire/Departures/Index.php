@@ -317,6 +317,10 @@ class Index extends Component
 
         $this->byHQ = ($this->searchType ?? 1) == 3;
 
+        // Si viene del RMP (showSection != all), forzar modo agrupado por placa
+        if ($this->showSection !== 'all') {
+            $this->groupMode = true;
+        }
 
     }
 
