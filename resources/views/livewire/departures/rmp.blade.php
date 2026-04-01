@@ -187,7 +187,7 @@
                                         @endphp
                                         <td class="green_modules">
                                             @if($cnt > 0)
-                                                <a href="{{ route('departures.index', ['searchType' => 3, 'searchText' => $r['stop'], 'searchUser' => $r['controller'], 'fromDate' => $dayDate, 'toDate' => $dayDate]) }}" target="_blank">{{ $cnt }}</a>
+                                                <a href="{{ route('departures.index', ['searchType' => 3, 'searchText' => $r['stop'], 'searchUser' => $r['controller'], 'showSection' => $r['type'] === 'Emp' ? 'principal' : 'apoyo', 'fromDate' => $dayDate, 'toDate' => $dayDate]) }}" target="_blank">{{ $cnt }}</a>
                                             @else
                                                 0
                                             @endif
@@ -200,7 +200,7 @@
                                     @endphp
                                     <td>
                                         @if($r['total'] > 0)
-                                            <a href="{{ route('departures.index', ['searchType' => 3, 'searchText' => $r['stop'], 'searchUser' => $r['controller'], 'fromDate' => $mStart, 'toDate' => $mEnd]) }}" target="_blank">{{ $r['total'] }}</a>
+                                            <a href="{{ route('departures.index', ['searchType' => 3, 'searchText' => $r['stop'], 'searchUser' => $r['controller'], 'showSection' => $r['type'] === 'Emp' ? 'principal' : 'apoyo', 'fromDate' => $mStart, 'toDate' => $mEnd]) }}" target="_blank">{{ $r['total'] }}</a>
                                         @else
                                             0
                                         @endif

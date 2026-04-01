@@ -49,6 +49,12 @@ class Index extends Component
     public ?string $searchUser = null;
 
     /**
+     * Sección a mostrar: all, principal, apoyo.
+     * @var string
+     */
+    public string $showSection = 'all';
+
+    /**
      * Fecha inicial del rango (YYYY-MM-DD).
      * @var string|null
      */
@@ -96,6 +102,7 @@ class Index extends Component
         'searchType' => ['except' => 1],
         'searchText' => ['except' => null],
         'searchUser' => ['except' => null],
+        'showSection' => ['except' => 'all'],
         'fromDate'   => ['except' => null],
         'toDate'     => ['except' => null],
         'groupMode'  => ['except' => false]
@@ -684,6 +691,7 @@ class Index extends Component
             'groupMode'      => $this->groupMode,
             'grandTotals'    => $grandTotals,
             'headquarters'   => $this->headquarters,
+            'showSection'    => $this->showSection,
         ]);
     }
 

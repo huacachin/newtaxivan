@@ -166,6 +166,7 @@
                         </button>
                     </div>
 
+                    @if($showSection === 'all' || $showSection === 'principal')
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped table-hover  p-0"
                                wire:key="dep-table-{{ $groupMode ? 'g' : 'd' }}">
@@ -289,7 +290,9 @@
                             </tfoot>
                         </table>
                     </div>
+                    @endif
 
+                    @if($showSection === 'all' || $showSection === 'apoyo')
                     <h4 class="my-2 title-modules text-center">VEHÍCULOS DE APOYO</h4>
                     <div class="table-responsive mb-3">
                         <table class=" table table-bordered table-striped   p-0 table-hover">
@@ -416,6 +419,7 @@
                             </tfoot>
                         </table>
                     </div>
+                    @endif
 
                 </div>
 
