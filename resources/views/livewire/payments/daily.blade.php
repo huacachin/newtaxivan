@@ -109,7 +109,7 @@
                             <thead class="bg-primary text-white">
                             {{-- Fila 1 de encabezados (agrupadores) --}}
                             <tr>
-                                <th rowspan="2">Item</th>
+                                <th rowspan="2">Nº</th>
                                 <th rowspan="2">Placa</th>
                                 <th rowspan="2">Cond.</th>
 
