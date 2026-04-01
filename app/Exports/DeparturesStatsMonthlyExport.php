@@ -528,6 +528,29 @@ SQL;
         }
     }
 
+    public function htmlData(): array
+    {
+        $this->prepare();
+
+        $start = CarbonImmutable::create($this->year, $this->month, 1);
+        $sundays = [];
+        for ($d = 1; $d <= $this->daysInMonth; $d++) {
+            $sundays[$d] = $start->day($d)->isSunday();
+        }
+
+        return [
+            'year'           => $this->year,
+            'monthName'      => $this->monthName(),
+            'daysInMonth'    => $this->daysInMonth,
+            'sundays'        => $sundays,
+            'rows'           => $this->rows,
+            'totalsSalidas'  => $this->totalsSalidas,
+            'totalsMonto'    => $this->totalsMonto,
+            'grandSalidas'   => $this->grandSalidas,
+            'grandMonto'     => $this->grandMonto,
+        ];
+    }
+
     protected function monthName(): string
     {
         $m = [
