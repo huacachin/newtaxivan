@@ -67,7 +67,7 @@ class VehiclesReportExport implements
     public function headings(): array
     {
         return [
-            'Item','Cod','Placa','Marca','Año','Categoría',
+            'Nº','Cod','Placa','Marca','Año','Categoría',
             'Propietario','Conductor','Modalidad','Comb.','Condición','Empresa Afil.'
         ];
     }
