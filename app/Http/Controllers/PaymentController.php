@@ -81,8 +81,16 @@ class PaymentController extends Controller
     public function exportStats(Request $request){
         $year  = (int) $request->integer('year');
         $month = (int) $request->integer('month');
-        $file  = sprintf('reporte-estadistico-%04d-%02d.xlsx', $year, $month);
-        return Excel::download(new PaymentsStatsExport($year, $month), $file);
+
+        $export = new PaymentsStatsExport($year, $month);
+        $data   = $export->htmlData();
+        $html   = view('exports.payments-stats', $data)->render();
+
+        $file = sprintf('reporte-estadistico-%04d-%02d.xls', $year, $month);
+
+        return response($html)
+            ->header('Content-Type', 'application/vnd.ms-excel')
+            ->header('Content-Disposition', "attachment; filename=\"{$file}\"");
     }
 
 }

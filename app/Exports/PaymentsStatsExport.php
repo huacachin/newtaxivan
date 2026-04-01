@@ -354,6 +354,24 @@ class PaymentsStatsExport implements FromArray, WithHeadings, WithEvents, WithTi
 
     /* ================== HELPERS ================== */
 
+    public function htmlData(): array
+    {
+        $start = CarbonImmutable::create($this->year, $this->month, 1);
+        $sundays = [];
+        for ($d = 1; $d <= $this->daysInMonth; $d++) {
+            $sundays[$d] = $start->day($d)->isSunday();
+        }
+
+        return [
+            'year'        => $this->year,
+            'monthName'   => $this->mesTexto($this->month),
+            'daysInMonth' => $this->daysInMonth,
+            'sundays'     => $sundays,
+            'rows'        => $this->rows,
+            'footer'      => $this->footer,
+        ];
+    }
+
     protected function mesTexto(int $m): string
     {
         return [
