@@ -106,13 +106,13 @@
                                 <th>Cod</th>
                                 <th>Placa</th>
                                 <th>Condición</th>
-                                <th title="Días NO trabajados">DIAS NO TRABAJADOS(<span style="color:#eab723">{{ $months[$month] ?? '' }}</span>)</th>
-                                <th title="Total Días no Trabajados">T. d.n.t</th>
-                                <th title="Total Deuda (S/)">T. D. (S/)</th>
-                                <th title="Exonerado (S/)">Ex (S/)</th>
-                                <th title="Total por pagar (S/)">T. D.x.P (S/)</th>
-                                <th title="Amortización (S/)">Amor (S/)</th>
-                                <th title="Pendiente (S/)">Pend (S/)</th>
+                                <th title="Días NO trabajados">DIAS NO TRABAJADOS (<span style="color:#eab723">{{ $months[$month] ?? '' }}</span>)</th>
+                                <th title="Total Días no Trabajados">T.D.N.T</th>
+                                <th title="Total Deuda">T. D.</th>
+                                <th title="Exonerado">EX</th>
+                                <th title="Total por pagar">T. D.X.P</th>
+                                <th title="Amortización">AMOR</th>
+                                <th title="Pendiente">PEND</th>
                             </tr>
                             </thead>
 
