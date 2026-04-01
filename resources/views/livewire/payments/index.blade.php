@@ -169,13 +169,13 @@
                                 <a class="btn btn-sm btn-success" href="{{ route('payments.add') }}" target="_blank">
                                     <i class="ti ti-square-plus f-s-12"></i> Nuevo
                                 </a>
-                                <a href="{{ route('payments.daily') }}" class="btn btn-sm btn-primary">
+                                <a href="{{ route('payments.daily') }}" class="btn btn-sm btn-primary" target="_blank">
                                     <i class="ti ti-report-analytics f-s-12"></i> Diario
                                 </a>
-                                <a href="{{ route('payments.monthly') }}" class="btn btn-sm btn-primary">
+                                <a href="{{ route('payments.monthly') }}" class="btn btn-sm btn-primary" target="_blank">
                                     <i class="ti ti-report-analytics f-s-12"></i> Mensual
                                 </a>
-                                <a href="{{ route('payments.stats') }}" class="btn btn-sm btn-primary">
+                                <a href="{{ route('payments.stats') }}" class="btn btn-sm btn-primary" target="_blank">
                                     <i class="ti ti-report-analytics f-s-12"></i> Estadis.
                                 </a>
 
