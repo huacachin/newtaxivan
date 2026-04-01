@@ -28,13 +28,13 @@
     @for($d = 1; $d <= $daysInMonth; $d++)
         <col width="35">
     @endfor
-    <col width="41">
-    <col width="56">
+    <col width="46">
+    <col width="61">
     @if($mode === 'Pago')
-        <col width="41">
-        <col width="56">
-        <col width="41">
-        <col width="56">
+        <col width="46">
+        <col width="61">
+        <col width="46">
+        <col width="61">
     @endif
 
     {{-- Título --}}
