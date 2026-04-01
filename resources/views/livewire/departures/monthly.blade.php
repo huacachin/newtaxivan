@@ -115,9 +115,31 @@
                                     <td>{{ $row['sort_order'] }}</td>
                                     <td class="text-start">{{ $row['plate'] }}</td>
                                     @foreach($days as $d)
-                                        <td>{{ $row['daily'][$d] ?? 0 }}</td>
+                                        @php
+                                            $count = $row['daily'][$d] ?? 0;
+                                            $dayDate = sprintf('%04d-%02d-%02d', $year, $month, $d);
+                                        @endphp
+                                        <td>
+                                            @if($count > 0)
+                                                <a href="{{ route('departures.index', ['searchType' => 1, 'searchText' => $row['plate'], 'fromDate' => $dayDate, 'toDate' => $dayDate]) }}" target="_blank">{{ $count }}</a>
+                                            @else
+                                                0
+                                            @endif
+                                        </td>
                                     @endforeach
-                                    <td><strong>{{ $row['total'] }}</strong></td>
+                                    @php
+                                        $monthStart = sprintf('%04d-%02d-01', $year, $month);
+                                        $monthEnd = sprintf('%04d-%02d-%02d', $year, $month, $daysInMonth);
+                                    @endphp
+                                    <td>
+                                        <strong>
+                                            @if($row['total'] > 0)
+                                                <a href="{{ route('departures.index', ['searchType' => 1, 'searchText' => $row['plate'], 'fromDate' => $monthStart, 'toDate' => $monthEnd]) }}" target="_blank">{{ $row['total'] }}</a>
+                                            @else
+                                                0
+                                            @endif
+                                        </strong>
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
@@ -132,7 +154,17 @@
                             <tr>
                                 <th colspan="3" class="text-center">Total Vueltas</th>
                                 @foreach($days as $d)
-                                    <th class="bg-modules">{{ $totalPerDay[$d] ?? 0 }}</th>
+                                    @php
+                                        $tpd = $totalPerDay[$d] ?? 0;
+                                        $dayDate = sprintf('%04d-%02d-%02d', $year, $month, $d);
+                                    @endphp
+                                    <th class="bg-modules">
+                                        @if($tpd > 0)
+                                            <a href="{{ route('departures.index', ['fromDate' => $dayDate, 'toDate' => $dayDate]) }}" target="_blank" class="text-white">{{ $tpd }}</a>
+                                        @else
+                                            0
+                                        @endif
+                                    </th>
                                 @endforeach
                                 <th>{{ array_sum($totalPerDay) }}</th>
                             </tr>
@@ -180,9 +212,31 @@
                                     <td>{{ $row['sort_order'] }}</td>
                                     <td class="text-start">{{ $row['plate'] }}</td>
                                     @foreach($days as $d)
-                                        <td>{{ $row['daily'][$d] ?? 0 }}</td>
+                                        @php
+                                            $count = $row['daily'][$d] ?? 0;
+                                            $dayDate = sprintf('%04d-%02d-%02d', $year, $month, $d);
+                                        @endphp
+                                        <td>
+                                            @if($count > 0)
+                                                <a href="{{ route('departures.index', ['searchType' => 1, 'searchText' => $row['plate'], 'fromDate' => $dayDate, 'toDate' => $dayDate]) }}" target="_blank">{{ $count }}</a>
+                                            @else
+                                                0
+                                            @endif
+                                        </td>
                                     @endforeach
-                                    <td><strong>{{ $row['total'] }}</strong></td>
+                                    @php
+                                        $monthStart = sprintf('%04d-%02d-01', $year, $month);
+                                        $monthEnd = sprintf('%04d-%02d-%02d', $year, $month, $daysInMonth);
+                                    @endphp
+                                    <td>
+                                        <strong>
+                                            @if($row['total'] > 0)
+                                                <a href="{{ route('departures.index', ['searchType' => 1, 'searchText' => $row['plate'], 'fromDate' => $monthStart, 'toDate' => $monthEnd]) }}" target="_blank">{{ $row['total'] }}</a>
+                                            @else
+                                                0
+                                            @endif
+                                        </strong>
+                                    </td>
                                 </tr>
                             @endforeach
                             </tbody>
@@ -190,7 +244,17 @@
                             <tr>
                                 <th colspan="3" class="text-center">Total Vueltas</th>
                                 @foreach($days as $d)
-                                    <th class="bg-modules">{{ $hq['totalPerDay'][$d] ?? 0 }}</th>
+                                    @php
+                                        $hqTpd = $hq['totalPerDay'][$d] ?? 0;
+                                        $dayDate = sprintf('%04d-%02d-%02d', $year, $month, $d);
+                                    @endphp
+                                    <th class="bg-modules">
+                                        @if($hqTpd > 0)
+                                            <a href="{{ route('departures.index', ['fromDate' => $dayDate, 'toDate' => $dayDate]) }}" target="_blank" class="text-white">{{ $hqTpd }}</a>
+                                        @else
+                                            0
+                                        @endif
+                                    </th>
                                 @endforeach
                                 <th>{{ array_sum($hq['totalPerDay']) }}</th>
                             </tr>
