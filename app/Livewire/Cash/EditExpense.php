@@ -40,7 +40,7 @@ class EditExpense extends Component
             abort(403);
         }
         $this->expenseId = $id;
-        $this->users     = DB::table('users')->pluck('name', 'id');
+        $this->users     = DB::table('users')->where('status', 'active')->pluck('username', 'id');
         $this->refreshConcepts();
 
         $e = $this->expense;
