@@ -269,65 +269,63 @@ class PaymentsStatsExport implements FromArray, WithHeadings, WithEvents, WithTi
         $start = CarbonImmutable::create($this->year, $this->month, 1);
         $end   = $start->endOfMonth();
 
-        // ALL controllers with their assigned HQs
-        $controllers = User::role('controlador')
-            ->with('headquarters:id,name')
-            ->orderBy('name')
-            ->get(['id', 'name']);
-
-        // Aggregation by user/hq/type/day
+        // Misma query que la vista Livewire Stats
         $aggs = DB::table($this->paymentsTable . ' as p')
+            ->leftJoin('users as u', 'u.id', '=', 'p.user_id')
+            ->leftJoin('headquarters as h', 'h.id', '=', 'p.headquarter_id')
             ->selectRaw("
-                p.user_id,
-                p.headquarter_id,
-                DAY(p.date_register) as d,
+                COALESCE(u.username,'-') as controller,
+                COALESCE(h.name,'-') as headquarter,
                 UPPER(p.type) as t,
+                DAY(p.date_register) as d,
                 SUM(p.{$this->amountCol}) as s
             ")
-            ->whereNotNull('p.date_register')
-            ->whereBetween('p.date_register', [$start->toDateString(), $end->toDateString()])
+            ->whereYear('p.date_register', $start->year)
+            ->whereMonth('p.date_register', $start->month)
             ->whereIn(DB::raw('UPPER(p.type)'), ['PAGO','RETRASO','DEUDA'])
-            ->groupBy('p.user_id', 'p.headquarter_id', 'd', 't')
+            ->groupBy('controller', 'headquarter', 't', 'd')
+            ->orderBy('controller')
+            ->orderBy('headquarter')
             ->get();
 
-        // Index: [user_id][hq_id][TYPE][day] = sum
-        $matrix = [];
+        // Agrupar: [controller][headquarter][TYPE][day] = sum
+        $grouped = [];
         foreach ($aggs as $r) {
-            $uid = (int)($r->user_id ?? 0);
-            $hq  = (int)($r->headquarter_id ?? 0);
-            $d   = (int)$r->d;
-            $t   = (string)$r->t;
-            $s   = (float)$r->s;
-            $matrix[$uid][$hq][$t][$d] = ($matrix[$uid][$hq][$t][$d] ?? 0.0) + $s;
+            $ctrl = (string)$r->controller;
+            $hq   = (string)$r->headquarter;
+            $t    = (string)$r->t;
+            $d    = (int)$r->d;
+            $s    = (float)$r->s;
+
+            if (!isset($grouped[$ctrl])) $grouped[$ctrl] = [];
+            if (!isset($grouped[$ctrl][$hq])) {
+                $grouped[$ctrl][$hq] = [
+                    'PAGO'    => array_fill(1, $this->daysInMonth, 0.0),
+                    'RETRASO' => array_fill(1, $this->daysInMonth, 0.0),
+                    'DEUDA'   => array_fill(1, $this->daysInMonth, 0.0),
+                ];
+            }
+            if (isset($grouped[$ctrl][$hq][$t]) && $d >= 1 && $d <= $this->daysInMonth) {
+                $grouped[$ctrl][$hq][$t][$d] += $s;
+            }
         }
 
         $totalsPerDay = array_fill(1, $this->daysInMonth, 0.0);
         $rows = [];
 
-        foreach ($controllers as $u) {
-            $uid   = (int)$u->id;
-            $uname = (string)$u->name;
-            $hqs   = $u->headquarters->sortBy('name');
-
-            if ($hqs->isEmpty()) {
-                $hqs = collect([(object)['id' => 0, 'name' => '-']]);
-            }
-
+        foreach ($grouped as $ctrl => $byHq) {
             $firstHq = true;
-            foreach ($hqs as $hq) {
-                $hqId   = (int)$hq->id;
-                $hqName = (string)$hq->name;
-
+            foreach ($byHq as $hqName => $blocks) {
                 foreach (['PAGO','RETRASO','DEUDA'] as $type) {
                     $row = [
-                        $firstHq && $type === 'PAGO' ? $uname : '',
+                        $firstHq && $type === 'PAGO' ? $ctrl : '',
                         $type === 'PAGO' ? $hqName : '',
                         ucfirst(strtolower($type)),
                     ];
 
                     $sumRow = 0.0;
                     for ($d = 1; $d <= $this->daysInMonth; $d++) {
-                        $val = (float)($matrix[$uid][$hqId][$type][$d] ?? 0.0);
+                        $val = (float)($blocks[$type][$d] ?? 0.0);
                         $row[] = $val > 0 ? $val : '';
                         $sumRow += $val;
                         $totalsPerDay[$d] += $val;
