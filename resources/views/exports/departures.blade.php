@@ -71,7 +71,7 @@
 
     {{-- Total sección 1 --}}
     <tr>
-        <th colspan="7" style="background:#CEE7FF;text-align:right;"><b>TOTAL</b></th>
+        <th colspan="7" style="background:#CEE7FF;text-align:center;"><b>TOTAL</b></th>
         <th style="background:#CEE7FF;">{{ number_format((int)($totals->times_total ?? 0)) }}</th>
         <th style="background:#CEE7FF;">{{ number_format((int)($totals->times_total ?? 0)) }}</th>
         <th style="background:#CEE7FF;">{{ number_format((float)($totals->price_total ?? 0), 2) }}</th>
@@ -139,7 +139,7 @@
 
     {{-- Total Apoyo --}}
     <tr>
-        <th colspan="7" style="background:#CEE7FF;text-align:right;"><b>V.APOYO TOTAL</b></th>
+        <th colspan="7" style="background:#CEE7FF;text-align:center;"><b>TOTAL</b></th>
         <th style="background:#CEE7FF;">{{ number_format((int)($supTotals->times_total ?? 0)) }}</th>
         <th style="background:#CEE7FF;">{{ number_format((int)($supTotals->times_total ?? 0)) }}</th>
         <th style="background:#CEE7FF;">{{ number_format((float)($supTotals->price_total ?? 0), 2) }}</th>
@@ -150,7 +150,7 @@
 
     {{-- Total General --}}
     <tr>
-        <th colspan="7" style="background:#CEE7FF;text-align:right;"><b>TOTAL GENERAL</b></th>
+        <th colspan="7" style="background:#CEE7FF;text-align:center;"><b>TOTAL GENERAL</b></th>
         <th style="background:#CEE7FF;">{{ number_format((int)($grand->times_total ?? 0)) }}</th>
         <th style="background:#CEE7FF;">{{ number_format((int)($grand->times_total ?? 0)) }}</th>
         <th style="background:#CEE7FF;">{{ number_format((float)($grand->price_total ?? 0), 2) }}</th>

@@ -297,9 +297,9 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithColumnWidths, Wi
                         ],
                     ]);
 
-                    // Label alineado a la derecha
+                    // Label centrado
                     $s->getStyle("A{$ft}:G{$ft}")->getAlignment()
-                        ->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+                        ->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 }
 
                 // ===== Números centrados en columnas H..M =====
