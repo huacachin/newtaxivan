@@ -17,7 +17,7 @@
     @for($d = 1; $d <= $daysInMonth; $d++)
         <col width="35">
     @endfor
-    <col width="40">
+    <col width="43">
 
     <tr>
         <td colspan="{{ $totalCols }}" style="{{ $ttl }}">
@@ -26,8 +26,7 @@
     </tr>
     <tr>
         <th style="{{ $hdr }}">CONTROLADOR</th>
-        <th style="{{ $hdr }}">PARADERO</th>
-        <th style="{{ $hdr }}">TIPO</th>
+        <th colspan="2" style="{{ $hdr }}">PARADERO</th>
         @for($d = 1; $d <= $daysInMonth; $d++)
             <th style="{{ $sundays[$d] ? $sun : $hdr }}">{{ $d }}</th>
         @endfor
