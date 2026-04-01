@@ -51,7 +51,7 @@
     <col width="90">
     <col width="55">
     @for($d = 1; $d <= $daysInMonth; $d++)
-        <col width="35">
+        <col width="37">
     @endfor
     <col width="53">
 
