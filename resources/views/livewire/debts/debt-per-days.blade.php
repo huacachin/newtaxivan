@@ -85,13 +85,13 @@
                                 </button>
 
                                 <!-- Exportar resumen -->
-                                <button class="btn btn-sm btn-primary flex-shrink-0 align-self-end"
+                                <button class="btn btn-sm btn-export flex-shrink-0 align-self-end"
                                         wire:click="exportSummary">
                                     <i class="ti ti-file-analytics f-s-12"></i> Exportar
                                 </button>
 
                                 <!-- Exportar detalle -->
-                                <button class="btn btn-sm btn-primary flex-shrink-0 align-self-end"
+                                <button class="btn btn-sm btn-export flex-shrink-0 align-self-end"
                                         wire:click="exportDetail">
                                     <i class="ti ti-file-description f-s-12"></i> E. detalle
                                 </button>

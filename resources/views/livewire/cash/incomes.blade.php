@@ -133,7 +133,7 @@
                                         @endhasanyrole
 
                                         <!-- Exportar -->
-                                        <button class="btn btn-sm btn-primary flex-shrink-0"
+                                        <button class="btn btn-sm btn-export flex-shrink-0"
                                                 wire:click="export">
                                             <i class="ti ti-file-analytics f-s-12"></i> Excel
                                         </button>

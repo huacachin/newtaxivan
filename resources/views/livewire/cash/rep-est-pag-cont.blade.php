@@ -38,7 +38,7 @@
                                     <i class="ti ti-search f-s-12"></i>
                                 </button>
 
-                                <button class="btn btn-sm btn-primary mg-e-10" wire:click="export">
+                                <button class="btn btn-sm btn-export mg-e-10" wire:click="export">
                                <i class="ti ti-file-analytics f-s-12"></i>
                            </button>
 

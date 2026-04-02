@@ -135,7 +135,7 @@
                                 <i class="ti ti-square-plus f-s-12"></i> Nuevo
                             </a>
 
-                            <button class="btn btn-sm btn-primary flex-shrink-0" wire:click="export">
+                            <button class="btn btn-sm btn-export flex-shrink-0" wire:click="export">
                                 <i class="ti ti-file-analytics f-s-12"></i> Excel
                             </button>
 

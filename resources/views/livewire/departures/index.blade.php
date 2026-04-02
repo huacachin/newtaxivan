@@ -149,7 +149,7 @@
                             <i class="ti ti-report-analytics f-s-12"></i> Estadis.
                         </a>
 
-                        <button class="btn btn-sm btn-primary" wire:click="export">
+                        <button class="btn btn-sm btn-export" wire:click="export">
                             <i class="ti ti-file-analytics f-s-12"></i>
                         </button>
 

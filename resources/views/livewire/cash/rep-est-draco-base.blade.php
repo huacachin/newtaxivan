@@ -40,7 +40,7 @@
                                     <i class="ti ti-search f-s-12"></i>
                                 </button>
 
-                                <button class="btn btn-sm btn-primary" wire:click="export">
+                                <button class="btn btn-sm btn-export" wire:click="export">
                                 <i class="ti ti-file-analytics f-s-12"></i>
                             </button>
                             <a href="{{ route('departures.index') }}" class="btn btn-sm btn-primary ms-2">

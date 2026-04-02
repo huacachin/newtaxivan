@@ -61,7 +61,7 @@
                                 </button>
                                 <!-- Regresar -->
                                 <a href="{{ route('departures.index') }}"
-                                   class="btn btn-sm btn-primary flex-shrink-0 align-self-end">
+                                   class="btn btn-sm btn-export flex-shrink-0 align-self-end">
                                     <i class="ti ti-rotate-2 f-s-12"></i> Regresar
                                 </a>
 
@@ -69,7 +69,7 @@
                                 <!-- Exportar -->
                                 <a href="#"
                                    wire:click.prevent="export"
-                                   class="btn btn-sm btn-primary flex-shrink-0 align-self-end">
+                                   class="btn btn-sm btn-export flex-shrink-0 align-self-end">
                                     <i class="ti ti-file-analytics f-s-12"></i> Exportar
                                 </a>
 

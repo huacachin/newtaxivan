@@ -84,7 +84,7 @@
                                 <!-- Exportar -->
                                 <a href="#"
                                    wire:click.prevent="export"
-                                   class="btn btn-sm btn-primary flex-shrink-0 align-self-end">
+                                   class="btn btn-sm btn-export flex-shrink-0 align-self-end">
                                     <i class="ti ti-file-spreadsheet f-s-12"></i> Exportar
                                 </a>
 
