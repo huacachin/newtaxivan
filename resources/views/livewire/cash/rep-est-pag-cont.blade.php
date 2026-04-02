@@ -83,35 +83,35 @@
                                          <th class="bg-primary text-white">{{ $p['sucursal'] }}</th>
                                          <th class="bg-primary text-white">Ingr. Sal1.</th>
                                          @for ($m=1; $m<=12; $m++)
-                                             <td style="{{ $p['ingresos_mes'][$m] < 0 ? 'color:red;font-weight:bold;' : 'color:#000;' }}">{{ number_format($p['ingresos_mes'][$m], 2, '.', ',') }}</td>
+                                             <td style="{{ $p['ingresos_mes'][$m] < 0 ? 'color:red !important;font-weight:bold;' : 'color:#000 !important;' }}">{{ number_format($p['ingresos_mes'][$m], 2, '.', ',') }}</td>
                                          @endfor
-                                         <td class="text-center font-semibold" style="{{ $p['total'] < 0 ? 'color:red;font-weight:bold;' : 'color:#000;' }}">{{ number_format($p['total'], 2, '.', ',') }}</td>
+                                         <td style="{{ $p['total'] < 0 ? 'color:red !important;font-weight:bold;' : 'color:#000 !important;' }}">{{ number_format($p['total'], 2, '.', ',') }}</td>
                                      </tr>
                                      @php $first = false; @endphp
                                      @endforeach
 
                                      {{-- Egreso Pago --}}
-                                     <tr style="color:red;font-weight:bold;">
+                                     <tr>
                                          <th class="bg-primary text-white" colspan="2">Egreso Pago</th>
                                          @for ($m=1; $m<=12; $m++)
-                                             <td>
+                                             <td style="color:red !important;font-weight:bold;">
                                                  {{ number_format($ctrl['egreso_pago'][$m], 2, '.', ',') }}
                                              </td>
                                          @endfor
-                                         <td>
+                                         <td style="color:red !important;font-weight:bold;">
                                              {{ number_format($ctrl['tot_egr_pago'], 2, '.', ',') }}
                                          </td>
                                      </tr>
 
                                      {{-- Egreso Draco --}}
-                                     <tr style="color:red;font-weight:bold;">
+                                     <tr>
                                          <th class="bg-primary text-white" colspan="2">Egreso Draco</th>
                                          @for ($m=1; $m<=12; $m++)
-                                             <td>
+                                             <td style="color:red !important;font-weight:bold;">
                                                  {{ number_format($ctrl['egreso_draco'][$m], 2, '.', ',') }}
                                              </td>
                                          @endfor
-                                         <td>
+                                         <td style="color:red !important;font-weight:bold;">
                                              {{ number_format($ctrl['tot_egr_draco'], 2, '.', ',') }}
                                          </td>
                                      </tr>
@@ -120,12 +120,12 @@
                                      <tr>
                                          <th class="bg-primary text-white" colspan="2">Saldo</th>
                                          @for ($m=1; $m<=12; $m++)
-                                             <td id="saldo" class="title-modules">
-                                                 <strong>{{ number_format($ctrl['saldos'][$m], 2, '.', ',') }}</strong>
+                                             <td style="{{ $ctrl['saldos'][$m] < 0 ? 'color:red !important;' : 'color:#000 !important;' }}font-weight:bold;">
+                                                 {{ number_format($ctrl['saldos'][$m], 2, '.', ',') }}
                                              </td>
                                          @endfor
-                                         <td class="text-center font-semibold">
-                                             <strong>{{ number_format($ctrl['tot_saldo'], 2, '.', ',') }}</strong>
+                                         <td style="{{ $ctrl['tot_saldo'] < 0 ? 'color:red !important;' : 'color:#000 !important;' }}font-weight:bold;">
+                                             {{ number_format($ctrl['tot_saldo'], 2, '.', ',') }}
                                          </td>
                                      </tr>
                                      @empty
