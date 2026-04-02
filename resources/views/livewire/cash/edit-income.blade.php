@@ -129,11 +129,11 @@
                         <button type="button" class="btn btn-sm btn-primary" wire:click="update">
                             Guardar cambios
                         </button>
-                        @if($income->canBeDeletedBy(auth()->user()))
+                        @can('delete', $income)
                         <button type="button" class="btn btn-sm btn-danger" wire:click="questionDelete({{ $incomeId }})">
                             Eliminar
                         </button>
-                        @endif
+                        @endcan
                         <a href="{{ route('cash.incomes') }}" class="btn btn-sm btn-secondary">Volver</a>
                     </div>
 
@@ -142,6 +142,6 @@
         </div>
     </div>
 
-    {{-- Overlay de carga --}}
+    {{-- Overlay de carga --}}
 
 </div>

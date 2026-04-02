@@ -2,7 +2,11 @@
 
 namespace App\Providers;
 
+use App\Models\Expense;
+use App\Models\Income;
 use App\Models\Vehicle;
+use App\Policies\ExpensePolicy;
+use App\Policies\IncomePolicy;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -23,7 +27,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Gate::before(function ($user, $ability) {
+        Gate::policy(Income::class, IncomePolicy::class);
+        Gate::policy(Expense::class, ExpensePolicy::class);
+
+        Gate::before(function ($user, $ability, $arguments) {
+            // No hacer bypass para policies de Income/Expense
+            if (!empty($arguments) && ($arguments[0] instanceof Income || $arguments[0] instanceof Expense)) {
+                return null;
+            }
             return $user->hasAnyRole('director','gerente') ? true : null;
         });
 

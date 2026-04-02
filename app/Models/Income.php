@@ -45,25 +45,4 @@ class Income extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function canBeEditedBy(User $user): bool
-    {
-        if ($user->hasRole('director')) return true;
-        if (!$user->hasAnyRole(['gerente', 'administrador'])) return false;
-        $today = now(config('app.timezone'))->toDateString();
-        $date  = $this->date instanceof \Carbon\Carbon
-            ? $this->date->toDateString()
-            : ($this->created_at?->timezone(config('app.timezone'))->toDateString());
-        return $date === $today;
-    }
-
-    public function canBeDeletedBy(User $user): bool
-    {
-        if ($user->hasRole('director')) return true;
-        if (!$user->hasAnyRole(['gerente', 'administrador'])) return false;
-        $today = now(config('app.timezone'))->toDateString();
-        $date  = $this->date instanceof \Carbon\Carbon
-            ? $this->date->toDateString()
-            : ($this->created_at?->timezone(config('app.timezone'))->toDateString());
-        return $date === $today;
-    }
 }

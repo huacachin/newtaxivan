@@ -33,7 +33,7 @@ class EditIncome extends Component
     {
         $this->income   = Income::findOrFail($id);
 
-        if (!$this->income->canBeEditedBy(auth()->user())) {
+        if (auth()->user()->cannot('update', $this->income)) {
             abort(403);
         }
         $this->incomeId = $id;
@@ -110,7 +110,7 @@ class EditIncome extends Component
     {
         $income = Income::findOrFail($id);
 
-        if (!$income->canBeDeletedBy(auth()->user())) {
+        if (auth()->user()->cannot('delete', $income)) {
             abort(403);
         }
 
@@ -125,7 +125,7 @@ class EditIncome extends Component
 
     public function update(): void
     {
-        if (!$this->income->canBeEditedBy(auth()->user())) {
+        if (auth()->user()->cannot('update', $this->income)) {
             abort(403);
         }
 

@@ -36,7 +36,7 @@ class EditExpense extends Component
     {
         $this->expense   = Expense::findOrFail($id);
 
-        if (!$this->expense->canBeEditedBy(auth()->user())) {
+        if (auth()->user()->cannot('update', $this->expense)) {
             abort(403);
         }
         $this->expenseId = $id;
@@ -130,7 +130,7 @@ class EditExpense extends Component
     {
         $expense = Expense::findOrFail($id);
 
-        if (!$expense->canBeDeletedBy(auth()->user())) {
+        if (auth()->user()->cannot('delete', $expense)) {
             abort(403);
         }
 
@@ -145,7 +145,7 @@ class EditExpense extends Component
 
     public function update(): void
     {
-        if (!$this->expense->canBeEditedBy(auth()->user())) {
+        if (auth()->user()->cannot('update', $this->expense)) {
             abort(403);
         }
 
