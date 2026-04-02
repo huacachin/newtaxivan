@@ -32,7 +32,7 @@ class GeneralReportExport implements FromArray, WithEvents, WithColumnFormatting
     /** Topes de ancho para mantener angosto */
     private const CAP_A = 6.0;   // ITEM
     private const CAP_B = 11.0;  // FECHA
-    private const CAP_C = 16.0;  // DATOS CLIENTE
+    private const CAP_C = 36.0;  // DATOS CLIENTE
     private const CAP_D = 24.0;  // GLOSA
     private const CAP_E = 12.0;  // INGRESO
     private const CAP_F = 12.0;  // EGRESO
