@@ -73,7 +73,7 @@ class IncomesExport implements
     /* ========================= LAYOUT ========================= */
     public function headings(): array
     {
-        return ['Item', 'Fecha', 'Respons.', 'A', 'Motivo', 'S/.'];
+        return ['Nº', 'Fecha', 'Respons.', 'A', 'Motivo', 'S/.'];
     }
 
     public function map($row): array

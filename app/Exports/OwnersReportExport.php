@@ -52,7 +52,7 @@ class OwnersReportExport implements
 
     public function headings(): array
     {
-        return ['Item','Cod','Placa','Nombre','N° Documento','Teléfono'];
+        return ['Nº','Cod','Placa','Nombre','N° Documento','Teléfono'];
     }
 
     public function map($r): array

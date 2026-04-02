@@ -288,7 +288,7 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
                 $hdr3 = $hdr1 + 2;
                 $hdr4 = $hdr1 + 3;
 
-                $s->mergeCells("A{$hdr1}:A{$hdr4}"); $s->setCellValue("A{$hdr1}", 'Item');
+                $s->mergeCells("A{$hdr1}:A{$hdr4}"); $s->setCellValue("A{$hdr1}", 'Nº');
                 $s->mergeCells("B{$hdr1}:B{$hdr4}"); $s->setCellValue("B{$hdr1}", 'Mes');
 
                 $s->mergeCells("C{$hdr1}:D{$hdr1}"); $s->setCellValue("C{$hdr1}", 'Luis');

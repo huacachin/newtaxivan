@@ -31,7 +31,7 @@ class DriversReportExport implements FromArray, WithColumnFormatting, WithEvents
     protected function headings(): array
     {
         return [
-            'Item', 'Cod', 'Placa', 'Nombre', 'N° Documento',
+            'Nº', 'Cod', 'Placa', 'Nombre', 'N° Documento',
             'I.Contrato', 'F.Contrato', 'Teléfono', 'Condición',
         ];
     }

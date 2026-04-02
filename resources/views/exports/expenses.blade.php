@@ -5,7 +5,7 @@
     <thead>
     <tr><td colspan="7" align="center" style="font-weight:bold;color:red;font-size:11pt;">REPORTE DE GASTOS</td></tr>
     <tr>
-        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Item</b></th>
+        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Nº</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Fecha</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>A (Raz&oacute;n)</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Motivo (Detalle)</b></th>

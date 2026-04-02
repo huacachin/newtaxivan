@@ -7,7 +7,7 @@
     <thead>
     <tr><td colspan="{{ 4 + count($days) + 4 }}" align="center" style="font-weight:bold;color:red;font-size:11pt;">REPORTE DE RETRASO {{ strtoupper($monthLabel) }}</td></tr>
     <tr>
-        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Item</b></th>
+        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Nº</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Cod</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Placa</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Condicion</b></th>

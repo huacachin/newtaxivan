@@ -72,7 +72,7 @@ class GeneralReportExport implements FromArray, WithEvents, WithColumnFormatting
         // Fila 1: Título
         $rows[] = ["Reporte General {$monthName} {$this->year}"];
         // Fila 2: encabezados
-        $rows[] = ['ITEM','FECHA','DATOS CLIENTE','GLOSA','INGRESO','EGRESO'];
+        $rows[] = ['Nº','FECHA','DATOS CLIENTE','GLOSA','INGRESO','EGRESO'];
 
         $item = 1;
         $totalIncomes = 0.0;

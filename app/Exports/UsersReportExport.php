@@ -45,7 +45,7 @@ class UsersReportExport implements
 
     public function headings(): array
     {
-        return ['Item', 'Nombres', 'Telefono', 'Sedes', 'Sede Primaria', 'Nivel'];
+        return ['Nº', 'Nombres', 'Telefono', 'Sedes', 'Sede Primaria', 'Nivel'];
     }
 
     public function map($user): array

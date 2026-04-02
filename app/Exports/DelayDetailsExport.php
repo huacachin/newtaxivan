@@ -120,7 +120,7 @@ class DelayDetailsExport implements FromArray, WithHeadings, WithEvents, WithTit
 
     public function headings(): array
     {
-        return ['Item','Codigo','Fecha','Placa','Vueltas','S/'];
+        return ['Nº','Codigo','Fecha','Placa','Vueltas','S/'];
     }
 
 public function title(): string

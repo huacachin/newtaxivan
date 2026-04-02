@@ -5,7 +5,7 @@
     <thead>
     <tr><td colspan="6" align="center" style="font-weight:bold;color:red;font-size:11pt;">LISTADO GENERAL DE INGRESOS</td></tr>
     <tr>
-        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Item</b></th>
+        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Nº</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Fecha</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Respons.</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>A</b></th>

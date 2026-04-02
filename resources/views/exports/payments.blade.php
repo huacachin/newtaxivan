@@ -5,7 +5,7 @@
     <thead>
     <tr><td colspan="10" align="center" style="font-weight:bold;color:red;font-size:11pt;">PAGO</td></tr>
     <tr>
-        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Item</b></th>
+        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Nº</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Placa</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Serie</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Fecha Registro</b></th>

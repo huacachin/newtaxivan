@@ -102,7 +102,7 @@ class PaymentsExport implements
     public function headings(): array
     {
         return [
-            'Item',           // A
+            'Nº',           // A
             'Placa',          // B
             'Serie',          // C
             'Fecha Registro', // D

@@ -23,7 +23,7 @@
         </td>
     </tr>
     <tr>
-        <th style="{{ $hdr }}">Item</th>
+        <th style="{{ $hdr }}">Nº</th>
         <th style="{{ $hdr }}">Placa</th>
         @for($d = 1; $d <= $daysInMonth; $d++)
             <th style="{{ $sundays[$d] ? $sun : $hdr }}">{{ $d }}</th>
@@ -72,7 +72,7 @@
         </td>
     </tr>
     <tr>
-        <th style="{{ $hdr }}">Item</th>
+        <th style="{{ $hdr }}">Nº</th>
         <th style="{{ $hdr }}">Placa</th>
         @for($d = 1; $d <= $daysInMonth; $d++)
             <th style="{{ $sundays[$d] ? $sun : $hdr }}">{{ $d }}</th>

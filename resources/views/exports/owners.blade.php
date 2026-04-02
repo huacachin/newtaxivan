@@ -5,7 +5,7 @@
     <thead>
     <tr><td colspan="6" align="center" style="font-weight:bold;color:red;font-size:11pt;">LISTADO GENERAL DE PROPIETARIO ( {{ $countActive }} )</td></tr>
     <tr>
-        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Item</b></th>
+        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Nº</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Cod</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Placa</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Nombre</b></th>
@@ -38,7 +38,7 @@
     <thead>
     <tr><td colspan="6" align="center" style="font-weight:bold;color:red;font-size:10pt;">PROPIETARIOS LIBRES</td></tr>
     <tr>
-        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Item</b></th>
+        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Nº</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Cod</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Placa</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Nombre</b></th>

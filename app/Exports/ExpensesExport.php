@@ -77,7 +77,7 @@ class ExpensesExport implements
     public function headings(): array
     {
         return [
-            'Item',
+            'Nº',
             'Fecha',
             'A (Razón)',
             'Motivo (Detalle)',

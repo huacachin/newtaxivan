@@ -58,7 +58,7 @@ class DeparturesMonthly implements FromArray, WithStyles, WithEvents
         $currentRow++;
 
         // Header row
-        $head = ['Item', 'Placa'];
+        $head = ['Nº', 'Placa'];
         for ($d = 1; $d <= $this->daysInMonth; $d++) $head[] = (string)$d;
         $head[] = 'T. Salida';
         $data[] = $head;

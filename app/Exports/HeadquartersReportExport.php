@@ -36,7 +36,7 @@ class HeadquartersReportExport implements
 
     public function headings(): array
     {
-        return ['Item', 'Orden', 'Nombre', 'Estado'];
+        return ['Nº', 'Orden', 'Nombre', 'Estado'];
     }
 
     public function map($hq): array

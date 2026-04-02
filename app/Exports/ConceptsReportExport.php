@@ -36,7 +36,7 @@ class ConceptsReportExport implements
 
     public function headings(): array
     {
-        return ['Item', 'Código', 'Nombre', 'Tipo'];
+        return ['Nº', 'Código', 'Nombre', 'Tipo'];
     }
 
     public function map($concept): array

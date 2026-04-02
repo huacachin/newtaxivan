@@ -46,7 +46,7 @@ class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, With
     public function headings(): array
     {
         return [
-            'Item','Cod','Placa',
+            'Nº','Cod','Placa',
             'Deuda','Exo.','P.Deuda',
             sprintf('%02d/%d', $this->month, $this->year),
             'Lab.','DT','DNT','Condición','T.Deuda',
@@ -97,7 +97,7 @@ class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, With
                 $s->getRowDimension($titleRow)->setRowHeight(18);
 
                 // Cabecera de grupos (fila 2)
-                $s->setCellValue("A{$groupRow}", 'Item');
+                $s->setCellValue("A{$groupRow}", 'Nº');
                 $s->setCellValue("B{$groupRow}", 'Cod');
                 $s->setCellValue("C{$groupRow}", 'Placa');
 

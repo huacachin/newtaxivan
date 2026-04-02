@@ -105,7 +105,7 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
     {
         $monthL = mb_strtoupper(\Carbon\Carbon::parse($this->monthDate)->startOfMonth()->locale('es')->translatedFormat('F'));
         return [
-            'Item',
+            'Nº',
             'Placa',
             'Cond.',
             "DIAS NO TRABAJADOS ({$monthL})",
