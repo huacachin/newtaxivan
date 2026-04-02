@@ -107,7 +107,7 @@
                         <table class="table table-bordered table-hover" style="min-width:1800px;white-space:nowrap">
                             <thead class="bg-primary">
                             <tr>
-                                <th>ITEM</th>
+                                <th>Nº</th>
                                 <th>PLACA</th>
                                 <th>CONDICIÓN</th>
 

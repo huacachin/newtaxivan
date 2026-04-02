@@ -128,7 +128,7 @@
                                 @hasanyrole('director|gerente|administrador')
                                 <th class="sticky-col"></th>
                                 @endhasanyrole
-                                <th>Item</th>
+                                <th>Nº</th>
                                 <th>Cod</th>
                                 <th class="sticky-col-2">Placa</th>
                                 <th>Marca</th>

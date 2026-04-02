@@ -77,7 +77,7 @@
                     <table class="table table-bordered table-hover table-striped">
                         <thead class="bg-primary">
                         <tr>
-                            <th>ITEM</th>
+                            <th>Nº</th>
                             <th>FECHA</th>
                             <th>DATOS CLIENTE</th>
                             <th>GLOSA</th>

@@ -41,7 +41,7 @@
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">
                             <tr>
-                                <th>Item</th>
+                                <th>Nº</th>
                                 <th>Mes</th>
                                 <th>Año</th>
                                 <th>Placas</th>

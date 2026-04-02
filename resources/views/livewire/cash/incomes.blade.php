@@ -157,7 +157,7 @@
                             <thead class="bg-primary">
                             <tr>
                                 <th></th>
-                                <th>Item</th>
+                                <th>Nº</th>
                                 <th>Fecha</th>
                                 <th>Usuario</th>
                                 <th>A</th>

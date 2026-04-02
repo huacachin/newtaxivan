@@ -96,7 +96,7 @@
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">
                             <tr>
-                                <th>Item</th>
+                                <th>Nº</th>
                                 <th>COD</th>
                                 <th>Placa</th>
                                 @foreach($days as $d)
@@ -194,7 +194,7 @@
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">
                             <tr>
-                                <th>Item</th>
+                                <th>Nº</th>
                                 <th>COD</th>
                                 <th>Placa</th>
                                 @foreach($days as $d)

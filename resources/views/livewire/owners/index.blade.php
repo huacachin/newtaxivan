@@ -92,7 +92,7 @@
                             <thead class="bg-primary">
                             <tr>
                                 @hasanyrole('director|gerente|administrador')<th scope="col"></th>@endhasanyrole
-                                <th>Item</th>
+                                <th>Nº</th>
                                 <th>Cod</th>
                                 <th scope="col">Placa</th>
                                 <th scope="col">Nombre/Empresa</th>

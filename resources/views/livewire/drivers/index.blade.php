@@ -95,7 +95,7 @@
                             <thead class="bg-primary">
                             <tr>
                                 @hasanyrole('director|gerente|administrador')<th></th>@endhasanyrole
-                                <th>Item</th>
+                                <th>Nº</th>
                                 <th>Cod</th>
                                 <th>Placa</th>
                                 <th>Nombre</th>
