@@ -71,7 +71,7 @@
 
                                 <!-- Botones -->
                                 @hasanyrole('director|gerente|administrador')
-                                <a class="btn btn-sm btn-export flex-shrink-0"
+                                <a class="btn btn-sm btn-primary flex-shrink-0"
                                    href="{{ route('settings.drivers.create') }}" target="_blank">
                                     <i class="ti ti-square-plus f-s-12"></i> Nuevo
                                 </a>
