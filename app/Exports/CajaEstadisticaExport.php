@@ -223,17 +223,15 @@ class CajaEstadisticaExport implements WithEvents
         $sheet->setCellValue("F{$r2}", 'Salida');
         $sheet->mergeCells("F{$r2}:H{$r2}");   // F..H
         $sheet->setCellValue("I{$r2}", 'Otros');
-        $sheet->mergeCells("I{$r2}:I{$r2}");
+        $sheet->mergeCells("I{$r2}:I".($r2+1));
         $sheet->setCellValue("J{$r2}", 'Total');
-        $sheet->mergeCells("J{$r2}:J{$r2}");
+        $sheet->mergeCells("J{$r2}:J".($r2+1));
         $this->paintHeader($sheet, "B{$r2}:J{$r2}");
 
         // Fila 3
         $r3 = $r + 2;
         $sheet->fromArray(['Cotización','Retraso','Deuda','Total','Empresa','Apoyo','Total'], null, "B{$r3}");
         $this->paintHeader($sheet, "B{$r3}:H{$r3}");
-        $this->paintHeader($sheet, "I{$r3}:I{$r3}");
-        $this->paintHeader($sheet, "J{$r3}:J{$r3}");
         $this->headerBaseStyle($sheet, "A{$r}:L{$r3}");
         // "Retraso" siempre en rojo
         $sheet->getStyle("C{$r3}")->getFont()->getColor()->setRGB(self::RED_TITLE);
@@ -327,17 +325,15 @@ class CajaEstadisticaExport implements WithEvents
         $sheet->setCellValue("F{$r2}", 'Salida');
         $sheet->mergeCells("F{$r2}:H{$r2}");
         $sheet->setCellValue("I{$r2}", 'Otros');
-        $sheet->mergeCells("I{$r2}:I{$r2}");
+        $sheet->mergeCells("I{$r2}:I".($r2+1));
         $sheet->setCellValue("J{$r2}", 'Total');
-        $sheet->mergeCells("J{$r2}:J{$r2}");
+        $sheet->mergeCells("J{$r2}:J".($r2+1));
         $this->paintHeader($sheet, "B{$r2}:J{$r2}");
 
         // Fila 3
         $r3 = $r + 2;
         $sheet->fromArray(['Cotización', 'Retraso', 'Deuda', 'Total', 'Empresa', 'Apoyo', 'Total'], null, "B{$r3}");
         $this->paintHeader($sheet, "B{$r3}:H{$r3}");
-        $this->paintHeader($sheet, "I{$r3}:I{$r3}");
-        $this->paintHeader($sheet, "J{$r3}:J{$r3}");
         $this->headerBaseStyle($sheet, "A{$r}:L{$r3}");
         // "Retraso" siempre en rojo
         $sheet->getStyle("C{$r3}")->getFont()->getColor()->setRGB(self::RED_TITLE);
