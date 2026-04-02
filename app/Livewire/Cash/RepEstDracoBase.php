@@ -220,8 +220,8 @@ class RepEstDracoBase extends Component
     protected function buildMaps(): void
     {
         if (Schema::hasTable('users')) {
-            DB::table('users')->select('id','name')->orderBy('name')->chunk(1000, function($rows) {
-                foreach ($rows as $r) $this->userMap[(int)$r->id] = (string)$r->name;
+            DB::table('users')->select('id','username')->orderBy('username')->chunk(1000, function($rows) {
+                foreach ($rows as $r) $this->userMap[(int)$r->id] = (string)$r->username;
             });
         }
         if (Schema::hasTable('headquarters')) {

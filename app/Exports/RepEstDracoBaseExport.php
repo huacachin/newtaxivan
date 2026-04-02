@@ -51,11 +51,11 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
 
         if (Schema::hasTable('users')) {
             DB::table('users')
-                ->select('id', 'name')
-                ->orderBy('name')
+                ->select('id', 'username')
+                ->orderBy('username')
                 ->chunk(1000, function ($rows) use (&$userMap) {
                     foreach ($rows as $r) {
-                        $userMap[(int)$r->id] = (string)$r->name;
+                        $userMap[(int)$r->id] = (string)$r->username;
                     }
                 });
         }
