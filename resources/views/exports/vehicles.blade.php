@@ -3,9 +3,9 @@
 <body>
 <table cellspacing="0" border="1" style="border-collapse:collapse;">
     <thead>
-    <tr><td colspan="12" align="center" style="font-weight:bold;color:red;font-size:11pt;">{{ $title }}</td></tr>
     <tr>
         <td colspan="12" align="center" style="font-weight:bold;font-size:10pt;">
+            <b style="color:red">VEHICULOS {{ $stats['total'] }}</b> -
             <b>D2:</b> <b style="color:red">{{ $stats['d2'] }}</b> ·
             <b>Gas:</b> <b style="color:red">{{ $stats['gas'] }}</b> ·
             <b>V.T:</b> <b style="color:red">{{ $stats['vt'] }}</b> ·
