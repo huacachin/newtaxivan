@@ -101,12 +101,36 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
         $grandDraco = 0.0;
         $mkMonths   = fn () => array_fill(1, 12, 0.0);
 
-        // Pre-seed controllers
+        // Pre-seed controllers con sus sedes asignadas (como la vista)
+        $assignedHqs = [];
+        if (!empty($controllerIds)) {
+            $assignedHqs = DB::table('headquarter_user')
+                ->whereIn('user_id', $controllerIds)
+                ->get()
+                ->groupBy('user_id');
+        }
+
         foreach ($controllerIds as $uid) {
             $groups[$uid] = [
                 'user'    => $userMap[$uid] ?? ('User#' . $uid),
                 'hq_rows' => [],
             ];
+            $userHqs = $assignedHqs->get($uid, collect());
+            foreach ($userHqs as $pivot) {
+                $hid = (int) $pivot->headquarter_id;
+                $groups[$uid]['hq_rows'][$hid] = [
+                    'hq'    => $hqMap[$hid] ?? ($hid ? ('HQ#' . $hid) : '-'),
+                    'm'     => $mkMonths(),
+                    'total' => 0.0,
+                ];
+            }
+            if (empty($groups[$uid]['hq_rows'])) {
+                $groups[$uid]['hq_rows'][0] = [
+                    'hq'    => '–',
+                    'm'     => $mkMonths(),
+                    'total' => 0.0,
+                ];
+            }
         }
 
         if (Schema::hasTable('expenses') && !empty($controllerIds)) {
@@ -138,17 +162,6 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
             }
         }
 
-        // Controllers sin movimientos => una fila "–"
-        foreach ($groups as $uid => &$g) {
-            if (empty($g['hq_rows'])) {
-                $g['hq_rows'][0] = [
-                    'hq'    => '–',
-                    'm'     => $mkMonths(),
-                    'total' => 0.0,
-                ];
-            }
-        }
-        unset($g);
 
         // Ordenar usuarios y HQs por nombre
         uasort($groups, fn ($a, $b) => strcmp($a['user'], $b['user']));
