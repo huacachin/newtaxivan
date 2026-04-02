@@ -101,7 +101,7 @@ class RepEstPagCont extends Component
             }
 
             $ctrlBlock = [
-                'controlador' => $ctrl->name,
+                'controlador' => $ctrl->username,
                 'paraderos'   => [],
                 'egreso_pago' => array_fill(1, 12, 0.0),
                 'egreso_draco'=> array_fill(1, 12, 0.0),
@@ -171,7 +171,7 @@ class RepEstPagCont extends Component
             }
 
             $this->rows[] = [
-                'controlador'   => $ctrl->name,
+                'controlador'   => $ctrl->username,
                 'paraderos'     => $ctrlBlock['paraderos'],
                 'tot_ing_mes'   => $totIngMes,
                 'egreso_pago'   => $ctrlBlock['egreso_pago'],
