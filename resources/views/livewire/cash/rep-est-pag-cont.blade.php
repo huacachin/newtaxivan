@@ -83,15 +83,15 @@
                                          <th class="bg-primary text-white">{{ $p['sucursal'] }}</th>
                                          <th class="bg-primary text-white">Ingr. Sal1.</th>
                                          @for ($m=1; $m<=12; $m++)
-                                             <td>{{ number_format($p['ingresos_mes'][$m], 2, '.', ',') }}</td>
+                                             <td style="{{ $p['ingresos_mes'][$m] < 0 ? 'color:red;font-weight:bold;' : 'color:#000;' }}">{{ number_format($p['ingresos_mes'][$m], 2, '.', ',') }}</td>
                                          @endfor
-                                         <td class="text-center font-semibold">{{ number_format($p['total'], 2, '.', ',') }}</td>
+                                         <td class="text-center font-semibold" style="{{ $p['total'] < 0 ? 'color:red;font-weight:bold;' : 'color:#000;' }}">{{ number_format($p['total'], 2, '.', ',') }}</td>
                                      </tr>
                                      @php $first = false; @endphp
                                      @endforeach
 
                                      {{-- Egreso Pago --}}
-                                     <tr>
+                                     <tr style="color:red;font-weight:bold;">
                                          <th class="bg-primary text-white" colspan="2">Egreso Pago</th>
                                          @for ($m=1; $m<=12; $m++)
                                              <td>
@@ -104,7 +104,7 @@
                                      </tr>
 
                                      {{-- Egreso Draco --}}
-                                     <tr>
+                                     <tr style="color:red;font-weight:bold;">
                                          <th class="bg-primary text-white" colspan="2">Egreso Draco</th>
                                          @for ($m=1; $m<=12; $m++)
                                              <td>
