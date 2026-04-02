@@ -181,7 +181,7 @@
                                 <thead class="bg-primary">
                                 <tr>
                                     @hasanyrole('director|gerente|administrador')<th></th>@endhasanyrole
-                                    <th>Id</th>
+                                    <th>Nº</th>
                                     <th>Nombre</th>
                                     <th>DNI</th>
                                     <th>I.Contrato</th>

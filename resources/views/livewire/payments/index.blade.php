@@ -195,7 +195,7 @@
                             <thead class="text-center bg-primary">
                             <tr>
                                 <th></th>
-                                <th>Ítem</th>
+                                <th>Nº</th>
                                 <th>Placa</th>
                                 <th>Serie</th>
                                 <th>Fecha Registro</th>

@@ -63,7 +63,7 @@
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">
                             <tr>
-                                <th>Id</th>
+                                <th>Nº</th>
                                 <th>Nombres</th>
                                 <th>Usuario</th>
                                 <th>Teléfono</th>

@@ -150,7 +150,7 @@
                     <thead class="bg-primary">
                     <tr>
                         <th></th>
-                        <th>ID</th>
+                        <th>Nº</th>
                         <th>Fecha</th>
                         <th>Detalle</th>
                         <th>Exonerado (S/)</th>

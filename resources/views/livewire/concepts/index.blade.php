@@ -79,7 +79,7 @@
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">
                             <tr>
-                                <th>Id</th>
+                                <th>Nº</th>
                                 <th>Código</th>
                                 <th>Nombre</th>
                                 <th>Tipo</th>
