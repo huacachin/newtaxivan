@@ -376,11 +376,13 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
                 }
 
                 // ===== Bordes datos: dotted+solid para área numérica (C-O), thin para A-B =====
-                if ($lastRow >= $dataStartRow) {
-                    $ws->getStyle("A{$dataStartRow}:B{$lastRow}")->applyFromArray([
+                $mainLastRow = $dataStartRow + $this->mainRowCount - 1;
+
+                if ($mainLastRow >= $dataStartRow) {
+                    $ws->getStyle("A{$dataStartRow}:B{$mainLastRow}")->applyFromArray([
                         'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]]],
                     ]);
-                    $ws->getStyle("C{$dataStartRow}:O{$lastRow}")->applyFromArray([
+                    $ws->getStyle("C{$dataStartRow}:O{$mainLastRow}")->applyFromArray([
                         'borders' => [
                             'allBorders' => ['borderStyle' => Border::BORDER_DOTTED, 'color' => ['argb' => $gray]],
                             'vertical'   => ['borderStyle' => Border::BORDER_THIN,   'color' => ['argb' => $black]],
@@ -391,14 +393,14 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
                 }
 
                 // ===== Alineaciones básicas
-                if ($lastRow >= $dataStartRow) {
-                    $ws->getStyle("A{$dataStartRow}:O{$lastRow}")
+                if ($mainLastRow >= $dataStartRow) {
+                    $ws->getStyle("A{$dataStartRow}:O{$mainLastRow}")
                         ->getAlignment()
                         ->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 }
 
                 // ===== Formato moneda para meses + total
-                $ws->getStyle("C{$dataStartRow}:O{$lastRow}")
+                $ws->getStyle("C{$dataStartRow}:O{$mainLastRow}")
                     ->getNumberFormat()->setFormatCode('#,##0.00');
 
                 // ===== Forzar vacíos -> 0 en la tabla principal (C..O)
