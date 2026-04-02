@@ -152,9 +152,22 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
                         $paintBlue("C{$row}");
 
                         for ($m=1; $m<=12; $m++) {
-                            $s->setCellValueByColumnAndRow(3+$m, $row, (float)($p['ingresos_mes'][$m] ?? 0));
+                            $val = (float)($p['ingresos_mes'][$m] ?? 0);
+                            $s->setCellValueByColumnAndRow(3+$m, $row, $val);
+                            if ($val < 0) {
+                                $col = Coordinate::stringFromColumnIndex(3+$m);
+                                $s->getStyle("{$col}{$row}")->applyFromArray([
+                                    'font' => ['bold' => true, 'color' => ['rgb' => $red]],
+                                ]);
+                            }
                         }
-                        $s->setCellValue("P{$row}", (float)$p['total']);
+                        $totalP = (float)$p['total'];
+                        $s->setCellValue("P{$row}", $totalP);
+                        if ($totalP < 0) {
+                            $s->getStyle("P{$row}")->applyFromArray([
+                                'font' => ['bold' => true, 'color' => ['rgb' => $red]],
+                            ]);
+                        }
                         $row++;
                     }
 
@@ -166,7 +179,9 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
                         $s->setCellValueByColumnAndRow(3+$m, $row, (float)($block['egreso_pago'][$m] ?? 0));
                     }
                     $s->setCellValue("P{$row}", (float)$block['tot_egr_pago']);
-                    $s->getStyle("D{$row}:P{$row}")->getFont()->getColor()->setRGB($red);
+                    $s->getStyle("D{$row}:P{$row}")->applyFromArray([
+                        'font' => ['bold' => true, 'color' => ['rgb' => $red]],
+                    ]);
                     $row++;
 
                     // Egreso Draco
@@ -177,17 +192,29 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
                         $s->setCellValueByColumnAndRow(3+$m, $row, (float)($block['egreso_draco'][$m] ?? 0));
                     }
                     $s->setCellValue("P{$row}", (float)$block['tot_egr_draco']);
-                    $s->getStyle("D{$row}:P{$row}")->getFont()->getColor()->setRGB($red);
+                    $s->getStyle("D{$row}:P{$row}")->applyFromArray([
+                        'font' => ['bold' => true, 'color' => ['rgb' => $red]],
+                    ]);
                     $row++;
 
                     // Saldo
+                    $saldoRow = $row;
                     $s->mergeCells("B{$row}:C{$row}");
                     $s->setCellValue("B{$row}", 'Saldo');
                     $paintBlue("B{$row}:C{$row}");
                     for ($m=1; $m<=12; $m++) {
-                        $s->setCellValueByColumnAndRow(3+$m, $row, (float)($block['saldos'][$m] ?? 0));
+                        $val = (float)($block['saldos'][$m] ?? 0);
+                        $s->setCellValueByColumnAndRow(3+$m, $row, $val);
+                        $col = Coordinate::stringFromColumnIndex(3+$m);
+                        $s->getStyle("{$col}{$row}")->applyFromArray([
+                            'font' => ['bold' => true, 'color' => ['rgb' => $val < 0 ? $red : $black]],
+                        ]);
                     }
-                    $s->setCellValue("P{$row}", (float)$block['tot_saldo']);
+                    $totSaldo = (float)$block['tot_saldo'];
+                    $s->setCellValue("P{$row}", $totSaldo);
+                    $s->getStyle("P{$row}")->applyFromArray([
+                        'font' => ['bold' => true, 'color' => ['rgb' => $totSaldo < 0 ? $red : $black]],
+                    ]);
                     $row++;
 
                     // Merge columna A (CONTROL.)
@@ -234,15 +261,12 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
                     'borders' => ['outline' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => $black]]],
                 ]);
 
-                // Ceros en rojo (cuadro 1)
+                // Rellenar celdas vacías con 0 (cuadro 1)
                 for ($r=$startTable; $r<=$endTable; $r++) {
                     for ($c=4; $c<=16; $c++) {
                         $coord = Coordinate::stringFromColumnIndex($c).$r;
                         $val = $s->getCell($coord)->getValue();
-                        if ($val === null || $val === '') { $s->setCellValue($coord, 0); $val = 0; }
-                        if ((float)$val == 0.0) {
-                            $s->getStyle($coord)->getFont()->getColor()->setRGB($red);
-                        }
+                        if ($val === null || $val === '') { $s->setCellValue($coord, 0); }
                     }
                 }
 
