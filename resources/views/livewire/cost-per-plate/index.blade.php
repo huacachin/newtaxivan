@@ -66,7 +66,7 @@
                             @forelse($result as $item)
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
-                                    <td>{{ str_pad($item->month, 2, '0', STR_PAD_LEFT) }}</td>
+                                    <td style="color: {{ $yearColors[$item->year] ?? '#000' }}; font-weight:bold;">{{ str_pad($item->month, 2, '0', STR_PAD_LEFT) }}</td>
                                     <td>{{ ucfirst(\Carbon\Carbon::create(null, $item->month, 1)->locale('es')->translatedFormat('F')) }}</td>
                                     <td style="color: {{ $yearColors[$item->year] ?? '#000' }}; font-weight:bold;">{{ $item->year }}</td>
                                     <td>{{ number_format($item->plates) }}</td>
