@@ -36,6 +36,11 @@ class Edit extends Component
         $this->phone                   = $this->owner->phone;
     }
 
+    protected $validationAttributes = [
+        'document_type'   => 'tipo de documento',
+        'document_number' => 'documento de identidad',
+    ];
+
     public function rules()
     {
         return [

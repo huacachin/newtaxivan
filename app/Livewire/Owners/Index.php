@@ -25,6 +25,11 @@ class Index extends Component
     public $phone;
 
 
+    protected $validationAttributes = [
+        'document_type'   => 'tipo de documento',
+        'document_number' => 'documento de identidad',
+    ];
+
     protected $rules = [
         'name' => 'required|string|max:255',
         'document_type' => 'required|string|max:255',
