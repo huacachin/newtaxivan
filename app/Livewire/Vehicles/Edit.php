@@ -122,7 +122,9 @@ class Edit extends Component
 
         if ($departures > 0) $relations[] = "{$departures} salida(s)";
         if ($payments > 0)   $relations[] = "{$payments} pago(s)";
-        if ($debtDays > 0)   $relations[] = "{$debtDays} deuda(s)";
+
+        $cond = strtoupper(trim($vehicle->condition ?? ''));
+        if ($debtDays > 0 && $cond !== 'EX') $relations[] = "{$debtDays} deuda(s)";
 
         if (!empty($relations)) {
             session()->flash('vehicle_error', "No se puede eliminar {$vehicle->plate} porque tiene: " . implode(', ', $relations));
