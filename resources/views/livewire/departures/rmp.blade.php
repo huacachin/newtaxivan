@@ -70,7 +70,7 @@
     <div class="row align-items-center mb-3">
         <div class="col-sm-6">
             <h4 class="main-title title-modules ">
-                REPORTE MENSUAL POR PARADERO V.T {{ mb_strtoupper($monthName, 'UTF-8') }} DEL {{ $year }}
+                REPORTE MENSUAL POR PARADERO VEH.TRAB {{ mb_strtoupper($monthName, 'UTF-8') }} DEL {{ $year }}
             </h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
@@ -219,7 +219,7 @@
                             <tfoot class="text-center fw-semibold">
                             <tr>
                                 <td rowspan="3" colspan="2">TOTAL GENERAL</td>
-                                <td>T.E</td>
+                                <td>T. Emp.</td>
                                 @for($d=1; $d<=$daysInMonth; $d++)
                                     @php $dayDate = sprintf('%04d-%02d-%02d', $year, $month, $d); @endphp
                                     <td>{{ $totalsTE[$d] ?? 0 }}</td>
@@ -227,14 +227,14 @@
                                 <td>{{ $grandTE }}</td>
                             </tr>
                             <tr class="striped-cond">
-                                <td>T.A</td>
+                                <td>T. Ap.</td>
                                 @for($d=1; $d<=$daysInMonth; $d++)
                                     <td class="day-col">{{ $totalsTA[$d] ?? 0 }}</td>
                                 @endfor
                                 <td>{{ $grandTA }}</td>
                             </tr>
                             <tr>
-                                <td>V.T</td>
+                                <td>T. Veh.</td>
                                 @for($d=1; $d<=$daysInMonth; $d++)
                                     <td class="day-col">{{ $totalsVT[$d] ?? 0 }}</td>
                                 @endfor

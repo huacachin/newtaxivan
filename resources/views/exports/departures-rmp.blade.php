@@ -21,7 +21,7 @@
 
     <tr>
         <td colspan="{{ $totalCols }}" style="{{ $ttl }}">
-            REPORTE MENSUAL POR PARADERO V.T. {{ mb_strtoupper($monthName) }} {{ $year }}
+            REPORTE MENSUAL POR PARADERO VEH.TRAB {{ mb_strtoupper($monthName) }} {{ $year }}
         </td>
     </tr>
     <tr>
