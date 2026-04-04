@@ -403,7 +403,7 @@
                                 <td>{{ number_format((float) data_get($supportTotals, 'passengers_total', 0)) }}</td>
                                 <td>{{ number_format((float) data_get($supportTotals, 'passage_total', 0), 2) }}</td>
                                 <td>{{ number_format((float) data_get($supportTotals, 'total_pasaje_total', 0), 2) }}</td>
-                                <td>-</td>
+                                @if(!$groupMode)<td>-</td>@endif
                             </tr>
                             <tr>
                                 <td class="text-center" colspan="{{ (!$groupMode) ? (8) : 6 }}">TOTAL GENERAL</td>
@@ -415,7 +415,7 @@
                                 <td>{{ number_format($grandTotals->passengers_total ?? 0) }}</td>
                                 <td>{{ number_format($grandTotals->passage_total ?? 0, 2) }}</td>
                                 <td>{{ number_format($grandTotals->total_pasaje_total ?? 0, 2) }}</td>
-                                <td>-</td>
+                                @if(!$groupMode)<td>-</td>@endif
                             </tr>
                             </tfoot>
                         </table>
