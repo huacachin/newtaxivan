@@ -108,22 +108,32 @@ class Edit extends Component
     #[On('register_destroy')]
     public function delete(int $id): void
     {
-
         if (!auth()->user()?->hasAnyRole('director','gerente','administrador')) {
             abort(403);
         }
 
-        try {
-            Vehicle::findOrFail($id)->delete();
-            session()->flash('vehicle_success', 'Vehículo eliminado correctamente.');
-        } catch (\Illuminate\Database\QueryException $e) {
-            if ($e->getCode() === '23000') {
-                session()->flash('vehicle_error', 'No se puede eliminar porque el vehículo tiene registros relacionados (salidas, pagos, costos o deudas).');
-            } else {
-                session()->flash('vehicle_error', 'Error al eliminar: ' . $e->getMessage());
-            }
+        $vehicle = Vehicle::findOrFail($id);
+
+        // Verificar relaciones antes de borrar
+        $relations = [];
+        $departures = \DB::table('departures')->where('vehicle_id', $id)->count();
+        $payments   = \DB::table('payments')->where('vehicle_id', $id)->count();
+        $debtDays   = \DB::table('debt_days')->where('vehicle_id', $id)->count();
+        $costs      = \DB::table('cost_per_plates')->where('vehicle_id', $id)->count();
+
+        if ($departures > 0) $relations[] = "{$departures} salida(s)";
+        if ($payments > 0)   $relations[] = "{$payments} pago(s)";
+        if ($debtDays > 0)   $relations[] = "{$debtDays} deuda(s)";
+        if ($costs > 0)      $relations[] = "{$costs} costo(s)";
+
+        if (!empty($relations)) {
+            session()->flash('vehicle_error', "No se puede eliminar {$vehicle->plate} porque tiene: " . implode(', ', $relations));
+            $this->redirectRoute('settings.vehicles.index');
+            return;
         }
 
+        $vehicle->delete();
+        session()->flash('vehicle_success', "Vehículo {$vehicle->plate} eliminado correctamente.");
         $this->redirectRoute('settings.vehicles.index');
     }
 
