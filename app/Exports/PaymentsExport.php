@@ -39,7 +39,7 @@ class PaymentsExport implements
     public function query(): Builder
     {
         $q = Payment::query()
-            ->with(['vehicle:id,plate', 'user:id,name', 'headquarter:id,name'])
+            ->with(['vehicle:id,plate', 'user:id,username', 'headquarter:id,name'])
             ->when($this->date_start && $this->date_end,
                 fn($q) => $q->whereBetween('date_register', [$this->date_start, $this->date_end]),
                 fn($q) => $q->whereBetween('date_register', [now()->toDateString(), now()->toDateString()])
@@ -143,7 +143,7 @@ class PaymentsExport implements
             $this->excelTime($row->hour), // Hora como número Excel
             $row->type,
             optional($row->headquarter)->name,
-            optional($row->user)->name,
+            optional($row->user)->username,
             (float) $row->amount,
         ];
     }
@@ -164,7 +164,7 @@ class PaymentsExport implements
                 'hour'          => $row->hour,
                 'type'          => $row->type,
                 'headquarter'   => optional($row->headquarter)->name,
-                'user'          => optional($row->user)->name,
+                'user'          => optional($row->user)->username,
                 'amount'        => (float) $row->amount,
             ];
         }

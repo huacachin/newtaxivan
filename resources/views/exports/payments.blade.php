@@ -28,7 +28,7 @@
             <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;">{{ $row['date_register'] }}</td>
             <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;">{{ $row['date_payment'] }}</td>
             <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;">{{ $row['hour'] }}</td>
-            <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;{{ strtolower($row['type']) === 'retraso' ? 'color:red;' : '' }}">{{ $row['type'] }}</td>
+            <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;{{ in_array(strtolower($row['type']), ['retraso','deuda']) ? 'color:red;font-weight:bold;' : '' }}">{{ $row['type'] }}</td>
             <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;">{{ $row['headquarter'] }}</td>
             <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;">{{ $row['user'] }}</td>
             <td style="border-style:dotted solid dotted solid;text-align:center;vertical-align:middle;">{{ number_format((float) $row['amount'], 2) }}</td>
