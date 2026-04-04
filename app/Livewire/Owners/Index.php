@@ -28,7 +28,7 @@ class Index extends Component
     protected $rules = [
         'name' => 'required|string|max:255',
         'document_type' => 'required|string|max:255',
-        'document_number' => 'required|string|max:255|unique:owners,document_number',
+        'document_number' => 'required|string|max:255',
         'document_expiration_date' => 'nullable|date',
         'birthdate' => 'nullable|date',
         'address' => 'nullable|string|max:255',
@@ -125,7 +125,7 @@ class Index extends Component
         $this->validate([
             'name' => 'required|string|max:255',
             'document_type' => 'required|string|max:255',
-            'document_number' => 'required|string|max:255|unique:owners,document_number,' .$this->ownerId,
+            'document_number' => 'required|string|max:255',
             'document_expiration_date' => 'nullable|date',
             'birthdate' => 'nullable|date',
             'address' => 'nullable|string|max:255',
