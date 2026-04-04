@@ -108,11 +108,22 @@ class Edit extends Component
     #[On('register_destroy')]
     public function delete(int $id): void
     {
+
         if (!auth()->user()?->hasAnyRole('director','gerente','administrador')) {
             abort(403);
         }
-        Vehicle::find($id)->update(['status' => 'inactive']);
-        session()->flash('vehicle_success', 'Vehículo eliminado correctamente.');
+
+        try {
+            Vehicle::findOrFail($id)->delete();
+            session()->flash('vehicle_success', 'Vehículo eliminado correctamente.');
+        } catch (\Illuminate\Database\QueryException $e) {
+            if ($e->getCode() === '23000') {
+                session()->flash('vehicle_error', 'No se puede eliminar porque el vehículo tiene registros relacionados (salidas, pagos, costos o deudas).');
+            } else {
+                session()->flash('vehicle_error', 'Error al eliminar: ' . $e->getMessage());
+            }
+        }
+
         $this->redirectRoute('settings.vehicles.index');
     }
 

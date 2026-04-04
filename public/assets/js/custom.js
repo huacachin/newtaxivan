@@ -154,12 +154,7 @@ function questionDelete(id, role, name) {
         confirmButtonText: "Eliminar"
     }).then(function (result) {
         if (result.isConfirmed) {
-            Livewire.dispatch('register_destroy', [id]);
-            Swal.fire({
-                title: "Eliminado!",
-                text: "El registro se eliminado correctamente.",
-                icon: "success"
-            });
+            Livewire.dispatch('register_destroy', {id: id});
         }
     });
 }
