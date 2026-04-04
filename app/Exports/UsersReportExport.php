@@ -70,8 +70,17 @@ class UsersReportExport implements
 
     public function htmlData(): array
     {
+        $authUser = auth()->user();
+        $authLevel = $authUser->getRoleLevel();
+
+        $visibleRoles = collect(User::ROLE_HIERARCHY)
+            ->filter(fn($level) => $authUser->isDirector() ? $level <= $authLevel : $level < $authLevel)
+            ->keys()
+            ->toArray();
+
         $users = User::query()
             ->where('status', 'active')
+            ->whereHas('roles', fn($q) => $q->whereIn('name', $visibleRoles))
             ->when(trim((string) $this->search) !== '', function ($q) {
                 $term = trim((string) $this->search);
                 $q->where(function ($w) use ($term) {
