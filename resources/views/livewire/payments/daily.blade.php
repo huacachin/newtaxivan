@@ -149,9 +149,10 @@
 
                             <tbody>
                             @php $i=0; @endphp
-                            @forelse($rows as $r)
+                            @forelse($rows as $vid => $r)
                                 @php
                                     $i++;
+                                    $isLegacy = $vid < 0;
                                     $cond = strtoupper($r['cond'] ?? '');
                                     $condClass = 'cond-badge ';
                                     if (str_starts_with($cond, 'EX')) {
@@ -164,7 +165,13 @@
                                 @endphp
                                 <tr>
                                     <td style="background:#D0CECE">{{ $i }}</td>
-                                    <td style="background:#D0CECE">{{ $r['plate'] }}</td>
+                                    <td style="background:#D0CECE">
+                                        @if($isLegacy)
+                                            <span style="color:red;font-weight:bold;" title="Cesado">{{ $r['plate'] }}</span>
+                                        @else
+                                            {{ $r['plate'] }}
+                                        @endif
+                                    </td>
                                     <td style="background:#D0CECE">
                                         <span class="{{ $condClass }}">{{ $cond ?: '-' }}</span>
                                     </td>
