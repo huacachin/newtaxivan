@@ -45,6 +45,7 @@
                             <thead class="bg-primary">
                             <tr>
                                 <th>Nº</th>
+                                <th>M</th>
                                 <th>Mes</th>
                                 <th>Año</th>
                                 <th>Placas</th>
@@ -54,11 +55,19 @@
                             </thead>
 
                             <tbody>
+                            @php
+                                $years = $result->pluck('year')->unique()->sort()->reverse()->values();
+                                $yearColors = [];
+                                foreach ($years as $i => $y) {
+                                    $yearColors[$y] = $i % 2 === 0 ? '#000' : 'red';
+                                }
+                            @endphp
                             @forelse($result as $item)
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
+                                    <td>{{ str_pad($item->month, 2, '0', STR_PAD_LEFT) }}</td>
                                     <td>{{ ucfirst(\Carbon\Carbon::create(null, $item->month, 1)->locale('es')->translatedFormat('F')) }}</td>
-                                    <td>{{ $item->year }}</td>
+                                    <td style="color: {{ $yearColors[$item->year] ?? '#000' }}; font-weight:bold;">{{ $item->year }}</td>
                                     <td>{{ number_format($item->plates) }}</td>
                                     <td>{{ number_format($item->amount, 2) }}</td>
                                     <td>
@@ -68,7 +77,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td class="py-4 text-muted" colspan="6">No se encontraron resultados</td>
+                                    <td class="py-4 text-muted" colspan="7">No se encontraron resultados</td>
                                 </tr>
                             @endforelse
                             </tbody>
