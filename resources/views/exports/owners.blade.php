@@ -3,14 +3,20 @@
 <body>
 <table cellspacing="0" border="1" style="border-collapse:collapse;">
     <thead>
-    <tr><td colspan="6" align="center" style="font-weight:bold;color:red;font-size:11pt;">LISTADO GENERAL DE PROPIETARIO ( {{ $countActive }} )</td></tr>
+    <tr>
+        <td colspan="6" align="center" style="font-weight:bold;font-size:10pt;">
+            <b style="color:red">Total de propietarios {{ $countActive + $countFree }}</b> -
+            <b>Propietarios:</b> <b style="color:red">{{ $countActive }}</b> ·
+            <b>Libres:</b> <b style="color:red">{{ $countFree }}</b>
+        </td>
+    </tr>
     <tr>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Nº</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Cod</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Placa</b></th>
-        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Nombre</b></th>
-        <th bgcolor="#2874A6" align="center" style="color:white;"><b>N&deg; Documento</b></th>
-        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Tel&eacute;fono</b></th>
+        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Nombre / Empresa</b></th>
+        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Dni / Ruc</b></th>
+        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Cel.</b></th>
     </tr>
     </thead>
     <tbody>
