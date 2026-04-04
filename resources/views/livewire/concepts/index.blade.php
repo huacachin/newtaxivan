@@ -80,7 +80,6 @@
                             <thead class="bg-primary">
                             <tr>
                                 <th>Nº</th>
-                                <th>Orden</th>
                                 <th>Nombre</th>
                                 <th>Tipo</th>
                                 <th></th>
@@ -92,7 +91,6 @@
                                 @foreach($concepts as $concept)
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
-                                        <td>{{ $concept->sort_order }}</td>
                                         <td>{{ $concept->name }}</td>
                                         <td>{{ ucfirst($concept->type) }}</td>
                                         <td>

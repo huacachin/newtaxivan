@@ -36,7 +36,7 @@ class ConceptsReportExport implements
 
     public function headings(): array
     {
-        return ['Nº', 'Orden', 'Nombre', 'Tipo'];
+        return ['Nº', 'Nombre', 'Tipo'];
     }
 
     public function map($concept): array
@@ -45,7 +45,6 @@ class ConceptsReportExport implements
 
         return [
             $this->rowNum,
-            $concept->sort_order,
             $concept->name,
             ucfirst($concept->type),
         ];
@@ -59,7 +58,6 @@ class ConceptsReportExport implements
             $i++;
             $rows[] = [
                 'item' => $i,
-                'sort_order' => $concept->sort_order,
                 'name' => $concept->name,
                 'type' => ucfirst($concept->type),
             ];
