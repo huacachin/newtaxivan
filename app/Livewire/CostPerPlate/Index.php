@@ -147,6 +147,11 @@ class Index extends Component
         $this->dispatch('questionGenerate');
     }
 
+    public function export(): void
+    {
+        $this->dispatch('url-open', ['url' => route('exports.cost-per-plate')]);
+    }
+
     public function openDetail($year, $month){
 
         $route = route('settings.cost-per-plate.cost-per-plate-day',["year" => $year, "month" => $month]);

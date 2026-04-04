@@ -28,14 +28,17 @@
                 <div class="card-body pb-2">
                     <div class="my-2 d-flex align-items-center justify-content-end">
 
+                        <button class="btn btn-sm btn-export mg-e-2" wire:click="export">
+                            <i class="ti ti-file-analytics f-s-12"></i> Exportar
+                        </button>
                         @hasanyrole('director')
                         <button class="btn btn-sm btn-primary mg-e-2" wire:click="questionGenerate">
                             <i class="ti ti-square-rounded-plus f-s-12"></i> Generar
                         </button>
+                        @endhasanyrole
                         <button class="btn btn-sm btn-primary" id="down" title="Bajar">
                             <i class="fa-solid fa-angle-down"></i>
                         </button>
-                        @endhasanyrole
                     </div>
                     <div class="table-responsive tableFixHead">
                         <table class="table table-bordered table-striped table-hover">
@@ -45,7 +48,7 @@
                                 <th>Mes</th>
                                 <th>Año</th>
                                 <th>Placas</th>
-                                <th>Monto</th>
+                                <th>S/</th>
                                 <th width="10"></th>
                             </tr>
                             </thead>
