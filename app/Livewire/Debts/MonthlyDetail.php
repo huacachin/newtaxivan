@@ -112,10 +112,10 @@ class MonthlyDetail extends Component
     }
 
     #[On('register_destroy')]
-    public function deleteDetail(int $detailId): void
+    public function deleteDetail(int $id): void
     {
-        DB::transaction(function () use ($detailId) {
-            $detail = DebtDayDetail::where('debt_days_id', $this->id)->findOrFail($detailId);
+        DB::transaction(function () use ($id) {
+            $detail = DebtDayDetail::where('debt_days_id', $this->id)->findOrFail($id);
             $detail->delete();
 
             $sums = DebtDayDetail::where('debt_days_id', $this->id)
