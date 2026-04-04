@@ -396,7 +396,7 @@
                             <tfoot class="text-center f-w-600  bg-primary"
                                    wire:key="dep-support-tfoot-{{ $groupMode ? 'g' : 'd' }}">
                             <tr>
-                                <td class="text-center" colspan="{{ (!$groupMode) ? (8) : 6 }}">TOTAL</td>
+                                <td class="text-center" colspan="{{ (!$groupMode) ? (8) : 7 }}">TOTAL</td>
                                 <td>{{ number_format((float) data_get($supportTotals, 'times_total', 0)) }}</td>
                                 <td>{{ number_format((float) data_get($supportTotals, 'times_total', 0)) }}</td>
                                 <td>{{ number_format((float) data_get($supportTotals, 'price_total', 0), 2) }}</td>
@@ -406,7 +406,7 @@
                                 @if(!$groupMode)<td>-</td>@endif
                             </tr>
                             <tr>
-                                <td class="text-center" colspan="{{ (!$groupMode) ? (8) : 6 }}">TOTAL GENERAL</td>
+                                <td class="text-center" colspan="{{ (!$groupMode) ? (8) : 7 }}">TOTAL GENERAL</td>
                                 {{-- Empresa --}}
                                 <td>{{ number_format($grandTotals->times_total ?? 0) }}</td>
                                 <td>{{ number_format($grandTotals->times_total ?? 0) }}</td>
