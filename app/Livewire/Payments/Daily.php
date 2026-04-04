@@ -280,5 +280,72 @@ class Daily extends Component
             $this->grandTotal += (float)$row['total'];
         }
         unset($row);
+
+        // ===== Pagos sin vehicle_id (legacy_plate) =====
+        $legacyAggs = DB::table('payments')
+            ->selectRaw("legacy_plate as plate, DAY($dateCol) as d, SUM(amount) as s")
+            ->whereIn(DB::raw('UPPER(type)'), $typeFilter)
+            ->whereNotNull($dateCol)
+            ->whereBetween($dateCol, [$startStr, $endStr])
+            ->whereNull('vehicle_id')
+            ->whereNotNull('legacy_plate')
+            ->where('legacy_plate', '!=', '')
+            ->groupBy('plate', 'd')
+            ->get();
+
+        $legacyPlates = [];
+        foreach ($legacyAggs as $r) {
+            $plate = strtoupper(trim($r->plate));
+            $day   = (int) $r->d;
+            if (!isset($legacyPlates[$plate])) {
+                $legacyPlates[$plate] = [
+                    'order'           => '',
+                    'plate'           => $plate,
+                    'cond'            => '',
+                    'days'            => array_fill(1, $this->daysInMonth, 0.0),
+                    'total'           => 0.0,
+                    'days_paid'       => 0,
+                    'debt_days'       => 0,
+                    'debt_amount'     => 0.0,
+                    'real_debt_days'  => 0,
+                    'real_debt_amount'=> 0.0,
+                ];
+            }
+            if ($day >= 1 && $day <= $this->daysInMonth) {
+                $legacyPlates[$plate]['days'][$day] = (float) $r->s;
+            }
+        }
+
+        // Calcular totales y days_paid para legacy
+        $legacyPaidCounts = DB::table('payments')
+            ->selectRaw("legacy_plate as plate, COUNT(*) as kt")
+            ->whereIn(DB::raw('UPPER(type)'), ['PAGO','RETRASO'])
+            ->whereNotNull($dateCol)
+            ->whereBetween($dateCol, [$startStr, $endStr])
+            ->whereNull('vehicle_id')
+            ->whereNotNull('legacy_plate')
+            ->where('legacy_plate', '!=', '')
+            ->groupBy('plate')
+            ->pluck('kt', 'plate');
+
+        foreach ($legacyPlates as $plate => &$row) {
+            $row['total']     = array_sum($row['days']);
+            $row['days_paid'] = (int) ($legacyPaidCounts[strtoupper(trim($plate))] ?? 0);
+
+            $this->sumDaysPaid += (int)$row['days_paid'];
+
+            for ($d = 1; $d <= $this->daysInMonth; $d++) {
+                $this->totalsPerDay[$d] += (float)$row['days'][$d];
+            }
+            $this->grandTotal += (float)$row['total'];
+        }
+        unset($row);
+
+        // Agregar al final de rows con keys negativos para no colisionar
+        $negKey = -1;
+        foreach ($legacyPlates as $plate => $row) {
+            $this->rows[$negKey] = $row;
+            $negKey--;
+        }
     }
 }
