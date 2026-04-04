@@ -69,7 +69,6 @@
                             <thead class="bg-primary">
                             <tr>
                                 <th>#</th>
-                                <th>Orden</th>
                                 <th>Nombre</th>
                                 <th>Usuarios</th>
                                 <th>Estado</th>
@@ -82,7 +81,6 @@
                             @forelse($headquarters as $hq)
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
-                                    <td>{{ $hq->sort_order }}</td>
                                     <td>{{ $hq->name }}</td>
                                     <td>{{ $hq->activeUsers->pluck('username')->implode(', ') ?: '—' }}</td>
                                     <td>

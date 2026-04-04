@@ -36,7 +36,7 @@ class HeadquartersReportExport implements
 
     public function headings(): array
     {
-        return ['Nº', 'Orden', 'Nombre', 'Estado'];
+        return ['Nº', 'Nombre', 'Estado'];
     }
 
     public function map($hq): array
@@ -45,7 +45,6 @@ class HeadquartersReportExport implements
 
         return [
             $this->rowNum,
-            $hq->sort_order,
             $hq->name,
             $hq->status === 'active' ? 'Activo' : 'Inactivo',
         ];
@@ -58,10 +57,9 @@ class HeadquartersReportExport implements
         foreach ($this->query()->get() as $hq) {
             $i++;
             $rows[] = [
-                'item'       => $i,
-                'sort_order' => $hq->sort_order,
-                'name'       => $hq->name,
-                'status'     => $hq->status === 'active' ? 'Activo' : 'Inactivo',
+                'item'   => $i,
+                'name'   => $hq->name,
+                'status' => $hq->status === 'active' ? 'Activo' : 'Inactivo',
             ];
         }
         return $rows;
