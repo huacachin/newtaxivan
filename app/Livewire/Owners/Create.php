@@ -21,8 +21,8 @@ class Create extends Component
 
     protected $rules = [
         'name'                     => 'required|string|max:255',
-        'document_type'            => 'nullable|string|max:255',
-        'document_number'          => 'nullable|string|max:255|unique:owners,document_number',
+        'document_type'            => 'required|string|max:255',
+        'document_number'          => 'required|string|max:255|unique:owners,document_number',
         'document_expiration_date' => 'nullable|date',
         'birthdate'                => 'nullable|date',
         'address'                  => 'nullable|string|max:255',

@@ -40,8 +40,8 @@ class Edit extends Component
     {
         return [
             'name'                     => 'required|string|max:255',
-            'document_type'            => 'nullable|string|max:255',
-            'document_number'          => 'nullable|string|max:255|unique:owners,document_number,' . $this->owner->id,
+            'document_type'            => 'required|string|max:255',
+            'document_number'          => 'required|string|max:255|unique:owners,document_number,' . $this->owner->id,
             'document_expiration_date' => 'nullable|date',
             'birthdate'                => 'nullable|date',
             'address'                  => 'nullable|string|max:255',
