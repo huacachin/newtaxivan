@@ -15,11 +15,11 @@
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Cod</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Placa</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Nombre</b></th>
-        <th bgcolor="#2874A6" align="center" style="color:white;"><b>N&deg; Documento</b></th>
+        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Dni</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>I.Contrato</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>F.Contrato</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Tel&eacute;fono</b></th>
-        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Condici&oacute;n</b></th>
+        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Estado</b></th>
     </tr>
     </thead>
     <tbody>

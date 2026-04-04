@@ -101,8 +101,8 @@
                                 <th>Nº</th>
                                 <th>Cod</th>
                                 <th scope="col">Placa</th>
-                                <th scope="col">Nombre/Empresa</th>
-                                <th scope="col">DNI/RUC</th>
+                                <th scope="col">Nombre / Empresa</th>
+                                <th scope="col">Dni / Ruc</th>
                                 <th scope="col">Cel.</th>
                             </tr>
                             </thead>

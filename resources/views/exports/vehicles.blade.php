@@ -5,7 +5,7 @@
     <thead>
     <tr>
         <td colspan="12" align="center" style="font-weight:bold;font-size:10pt;">
-            <b style="color:red">Total de vehículos {{ $stats['total'] }}</b> -
+            <b>Total de vehículos </b> <b style="color:red" >{{ $stats['total'] }}</b> -
             <b>D2:</b> <b style="color:red">{{ $stats['d2'] }}</b> ·
             <b>Gas:</b> <b style="color:red">{{ $stats['gas'] }}</b> ·
             <b>V.T:</b> <b style="color:red">{{ $stats['vt'] }}</b> ·
