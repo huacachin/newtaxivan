@@ -9,11 +9,11 @@
 
 <table cellspacing="0" border="1" style="border-collapse:collapse;">
     <col width="25">
-    <col width="140">
+    <col width="160">
     <col width="70">
-    <col width="67">
-    <col width="140">
     <col width="77">
+    <col width="160">
+    <col width="87">
     <col width="45">
 
     <tr>
