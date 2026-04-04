@@ -154,5 +154,7 @@ Route::middleware('auth')->group(function () {
         ->name('exports.headquarters');
     Route::get('/exports/cost-per-plate', [CostPerPlateController::class, 'export'])
         ->name('exports.cost-per-plate');
+    Route::get('/exports/cost-per-plate-day', [CostPerPlateController::class, 'exportDay'])
+        ->name('exports.cost-per-plate-day');
 
 });

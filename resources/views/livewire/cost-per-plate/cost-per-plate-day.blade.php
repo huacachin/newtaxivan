@@ -32,12 +32,14 @@
                                 <button class="btn btn-sm btn-dark mg-e-10" wire:click="$refresh">
                                     <i class="ti ti-search f-s-12"></i>
                                 </button>
+                                <button class="btn btn-sm btn-export mg-e-10" wire:click="export">
+                                    <i class="ti ti-file-analytics f-s-12"></i> Exportar
+                                </button>
                                 <button class="btn btn-sm btn-primary mg-e-10" wire:click="goBack">
                                     <i class="ti ti-arrow-back-up f-s-12"></i> Regresar
                                 </button>
-                                <button id="down"
-                                        class="btn btn-sm btn-primary flex-shrink-0">
-                                    <i class="ti ti-square-chevrons-down f-s-12"></i>
+                                <button class="btn btn-sm btn-primary" id="down" title="Bajar">
+                                    <i class="fa-solid fa-angle-down"></i>
                                 </button>
                             </div>
 
@@ -50,7 +52,7 @@
                                 <th>Mes</th>
                                 <th>Año</th>
                                 <th>Placa</th>
-                                <th>Monto ({{ $now->format('d/m/Y') }})</th>
+                                <th>S/ ({{ $now->format('d/m/Y') }})</th>
                                 <th width="10"></th>
                             </tr>
                             </thead>

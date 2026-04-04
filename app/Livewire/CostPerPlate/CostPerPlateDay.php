@@ -25,6 +25,11 @@ class CostPerPlateDay extends Component
         $this->dispatch('url-open',["url" => $route]);;
     }
 
+    public function export(): void
+    {
+        $this->dispatch('url-open', ['url' => route('exports.cost-per-plate-day', ['year' => $this->year, 'month' => $this->month, 'plate' => $this->plate])]);
+    }
+
     public function goBack()
     {
         $this->redirect(route('settings.cost-per-plate.index'));
