@@ -46,7 +46,7 @@
 <body topmargin="0" leftmargin="0" rightmargin="0" bottommargin="0">
 
 <table cellspacing="0" border="1" style="border-collapse:collapse;">
-    <col width="115">
+    <col width="122">
     <col width="97">
     <col width="62">
     @for($d = 1; $d <= $daysInMonth; $d++)
