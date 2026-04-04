@@ -277,7 +277,7 @@
         <div class="col-xl-12 mt-4">
             <div class="card shadow-sm">
                 <div class="card-body">
-                    <h5 class="fw-bold title-modules mb-2">RESUMEN POR SEDE - {{$monthName}} DEL {{$year}}</h5>
+                    <h5 class="fw-bold title-modules mb-2">RESUMEN POR SEDE (Veh. Apoyo) - {{$monthName}} DEL {{$year}}</h5>
                     <div class="table-responsive">
                         <table class="table table-bordered table-hover">
                             <thead class="bg-primary">
