@@ -287,6 +287,7 @@ class OwnersReportExport implements
         $like = $s === '' ? null : '%'.str_replace(['%','_'], ['\%','\_'], $s).'%';
 
         $rows = DB::table('owners as o')
+            ->where('o.status', 'active')
             ->whereNotExists(function ($sub) {
                 $sub->from('vehicles as v')
                     ->whereColumn('v.owner_id','=','o.id')
