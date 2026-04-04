@@ -65,7 +65,7 @@ class Create extends Component
     {
         $today = Carbon::today()->toDateString();
         $this->entry_date = $today;
-        $this->termination_date = '0000-00-00';
+        $this->termination_date = null;
         $this->certificate_date = $today;
         $this->soat_date = $today;
         $this->technical_review = $today;
@@ -77,6 +77,10 @@ class Create extends Component
     public function save()
     {
         try {
+            if ($this->termination_date === '0000-00-00' || $this->termination_date === '') {
+                $this->termination_date = null;
+            }
+
             $this->validate();
 
             Vehicle::create([

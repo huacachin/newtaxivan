@@ -34,7 +34,7 @@ class Edit extends Component
         $this->plate = $this->vehicle->plate;
         $this->headquarter = $this->vehicle->headquarters;
         $this->entry_date = optional($this->vehicle->entry_date)->format('Y-m-d');
-        $this->termination_date = $this->vehicle->termination_date ? $this->vehicle->termination_date->format('Y-m-d') : '0000-00-00';
+        $this->termination_date = $this->vehicle->termination_date ? $this->vehicle->termination_date->format('Y-m-d') : null;
         $this->class = $this->vehicle->class;
         $this->brand = $this->vehicle->brand;
         $this->year = $this->vehicle->year;
@@ -138,6 +138,10 @@ class Edit extends Component
     public function update()
     {
         try {
+            if ($this->termination_date === '0000-00-00' || $this->termination_date === '') {
+                $this->termination_date = null;
+            }
+
             $this->validate();
 
             $this->vehicle->update([
