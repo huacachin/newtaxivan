@@ -2,7 +2,7 @@
     <!-- Header -->
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title title-modules">LISTADO GENERAL DE CONDUCTORES ({{ $drivers->count() + $driversFree->count() }})</h4>
+            <h4 class="main-title title-modules">CONDUCTORES</h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -39,11 +39,15 @@
             <div class="card">
                 <div class="card-body">
 
+                        <h5 class="mb-1">Total de conductores: <span class="title-modules">{{ $drivers->count() + $driversFree->count() }}</span></h5>
+                        <p class="mb-0">
+                            <strong>Conductores:</strong> <strong style="color:red">{{ $drivers->count() }}</strong> ·
+                            <strong>Libres:</strong> <strong style="color:red">{{ $driversFree->count() }}</strong>
+                        </p>
+
                     <div class="row my-2">
                         <div class="col-12">
                             <div class="d-flex flex-wrap align-items-end gap-2 overflow-auto py-1">
-
-
 
                                 <!-- Filtro -->
                                 <div class="flex-shrink-0" style="min-width: 160px;">
