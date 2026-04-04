@@ -195,7 +195,6 @@
                             <thead class="bg-primary">
                             <tr>
                                 <th>Nº</th>
-                                <th>COD</th>
                                 <th>Placa</th>
                                 @foreach($days as $d)
                                     @php $isSun = \Carbon\Carbon::create($year, $month, $d)->isSunday(); @endphp
@@ -210,7 +209,6 @@
                                 @php $hi++; @endphp
                                 <tr class="text-center">
                                     <td>{{ $hi }}</td>
-                                    <td>{{ $row['sort_order'] }}</td>
                                     <td class="text-start">{{ $row['plate'] }}</td>
                                     @foreach($days as $d)
                                         @php
@@ -243,7 +241,7 @@
                             </tbody>
                             <tfoot class="text-center f-w-600 bg-primary">
                             <tr>
-                                <th colspan="3" class="text-center">Total Vueltas</th>
+                                <th colspan="2" class="text-center">Total Vueltas</th>
                                 @foreach($days as $d)
                                     @php
                                         $hqTpd = $hq['totalPerDay'][$d] ?? 0;
@@ -260,7 +258,7 @@
                                 <th>{{ array_sum($hq['totalPerDay']) }}</th>
                             </tr>
                             <tr>
-                                <th colspan="3" class="text-center">Total V.T</th>
+                                <th colspan="2" class="text-center">Total V.T</th>
                                 @foreach($days as $d)
                                     <th class="bg-modules">{{ $hq['vtPerDay'][$d] ?? 0 }}</th>
                                 @endforeach

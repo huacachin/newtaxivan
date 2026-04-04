@@ -240,6 +240,9 @@ class Monthly extends Component
 
             if (empty($hqRows)) continue;
 
+            // Ordenar por total de salidas descendente
+            usort($hqRows, fn($a, $b) => $b['total'] <=> $a['total']);
+
             $this->hqTables[$hqId] = [
                 'name'        => $hqData['name'],
                 'rows'        => $hqRows,

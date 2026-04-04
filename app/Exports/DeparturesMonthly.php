@@ -481,9 +481,10 @@ class DeparturesMonthly implements FromArray, WithStyles, WithEvents
         $this->rows = [];
         foreach ($vehicles as $v) {
             $this->rows[(int)$v->id] = [
-                'plate' => (string)$v->plate,
-                'daily' => array_fill(1, $this->daysInMonth, 0),
-                'total' => 0,
+                'sort_order' => (string)($v->sort_order ?? ''),
+                'plate'      => (string)$v->plate,
+                'daily'      => array_fill(1, $this->daysInMonth, 0),
+                'total'      => 0,
             ];
         }
 
@@ -651,6 +652,8 @@ class DeparturesMonthly implements FromArray, WithStyles, WithEvents
             }
 
             if (empty($hqRows)) continue;
+
+            usort($hqRows, fn($a, $b) => $b['total'] <=> $a['total']);
 
             $this->hqTables[$hqId] = [
                 'name'        => $hqName,

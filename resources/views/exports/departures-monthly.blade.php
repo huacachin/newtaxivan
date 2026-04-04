@@ -4,11 +4,14 @@
     $sun = 'background:#FF0000;color:white;font-weight:bold;text-align:center;vertical-align:middle;font-size:9pt;border:1px solid #000;';
     $ftr = 'background:#CEE7FF;font-weight:bold;text-align:center;vertical-align:middle;font-size:9pt;border:1px solid #000;';
     $ttl = 'font-weight:bold;color:red;text-align:center;vertical-align:middle;font-size:10pt;border:1px solid #000;';
-    $totalCols = 2 + $daysInMonth + 1;
+    $totalCols = 3 + $daysInMonth + 1;
+    $totalColsHQ = 2 + $daysInMonth + 1;
 
-    $colDefs = '<col width="25"><col width="55">';
-    for ($x = 1; $x <= $daysInMonth; $x++) $colDefs .= '<col width="25">';
+    $colDefs = '<col width="25"><col width="25"><col width="55">';
+    $colDefsHQ = '<col width="25"><col width="55">';
+    for ($x = 1; $x <= $daysInMonth; $x++) { $colDefs .= '<col width="25">'; $colDefsHQ .= '<col width="25">'; }
     $colDefs .= '<col width="35">';
+    $colDefsHQ .= '<col width="35">';
 @endphp
 <html>
 <head><meta charset="UTF-8"></head>
@@ -24,6 +27,7 @@
     </tr>
     <tr>
         <th style="{{ $hdr }}">Nº</th>
+        <th style="{{ $hdr }}">COD</th>
         <th style="{{ $hdr }}">Placa</th>
         @for($d = 1; $d <= $daysInMonth; $d++)
             <th style="{{ $sundays[$d] ? $sun : $hdr }}">{{ $d }}</th>
@@ -36,6 +40,7 @@
         @php $i++; @endphp
         <tr>
             <td style="{{ $ds }}">{{ $i }}</td>
+            <td style="{{ $ds }}">{{ $row['sort_order'] ?? '' }}</td>
             <td style="{{ $ds }}">{{ $row['plate'] }}</td>
             @for($d = 1; $d <= $daysInMonth; $d++)
                 <td style="{{ $ds }}">{{ $row['daily'][$d] ?? 0 }}</td>
@@ -45,14 +50,14 @@
     @endforeach
 
     <tr>
-        <td colspan="2" style="{{ $ftr }}">Total Salidas</td>
+        <td colspan="3" style="{{ $ftr }}">Total Salidas</td>
         @for($d = 1; $d <= $daysInMonth; $d++)
             <td style="{{ $ftr }}">{{ $totalPerDay[$d] ?? 0 }}</td>
         @endfor
         <td style="{{ $ftr }}">{{ array_sum($totalPerDay) }}</td>
     </tr>
     <tr>
-        <td colspan="2" style="{{ $ftr }}">Total V.T.</td>
+        <td colspan="3" style="{{ $ftr }}">Total V.T.</td>
         @for($d = 1; $d <= $daysInMonth; $d++)
             <td style="{{ $ftr }}">{{ $vehiclesWorkedPerDay[$d] ?? 0 }}</td>
         @endfor
@@ -65,9 +70,9 @@
 {{-- ===== TABLAS POR SEDE ===== --}}
 @foreach($hqTables as $hqId => $hq)
 <table cellspacing="0" border="1" style="border-collapse:collapse;">
-    {!! $colDefs !!}
+    {!! $colDefsHQ !!}
     <tr>
-        <td colspan="{{ $totalCols }}" style="{{ $ttl }}">
+        <td colspan="{{ $totalColsHQ }}" style="{{ $ttl }}">
             {{ mb_strtoupper($hq['name']) }} - V.T {{ mb_strtoupper($monthName) }} {{ $year }}
         </td>
     </tr>
