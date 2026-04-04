@@ -167,7 +167,7 @@
                                     <td style="background:#D0CECE">{{ $i }}</td>
                                     <td style="background:#D0CECE">
                                         @if($isLegacy)
-                                            <span style="color:red;font-weight:bold;" title="Cesado">{{ $r['plate'] }}</span>
+                                            <span style="color:red;font-weight:bold;" data-bs-toggle="tooltip" data-bs-placement="top" title="Cesado">{{ $r['plate'] }}</span>
                                         @else
                                             {{ $r['plate'] }}
                                         @endif
