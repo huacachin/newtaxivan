@@ -38,7 +38,8 @@ class UserController extends Controller
         $filename = 'usuarios_' . now()->format('Ymd_His') . '.xls';
 
         $export = new UsersReportExport($search);
-        $html = view('exports.users', ['rows' => $export->htmlData()])->render();
+        $data = $export->htmlData();
+        $html = view('exports.users', $data)->render();
 
         return response($html)
             ->header('Content-Type', 'application/vnd.ms-excel')

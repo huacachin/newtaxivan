@@ -70,25 +70,51 @@ class UsersReportExport implements
 
     public function htmlData(): array
     {
+        $users = User::query()
+            ->where('status', 'active')
+            ->when(trim((string) $this->search) !== '', function ($q) {
+                $term = trim((string) $this->search);
+                $q->where(function ($w) use ($term) {
+                    $w->where('username', 'like', "%{$term}%")
+                      ->orWhere('name', 'like', "%{$term}%")
+                      ->orWhere('phone', 'like', "%{$term}%");
+                });
+            })
+            ->with(['headquarter:id,name', 'headquarters:id,name', 'roles:id,name', 'permissions'])
+            ->orderBy('name')
+            ->get();
+
         $rows = [];
         $i = 0;
-        foreach ($this->query()->get() as $user) {
+        foreach ($users as $user) {
             $i++;
-            $sedes = $user->headquarters->pluck('name')->implode(', ') ?: '—';
-            $sedePrimaria = optional($user->headquarter)->name ?? '—';
             $rolKey = optional($user->roles->first())->name;
             $rol    = $rolKey ? __('roles.' . $rolKey, [], 'es') : '—';
 
+            // Sede combinada como la vista
+            $isTopRole = in_array($rolKey, ['director', 'gerente']);
+            if ($isTopRole) {
+                $sede = '—';
+            } else {
+                $sedes = $user->headquarters->pluck('name')->implode(', ') ?: '—';
+                $primaria = optional($user->headquarter)->name;
+                $sede = $sedes;
+                if ($primaria) {
+                    $sede .= ' (Primaria: ' . $primaria . ')';
+                }
+            }
+
             $rows[] = [
-                'item'          => $i,
-                'name'          => $user->name,
-                'phone'         => $user->phone ?: '—',
-                'sedes'         => $sedes,
-                'sede_primaria' => $sedePrimaria,
-                'nivel'         => $rol,
+                'item'     => $i,
+                'name'     => $user->name,
+                'username' => $user->username,
+                'phone'    => $user->phone ?: '—',
+                'sede'     => $sede,
+                'rol'      => $rol,
+                'permisos' => $user->permissions->count(),
             ];
         }
-        return $rows;
+        return ['rows' => $rows, 'total' => count($rows)];
     }
 
     public function styles(Worksheet $sheet)
