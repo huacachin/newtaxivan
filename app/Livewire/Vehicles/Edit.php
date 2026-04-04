@@ -114,17 +114,15 @@ class Edit extends Component
 
         $vehicle = Vehicle::findOrFail($id);
 
-        // Verificar relaciones antes de borrar
+        // Verificar relaciones antes de borrar (cost_per_plates se borra en cascada)
         $relations = [];
         $departures = \DB::table('departures')->where('vehicle_id', $id)->count();
         $payments   = \DB::table('payments')->where('vehicle_id', $id)->count();
         $debtDays   = \DB::table('debt_days')->where('vehicle_id', $id)->count();
-        $costs      = \DB::table('cost_per_plates')->where('vehicle_id', $id)->count();
 
         if ($departures > 0) $relations[] = "{$departures} salida(s)";
         if ($payments > 0)   $relations[] = "{$payments} pago(s)";
         if ($debtDays > 0)   $relations[] = "{$debtDays} deuda(s)";
-        if ($costs > 0)      $relations[] = "{$costs} costo(s)";
 
         if (!empty($relations)) {
             session()->flash('vehicle_error', "No se puede eliminar {$vehicle->plate} porque tiene: " . implode(', ', $relations));
