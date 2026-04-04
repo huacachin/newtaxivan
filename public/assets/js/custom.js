@@ -49,8 +49,6 @@ function _applyDatepickers(pairs, wire) {
         try { $el.datepicker('destroy'); } catch (e) {}
         $el.datepicker({
             changeMonth: true,
-            changeYear: true,
-            yearRange: '2020:2035',
             dateFormat: 'yy-mm-dd',
             onSelect: function (dateText) {
                 wire.set(pair[1], dateText);
