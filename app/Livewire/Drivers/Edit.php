@@ -76,6 +76,10 @@ class Edit extends Component
         $this->existing_image               = $this->driver->image_path;
     }
 
+    protected $validationAttributes = [
+        'document_number' => 'documento de identidad',
+    ];
+
     public function rules()
     {
         return [

@@ -39,6 +39,10 @@ class Create extends Component
 
     public $age;
 
+    protected $validationAttributes = [
+        'document_number' => 'documento de identidad',
+    ];
+
     protected $rules = [
         'name' => 'required|string|max:255',
         'document_number' => 'required|string|max:255|unique:drivers,document_number',
