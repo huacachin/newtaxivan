@@ -10,7 +10,7 @@ class Concept extends Model
     protected $auditModule = 'Conceptos';
 
     protected $fillable = [
-        'code','name', 'type', 'status',
+        'sort_order','name', 'type', 'status',
     ];
 
     protected $casts = [

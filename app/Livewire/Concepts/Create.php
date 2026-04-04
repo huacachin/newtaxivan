@@ -7,20 +7,14 @@ use Livewire\Component;
 
 class Create extends Component
 {
-    public string $code   = '';
+    public int    $sort_order = 0;
     public string $name   = '';
     public string $status = 'inactive';
     public string $type   = 'ingreso';
 
     public function mount(): void
     {
-        $this->code = $this->generateCode();
-    }
-
-    private function generateCode(): string
-    {
-        $nextId = (Concept::max('id') ?? 0) + 1;
-        return $nextId < 10 ? '0' . $nextId : (string) $nextId;
+        $this->sort_order = (int) ((Concept::max('sort_order') ?? 0) + 1);
     }
 
     public function clear(): void
@@ -28,15 +22,15 @@ class Create extends Component
         $this->name   = '';
         $this->status = 'inactive';
         $this->type   = 'ingreso';
-        $this->code   = $this->generateCode();
+        $this->sort_order = (int) ((Concept::max('sort_order') ?? 0) + 1);
         $this->resetErrorBag();
     }
 
     protected $rules = [
-        'code'   => 'required|string|max:255',
-        'name'   => 'required|string|max:255',
-        'status' => 'required|string|max:255',
-        'type'   => 'required|string|max:255',
+        'sort_order' => 'required|integer|min:0',
+        'name'       => 'required|string|max:255',
+        'status'     => 'required|string|max:255',
+        'type'       => 'required|string|max:255',
     ];
 
     public function save(): void
@@ -45,10 +39,10 @@ class Create extends Component
             $this->validate();
 
             Concept::create([
-                'code'   => $this->code,
-                'name'   => $this->name,
-                'status' => $this->status,
-                'type'   => $this->type,
+                'sort_order' => $this->sort_order,
+                'name'       => $this->name,
+                'status'     => $this->status,
+                'type'       => $this->type,
             ]);
 
             session()->flash('concept_success', 'Concepto creado correctamente.');

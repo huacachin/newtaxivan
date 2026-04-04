@@ -11,31 +11,31 @@ class Edit extends Component
     public Concept $concept;
     public int $conceptId;
 
-    public string $code   = '';
+    public int    $sort_order = 0;
     public string $name   = '';
     public string $status = 'inactive';
     public string $type   = 'ingreso';
 
     public function mount(int $id): void
     {
-        if (!auth()->user()?->hasRole('director')) {
+        if (!auth()->user()?->hasAnyRole('director','gerente')) {
             abort(403);
         }
 
         $this->concept   = Concept::findOrFail($id);
         $this->conceptId = $id;
 
-        $this->code   = (string)$this->concept->code;
-        $this->name   = (string)$this->concept->name;
-        $this->status = (string)$this->concept->status;
-        $this->type   = (string)$this->concept->type;
+        $this->sort_order = (int)$this->concept->sort_order;
+        $this->name       = (string)$this->concept->name;
+        $this->status     = (string)$this->concept->status;
+        $this->type       = (string)$this->concept->type;
     }
 
     protected $rules = [
-        'code'   => 'required|string|max:255',
-        'name'   => 'required|string|max:255',
-        'status' => 'required|string|max:255',
-        'type'   => 'required|string|max:255',
+        'sort_order' => 'required|integer|min:0',
+        'name'       => 'required|string|max:255',
+        'status'     => 'required|string|max:255',
+        'type'       => 'required|string|max:255',
     ];
 
     public function questionDelete(int $id): void
@@ -46,7 +46,7 @@ class Edit extends Component
     #[On('register_destroy')]
     public function destroy(int $id): void
     {
-        if (!auth()->user()?->hasRole('director')) {
+        if (!auth()->user()?->hasAnyRole('director','gerente')) {
             abort(403);
         }
 
@@ -61,10 +61,10 @@ class Edit extends Component
             $this->validate();
 
             $this->concept->update([
-                'code'   => $this->code,
-                'name'   => $this->name,
-                'status' => $this->status,
-                'type'   => $this->type,
+                'sort_order' => $this->sort_order,
+                'name'       => $this->name,
+                'status'     => $this->status,
+                'type'       => $this->type,
             ]);
 
             session()->flash('concept_success', 'Concepto actualizado correctamente.');

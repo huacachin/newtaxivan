@@ -12,7 +12,7 @@ class Index extends Component
     public $type = "ingreso";
     public $name = "";
     public $status = "inactive";
-    public $code = "";
+    public $sort_order = 0;
     public $concepts;
     public $id = null;
 
@@ -22,12 +22,12 @@ class Index extends Component
             ->when($term !== '', fn ($q) =>
             $q->where('name', 'like', "%{$term}%")
             )
-            ->orderBy('id')
+            ->orderBy('sort_order')
             ->get();
     }
 
     protected $rules = [
-        "code" => "required|string|max:255",
+        "sort_order" => "required|integer|min:0",
         "name" => "required|string|max:255",
         "status" => "required|string|max:255",
         "type" => "required|string|max:255",
@@ -41,13 +41,13 @@ class Index extends Component
 
         $this->validate();
         Concept::create([
-            "code" => $this->code,
+            "sort_order" => $this->sort_order,
             "name" => $this->name,
             "status" => $this->status,
             "type" => $this->type,
         ]);
 
-        $this->reset(['code','name','status','type']);
+        $this->reset(['sort_order','name','status','type']);
         $this->mount();
         $this->dispatch('modal-close',["name" => "modalAddConcept"]);
         $this->dispatch('successAlert',["message" => "Concepto creado correctamente"]);
@@ -68,12 +68,12 @@ class Index extends Component
 
         $concept = Concept::find($id);
         $this->id = $id;
-        $this->code = $concept->code;
+        $this->sort_order = $concept->sort_order;
         $this->name = $concept->name;
         $this->status = $concept->status;
         $this->type = $concept->type;
 
-        $this->dispatch('open-modal',["name" => "modalEditConcept","focus" => "code"]);
+        $this->dispatch('open-modal',["name" => "modalEditConcept","focus" => "sort_order"]);
 
     }
 
@@ -81,13 +81,13 @@ class Index extends Component
         $this->validate();
         $concept = Concept::find($this->id);
         $concept->update([
-            "code" => $this->code,
+            "sort_order" => $this->sort_order,
             "name" => $this->name,
             "status" => $this->status,
             "type" => $this->type,
         ]);
 
-        $this->reset(['code','name','status','type']);
+        $this->reset(['sort_order','name','status','type']);
         $this->mount();
         $this->dispatch('modal-close',["name" => "modalEditConcept"]);
         $this->dispatch('successAlert',["message" => "Concepto actualizado correctamente"]);

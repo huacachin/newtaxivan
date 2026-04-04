@@ -37,14 +37,14 @@
 
                     <div class="row">
 
-                        {{-- Código --}}
+                        {{-- Orden --}}
                         <div class="col-md-auto col-sm-12">
                             <div class="mb-3">
-                                <label class="form-label">Código (*)</label>
-                                <input type="text" class="form-control form-control-sm @error('code') is-invalid @enderror"
-                                       placeholder="Ingresar Código"
-                                       wire:model.defer="code">
-                                @error('code') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <label class="form-label">Orden (*)</label>
+                                <input type="number" class="form-control form-control-sm @error('sort_order') is-invalid @enderror"
+                                       placeholder="0"
+                                       wire:model.defer="sort_order">
+                                @error('sort_order') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                         </div>
 
@@ -102,6 +102,6 @@
         </div>
     </div>
 
-    {{-- Overlay --}}
+    {{-- Overlay --}}
 
 </div>

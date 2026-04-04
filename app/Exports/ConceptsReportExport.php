@@ -31,12 +31,12 @@ class ConceptsReportExport implements
 
         return Concept::query()
             ->when($search !== '', fn ($q) => $q->where('name', 'like', "%{$search}%"))
-            ->orderBy('id');
+            ->orderBy('sort_order');
     }
 
     public function headings(): array
     {
-        return ['Nº', 'Código', 'Nombre', 'Tipo'];
+        return ['Nº', 'Orden', 'Nombre', 'Tipo'];
     }
 
     public function map($concept): array
@@ -45,7 +45,7 @@ class ConceptsReportExport implements
 
         return [
             $this->rowNum,
-            $concept->code,
+            $concept->sort_order,
             $concept->name,
             ucfirst($concept->type),
         ];
@@ -59,7 +59,7 @@ class ConceptsReportExport implements
             $i++;
             $rows[] = [
                 'item' => $i,
-                'code' => $concept->code,
+                'sort_order' => $concept->sort_order,
                 'name' => $concept->name,
                 'type' => ucfirst($concept->type),
             ];
