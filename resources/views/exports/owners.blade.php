@@ -5,7 +5,7 @@
     <thead>
     <tr>
         <td colspan="6" align="center" style="font-weight:bold;font-size:10pt;">
-            <b style="color:red">Total de propietarios </b><b style="color:red">{{ $countActive + $countFree }}</b>-
+            <b>Total de propietarios </b><b style="color:red">{{ $countActive + $countFree }}</b>-
             <b>Propietarios:</b> <b style="color:red">{{ $countActive }}</b> ·
             <b>Libres:</b> <b style="color:red">{{ $countFree }}</b>
         </td>

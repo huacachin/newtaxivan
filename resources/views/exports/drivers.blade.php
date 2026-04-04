@@ -5,7 +5,7 @@
     <thead>
     <tr>
         <td colspan="9" align="center" style="font-weight:bold;font-size:10pt;">
-            <b style="color:red">Total de conductores</b> <b style="color:red">{{ $totalActive + $totalFree }}</b>-
+            <b>Total de conductores</b> <b style="color:red">{{ $totalActive + $totalFree }}</b>-
             <b>Conductores:</b> <b style="color:red">{{ $totalActive }}</b> ·
             <b>Libres:</b> <b style="color:red">{{ $totalFree }}</b>
         </td>
