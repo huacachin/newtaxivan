@@ -443,7 +443,7 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithColumnWidths, Wi
                 d.id, d.date, d.hour, d.times, d.price, d.passenger, d.passage,
                 d.latitude, d.longitude,
                 v.plate as plate,
-                h.name as headquarter_name, u.name as user_name,
+                h.name as headquarter_name, u.username as user_name,
                 COALESCE(d.passenger,0)*COALESCE(d.passage,0) as total_pasaje,
                 CONCAT(d.date,' ',d.hour) as curr_dt,
                 LAG(CONCAT(d.date,' ',d.hour)) OVER (PARTITION BY v.plate ORDER BY d.date, d.hour) as prev_dt
@@ -487,7 +487,7 @@ class DeparturesExport implements FromView, ShouldAutoSize, WithColumnWidths, Wi
                 d.id, d.date, d.hour, d.times, d.price, d.passenger, d.passage,
                 d.latitude, d.longitude,
                 d.legacy_plate as plate,
-                h.name as headquarter_name, u.name as user_name,
+                h.name as headquarter_name, u.username as user_name,
                 COALESCE(d.passenger,0)*COALESCE(d.passage,0) as total_pasaje,
                 CONCAT(d.date,' ',d.hour) as curr_dt,
                 LAG(CONCAT(d.date,' ',d.hour)) OVER (PARTITION BY d.legacy_plate ORDER BY d.date, d.hour) as prev_dt
