@@ -73,11 +73,11 @@
 
     {{-- Datos --}}
     @php $i = 0; @endphp
-    @foreach($rows as $r)
-        @php $i++; @endphp
+    @foreach($rows as $vid => $r)
+        @php $i++; $isLegacy = !empty($r['is_legacy']); @endphp
         <tr>
             <td style="{{ $grey }}">{{ $i }}</td>
-            <td style="{{ $grey }}">{{ $r['plate'] }}</td>
+            <td style="{{ $grey }}{{ $isLegacy ? 'color:red;font-weight:bold;' : '' }}">{{ $r['plate'] }}</td>
             <td style="{{ $grey }}">{{ strtoupper($r['cond'] ?? '') ?: '-' }}</td>
 
             @for($d = 1; $d <= $daysInMonth; $d++)
