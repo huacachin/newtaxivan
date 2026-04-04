@@ -2,7 +2,7 @@
     <!-- Header -->
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title title-modules">LISTADO GENERAL DE PROPIETARIOS ({{ $owners->count() + $ownersFree->count() }})</h4>
+            <h4 class="main-title title-modules">PROPIETARIOS</h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -38,6 +38,12 @@
         <div class="col-xl-12">
             <div class="card">
                 <div class="card-body">
+
+                        <h5 class="mb-1">Total de propietarios: <span class="title-modules">{{ $owners->count() + $ownersFree->count() }}</span></h5>
+                        <p class="mb-0">
+                            <strong>Propietarios:</strong> <strong style="color:red">{{ $owners->count() }}</strong> ·
+                            <strong>Libres:</strong> <strong style="color:red">{{ $ownersFree->count() }}</strong>
+                        </p>
 
                     <div class="row my-2">
                         <div class="col-12">
