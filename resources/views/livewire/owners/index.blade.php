@@ -167,7 +167,9 @@
                             <thead class="bg-primary">
                             <tr>
                                 @hasanyrole('director|gerente|administrador')<th scope="col"></th>@endhasanyrole
-                                <th scope="col">Id</th>
+                                <th scope="col">Nº</th>
+                                <th scope="col">Cod</th>
+                                <th scope="col">Placa</th>
                                 <th scope="col">Nombre/Empresa</th>
                                 <th scope="col">DNI/RUC</th>
                                 <th scope="col">Cel.</th>
@@ -184,6 +186,8 @@
                                     </td>
                                         @endhasanyrole
                                     <td>{{ $loop->iteration }}</td>
+                                    <td>-</td>
+                                    <td>-</td>
                                     <td>{{ $owner->name }}</td>
                                     <td>
                                         {{ $owner->document_number }}
@@ -212,13 +216,13 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="{{ auth()->user()->hasAnyRole('director','gerente','administrador') ? 5 : 4 }}">No se encontrarón resultados</td>
+                                    <td colspan="{{ auth()->user()->hasAnyRole('director','gerente','administrador') ? 7 : 6 }}">No se encontrarón resultados</td>
                                 </tr>
                             @endforelse
                             </tbody>
                             <tfoot>
                             <tr>
-                                <td colspan="{{ auth()->user()->hasAnyRole('director','gerente','administrador') ? 5 : 4 }}">Libres: {{ $ownersFree->count() }}</td>
+                                <td colspan="{{ auth()->user()->hasAnyRole('director','gerente','administrador') ? 7 : 6 }}">Libres: {{ $ownersFree->count() }}</td>
                             </tr>
                             </tfoot>
                         </table>
