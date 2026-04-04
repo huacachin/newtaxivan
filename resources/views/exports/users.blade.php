@@ -8,13 +8,6 @@
 <body topmargin="0" leftmargin="0" rightmargin="0" bottommargin="0">
 
 <table cellspacing="0" border="1" style="border-collapse:collapse;">
-    <col width="25">
-    <col width="160">
-    <col width="70">
-    <col width="77">
-    <col width="160">
-    <col width="87">
-    <col width="45">
 
     <tr>
         <td colspan="7" align="center" style="font-weight:bold;font-size:10pt;">
