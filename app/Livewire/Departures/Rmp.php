@@ -83,7 +83,7 @@ d0 AS (
 ),
 base AS (
   SELECT
-    u.name          AS controller,
+    u.username      AS controller,
     h.name          AS stop,
     DATE(d0.`date`) AS ddate,
 
@@ -105,7 +105,7 @@ base AS (
   LEFT JOIN vehicles v2
     ON UPPER(TRIM(v2.plate)) = UPPER(TRIM(d0.legacy_plate))
 
-  GROUP BY u.name, h.name, DATE(d0.`date`)
+  GROUP BY u.username, h.name, DATE(d0.`date`)
 ),
 per_day AS (
   SELECT
