@@ -75,7 +75,7 @@ d0 AS (
 ),
 base AS (
   SELECT
-    u.name  AS controller,
+    u.username  AS controller,
     h.name  AS stop,
     d0.ddate,
     SUM(d0.times) AS salidas,
@@ -83,7 +83,7 @@ base AS (
   FROM d0
   JOIN users        u ON u.id = d0.user_id
   JOIN headquarters h ON h.id = d0.headquarter_id
-  GROUP BY u.name, h.name, d0.ddate
+  GROUP BY u.username, h.name, d0.ddate
 ),
 per_day AS (
   SELECT
