@@ -349,6 +349,7 @@ class DriversReportExport implements FromArray, WithColumnFormatting, WithEvents
             ->get(['id','name','document_number','phone','condition','contract_start','contract_end']);
 
         $free = Driver::query()
+            ->where('status', 'active')
             ->whereDoesntHave('vehicles', fn($q) =>
             $q->whereIn(DB::raw("LOWER(TRIM(status))"), $statuses)
             )
