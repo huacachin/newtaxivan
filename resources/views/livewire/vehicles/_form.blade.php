@@ -51,7 +51,7 @@
     {{-- Fecha Cese --}}
     <div class="col-6 col-md-2">
         <label for="termination_date" class="form-label">Fecha Cese</label>
-        <input id="termination_date" type="text" class="form-control form-control-sm" wire:model="termination_date">
+        <input id="termination_date" type="text" class="form-control form-control-sm" wire:model="termination_date" placeholder="0000-00-00">
         @error('termination_date') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
