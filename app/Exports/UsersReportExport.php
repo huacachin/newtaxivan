@@ -81,6 +81,7 @@ class UsersReportExport implements
                 });
             })
             ->with(['headquarter:id,name', 'headquarters:id,name', 'roles:id,name', 'permissions'])
+            ->orderBy('sort_order')
             ->orderBy('name')
             ->get();
 
