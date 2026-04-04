@@ -3,7 +3,13 @@
 <body>
 <table cellspacing="0" border="1" style="border-collapse:collapse;">
     <thead>
-    <tr><td colspan="9" align="center" style="font-weight:bold;color:red;font-size:11pt;">REPORTE DE CONDUCTORES (Total: {{ $totalActive + $totalFree }})</td></tr>
+    <tr>
+        <td colspan="9" align="center" style="font-weight:bold;font-size:10pt;">
+            <b style="color:red">Total de conductores {{ $totalActive + $totalFree }}</b> -
+            <b>Conductores:</b> <b style="color:red">{{ $totalActive }}</b> ·
+            <b>Libres:</b> <b style="color:red">{{ $totalFree }}</b>
+        </td>
+    </tr>
     <tr>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Nº</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Cod</b></th>
