@@ -127,7 +127,7 @@
                         <div class="col-auto d-flex align-items-end">
                             <button class="btn btn-search btn-sm"
                                     wire:click="applyDateRange"
-                                   
+
                                     wire:target="applyDateRange">
                                 <i class="ti ti-search f-s-12"></i>
                             </button>
@@ -149,13 +149,7 @@
                             <i class="ti ti-report-analytics f-s-12"></i> Estadis.
                         </a>
 
-                        <button class="btn btn-sm btn-export" wire:click="export">
-                            <i class="ti ti-file-analytics f-s-12"></i>
-                        </button>
 
-                        <button class="btn btn-sm btn-primary" id="down" title="Bajar">
-                            <i class="fa-solid fa-angle-down"></i>
-                        </button>
                         <button
                             class="btn btn-sm {{ $groupMode ? 'btn-success' : 'btn-primary' }}"
                             wire:click="toggleGroup"
@@ -163,6 +157,13 @@
                             title="{{ $groupMode ? 'Agrupado: ON' : 'Agrupado: OFF' }}"
                         >
                             {{ $groupMode ? 'TS[ON]' : 'TS[OFF]' }}
+                        </button>
+                        <button class="btn btn-sm btn-export" wire:click="export">
+                            <i class="ti ti-file-analytics f-s-12"></i>
+                        </button>
+
+                        <button class="btn btn-sm btn-primary" id="down" title="Bajar">
+                            <i class="fa-solid fa-angle-down"></i>
                         </button>
                     </div>
 
