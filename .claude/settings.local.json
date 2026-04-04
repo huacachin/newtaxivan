@@ -39,7 +39,27 @@
       "Read(//Users/antonyalfredoculquicarranza/projects/laravel_taxivan/**)",
       "Bash(echo \"OK: $f\")",
       "Bash(echo \"FALTA: $f\")",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(xargs -I {} basename {})",
+      "Read(//Users/antonyalfredoculquicarranza/projects/**)",
+      "Bash(composer create-project:*)",
+      "Bash(composer require:*)",
+      "Bash(mkdir -p /Users/antonyalfredoculquicarranza/projects/laravel_prestamos/resources/views/layout)",
+      "Bash(mkdir -p /Users/antonyalfredoculquicarranza/projects/laravel_prestamos/resources/views/auth)",
+      "Bash(mkdir -p /Users/antonyalfredoculquicarranza/projects/laravel_prestamos/resources/views/livewire)",
+      "Bash(mkdir -p /Users/antonyalfredoculquicarranza/projects/laravel_prestamos/resources/views/partials)",
+      "Bash(mkdir -p /Users/antonyalfredoculquicarranza/projects/laravel_prestamos/public/assets/scss/app)",
+      "Bash(cp /Users/antonyalfredoculquicarranza/projects/laravel_taxivan/resources/views/layout/head.blade.php /Users/antonyalfredoculquicarranza/projects/laravel_prestamos/resources/views/layout/)",
+      "Bash(cp /Users/antonyalfredoculquicarranza/projects/laravel_taxivan/resources/views/layout/css.blade.php /Users/antonyalfredoculquicarranza/projects/laravel_prestamos/resources/views/layout/)",
+      "Bash(cp /Users/antonyalfredoculquicarranza/projects/laravel_taxivan/resources/views/layout/script.blade.php /Users/antonyalfredoculquicarranza/projects/laravel_prestamos/resources/views/layout/)",
+      "Bash(npm install:*)",
+      "Bash(cp /Users/antonyalfredoculquicarranza/projects/laravel_taxivan/package.json /Users/antonyalfredoculquicarranza/projects/laravel_prestamos/package.json)",
+      "Bash(cp /Users/antonyalfredoculquicarranza/projects/laravel_taxivan/package-lock.json /Users/antonyalfredoculquicarranza/projects/laravel_prestamos/package-lock.json)",
+      "Bash(rm -rf node_modules)",
+      "Bash(mkdir -p /Users/antonyalfredoculquicarranza/projects/laravel_prestamos/app/Livewire/Auth)",
+      "Bash(mkdir -p /Users/antonyalfredoculquicarranza/projects/laravel_prestamos/resources/views/livewire/auth)",
+      "Bash(cp /Users/antonyalfredoculquicarranza/projects/laravel_taxivan/app/Livewire/Auth/Login.php /Users/antonyalfredoculquicarranza/projects/laravel_prestamos/app/Livewire/Auth/)",
+      "Bash(cp /Users/antonyalfredoculquicarranza/projects/laravel_taxivan/resources/views/livewire/auth/login.blade.php /Users/antonyalfredoculquicarranza/projects/laravel_prestamos/resources/views/livewire/auth/)"
     ]
   }
 }
