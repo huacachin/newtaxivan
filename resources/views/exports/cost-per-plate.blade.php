@@ -17,7 +17,7 @@
 <table cellspacing="0" border="1" style="border-collapse:collapse;">
     <col width="30">
     <col width="30">
-    <col width="80">
+    <col width="90">
     <col width="50">
     <col width="50">
     <col width="60">
@@ -39,7 +39,7 @@
     @forelse($result as $item)
         <tr>
             <td style="{{ $ds }}">{{ $loop->iteration }}</td>
-            <td style="{{ $ds }}">{{ str_pad($item->month, 2, '0', STR_PAD_LEFT) }}</td>
+            <td style="{{ $ds }}color:{{ $yearColors[$item->year] ?? '#000' }};font-weight:bold;">{{ str_pad($item->month, 2, '0', STR_PAD_LEFT) }}</td>
             <td style="{{ $ds }}">{{ $months[$item->month] ?? $item->month }}</td>
             <td style="{{ $ds }}color:{{ $yearColors[$item->year] ?? '#000' }};font-weight:bold;">{{ $item->year }}</td>
             <td style="{{ $ds }}">{{ $item->plates }}</td>
