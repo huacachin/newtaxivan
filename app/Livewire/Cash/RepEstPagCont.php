@@ -186,7 +186,11 @@ class RepEstPagCont extends Component
 
         $this->totalSaldoFavor = array_sum($this->totalesSaldoMes);
 
-        /** Comparativo (lo dejé tal cual tu versión) */
+        /** Comparativo
+         * @TODO Deuda técnica: los usuarios (Luis, Elmer) y sedes (Huaycan, La victoria)
+         * están hardcodeados. Debe hacerse dinámico con selects para elegir qué usuarios
+         * y sedes comparar.
+         */
         $this->comparativo = $this->buildComparativo(
             $year,
             userA: 'Luis',
@@ -212,7 +216,7 @@ class RepEstPagCont extends Component
         return (float) DB::table(self::DEPARTURES_TABLE.' as d')
             ->join(self::USERS_TABLE.' as u', 'u.'.self::USERS_ID, '=', 'd.'.self::DEP_USER_ID)
             ->join(self::HQ_TABLE.' as h', 'h.'.self::HQ_ID, '=', 'd.'.self::DEP_HQ_ID)
-            ->where('u.'.self::USERS_NAME, $userName)
+            ->where('u.'.self::USERS_USERNAME, $userName)
             ->where('h.'.self::HQ_NAME, $hqName)
             ->whereBetween('d.'.self::DEP_DATE, [$start, $end])
             ->sum('d.'.self::DEP_PRICE);
