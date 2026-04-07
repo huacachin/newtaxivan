@@ -291,139 +291,66 @@ class DebtPerDays extends Component
             $rows[] = $row;
         }
 
-        // --- Cesados: vehículos inactivos con datos en el mes ---
-        if ($this->onlyActive) {
-            $cesadosQ = DB::table('vehicles as v')
-                ->select('v.id','v.plate','v.sort_order','v.condition','v.status')
-                ->where('v.status', 'inactive');
+        // --- Cesados: pagos con vehicle_id=NULL y legacy_plate (igual que payments/daily) ---
+        $legacyAggs = DB::table('payments')
+            ->selectRaw("legacy_plate as plate, DATE(date_payment) as date, SUM(amount) as total_paid")
+            ->whereIn(DB::raw('UPPER(type)'), ['PAGO','RETRASO'])
+            ->whereNotNull('date_payment')
+            ->whereBetween('date_payment', [$from, $toMonthEnd])
+            ->whereNull('vehicle_id')
+            ->whereNotNull('legacy_plate')
+            ->where('legacy_plate', '!=', '')
+            ->groupBy('plate', 'date')
+            ->get();
 
-            if ($this->condition !== '') {
-                $cesadosQ->where('v.condition', $this->condition);
+        // Agrupar por placa
+        $legacyPlates = [];
+        foreach ($legacyAggs as $r) {
+            $plate = strtoupper(trim($r->plate));
+            $legacyPlates[$plate][$r->date] = (float)$r->total_paid;
+        }
+
+        foreach ($legacyPlates as $plate => $payDays) {
+            $item++;
+
+            $row = [
+                'item'        => $item,
+                'cod'         => '',
+                'plate'       => $plate,
+                'condition'   => '',
+                'is_legacy'   => true,
+                'cells'       => [],
+                'paid_days'   => 0,
+                'paid_amount' => 0.0,
+                'debt_days'   => 0,
+                'debt_amount' => 0.0,
+            ];
+
+            foreach ($this->days as $d) {
+                $date = $d['d'];
+                if ($d['isSunday']) {
+                    $row['cells'][] = ['txt'=>'', 'class'=>''];
+                    continue;
+                }
+
+                $paid = (float)($payDays[$date] ?? 0.0);
+                if ($paid > 0) {
+                    $row['cells'][] = ['txt'=>'P', 'class'=>'paid'];
+                    if ($date <= $cutoff) {
+                        $row['paid_days']++;
+                        $row['paid_amount'] += $paid;
+                        $sumPaidDays++;
+                        $sumPaidAmount += $paid;
+                        $dayTotals[$date]['p_count']++;
+                        $dayTotals[$date]['paid_amount'] += $paid;
+                    }
+                } else {
+                    $row['cells'][] = ['txt'=>'', 'class'=>''];
+                }
             }
 
-            // Solo los que tengan pagos registrados en el mes
-            $cesadosQ->whereExists(function ($sub) use ($from, $toMonthEnd) {
-                $sub->select(DB::raw(1))
-                    ->from('payments')
-                    ->whereColumn('payments.vehicle_id', 'v.id')
-                    ->whereBetween(DB::raw('DATE(payments.date_payment)'), [$from, $toMonthEnd]);
-            });
-
-            $cesados = $cesadosQ
-                ->orderByRaw('COALESCE(v.sort_order, 999999)')
-                ->orderBy('v.plate')
-                ->get();
-
-            if ($cesados->isNotEmpty()) {
-                $cesadoIds = $cesados->pluck('id')->all();
-
-                // Costos cesados
-                $costsC = DB::table('cost_per_plate_days as c')
-                    ->select('c.vehicle_id','c.date', DB::raw('SUM(c.amount) as amount'))
-                    ->whereIn('c.vehicle_id', $cesadoIds)
-                    ->whereBetween('c.date', [$from, $toMonthEnd])
-                    ->groupBy('c.vehicle_id','c.date')
-                    ->get();
-                foreach ($costsC as $c) {
-                    $costMap[$c->vehicle_id][$c->date] = (float)$c->amount;
-                }
-
-                // Pagos cesados
-                $payDayC = DB::table('payments as p')
-                    ->select('p.vehicle_id', DB::raw('DATE(p.date_payment) as date'), DB::raw('SUM(p.amount) as total_paid'))
-                    ->whereIn('p.vehicle_id', $cesadoIds)
-                    ->where('p.type','<>','DEUDA')
-                    ->whereBetween(DB::raw('DATE(p.date_payment)'), [$from, $toMonthEnd])
-                    ->groupBy('p.vehicle_id', DB::raw('DATE(p.date_payment)'))
-                    ->get();
-                foreach ($payDayC as $p) {
-                    $payMap[$p->vehicle_id][$p->date] = (float)$p->total_paid;
-                }
-
-                // Salidas cesados
-                $depsC = DB::table('departures as d')
-                    ->leftJoin('headquarters as h','h.id','=','d.headquarter_id')
-                    ->select('d.vehicle_id','d.date', DB::raw('SUM(d.times) as k1'))
-                    ->whereIn('d.vehicle_id', $cesadoIds)
-                    ->whereBetween('d.date', [$from, $toMonthEnd])
-                    ->where(function($q){
-                        $q->whereNull('h.name')->orWhereNotIn('h.name', ['Huachipa','lima']);
-                    })
-                    ->groupBy('d.vehicle_id','d.date')
-                    ->get();
-                foreach ($depsC as $d) {
-                    $depMap[$d->vehicle_id][$d->date] = (int)$d->k1;
-                }
-
-                foreach ($cesados as $v) {
-                    $item++;
-                    $isExempt = Str::startsWith((string)$v->condition, 'EX');
-
-                    $row = [
-                        'item'        => $item,
-                        'cod'         => $v->sort_order,
-                        'plate'       => $v->plate,
-                        'condition'   => $v->condition,
-                        'is_legacy'   => true,
-                        'cells'       => [],
-                        'paid_days'   => 0,
-                        'paid_amount' => 0.0,
-                        'debt_days'   => 0,
-                        'debt_amount' => 0.0,
-                    ];
-
-                    foreach ($this->days as $d) {
-                        $date = $d['d'];
-                        if ($d['isSunday']) {
-                            $row['cells'][] = ['txt'=>'', 'class'=>''];
-                            continue;
-                        }
-
-                        $cost = (float)($costMap[$v->id][$date] ?? 0.0);
-                        if ($cost == 0.0 && $date <= '2023-04-30') {
-                            $cost = 10.0;
-                        }
-
-                        $paid = (float)($payMap[$v->id][$date] ?? 0.0);
-
-                        if ($cost > 0 && $paid >= $cost) {
-                            $row['cells'][] = ['txt'=>'P', 'class'=>'paid'];
-                            if ($date <= $cutoff && !$isExempt) {
-                                $row['paid_days']++;
-                                $row['paid_amount'] += $cost;
-                                $sumPaidDays++;
-                                $sumPaidAmount += $cost;
-                                $dayTotals[$date]['p_count']++;
-                                $dayTotals[$date]['paid_amount'] += $cost;
-                            }
-                            continue;
-                        }
-
-                        $k = (int)($depMap[$v->id][$date] ?? 0);
-                        if ($k > 0) {
-                            $vueltas = (int)ceil($k / 2);
-                            $row['cells'][] = ['txt'=>(string)$vueltas, 'class'=>'freq'];
-                            if ($date <= $cutoff && !$isExempt) {
-                                $row['debt_days']++;
-                                $row['debt_amount'] += $cost;
-                                $sumDebtDays++;
-                                $sumDebtAmount += $cost;
-                                $dayTotals[$date]['debt_count']++;
-                                $dayTotals[$date]['debt_amount'] += $cost;
-                            }
-                        } else {
-                            $row['cells'][] = ['txt'=>'NT', 'class'=>'nopay'];
-                        }
-                    }
-
-                    if (!$isExempt) {
-                        $row['paid_amount'] = round($row['paid_amount'], 2);
-                        $row['debt_amount'] = round($row['debt_amount'], 2);
-                    }
-
-                    $rows[] = $row;
-                }
-            }
+            $row['paid_amount'] = round($row['paid_amount'], 2);
+            $rows[] = $row;
         }
 
         $this->rows = $rows;
