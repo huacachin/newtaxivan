@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DebtDayDetail extends Model
 {
@@ -12,8 +13,7 @@ class DebtDayDetail extends Model
 
     protected $table = 'debt_days_detail';
 
-    // PK legado, no autoincremental
-    public $incrementing = false;
+    public $incrementing = true;
     protected $keyType = 'int';
 
     protected $fillable = [
@@ -40,5 +40,10 @@ class DebtDayDetail extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function images(): HasMany
+    {
+        return $this->hasMany(DebtDayDetailImage::class, 'debt_day_detail_id');
     }
 }

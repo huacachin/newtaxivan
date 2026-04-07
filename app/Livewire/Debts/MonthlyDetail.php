@@ -4,13 +4,18 @@ namespace App\Livewire\Debts;
 
 use App\Models\DebtDay;
 use App\Models\DebtDayDetail;
+use App\Models\DebtDayDetailImage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\On;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use Illuminate\Validation\ValidationException;
 
 class MonthlyDetail extends Component
 {
+    use WithFileUploads;
+
     public int $id;                 // debt_days.id desde la ruta
     public ?DebtDay $debtDay = null;
 
@@ -30,8 +35,25 @@ class MonthlyDetail extends Component
     public float $sumAmortized  = 0.0;
     public float $pending       = 0.0;
 
+    // Imágenes (upload múltiple — acumulativo)
+    public $new_images = [];
+    public $image_files = [];
+
     // Tabla de detalles
     public $details = [];
+
+    public function updatedNewImages(): void
+    {
+        foreach ($this->new_images as $file) {
+            $this->image_files[] = $file;
+        }
+        $this->new_images = [];
+    }
+
+    public function removeImage(int $index): void
+    {
+        array_splice($this->image_files, $index, 1);
+    }
 
     public function mount(int $id): void
     {
@@ -54,6 +76,8 @@ class MonthlyDetail extends Component
                 if ($value > $this->pending) $fail('La amortización no puede superar el pendiente.');
             }],
             'detailInput'    => ['required','string','max:500'],
+            'new_images'    => ['nullable','array','max:10'],
+            'new_images.*'  => ['image','max:3072'],
         ];
     }
 
@@ -78,7 +102,7 @@ class MonthlyDetail extends Component
 
         DB::transaction(function () use ($ex, $am) {
             // 1) Crear detalle
-            DebtDayDetail::create([
+            $detail = DebtDayDetail::create([
                 'debt_days_id' => $this->debtDay->id,
                 'exonerated'   => round($ex, 2),
                 'amortized'    => round($am, 2),
@@ -87,7 +111,18 @@ class MonthlyDetail extends Component
                 'date'         => now()->toDateString(),
             ]);
 
-            // 2) Recalcular totales del padre desde los detalles (fuente de la verdad)
+            // 2) Guardar imágenes
+            if (!empty($this->image_files)) {
+                foreach ($this->image_files as $file) {
+                    $path = $file->storePublicly('debt-details', 'public');
+                    DebtDayDetailImage::create([
+                        'debt_day_detail_id' => $detail->id,
+                        'image_path'         => $path,
+                    ]);
+                }
+            }
+
+            // 3) Recalcular totales del padre desde los detalles (fuente de la verdad)
             $sums = DebtDayDetail::where('debt_days_id', $this->debtDay->id)
                 ->selectRaw('COALESCE(SUM(exonerated),0) exo, COALESCE(SUM(amortized),0) amo')
                 ->first();
@@ -101,7 +136,7 @@ class MonthlyDetail extends Component
         });
 
         // Reset y recarga
-        $this->reset(['exonerateInput','amortizeInput','detailInput']);
+        $this->reset(['exonerateInput','amortizeInput','detailInput','image_files','new_images']);
         $this->loadData();
         $this->dispatch('successAlert',["message" => "Se ha guardado exitosamente."]);
     }
@@ -116,6 +151,13 @@ class MonthlyDetail extends Component
     {
         DB::transaction(function () use ($id) {
             $detail = DebtDayDetail::where('debt_days_id', $this->id)->findOrFail($id);
+
+            // Eliminar imágenes del storage
+            foreach ($detail->images as $img) {
+                Storage::disk('public')->delete($img->image_path);
+            }
+            $detail->images()->delete();
+
             $detail->delete();
 
             $sums = DebtDayDetail::where('debt_days_id', $this->id)
@@ -134,7 +176,7 @@ class MonthlyDetail extends Component
 
     private function loadData(): void
     {
-        $this->debtDay = DebtDay::with(['vehicle','details.user'])
+        $this->debtDay = DebtDay::with(['vehicle','details.user','details.images'])
             ->findOrFail($this->id);
 
         $this->date  = (string)$this->debtDay->date;
@@ -159,6 +201,10 @@ class MonthlyDetail extends Component
                 'exonerated' => number_format((float)$d->exonerated, 2),
                 'amortized'  => number_format((float)$d->amortized, 2),
                 'user'       => $d->user?->username ?? '—',
+                'images'     => $d->images->map(fn($img) => [
+                    'id'   => $img->id,
+                    'url'  => asset('storage/' . $img->image_path),
+                ])->all(),
             ])->all();
     }
 
