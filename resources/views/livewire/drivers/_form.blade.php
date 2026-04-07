@@ -38,16 +38,16 @@
 @endphp
 
 <div class="row g-3">
+    <div class="col-auto">
+        <label class="form-label">N° Documento</label>
+        <input type="text" class="form-control form-control-sm" placeholder="DNI" wire:model="document_number" @if(!($highlightExpiration ?? false)) wire:change="checkDocumentNumber" @endif autocomplete="off">
+        @error('document_number') <span class="title-modules">{{ $message }}</span> @enderror
+    </div>
+
     <div class="col-12 col-md-4">
         <label for="drv_name" class="form-label">Nombres</label>
         <input id="drv_name" type="text" class="form-control form-control-sm" placeholder="Nombres y apellidos" wire:model="name" autocomplete="off">
         @error('name') <span class="title-modules">{{ $message }}</span> @enderror
-    </div>
-
-    <div class="col-auto">
-        <label class="form-label">N° Documento</label>
-        <input type="text" class="form-control form-control-sm" placeholder="DNI" wire:model="document_number" autocomplete="off">
-        @error('document_number') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
     <div class="col-auto">

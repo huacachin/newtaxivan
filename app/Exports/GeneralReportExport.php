@@ -66,7 +66,7 @@ class GeneralReportExport implements FromArray, WithEvents, WithColumnFormatting
         $this->prepareStatic();
         [$payments, $departures, $incomes, $expenses] = $this->loadMonthBatches();
 
-        $monthName = Carbon::create($this->year, $this->month, 1)->locale('es')->translatedFormat('F');
+        $monthName = ucfirst(Carbon::create($this->year, $this->month, 1)->locale('es')->translatedFormat('F'));
 
         $rows = [];
         // Fila 1: Título

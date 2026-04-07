@@ -24,7 +24,7 @@
 <table cellspacing="0" border="1" style="border-collapse:collapse;">
     <col width="31">
     <col width="64">
-    <col width="39">
+    <col width="46">
     @for($d = 1; $d <= $daysInMonth; $d++)
         <col width="35">
     @endfor
@@ -105,7 +105,7 @@
 
     {{-- Footer --}}
     <tr>
-        <td colspan="3" style="{{ $ftr }}">Totales por día (S/)</td>
+        <td colspan="3" style="{{ $ftr }}">Totales x día (S/)</td>
         @for($d = 1; $d <= $daysInMonth; $d++)
             <td style="{{ $ftr }}">{{ $fmt($totalsPerDay[$d] ?? 0) }}</td>
         @endfor

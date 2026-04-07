@@ -84,16 +84,18 @@
                                     <i class="ti ti-search f-s-12"></i>
                                 </button>
 
+
+                                <!-- Exportar detalle -->
+                                <button class="btn btn-sm btn-primary flex-shrink-0 align-self-end"
+                                        wire:click="exportDetail">
+                                    <i class="ti ti-file-description f-s-12"></i> E. detalle
+                                </button>
+
+
                                 <!-- Exportar resumen -->
                                 <button class="btn btn-sm btn-export flex-shrink-0 align-self-end"
                                         wire:click="exportSummary">
                                     <i class="ti ti-file-analytics f-s-12"></i> Exportar
-                                </button>
-
-                                <!-- Exportar detalle -->
-                                <button class="btn btn-sm btn-export flex-shrink-0 align-self-end"
-                                        wire:click="exportDetail">
-                                    <i class="ti ti-file-description f-s-12"></i> E. detalle
                                 </button>
 
                                 <button class="btn btn-sm btn-primary" id="down" title="Bajar">
@@ -108,6 +110,7 @@
                             <thead class="bg-primary">
                             <tr>
                                 <th>Nº</th>
+                                <th>COD</th>
                                 <th>PLACA</th>
                                 <th>CONDICIÓN</th>
 
@@ -126,6 +129,7 @@
                             @foreach($rows as $r)
                                 <tr>
                                     <td>{{ $r['item'] }}</td>
+                                    <td>{{ $r['cod'] }}</td>
                                     <td class="sticky-col-2"><strong>{{ $r['plate'] }}</strong></td>
                                     <td>{{ $r['condition'] }}</td>
 

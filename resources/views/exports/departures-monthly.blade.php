@@ -22,7 +22,7 @@
     {!! $colDefs !!}
     <tr>
         <td colspan="{{ $totalCols }}" style="{{ $ttl }}">
-            REPORTE MENSUAL POR PLACA - V.T {{ mb_strtoupper($monthName) }} {{ $year }}
+            REPORTE SALIDA MENSUAL POR PLACA - V.T {{ mb_strtoupper($monthName) }} {{ $year }}
         </td>
     </tr>
     <tr>
@@ -50,7 +50,7 @@
     @endforeach
 
     <tr>
-        <td colspan="3" style="{{ $ftr }}">Total Salidas</td>
+        <td colspan="3" style="{{ $ftr }}">Total Vueltas</td>
         @for($d = 1; $d <= $daysInMonth; $d++)
             <td style="{{ $ftr }}">{{ $totalPerDay[$d] ?? 0 }}</td>
         @endfor
@@ -99,7 +99,7 @@
     @endforeach
 
     <tr>
-        <td colspan="2" style="{{ $ftr }}">Total Salidas</td>
+        <td colspan="2" style="{{ $ftr }}">Total Vueltas</td>
         @for($d = 1; $d <= $daysInMonth; $d++)
             <td style="{{ $ftr }}">{{ $hq['totalPerDay'][$d] ?? 0 }}</td>
         @endfor

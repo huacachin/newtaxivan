@@ -6,12 +6,6 @@
 @endphp
 
 <div class="row g-3">
-    <div class="col-12 col-md-6">
-        <label for="name" class="form-label">Empresa/Nombre</label>
-        <input id="name" type="text" class="form-control form-control-sm" placeholder="Ingresar nombres y apellidos" wire:model="name" autocomplete="off">
-        @error('name') <span class="title-modules">{{ $message }}</span> @enderror
-    </div>
-
     <div class="col-auto">
         <label for="document_type" class="form-label">Tipo de documento</label>
         <select id="document_type" class="form-select form-select-sm" wire:model="document_type">
@@ -24,8 +18,14 @@
 
     <div class="col-auto">
         <label for="document_number" class="form-label">Número de documento</label>
-        <input id="document_number" type="text" class="form-control form-control-sm" placeholder="Documento" wire:model="document_number" autocomplete="off">
+        <input id="document_number" type="text" class="form-control form-control-sm" placeholder="Documento" wire:model="document_number" @if(!($highlightExpiration ?? false)) wire:change="checkDocumentNumber" @endif autocomplete="off">
         @error('document_number') <span class="title-modules">{{ $message }}</span> @enderror
+    </div>
+
+    <div class="col-12 col-md-6">
+        <label for="name" class="form-label">Empresa/Nombre</label>
+        <input id="name" type="text" class="form-control form-control-sm" placeholder="Ingresar nombres y apellidos" wire:model="name" autocomplete="off">
+        @error('name') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
     <div class="col-auto">

@@ -78,21 +78,21 @@
 
     <tr>
         <td colspan="2" rowspan="3" style="{{ $hdr }}">TOTAL GENERAL</td>
-        <td style="{{ $ftr }}">T.E</td>
+        <td style="{{ $ftr }}">T. Emp.</td>
         @for($d = 1; $d <= $daysInMonth; $d++)
             <td style="{{ $ftr }}">{{ $totalsTE[$d] ?? 0 }}</td>
         @endfor
         <td style="{{ $ftr }}">{{ $grandTE }}</td>
     </tr>
     <tr>
-        <td style="{{ $ftr }}">T.A</td>
+        <td style="{{ $ftr }}">T. Ap.</td>
         @for($d = 1; $d <= $daysInMonth; $d++)
             <td style="{{ $ftr }}">{{ $totalsTA[$d] ?? 0 }}</td>
         @endfor
         <td style="{{ $ftr }}">{{ $grandTA }}</td>
     </tr>
     <tr>
-        <td style="{{ $ftr }}">V.T</td>
+        <td style="{{ $ftr }}">T. Veh</td>
         @for($d = 1; $d <= $daysInMonth; $d++)
             <td style="{{ $ftr }}">{{ $totalsVT[$d] ?? 0 }}</td>
         @endfor

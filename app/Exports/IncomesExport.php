@@ -36,7 +36,7 @@ class IncomesExport implements
     public function query(): Builder
     {
         $q = Income::query()
-            ->with(['user:id,name'])
+            ->with(['user:id,name,username'])
             ->orderBy('date')
             ->orderBy('id');
 
@@ -73,23 +73,22 @@ class IncomesExport implements
     /* ========================= LAYOUT ========================= */
     public function headings(): array
     {
-        return ['Nº', 'Fecha', 'Respons.', 'A', 'Motivo', 'S/.'];
+        return ['Nº', 'Fecha', 'Usuario', 'A', 'Motivo', 'S/'];
     }
 
     public function map($row): array
     {
         $this->i++;
-        $colA = $row->reason === 'DEUDA' ? 'DEUDA' : 'Taxi Van';
 
         return [
             $this->i,                                                    // Item
             $row->date
                 ? ExcelDate::dateTimeToExcel(Carbon::parse($row->date)->startOfDay())
                 : null,
-            optional($row->user)->name,                                  // Respons.
-            $colA,                                                       // A
-            trim($row->detail ?: $row->reason),                          // Motivo
-            is_null($row->total) ? null : (float)$row->total,            // S/.
+            optional($row->user)->username,                              // Usuario
+            $row->reason,                                                // A
+            $row->detail,                                                // Motivo
+            is_null($row->total) ? null : (float)$row->total,            // Monto
         ];
     }
 
@@ -99,13 +98,12 @@ class IncomesExport implements
         $i = 0;
         foreach ($this->query()->get() as $row) {
             $i++;
-            $colA = $row->reason === 'DEUDA' ? 'DEUDA' : 'Taxi Van';
             $rows[] = [
                 'item'   => $i,
                 'date'   => $row->date ? Carbon::parse($row->date)->format('d/m/Y') : '',
-                'user'   => optional($row->user)->name,
-                'a'      => $colA,
-                'motivo' => trim($row->detail ?: $row->reason),
+                'user'   => optional($row->user)->username,
+                'a'      => $row->reason,
+                'motivo' => $row->detail,
                 'total'  => $row->total,
             ];
         }

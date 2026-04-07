@@ -48,7 +48,7 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
             });
         }
 
-        $rows = $q->orderBy('date')->get();
+        $rows = $q->orderBy('id')->get();
 
         $vehicleIds = $rows->pluck('vehicle_id')->filter()->unique()->values();
         $vehicles = Vehicle::query()

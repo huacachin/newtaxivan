@@ -59,17 +59,19 @@
                                     <i class="ti ti-search f-s-12"></i>
                                 </button>
 
-                                <!-- Exportar -->
-                                <a href="#"
-                                   wire:click.prevent="export"
-                                   class="btn btn-sm btn-export flex-shrink-0 align-self-end">
-                                    <i class="ti ti-file-analytics"></i> Exportar
-                                </a>
+
 
                                 <!-- Regresar -->
                                 <a href="{{ route('payments.index') }}"
                                    class="btn btn-sm btn-primary flex-shrink-0 align-self-end">
                                     <i class="ti ti-arrow-back-up"></i> Regresar
+                                </a>
+
+                                <!-- Exportar -->
+                                <a href="#"
+                                   wire:click.prevent="export"
+                                   class="btn btn-sm btn-export flex-shrink-0 align-self-end">
+                                    <i class="ti ti-file-analytics"></i> Exportar
                                 </a>
 
                             </div>

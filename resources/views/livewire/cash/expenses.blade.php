@@ -159,7 +159,7 @@
                             <th>Usuario</th>
                             <th>A</th>
                             <th>Motivo</th>
-                            <th class="text-end">Monto</th>
+                            <th>S/</th>
                             <th>T.Comp.</th>
                             <th>Respons.</th>
                             <th class="text-center">Img</th>

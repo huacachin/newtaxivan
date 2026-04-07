@@ -24,7 +24,7 @@
 
     <tr>
         <td colspan="6" align="center" style="font-weight:bold;font-size:10pt;">
-            <b style="color:red">Costo por placa ({{ $result->count() }})</b>
+            <b style="color:red">LISTADO GENERAL DE COSTO POR PLACA ({{ $result->count() }})</b>
         </td>
     </tr>
     <tr>

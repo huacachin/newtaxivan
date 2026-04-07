@@ -239,6 +239,24 @@ window.addEventListener('errorAlert', function (event) {
     });
 });
 
+window.addEventListener('confirmReactivate', function (event) {
+    var data = event.detail[0] || {};
+    Swal.fire({
+        title: data.entity + ' inactivo encontrado',
+        html: 'El ' + data.entity.toLowerCase() + ' <strong>' + data.name + '</strong> fue eliminado anteriormente. ¿Desea reactivarlo?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, reactivar',
+        cancelButtonText: 'No',
+    }).then(function (result) {
+        if (result.isConfirmed) {
+            Livewire.dispatch('reactivateConfirmed', { id: data.id });
+        }
+    });
+});
+
 document.addEventListener('click', function (e) {
     var btn = e.target.closest('#down');
     if (!btn) return;

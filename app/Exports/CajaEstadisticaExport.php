@@ -169,10 +169,10 @@ class CajaEstadisticaExport implements WithEvents
                 // ===== Anchos compactos (al ras) =====
                 $widths = [
                     'A'=>11,
-                    'B'=>13, 'C'=>13, 'D'=>13, 'E'=>13,
-                    'F'=>13, 'G'=>13, 'H'=>13,
-                    'I'=>13,
-                    'J'=>13,
+                    'B'=>10, 'C'=>10, 'D'=>10, 'E'=>10,
+                    'F'=>10, 'G'=>10, 'H'=>10,
+                    'I'=>10,
+                    'J'=>10,
                     'K'=>13,
                     'L'=>13,
                 ];
@@ -233,9 +233,6 @@ class CajaEstadisticaExport implements WithEvents
         $sheet->fromArray(['Cotización','Retraso','Deuda','Total','Empresa','Apoyo','Total'], null, "B{$r3}");
         $this->paintHeader($sheet, "B{$r3}:H{$r3}");
         $this->headerBaseStyle($sheet, "A{$r}:L{$r3}");
-        // "Retraso" siempre en rojo
-        $sheet->getStyle("C{$r3}")->getFont()->getColor()->setRGB(self::RED_TITLE);
-
         // -------- Datos --------
         $data  = $this->buildDailyData($this->year, $this->month, $this->headquarterId);
         $row   = $r3 + 1;
@@ -335,9 +332,6 @@ class CajaEstadisticaExport implements WithEvents
         $sheet->fromArray(['Cotización', 'Retraso', 'Deuda', 'Total', 'Empresa', 'Apoyo', 'Total'], null, "B{$r3}");
         $this->paintHeader($sheet, "B{$r3}:H{$r3}");
         $this->headerBaseStyle($sheet, "A{$r}:L{$r3}");
-        // "Retraso" siempre en rojo
-        $sheet->getStyle("C{$r3}")->getFont()->getColor()->setRGB(self::RED_TITLE);
-
         // -------- Datos --------
         [$rows, $totales, $promedios] = $this->buildAnnualData($this->year, $this->month, $this->headquarterId);
 

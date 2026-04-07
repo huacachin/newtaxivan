@@ -9,7 +9,7 @@
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Fecha</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>A (Raz&oacute;n)</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Motivo (Detalle)</b></th>
-        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Total</b></th>
+        <th bgcolor="#2874A6" align="center" style="color:white;"><b>S/</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Usuario</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Responsable</b></th>
     </tr>

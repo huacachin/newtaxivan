@@ -162,7 +162,7 @@
                                 <th>Usuario</th>
                                 <th>A</th>
                                 <th>Motivo</th>
-                                <th class="text-end">Monto</th>
+                                <th>S/</th>
                                 <th class="text-center">Img</th>
                             </tr>
                             </thead>

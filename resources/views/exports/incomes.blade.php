@@ -7,10 +7,10 @@
     <tr>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Nº</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Fecha</b></th>
-        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Respons.</b></th>
+        <th bgcolor="#2874A6" align="center" style="color:white;"><b>Usuario</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>A</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Motivo</b></th>
-        <th bgcolor="#2874A6" align="center" style="color:white;"><b>S/.</b></th>
+        <th bgcolor="#2874A6" align="center" style="color:white;"><b>S/</b></th>
     </tr>
     </thead>
     <tbody>

@@ -49,7 +49,7 @@
 <table cellspacing="0" border="1" style="border-collapse:collapse;">
     <col width="105">
     <col width="90">
-    <col width="55">
+    <col width="58">
     @for($d = 1; $d <= $daysInMonth; $d++)
         <col width="44">
     @endfor

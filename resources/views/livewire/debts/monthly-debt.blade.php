@@ -103,6 +103,7 @@
                             <thead class="bg-primary">
                             <tr>
                                 <th></th>
+                                <th>Nº</th>
                                 <th>Cod</th>
                                 <th>Placa</th>
                                 <th>Condición</th>
@@ -129,6 +130,7 @@
                                         @endif
                                         @endhasanyrole
                                     </td>
+                                    <td>{{ $loop->iteration }}</td>
                                     <td>{{ $r['cod'] }}</td>
                                     <td><strong>{{ $r['plate'] }}</strong></td>
                                     <td>{{ $r['condition'] }}</td>
@@ -142,14 +144,14 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="11">No se encontraron resultados.</td>
+                                    <td colspan="12">No se encontraron resultados.</td>
                                 </tr>
                             @endforelse
                             </tbody>
 
                             <tfoot class="bg-primary">
                             <tr>
-                                <td colspan="6">TOTAL GENERAL</td>
+                                <td colspan="7">TOTAL GENERAL</td>
                                 <td>{{ number_format($totals['total'] ?? 0, 2) }}</td>
                                 <td>{{ number_format($totals['exonerated'] ?? 0, 2) }}</td>
                                 <td>{{ number_format($totals['to_pay'] ?? 0, 2) }}</td>
