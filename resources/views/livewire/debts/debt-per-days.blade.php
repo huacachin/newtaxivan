@@ -130,7 +130,13 @@
                                 <tr>
                                     <td>{{ $r['item'] }}</td>
                                     <td>{{ $r['cod'] }}</td>
-                                    <td class="sticky-col-2"><strong>{{ $r['plate'] }}</strong></td>
+                                    <td class="sticky-col-2">
+                                        @if(!empty($r['is_legacy']))
+                                            <strong style="color:red;" data-bs-toggle="tooltip" title="Cesado">{{ $r['plate'] }}</strong>
+                                        @else
+                                            <strong>{{ $r['plate'] }}</strong>
+                                        @endif
+                                    </td>
                                     <td>{{ $r['condition'] }}</td>
 
                                     @foreach($r['cells'] as $i => $c)
@@ -155,7 +161,7 @@
                             <tr>
                                 <td></td>
                                 <td></td>
-                                <td colspan="1">TOTAL</td>
+                                <td colspan="2">TOTAL</td>
 
                                 @foreach($days as $d)
                                     <td>{{ number_format($dayTotals[$d['d']]['paid_amount'] ?? 0, 2) }}</td>
