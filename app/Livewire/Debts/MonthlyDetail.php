@@ -158,7 +158,7 @@ class MonthlyDetail extends Component
                 'detail'     => $d->detail,
                 'exonerated' => number_format((float)$d->exonerated, 2),
                 'amortized'  => number_format((float)$d->amortized, 2),
-                'user'       => $d->user?->name ?? '—',
+                'user'       => $d->user?->username ?? '—',
             ])->all();
     }
 
