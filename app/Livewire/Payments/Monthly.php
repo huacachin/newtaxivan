@@ -138,6 +138,38 @@ class Monthly extends Component
             $this->fillCurrentMonthTDebt_MatchExport($vehicles, $start, $end);
         }
 
+        // --- Cesados: pagos con vehicle_id=NULL y legacy_plate (igual que payments/daily) ---
+        if (Schema::hasTable($this->paymentsTable)) {
+            $legacyAggs = DB::table($this->paymentsTable)
+                ->selectRaw("legacy_plate as plate, SUM(amount) as s, COUNT(*) as kt")
+                ->whereIn(DB::raw('UPPER(type)'), ['PAGO','RETRASO'])
+                ->whereNotNull('date_payment')
+                ->whereBetween('date_payment', [$start->toDateString(), $end->toDateString()])
+                ->whereNull('vehicle_id')
+                ->whereNotNull('legacy_plate')
+                ->where('legacy_plate', '!=', '')
+                ->groupBy('plate')
+                ->get();
+
+            $negKey = -1;
+            foreach ($legacyAggs as $r) {
+                $plate = strtoupper(trim($r->plate));
+                $this->rows[$negKey] = [
+                    'order'            => '',
+                    'plate'            => $plate,
+                    'condition'        => '',
+                    'prev_debt'        => 0.0,
+                    'prev_exonerated'  => 0.0,
+                    'prev_paid_debt'   => 0.0,
+                    'month_amount'     => round((float)$r->s, 2),
+                    'dt_days'          => (int)$r->kt,
+                    'dnt_days'         => 0,
+                    'tdebt'            => 0.0,
+                ];
+                $negKey--;
+            }
+        }
+
         // Totales + DNT
         foreach ($this->rows as $vid => &$row) {
             $row['dnt_days'] = max(0, $this->laborableDays - (int)$row['dt_days']);

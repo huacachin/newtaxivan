@@ -140,7 +140,11 @@
                                     <td>{{ $loop->iteration }}</td>
                                     <td>{{ $r['order'] ?: '-' }}</td>
                                     <td class="green_modules">
-                                        <a href="{{ route('settings.vehicles.index', ['search' => $r['plate'], 'filter' => 'plate']) }}" target="_blank">{{ $r['plate'] }}</a>
+                                        @if($vid < 0)
+                                            <strong style="color:red;" data-bs-toggle="tooltip" title="Cesado">{{ $r['plate'] }}</strong>
+                                        @else
+                                            <a href="{{ route('settings.vehicles.index', ['search' => $r['plate'], 'filter' => 'plate']) }}" target="_blank">{{ $r['plate'] }}</a>
+                                        @endif
                                     </td>
 
                                     {{-- Deuda anterior (debt_days) --}}
