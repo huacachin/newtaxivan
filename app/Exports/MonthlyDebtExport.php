@@ -53,7 +53,7 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
         $vehicleIds = $rows->pluck('vehicle_id')->filter()->unique()->values();
         $vehicles = Vehicle::query()
             ->whereIn('id', $vehicleIds)
-            ->get(['id','plate','condition'])
+            ->get(['id','plate','condition','sort_order'])
             ->keyBy('id');
 
         $seed = Carbon::parse($from);
