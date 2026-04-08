@@ -194,11 +194,11 @@
 
                                  <td>{{ number_format($r['a_h'], 2, '.', ',') }}</td>
                                  <td>{{ number_format($r['b_h'], 2, '.', ',') }}</td>
-                                 <td>{{ number_format($r['dif_h'], 2, '.', ',') }}</td>
+                                 <td style="color:red !important;font-weight:bold;">{{ number_format($r['dif_h'], 2, '.', ',') }}</td>
 
                                  <td>{{ number_format($r['a_v'], 2, '.', ',') }}</td>
                                  <td>{{ number_format($r['b_v'], 2, '.', ',') }}</td>
-                                 <td>{{ number_format($r['dif_v'], 2, '.', ',') }}</td>
+                                 <td style="color:red !important;font-weight:bold;">{{ number_format($r['dif_v'], 2, '.', ',') }}</td>
 
                                  <td>{{ number_format($r['dif_h_vs_v'], 2, '.', ',') }}</td>
                              </tr>
@@ -211,11 +211,11 @@
                                  <td colspan="2" style="background-color: #fff !important; color: #000 !important;"><strong>Total</strong></td>
                                  <td>{{ number_format($this->comparativoTotales['a_h'], 2, '.', ',') }}</td>
                                  <td>{{ number_format($this->comparativoTotales['b_h'], 2, '.', ',') }}</td>
-                                 <td>{{ number_format($this->comparativoTotales['dif_h'], 2, '.', ',') }}</td>
+                                 <td style="color:red !important;font-weight:bold;">{{ number_format($this->comparativoTotales['dif_h'], 2, '.', ',') }}</td>
 
                                  <td>{{ number_format($this->comparativoTotales['a_v'], 2, '.', ',') }}</td>
                                  <td>{{ number_format($this->comparativoTotales['b_v'], 2, '.', ',') }}</td>
-                                 <td>{{ number_format($this->comparativoTotales['dif_v'], 2, '.', ',') }}</td>
+                                 <td style="color:red !important;font-weight:bold;">{{ number_format($this->comparativoTotales['dif_v'], 2, '.', ',') }}</td>
 
                                  <td>{{ number_format($this->comparativoTotales['dif_h_vs_v'], 2, '.', ',') }}</td>
                              </tr>
