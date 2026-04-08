@@ -120,7 +120,26 @@ class DebtPerDays extends Component
         $vehiclesQ = DB::table('vehicles as v')
             ->select('v.id','v.plate','v.sort_order','v.condition','v.status');
 
-        // No filtrar por status — mostrar todos los vehículos
+        if ($this->onlyActive) {
+            $vehiclesQ->where(function ($q) use ($from, $toMonthEnd) {
+                $q->where('v.status', 'active')
+                  ->orWhereExists(function ($sub) use ($from, $toMonthEnd) {
+                      $sub->from('cost_per_plate_days as cpd')
+                          ->whereColumn('cpd.vehicle_id', 'v.id')
+                          ->whereBetween('cpd.date', [$from, $toMonthEnd]);
+                  })
+                  ->orWhereExists(function ($sub) use ($from, $toMonthEnd) {
+                      $sub->from('payments as p')
+                          ->whereColumn('p.vehicle_id', 'v.id')
+                          ->whereBetween(\DB::raw('DATE(p.date_payment)'), [$from, $toMonthEnd]);
+                  })
+                  ->orWhereExists(function ($sub) use ($from, $toMonthEnd) {
+                      $sub->from('departures as d')
+                          ->whereColumn('d.vehicle_id', 'v.id')
+                          ->whereBetween('d.date', [$from, $toMonthEnd]);
+                  });
+            });
+        }
         if ($this->condition !== '') {
             $vehiclesQ->where('v.condition', $this->condition);
         }
