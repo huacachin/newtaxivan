@@ -3,7 +3,7 @@
 <body>
 <table cellspacing="0" border="1" style="border-collapse:collapse;">
     <thead>
-    <tr><td colspan="6" align="center" style="font-weight:bold;color:red;font-size:11pt;">LISTADO GENERAL DE INGRESOS</td></tr>
+    <tr><td colspan="6" align="center" style="font-weight:bold;color:red;font-size:11pt;">LISTA GENERAL DE INGRESO</td></tr>
     <tr>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Nº</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Fecha</b></th>
@@ -28,10 +28,9 @@
     @endforeach
     </tbody>
     <tfoot>
-    <tr style="background:#CEE7FF">
-        <td colspan="3"></td>
-        <td colspan="2" align="center" style="font-weight:bold;">Total</td>
-        <td align="center" style="font-weight:bold;">{{ number_format($total, 2) }}</td>
+    <tr>
+        <td colspan="5" align="center" style="font-weight:bold;background:#CEE7FF;">Total</td>
+        <td align="center" style="font-weight:bold;background:#CEE7FF;">{{ number_format($total, 2) }}</td>
     </tr>
     </tfoot>
 </table>
