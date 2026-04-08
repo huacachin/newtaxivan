@@ -458,6 +458,36 @@ class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, With
         }
         unset($row);
 
+        // --- Cesados: pagos con vehicle_id=NULL y legacy_plate ---
+        $legacyAggs = DB::table($this->paymentsTable)
+            ->selectRaw("legacy_plate as plate, SUM(amount) as s, COUNT(*) as kt")
+            ->whereIn(DB::raw('UPPER(type)'), ['PAGO','RETRASO'])
+            ->whereNotNull('date_payment')
+            ->whereBetween('date_payment', [$startStr, $endStr])
+            ->whereNull('vehicle_id')
+            ->whereNotNull('legacy_plate')
+            ->where('legacy_plate', '!=', '')
+            ->groupBy('plate')
+            ->get();
+
+        $negKey = -1;
+        foreach ($legacyAggs as $r) {
+            $plate = strtoupper(trim($r->plate));
+            $map[$negKey] = [
+                'order'           => '',
+                'plate'           => $plate,
+                'condition'       => '',
+                'prev_debt'       => 0.0,
+                'prev_exonerated' => 0.0,
+                'prev_paid_debt'  => 0.0,
+                'month_amount'    => round((float)$r->s, 2),
+                'dt_days'         => (int)$r->kt,
+                'dnt_days'        => max(0, $laborables - (int)$r->kt),
+                'tdebt'           => 0.0,
+            ];
+            $negKey--;
+        }
+
         // Construcción de filas + totales
         $sumPrevDebt = $sumPrevExo = $sumPrevPaid = 0.0;
         $sumMonth    = 0.0;
