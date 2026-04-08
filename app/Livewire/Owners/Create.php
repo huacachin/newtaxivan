@@ -83,8 +83,8 @@ class Create extends Component
         $this->name = $owner->name;
         $this->document_type = $owner->document_type;
         $this->document_number = $owner->document_number;
-        $this->document_expiration_date = $owner->document_expiration_date;
-        $this->birthdate = $owner->birthdate;
+        $this->document_expiration_date = optional($owner->document_expiration_date)->format('Y-m-d');
+        $this->birthdate = optional($owner->birthdate)->format('Y-m-d');
         $this->address = $owner->address;
         $this->district = $owner->district;
         $this->email = $owner->email;
