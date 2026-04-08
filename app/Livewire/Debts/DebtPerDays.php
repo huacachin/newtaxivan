@@ -120,9 +120,7 @@ class DebtPerDays extends Component
         $vehiclesQ = DB::table('vehicles as v')
             ->select('v.id','v.plate','v.sort_order','v.condition','v.status');
 
-        if ($this->onlyActive) {
-            $vehiclesQ->where('v.status','active');
-        }
+        // No filtrar por status — mostrar todos los vehículos
         if ($this->condition !== '') {
             $vehiclesQ->where('v.condition', $this->condition);
         }

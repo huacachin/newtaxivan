@@ -56,7 +56,7 @@ class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTi
         $vehiclesQ = DB::table('vehicles as v')
             ->select('v.id','v.plate','v.sort_order','v.condition','v.status');
 
-        if ($this->onlyActive)       $vehiclesQ->where('v.status','active');
+        // No filtrar por status — mostrar todos igual que el blade
         if ($this->condition !== '') $vehiclesQ->where('v.condition', $this->condition);
 
         $vehicles = $vehiclesQ
