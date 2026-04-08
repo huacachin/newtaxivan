@@ -66,26 +66,14 @@ class Index extends Component
         return (float) Expense::whereDate('date', $today)->sum('total');
     }
 
-    /** Top HQ por ingresos: UNION ALL en SQL y agrego en servidor */
+    /** Top HQ por ingresos: solo departures.price (columna S/ de Empresa) */
     protected function topHeadquartersByIncome(int $limit = 5): array
     {
         [$start, $end] = $this->monthRange();
 
-        $pay = Payment::query()
-            ->select('headquarter_id', DB::raw('SUM(amount) AS s'))
-            ->whereBetween('date_register', [$start, $end])
-            ->groupBy('headquarter_id');
-
-        $dep = Departure::query()
-            ->select('headquarter_id', DB::raw('SUM(price) AS s'))
+        $rows = Departure::query()
+            ->select('headquarter_id', DB::raw('SUM(price) AS sum_amount'))
             ->whereBetween('date', [$start->toDateString(), $end->toDateString()])
-            ->groupBy('headquarter_id');
-
-        // UNION ALL de ambas fuentes y re-agregación
-        $union = $pay->unionAll($dep);
-        $rows = DB::query()
-            ->fromSub($union, 'u')
-            ->select('headquarter_id', DB::raw('SUM(s) AS sum_amount'))
             ->groupBy('headquarter_id')
             ->orderByDesc('sum_amount')
             ->limit($limit)
