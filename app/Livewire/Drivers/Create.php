@@ -124,8 +124,8 @@ class Create extends Component
         $this->reactivateId = $driver->id;
         $this->name = $driver->name;
         $this->document_number = $driver->document_number;
-        $this->document_expiration_date = $driver->document_expiration_date;
-        $this->birthdate = $driver->birthdate;
+        $this->document_expiration_date = optional($driver->document_expiration_date)->format('Y-m-d');
+        $this->birthdate = optional($driver->birthdate)->format('Y-m-d');
         $this->age = $this->calculateAge($driver->birthdate);
         $this->address = $driver->address;
         $this->district = $driver->district;
@@ -134,17 +134,17 @@ class Create extends Component
         $this->license = $driver->license;
         $this->class = $driver->class;
         $this->category = $driver->category;
-        $this->license_issue_date = $driver->license_issue_date;
-        $this->license_revalidation_date = $driver->license_revalidation_date;
-        $this->contract_start = $driver->contract_start;
-        $this->contract_end = $driver->contract_end;
+        $this->license_issue_date = optional($driver->license_issue_date)->format('Y-m-d');
+        $this->license_revalidation_date = optional($driver->license_revalidation_date)->format('Y-m-d');
+        $this->contract_start = optional($driver->contract_start)->format('Y-m-d');
+        $this->contract_end = optional($driver->contract_end)->format('Y-m-d');
         $this->condition = $driver->condition;
         $this->score = $driver->score;
         $this->road_education = $driver->road_education;
-        $this->road_education_expiration_date = $driver->road_education_expiration_date;
+        $this->road_education_expiration_date = optional($driver->road_education_expiration_date)->format('Y-m-d');
         $this->road_education_municipality = $driver->road_education_municipality;
-        $this->credential = $driver->credential;
-        $this->credential_expiration_date = $driver->credential_expiration_date;
+        $this->credential = optional($driver->credential)->format('Y-m-d');
+        $this->credential_expiration_date = optional($driver->credential_expiration_date)->format('Y-m-d');
         $this->credential_municipality = $driver->credential_municipality;
         $this->details = $driver->details;
 
