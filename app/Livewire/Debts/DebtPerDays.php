@@ -124,11 +124,6 @@ class DebtPerDays extends Component
             $vehiclesQ->where(function ($q) use ($from, $toMonthEnd) {
                 $q->where('v.status', 'active')
                   ->orWhereExists(function ($sub) use ($from, $toMonthEnd) {
-                      $sub->from('cost_per_plate_days as cpd')
-                          ->whereColumn('cpd.vehicle_id', 'v.id')
-                          ->whereBetween('cpd.date', [$from, $toMonthEnd]);
-                  })
-                  ->orWhereExists(function ($sub) use ($from, $toMonthEnd) {
                       $sub->from('payments as p')
                           ->whereColumn('p.vehicle_id', 'v.id')
                           ->whereBetween(\DB::raw('DATE(p.date_payment)'), [$from, $toMonthEnd]);

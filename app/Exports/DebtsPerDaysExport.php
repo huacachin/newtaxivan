@@ -60,11 +60,6 @@ class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTi
             $vehiclesQ->where(function ($q) use ($from, $toMonthEnd) {
                 $q->where('v.status', 'active')
                   ->orWhereExists(function ($sub) use ($from, $toMonthEnd) {
-                      $sub->from('cost_per_plate_days as cpd')
-                          ->whereColumn('cpd.vehicle_id', 'v.id')
-                          ->whereBetween('cpd.date', [$from, $toMonthEnd]);
-                  })
-                  ->orWhereExists(function ($sub) use ($from, $toMonthEnd) {
                       $sub->from('payments as p')
                           ->whereColumn('p.vehicle_id', 'v.id')
                           ->whereBetween(DB::raw('DATE(p.date_payment)'), [$from, $toMonthEnd]);
@@ -110,18 +105,18 @@ class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTi
             $costMap[$c->vehicle_id][$c->date] = (float) $c->amount;
         }
 
-        // Pagos (excluye DEUDA)
+        // Pagos por día (sum monto; excluye DEUDA)
         $payDay = DB::table('payments as p')
-            ->select('p.vehicle_id', DB::raw('DATE(p.date_payment) as date'))
+            ->select('p.vehicle_id', DB::raw('DATE(p.date_payment) as date'), DB::raw('SUM(p.amount) as total_paid'))
             ->whereIn('p.vehicle_id', $vehicleIds)
             ->where('p.type','<>','DEUDA')
             ->whereBetween(DB::raw('DATE(p.date_payment)'), [$from, $toMonthEnd])
             ->groupBy('p.vehicle_id', DB::raw('DATE(p.date_payment)'))
             ->get();
 
-        $payExists = [];
+        $payMap = [];
         foreach ($payDay as $p) {
-            $payExists[$p->vehicle_id][$p->date] = true;
+            $payMap[$p->vehicle_id][$p->date] = (float)$p->total_paid;
         }
 
         // Salidas (sum(times)), excluyendo Huachipa / Lima
@@ -131,7 +126,7 @@ class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTi
             ->whereIn('d.vehicle_id', $vehicleIds)
             ->whereBetween('d.date', [$from, $toMonthEnd])
             ->where(function($q){
-                $q->whereNull('h.name')->orWhereNotIn('h.name', ['Huachipa','Lima']);
+                $q->whereNull('h.name')->orWhereNotIn('h.name', ['Huachipa','lima']);
             })
             ->groupBy('d.vehicle_id','d.date')
             ->get();
@@ -163,37 +158,44 @@ class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTi
 
             foreach ($days as $d) {
                 $date = $d['d'];
+
+                // Domingos: no cuentan, celda vacía
                 if ($d['isSunday']) {
                     $row['cells'][] = ['txt'=>'', 'type'=>'sun'];
                     continue;
                 }
 
-                if ($isExempt) {
-                    $row['cells'][] = ['txt'=>'NT', 'type'=>'nopay'];
-                    continue;
+                // Costo esperado: costpla_dia o fallback 10 si fecha <= 2023-04-30
+                $cost = (float)($costMap[$v->id][$date] ?? 0.0);
+                if ($cost == 0.0 && $date <= '2023-04-30') {
+                    $cost = 10.0;
                 }
 
-                $cost = (float)($costMap[$v->id][$date] ?? 0.0);
+                // Monto pagado ese día
+                $paid = (float)($payMap[$v->id][$date] ?? 0.0);
 
-                // Pago presente -> "P"
-                if (!empty($payExists[$v->id][$date])) {
+                // 1) Si monto pagado >= costo esperado → "P" (pagado)
+                if ($cost > 0 && $paid >= $cost) {
                     $row['cells'][] = ['txt'=>'P', 'type'=>'paid'];
-                    if ($date <= $cutoff) {
+
+                    if ($date <= $cutoff && !$isExempt) {
                         $row['paid_days']++;
                         $row['paid_amount'] += $cost;
                     }
                     continue;
                 }
 
-                // Sin pago: ver salidas
+                // 2) Pago insuficiente o sin pago → ver salidas (ceil(k/2) vueltas)
                 $k = (int)($depMap[$v->id][$date] ?? 0);
                 if ($k > 0) {
-                    $row['cells'][] = ['txt'=>(string)$k, 'type'=>'freq'];
-                    if ($date <= $cutoff) {
+                    $vueltas = (int)ceil($k / 2);
+                    $row['cells'][] = ['txt'=>(string)$vueltas, 'type'=>'freq'];
+                    if ($date <= $cutoff && !$isExempt) {
                         $row['debt_days']++;
                         $row['debt_amount'] += $cost;
                     }
                 } else {
+                    // 3) Sin pago y sin salidas → NT
                     $row['cells'][] = ['txt'=>'NT', 'type'=>'nopay'];
                 }
             }
@@ -203,6 +205,63 @@ class DebtsPerDaysExport implements FromView, ShouldAutoSize, WithEvents, WithTi
                 $row['debt_amount'] = round($row['debt_amount'], 2);
             }
 
+            $rows[] = $row;
+        }
+
+        // --- Cesados: pagos con vehicle_id=NULL y legacy_plate ---
+        $legacyAggs = DB::table('payments')
+            ->selectRaw("legacy_plate as plate, DATE(date_payment) as date, SUM(amount) as total_paid")
+            ->whereIn(DB::raw('UPPER(type)'), ['PAGO','RETRASO'])
+            ->whereNotNull('date_payment')
+            ->whereBetween('date_payment', [$from, $toMonthEnd])
+            ->whereNull('vehicle_id')
+            ->whereNotNull('legacy_plate')
+            ->where('legacy_plate', '!=', '')
+            ->groupBy('plate', 'date')
+            ->get();
+
+        $legacyPlates = [];
+        foreach ($legacyAggs as $r) {
+            $plate = strtoupper(trim($r->plate));
+            $legacyPlates[$plate][$r->date] = (float)$r->total_paid;
+        }
+
+        foreach ($legacyPlates as $plate => $payDays) {
+            $item++;
+
+            $row = [
+                'item'        => $item,
+                'cod'         => '',
+                'plate'       => $plate,
+                'condition'   => '',
+                'is_legacy'   => true,
+                'cells'       => [],
+                'paid_days'   => 0,
+                'paid_amount' => 0.0,
+                'debt_days'   => 0,
+                'debt_amount' => 0.0,
+            ];
+
+            foreach ($days as $d) {
+                $date = $d['d'];
+                if ($d['isSunday']) {
+                    $row['cells'][] = ['txt'=>'', 'type'=>'sun'];
+                    continue;
+                }
+
+                $paid = (float)($payDays[$date] ?? 0.0);
+                if ($paid > 0) {
+                    $row['cells'][] = ['txt'=>'P', 'type'=>'paid'];
+                    if ($date <= $cutoff) {
+                        $row['paid_days']++;
+                        $row['paid_amount'] += $paid;
+                    }
+                } else {
+                    $row['cells'][] = ['txt'=>'', 'type'=>'sun'];
+                }
+            }
+
+            $row['paid_amount'] = round($row['paid_amount'], 2);
             $rows[] = $row;
         }
 

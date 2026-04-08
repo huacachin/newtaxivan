@@ -7,7 +7,7 @@
     <tr>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Nº</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Fecha</b></th>
-        <th bgcolor="#2874A6" align="center" style="color:white;"><b>A (Raz&oacute;n)</b></th>
+        <th bgcolor="#2874A6" align="center" style="color:white;"><b>A</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Motivo (Detalle)</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>S/</b></th>
         <th bgcolor="#2874A6" align="center" style="color:white;"><b>Usuario</b></th>
