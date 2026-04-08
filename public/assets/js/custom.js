@@ -12,10 +12,10 @@ $(function () {
             nextText: 'Siguiente',
             currentText: 'Hoy',
             monthNames: [
-                'enero','febrero','marzo','abril','mayo','junio',
-                'julio','agosto','septiembre','octubre','noviembre','diciembre'
+                'Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'
             ],
-            monthNamesShort: ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'],
+            monthNamesShort: ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],
             dayNames: ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],
             dayNamesShort: ['dom','lun','mar','mié','jue','vie','sáb'],
             dayNamesMin: ['Do','Lu','Ma','Mi','Ju','Vi','Sa'],
@@ -50,14 +50,16 @@ function _applyDatepickers(pairs, wire) {
         $el.datepicker({
             changeMonth: true,
             changeYear: true,
-            yearRange: 'c-10:c+10',
+            yearRange: '2015:2036',
             dateFormat: 'yy-mm-dd',
             onSelect: function (dateText) {
                 wire.set(pair[1], dateText);
             }
         });
-        // Restaurar valor visual sin disparar eventos de Livewire
-        if (currentVal) $el.val(currentVal);
+        // Restaurar valor visual Y estado interno del datepicker
+        if (currentVal) {
+            $el.datepicker('setDate', currentVal);
+        }
     });
 }
 
