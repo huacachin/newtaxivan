@@ -85,6 +85,7 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
 
             $data[] = [
                 'item'       => $item,
+                'cod'        => $veh?->sort_order ?? '',
                 'plate'      => $plate,
                 'condition'  => $cond,
                 'days_mix'   => $daysMixed, // RichText después
@@ -106,6 +107,7 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
         $monthL = mb_strtoupper(\Carbon\Carbon::parse($this->monthDate)->startOfMonth()->locale('es')->translatedFormat('F'));
         return [
             'Nº',
+            'Cod',
             'Placa',
             'Cond.',
             "DIAS NO TRABAJADOS ({$monthL})",
@@ -150,7 +152,7 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
 
                 $monthLabel = \Carbon\Carbon::parse($this->monthDate)->startOfMonth()->locale('es')->translatedFormat('F Y');
                 $title = 'DEUDA MENSUAL - ' . mb_strtoupper($monthLabel);
-                $lastCol = 'J';
+                $lastCol = 'K';
                 $ws->mergeCells("A1:{$lastCol}1");
                 $ws->setCellValue('A1', $title);
                 $ws->getStyle("A1:{$lastCol}1")->applyFromArray([
@@ -194,7 +196,7 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
                 $r4 = $rtH->createTextRun(')');
                 $r4->getFont()->setBold(true)->setSize(10);
                 $r4->getFont()->getColor()->setRGB('FFFFFF');
-                $ws->getCell("D{$headerRow}")->setValue($rtH);
+                $ws->getCell("E{$headerRow}")->setValue($rtH);
 
                 // ===== Bordes datos =====
                 if ($lastRow >= $dataStartRow) {
@@ -209,12 +211,12 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
                     ]);
 
                     // Alineaciones
-                    $ws->getStyle("A{$dataStartRow}:C{$lastRow}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-                    $ws->getStyle("D{$dataStartRow}:D{$lastRow}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-                    $ws->getStyle("E{$dataStartRow}:J{$lastRow}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                    $ws->getStyle("A{$dataStartRow}:D{$lastRow}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                    $ws->getStyle("E{$dataStartRow}:E{$lastRow}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                    $ws->getStyle("F{$dataStartRow}:K{$lastRow}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
-                    /* Rellenar vacíos con 0 en montos (F..J) */
-                    foreach (range('F','J') as $col) {
+                    /* Rellenar vacíos con 0 en montos (G..K) */
+                    foreach (range('G','K') as $col) {
                         for ($r = $dataStartRow; $r <= $lastRow; $r++) {
                             $cell = $ws->getCell("{$col}{$r}");
                             if ($cell->getValue() === null || $cell->getValue() === '') $cell->setValue(0);
@@ -222,16 +224,16 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
                     }
 
                     // Formato moneda
-                    foreach (['F','G','H','I','J'] as $c) {
+                    foreach (['G','H','I','J','K'] as $c) {
                         $ws->getStyle("{$c}{$dataStartRow}:{$c}{$lastRow}")
                             ->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
                     }
 
-                    // Columna Exon. (G) en rojo claro
-                    $ws->getStyle("G{$dataStartRow}:G{$lastRow}")
+                    // Columna Exon. (H) en rojo claro
+                    $ws->getStyle("H{$dataStartRow}:H{$lastRow}")
                         ->getFont()->getColor()->setRGB('FF6666');
 
-                    // RichText en D (días X1 en azul oscuro + negrita)
+                    // RichText en E (días X1 en azul oscuro + negrita)
                     $darkBlue = '0066FF';
                     for ($r = $dataStartRow; $r <= $lastRow; $r++) {
                         $item = (int) $ws->getCell("A{$r}")->getCalculatedValue();
@@ -252,21 +254,21 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
                             }
                             if ($i < count($union) - 1) $rt->createTextRun(',');
                         }
-                        $ws->getCell("D{$r}")->setValue($rt);
+                        $ws->getCell("E{$r}")->setValue($rt);
                     }
                 }
 
                 // ===== Fila TOTAL =====
                 $totalRow = ($lastRow >= $dataStartRow) ? $lastRow + 1 : $dataStartRow;
-                $ws->mergeCells("A{$totalRow}:E{$totalRow}");
+                $ws->mergeCells("A{$totalRow}:F{$totalRow}");
                 $ws->setCellValue("A{$totalRow}", 'TOTAL');
 
                 if ($lastRow >= $dataStartRow) {
-                    foreach (['F','G','H','I','J'] as $c) {
+                    foreach (['G','H','I','J','K'] as $c) {
                         $ws->setCellValue("{$c}{$totalRow}", "=SUM({$c}{$dataStartRow}:{$c}{$lastRow})");
                     }
                 } else {
-                    foreach (['F','G','H','I','J'] as $c) $ws->setCellValue("{$c}{$totalRow}", 0);
+                    foreach (['G','H','I','J','K'] as $c) $ws->setCellValue("{$c}{$totalRow}", 0);
                 }
 
                 $ws->getStyle("A{$totalRow}:{$lastCol}{$totalRow}")->applyFromArray([
@@ -275,7 +277,7 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
                     'fill'      => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['argb' => $footerBg]],
                     'borders'   => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN, 'color' => ['argb' => $black]]],
                 ]);
-                foreach (['F','G','H','I','J'] as $c) {
+                foreach (['G','H','I','J','K'] as $c) {
                     $ws->getStyle("{$c}{$totalRow}")->getNumberFormat()->setFormatCode('"S/ " #,##0.00');
                     $ws->getStyle("{$c}{$totalRow}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
                 }
@@ -283,14 +285,15 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
 
                 // ===== Anchos de columna =====
                 $ws->getColumnDimension('A')->setWidth(4.2);
-                $ws->getColumnDimension('B')->setWidth(10.0);
-                $ws->getColumnDimension('C')->setWidth(5.0);
-                $ws->getColumnDimension('D')->setWidth(26.0);
-                $ws->getColumnDimension('E')->setWidth(6.5);
-                foreach (['F','G','H','I','J'] as $c) $ws->getColumnDimension($c)->setWidth(10.8);
+                $ws->getColumnDimension('B')->setWidth(4.5);
+                $ws->getColumnDimension('C')->setWidth(10.0);
+                $ws->getColumnDimension('D')->setWidth(5.0);
+                $ws->getColumnDimension('E')->setWidth(26.0);
+                $ws->getColumnDimension('F')->setWidth(6.5);
+                foreach (['G','H','I','J','K'] as $c) $ws->getColumnDimension($c)->setWidth(10.8);
 
-                // ===== Ocultar columnas vacías (K en adelante) =====
-                foreach (range('K', 'Z') as $col) {
+                // ===== Ocultar columnas vacías (L en adelante) =====
+                foreach (range('L', 'Z') as $col) {
                     $ws->getColumnDimension($col)->setVisible(false);
                 }
 
@@ -300,7 +303,7 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
                 $ws->getStyle("A1:{$lastCol}{$finalRow}")->getAlignment()->setWrapText(false);
                 // Restaurar wrap en D para datos
                 if ($lastRow >= $dataStartRow) {
-                    $ws->getStyle("D{$dataStartRow}:D{$lastRow}")->getAlignment()->setWrapText(true);
+                    $ws->getStyle("E{$dataStartRow}:E{$lastRow}")->getAlignment()->setWrapText(true);
                 }
             },
         ];
