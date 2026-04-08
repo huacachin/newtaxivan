@@ -286,14 +286,14 @@
                             <td>{{ $row['user'] }}</td>
                             <td>
                                 @if(!empty($row['images']))
-                                    <div class="d-flex flex-wrap gap-1"
-                                         x-data="{ urls: {{ json_encode(collect($row['images'])->pluck('url')->values()) }} }">
-                                        @foreach($row['images'] as $imgIdx => $img)
-                                            <img src="{{ $img['url'] }}" alt="Img"
-                                                 class="img-thumb-clickable"
-                                                 x-on:click="$dispatch('open-lightbox', { images: urls, index: {{ $imgIdx }} })">
-                                        @endforeach
-                                    </div>
+                                    <span x-data="{ urls: {{ json_encode(collect($row['images'])->pluck('url')->values()) }} }"
+                                          style="cursor:pointer;position:relative;display:inline-block;"
+                                          x-on:click="$dispatch('open-lightbox', { images: urls, index: 0 })">
+                                        <i class="fa-solid fa-camera f-s-18 text-dark"></i>
+                                        @if(count($row['images']) > 1)
+                                            <span class="badge bg-primary" style="position:absolute;top:-8px;right:-12px;font-size:9px;">{{ count($row['images']) }}</span>
+                                        @endif
+                                    </span>
                                 @else
                                     —
                                 @endif
