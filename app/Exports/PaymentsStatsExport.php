@@ -218,14 +218,14 @@ class PaymentsStatsExport implements FromArray, WithHeadings, WithEvents, WithTi
                     ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
                 // ======= Anchos =======
-                $sheet->getColumnDimension('A')->setWidth(9);
+                $sheet->getColumnDimension('A')->setWidth(12);
                 $sheet->getColumnDimension('B')->setWidth(10);
                 $sheet->getColumnDimension('C')->setWidth(6);
                 for ($i = 4; $i <= $lastColIdx - 1; $i++) {
                     $d = $i - 3; // día del mes
                     $isSunday = $monthStart->day($d)->isSunday();
                     $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($i))
-                        ->setWidth($isSunday ? 3.0 : 5.0);
+                        ->setWidth($isSunday ? 1.5 : 5.0);
                 }
                 $sheet->getColumnDimension($endCol)->setWidth(9);
 

@@ -24,6 +24,7 @@ class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, With
     protected array $rows = [];
     protected array $footer1 = [];
     protected array $footer2 = [];
+    protected array $legacyRowIndexes = [];
 
     protected string $paymentsTable = 'payments';
     protected string $vehiclesTable = 'vehicles';
@@ -84,7 +85,7 @@ class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, With
 
                 // Título
                 $s->mergeCells("A{$titleRow}:{$lastCol}{$titleRow}");
-                $s->setCellValue("A{$titleRow}", 'REPORTE MENSUAL DE PAGOS '.$this->mesTexto($this->month).' '.$this->year);
+                $s->setCellValue("A{$titleRow}", 'REPORTE MENSUAL DE PAGOS '.mb_strtoupper($this->mesTexto($this->month)).' '.$this->year);
                 $s->getStyle("A{$titleRow}:{$lastCol}{$titleRow}")->applyFromArray([
                     'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$white]],
                     'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$red]],
@@ -203,6 +204,14 @@ class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, With
                             }
                         }
                     }
+                }
+
+                // ===== Cesados: placa en rojo negrita =====
+                foreach ($this->legacyRowIndexes as $itemNum) {
+                    $excelRow = $dataRow1 + $itemNum - 1;
+                    $s->getStyle("C{$excelRow}")->applyFromArray([
+                        'font' => ['bold' => true, 'color' => ['argb' => 'FFFF0000']],
+                    ]);
                 }
 
                 // ===== Pies (últimas 2 filas) =====
@@ -498,6 +507,10 @@ class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, With
         $item = 0;
         foreach ($map as $vid => $r) {
             $item++;
+
+            if ($vid < 0) {
+                $this->legacyRowIndexes[] = $item;
+            }
 
             $this->rows[] = [
                 $item,

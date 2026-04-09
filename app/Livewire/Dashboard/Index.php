@@ -82,8 +82,9 @@ class Index extends Component
         $names = Headquarter::pluck('name', 'id');
 
         return $rows->map(fn($r) => [
-            'hq'  => $names[$r->headquarter_id] ?? '—',
-            'sum' => (float) $r->sum_amount,
+            'hq'    => $names[$r->headquarter_id] ?? '—',
+            'hq_id' => (int) $r->headquarter_id,
+            'sum'   => (float) $r->sum_amount,
         ])->all();
     }
 

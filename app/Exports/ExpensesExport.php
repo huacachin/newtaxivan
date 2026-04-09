@@ -79,11 +79,11 @@ class ExpensesExport implements
         return [
             'Nº',
             'Fecha',
+            'Usuario',
             'A (Razón)',
             'Motivo (Detalle)',
             'Total',
-            'Usuario',
-            'Responsable',
+            'Respons.',
         ];
     }
 
@@ -96,10 +96,10 @@ class ExpensesExport implements
             $row->date
                 ? ExcelDate::dateTimeToExcel(Carbon::parse($row->date)->startOfDay())
                 : null,
+            optional($row->user)->username,
             $row->reason,
             $row->detail,
             is_null($row->total) ? null : (float)$row->total,
-            optional($row->user)->username,
             $row->in_charge,
         ];
     }
@@ -113,10 +113,10 @@ class ExpensesExport implements
             $rows[] = [
                 'item'      => $i,
                 'date'      => $row->date ? \Carbon\Carbon::parse($row->date)->format('d/m/Y') : '',
+                'user'      => optional($row->user)->username,
                 'reason'    => $row->reason,
                 'detail'    => $row->detail,
                 'total'     => $row->total,
-                'user'      => optional($row->user)->username,
                 'in_charge' => $row->in_charge,
             ];
         }
@@ -127,7 +127,7 @@ class ExpensesExport implements
     {
         return [
             'B' => 'dd/mm/yyyy',
-            'E' => NumberFormat::FORMAT_NUMBER_00,
+            'F' => NumberFormat::FORMAT_NUMBER_00,
         ];
     }
 
@@ -161,7 +161,7 @@ class ExpensesExport implements
 
                 // Título
                 $ws->insertNewRowBefore(1, 1);
-                $ws->setCellValue('A1', 'REPORTE DE GASTOS');
+                $ws->setCellValue('A1', 'EGRESOS');
                 $ws->mergeCells('A1:G1');
                 $ws->getRowDimension(1)->setRowHeight(16);
                 $ws->getStyle('A1')->applyFromArray([
@@ -207,7 +207,7 @@ class ExpensesExport implements
 
                     $ws->getStyle("B{$dataStartRow}:B{$last}")
                         ->getNumberFormat()->setFormatCode('dd/mm/yyyy');
-                    $ws->getStyle("E{$dataStartRow}:E{$last}")
+                    $ws->getStyle("F{$dataStartRow}:F{$last}")
                         ->getNumberFormat()->setFormatCode('"S/ " #,##0');
                 }
 
@@ -224,10 +224,10 @@ class ExpensesExport implements
                 }
 
                 $totalRow = max($last, $dataStartRow - 1) + 1;
-                $ws->mergeCells("A{$totalRow}:D{$totalRow}");
+                $ws->mergeCells("A{$totalRow}:E{$totalRow}");
                 $ws->setCellValue("A{$totalRow}", 'Total');
-                $ws->setCellValue("E{$totalRow}", $last >= $dataStartRow
-                    ? "=SUM(E{$dataStartRow}:E{$last})"
+                $ws->setCellValue("F{$totalRow}", $last >= $dataStartRow
+                    ? "=SUM(F{$dataStartRow}:F{$last})"
                     : 0
                 );
 
@@ -242,9 +242,9 @@ class ExpensesExport implements
                         'startColor' => ['rgb' => $FOOT],
                     ],
                 ]);
-                $ws->getStyle("E{$totalRow}")
+                $ws->getStyle("F{$totalRow}")
                     ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
-                $ws->getStyle("E{$totalRow}")
+                $ws->getStyle("F{$totalRow}")
                     ->getNumberFormat()->setFormatCode('"S/ " #,##0');
 
                 $ws->getStyle("A{$headerRow}:G{$totalRow}")

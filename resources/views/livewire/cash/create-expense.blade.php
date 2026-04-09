@@ -94,10 +94,20 @@
                         <div class="col-md-3">
                             <div class="mb-3">
                                 <label class="form-label">Motivo / Detalle (*)</label>
-                                <input type="text" class="form-control form-control-sm @error('detail') is-invalid @enderror"
-                                       placeholder="Descripcion breve"
-                                       wire:model.defer="detail">
-                                @error('detail') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                @if($isDraco)
+                                    <select class="form-select form-select-sm @error('headquarter_id') is-invalid @enderror"
+                                            wire:model.live="headquarter_id">
+                                        @foreach($headquarters as $hq)
+                                            <option value="{{ $hq['id'] }}">{{ $hq['name'] }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('headquarter_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                @else
+                                    <input type="text" class="form-control form-control-sm @error('detail') is-invalid @enderror"
+                                           placeholder="Descripcion breve"
+                                           wire:model.defer="detail">
+                                    @error('detail') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                @endif
                             </div>
                         </div>
 

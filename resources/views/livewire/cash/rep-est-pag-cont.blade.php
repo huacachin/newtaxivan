@@ -38,17 +38,19 @@
                                     <i class="ti ti-search f-s-12"></i>
                                 </button>
 
-                                <button class="btn btn-sm btn-export mg-e-10" wire:click="export">
+
+
+
+
+                           <a href="{{ route('departures.index') }}" class="btn btn-sm btn-primary ms-2 mg-e-10">
+                               <i class="ti ti-arrow-back-up f-s-12"></i>
+                           </a>
+                           <button class="btn btn-sm btn-export mg-e-10" wire:click="export">
                                <i class="ti ti-file-analytics f-s-12"></i>
                            </button>
-
                            <button class="btn btn-sm btn-primary" id="down">
                                <i class="fa-solid fa-angle-down"></i>
                            </button>
-
-                           <a href="{{ route('departures.index') }}" class="btn btn-sm btn-primary ms-2">
-                               <i class="ti ti-arrow-back-up f-s-12"></i>
-                           </a>
                        </div>
 
 

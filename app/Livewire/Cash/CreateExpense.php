@@ -18,6 +18,9 @@ class CreateExpense extends Component
     public array  $concepts    = [];
     public string $reason_text = '';
     public array  $controladores = [];
+    public ?int   $headquarter_id = null;
+    public array  $headquarters   = [];
+    public bool   $isDraco        = false;
 
     public ?string $date          = null;
     public string  $detail        = '';
@@ -35,6 +38,7 @@ class CreateExpense extends Component
         $this->in_charge = auth()->user()?->username ?? '';
         $this->refreshConcepts();
         $this->loadControladores();
+        $this->loadHeadquarters();
     }
 
     private function loadControladores(): void
@@ -44,6 +48,17 @@ class CreateExpense extends Component
             ->orderBy('name')
             ->pluck('name')
             ->all();
+    }
+
+    private function loadHeadquarters(): void
+    {
+        $this->headquarters = DB::table('headquarters')
+            ->where('status', 'active')
+            ->orderBy('sort_order')
+            ->get(['id', 'name'])
+            ->map(fn($r) => ['id' => (int)$r->id, 'name' => (string)$r->name])
+            ->all();
+        $this->headquarter_id = 3; // Sta. Anita por defecto
     }
 
     private function refreshConcepts(): void
@@ -84,7 +99,8 @@ class CreateExpense extends Component
             'total'         => ['required', 'numeric', 'min:0.01'],
             'document_type' => ['nullable', 'string', 'max:100'],
             'in_charge'     => ['nullable', 'string', 'max:100'],
-            'image_file'    => ['nullable', 'image', 'max:3072'],
+            'image_file'      => ['nullable', 'image', 'max:3072'],
+            'headquarter_id'  => [$this->isDraco ? 'required' : 'nullable', 'integer'],
         ];
     }
 
@@ -93,20 +109,25 @@ class CreateExpense extends Component
         if ($val === 'Fijos') {
             $this->refreshConcepts();
             $this->concept_id = $this->concepts[0]['id'] ?? null;
+            $this->checkDraco();
         }
         if ($val === 'Planilla') {
             $this->concept_id = null;
             $this->reason_text = $this->controladores[0] ?? '';
+            $this->isDraco = false;
+            $this->headquarter_id = null;
         }
         if ($val === 'Otros') {
             $this->concept_id = null;
             $this->reason_text = '';
+            $this->isDraco = false;
+            $this->headquarter_id = null;
         }
     }
 
     public function clear(): void
     {
-        $this->reset(['expenseKind', 'concept_id', 'reason_text', 'detail', 'total', 'document_type', 'in_charge', 'image_file']);
+        $this->reset(['expenseKind', 'concept_id', 'reason_text', 'detail', 'total', 'document_type', 'in_charge', 'image_file', 'isDraco', 'headquarter_id']);
         $this->date        = now()->toDateString();
         $this->expenseKind = 'Otros';
         $this->resetValidation();
@@ -119,6 +140,37 @@ class CreateExpense extends Component
         if ($row && ($this->total === null || $this->total == 0)) {
             $def = $row['default_amount'] ?? null;
             if ($def !== null) $this->total = (float)$def;
+        }
+        $this->checkDraco();
+    }
+
+    private function checkDraco(): void
+    {
+        $wasDraco = $this->isDraco;
+        $this->isDraco = false;
+
+        if ($this->expenseKind === 'Fijos' && $this->concept_id) {
+            $row = collect($this->concepts)->firstWhere('id', (int)$this->concept_id);
+            if ($row && str_contains(strtoupper($row['name']), 'DRACO')) {
+                $this->isDraco = true;
+            }
+        }
+
+        if ($this->isDraco && !$wasDraco) {
+            $this->headquarter_id = 3;
+            $hq = collect($this->headquarters)->firstWhere('id', 3);
+            $this->detail = $hq['name'] ?? '';
+        } elseif (!$this->isDraco && $wasDraco) {
+            $this->detail = '';
+            $this->headquarter_id = null;
+        }
+    }
+
+    public function updatedHeadquarterId($value): void
+    {
+        if ($this->isDraco && $value) {
+            $hq = collect($this->headquarters)->firstWhere('id', (int)$value);
+            $this->detail = $hq['name'] ?? '';
         }
     }
 
@@ -139,13 +191,14 @@ class CreateExpense extends Component
                 : trim($this->reason_text);
 
             $payload = [
-                'date'          => $this->date,
-                'reason'        => $reason,
-                'detail'        => trim($this->detail),
-                'total'         => round((float)$this->total, 2),
-                'document_type' => trim((string)$this->document_type),
-                'in_charge'     => trim((string)$this->in_charge),
-                'user_id'       => Auth::id(),
+                'date'           => $this->date,
+                'reason'         => $reason,
+                'detail'         => trim($this->detail),
+                'total'          => round((float)$this->total, 2),
+                'document_type'  => trim((string)$this->document_type),
+                'in_charge'      => trim((string)$this->in_charge),
+                'user_id'        => Auth::id(),
+                'headquarter_id' => $this->isDraco ? $this->headquarter_id : null,
             ];
 
             if ($this->image_file) {

@@ -212,6 +212,10 @@
     </div>
 
     {{-- ════════════════════════ TABLES ROW ════════════════════════ --}}
+    @php
+        $monthStart = \Carbon\Carbon::create($year, $month, 1)->startOfMonth()->toDateString();
+        $monthEnd   = \Carbon\Carbon::create($year, $month, 1)->endOfMonth()->toDateString();
+    @endphp
     <div class="row g-3 mb-4">
 
         {{-- Top Sedes --}}
@@ -230,7 +234,12 @@
                                     <span class="rank-badge {{ $i < 3 ? 'rank-'.($i+1) : 'rank-default' }}">{{ $i+1 }}</span>
                                 </td>
                                 <td class="fw-semibold">{{ $row['hq'] }}</td>
-                                <td class="text-end amount positive">S/ {{ number_format($row['sum'], 2) }}</td>
+                                <td class="text-end amount positive">
+                                    <a href="{{ url('/departures?searchType=3&searchText=' . $row['hq_id'] . '&fromDate=' . $monthStart . '&toDate=' . $monthEnd) }}"
+                                       target="_blank" class="text-decoration-none positive">
+                                        S/ {{ number_format($row['sum'], 2) }}
+                                    </a>
+                                </td>
                             </tr>
                         @empty
                             <tr><td colspan="3" class="text-center text-muted py-4">Sin datos</td></tr>
@@ -257,7 +266,12 @@
                                     <span class="rank-badge {{ $i < 3 ? 'rank-'.($i+1) : 'rank-default' }}">{{ $i+1 }}</span>
                                 </td>
                                 <td class="fw-semibold">{{ strtoupper($row['type']) }}</td>
-                                <td class="text-end amount positive">S/ {{ number_format($row['sum'], 2) }}</td>
+                                <td class="text-end amount positive">
+                                    <a href="{{ url('/payments?type=' . urlencode($row['type']) . '&from=' . $monthStart . '&to=' . $monthEnd) }}"
+                                       target="_blank" class="text-decoration-none positive">
+                                        S/ {{ number_format($row['sum'], 2) }}
+                                    </a>
+                                </td>
                             </tr>
                         @empty
                             <tr><td colspan="3" class="text-center text-muted py-4">Sin datos</td></tr>
@@ -285,8 +299,18 @@
                         @forelse($last10 as $r)
                             <tr>
                                 <td class="fw-semibold">{{ \Carbon\Carbon::parse($r['date'])->format('d/m') }}</td>
-                                <td class="text-end amount positive">{{ number_format($r['income'], 2) }}</td>
-                                <td class="text-end amount negative">{{ number_format($r['expense'], 2) }}</td>
+                                <td class="text-end amount positive">
+                                    <a href="{{ url('/payments?from=' . $r['date'] . '&to=' . $r['date']) }}"
+                                       target="_blank" class="text-decoration-none positive">
+                                        {{ number_format($r['income'], 2) }}
+                                    </a>
+                                </td>
+                                <td class="text-end amount negative">
+                                    <a href="{{ url('/cash/expenses?date_start=' . $r['date'] . '&date_end=' . $r['date']) }}"
+                                       target="_blank" class="text-decoration-none negative">
+                                        {{ number_format($r['expense'], 2) }}
+                                    </a>
+                                </td>
                                 <td class="text-end amount fw-bold {{ $r['balance'] >= 0 ? 'positive' : 'negative' }}">
                                     {{ number_format($r['balance'], 2) }}
                                 </td>
