@@ -288,21 +288,27 @@
                 <div class="card-body">
                     <div class="dash-section-title">Saldos recientes (c/ movimiento)</div>
                     @php
-                        $daysWithMove = array_values(array_filter($days, fn($r) => ($r['income'] != 0 || $r['expense'] != 0)));
+                        $daysWithMove = array_values(array_filter($days, fn($r) => ($r['departures'] != 0 || $r['incomes'] != 0 || $r['expense'] != 0)));
                         $last10 = array_slice($daysWithMove, -10);
                     @endphp
                     <table class="table dash-table mb-0">
                         <thead>
-                        <tr><th>Fecha</th><th class="text-end">Ingreso</th><th class="text-end">Egreso</th><th class="text-end">Saldo</th></tr>
+                        <tr><th>Fecha</th><th class="text-end">Salidas</th><th class="text-end">Ingresos</th><th class="text-end">Egresos</th><th class="text-end">Saldo</th></tr>
                         </thead>
                         <tbody>
                         @forelse($last10 as $r)
                             <tr>
                                 <td class="fw-semibold">{{ \Carbon\Carbon::parse($r['date'])->format('d/m') }}</td>
                                 <td class="text-end amount positive">
-                                    <a href="{{ url('/payments?from=' . $r['date'] . '&to=' . $r['date']) }}"
+                                    <a href="{{ url('/departures?fromDate=' . $r['date'] . '&toDate=' . $r['date']) }}"
                                        target="_blank" class="text-decoration-none positive">
-                                        {{ number_format($r['income'], 2) }}
+                                        {{ number_format($r['departures'], 2) }}
+                                    </a>
+                                </td>
+                                <td class="text-end amount positive">
+                                    <a href="{{ url('/cash/incomes?date_start=' . $r['date'] . '&date_end=' . $r['date']) }}"
+                                       target="_blank" class="text-decoration-none positive">
+                                        {{ number_format($r['incomes'], 2) }}
                                     </a>
                                 </td>
                                 <td class="text-end amount negative">
@@ -316,7 +322,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="4" class="text-center text-muted py-4">Sin datos</td></tr>
+                            <tr><td colspan="5" class="text-center text-muted py-4">Sin datos</td></tr>
                         @endforelse
                         </tbody>
                     </table>

@@ -143,13 +143,16 @@ class Index extends Component
         while ($cursor->lte($endDay)) {
             $d = $cursor->toDateString();
 
-            $income  = (float) ($payByDay[$d] ?? 0) + (float) ($depByDay[$d] ?? 0) + (float) ($incByDay[$d] ?? 0);
-            $expense = (float) ($expByDay[$d] ?? 0);
+            $dep = (float) ($depByDay[$d] ?? 0);
+            $inc = (float) ($incByDay[$d] ?? 0);
+            $exp = (float) ($expByDay[$d] ?? 0);
             $days[] = [
-                'date'    => $d,
-                'income'  => $income,
-                'expense' => $expense,
-                'balance' => $income - $expense,
+                'date'       => $d,
+                'departures' => $dep,
+                'incomes'    => $inc,
+                'expense'    => $exp,
+                'income'     => $dep + $inc,
+                'balance'    => $dep + $inc - $exp,
             ];
 
             $cursor->addDay();
