@@ -56,6 +56,15 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
             ->get(['id','plate','condition','sort_order'])
             ->keyBy('id');
 
+        // Lookup por placa para legacy plates (sin vehicle_id)
+        $legacyPlates = $rows->whereNull('vehicle_id')->pluck('legacy_plate')->filter()->unique()->values();
+        $vehiclesByPlate = $legacyPlates->isNotEmpty()
+            ? Vehicle::query()
+                ->whereIn('plate', $legacyPlates)
+                ->get(['id','plate','condition','sort_order'])
+                ->keyBy(fn($v) => strtoupper(trim($v->plate)))
+            : collect();
+
         $seed = Carbon::parse($from);
         $this->daysInMonth = $seed->daysInMonth;
 
@@ -66,6 +75,9 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
             $item++;
 
             $veh   = $r->vehicle_id ? ($vehicles[$r->vehicle_id] ?? null) : null;
+            if (!$veh && $r->legacy_plate) {
+                $veh = $vehiclesByPlate[strtoupper(trim($r->legacy_plate))] ?? null;
+            }
             $plate = $veh?->plate ?? ($r->legacy_plate ?? '');
             $cond  = $r->condition ?: ($veh->condition ?? '');
 

@@ -177,6 +177,15 @@ class MonthlyDebt extends Component
             ->get(['id','sort_order','plate','condition'])
             ->keyBy('id');
 
+        // Lookup por placa para legacy plates (sin vehicle_id)
+        $legacyPlates = $rows->whereNull('vehicle_id')->pluck('legacy_plate')->filter()->unique()->values();
+        $vehiclesByPlate = $legacyPlates->isNotEmpty()
+            ? Vehicle::query()
+                ->whereIn('plate', $legacyPlates)
+                ->get(['id','sort_order','plate','condition'])
+                ->keyBy(fn($v) => strtoupper(trim($v->plate)))
+            : collect();
+
         $out = [];
 
         // reinicia acumuladores en cada loadData()
@@ -191,7 +200,10 @@ class MonthlyDebt extends Component
             $item++;
 
             $veh      = $row->vehicle_id ? ($vehicles[$row->vehicle_id] ?? null) : null;
-            $cod      = $item;
+            if (!$veh && $row->legacy_plate) {
+                $veh = $vehiclesByPlate[strtoupper(trim($row->legacy_plate))] ?? null;
+            }
+            $cod      = $veh?->sort_order ?? '';
             $plateStr = $veh ? $veh->plate : ($row->legacy_plate ?? '');
             $cond     = $row->condition ?: ($veh->condition ?? '');
 
