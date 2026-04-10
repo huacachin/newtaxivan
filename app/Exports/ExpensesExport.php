@@ -69,7 +69,7 @@ class ExpensesExport implements
 
         return $q->select([
             'id','date','reason','detail','total',
-            'user_id','in_charge'
+            'document_type','user_id','in_charge'
         ]);
     }
 
@@ -83,6 +83,7 @@ class ExpensesExport implements
             'A (Razón)',
             'Motivo (Detalle)',
             'Total',
+            'T.Comp.',
             'Respons.',
         ];
     }
@@ -100,6 +101,7 @@ class ExpensesExport implements
             $row->reason,
             $row->detail,
             is_null($row->total) ? null : (float)$row->total,
+            $row->document_type,
             $row->in_charge,
         ];
     }
@@ -111,13 +113,14 @@ class ExpensesExport implements
         foreach ($this->query()->get() as $row) {
             $i++;
             $rows[] = [
-                'item'      => $i,
-                'date'      => $row->date ? \Carbon\Carbon::parse($row->date)->format('d/m/Y') : '',
-                'user'      => optional($row->user)->username,
-                'reason'    => $row->reason,
-                'detail'    => $row->detail,
-                'total'     => $row->total,
-                'in_charge' => $row->in_charge,
+                'item'          => $i,
+                'date'          => $row->date ? \Carbon\Carbon::parse($row->date)->format('d/m/Y') : '',
+                'user'          => optional($row->user)->username,
+                'reason'        => $row->reason,
+                'detail'        => $row->detail,
+                'total'         => $row->total,
+                'document_type' => $row->document_type,
+                'in_charge'     => $row->in_charge,
             ];
         }
         return $rows;
@@ -162,7 +165,7 @@ class ExpensesExport implements
                 // Título
                 $ws->insertNewRowBefore(1, 1);
                 $ws->setCellValue('A1', 'EGRESOS');
-                $ws->mergeCells('A1:G1');
+                $ws->mergeCells('A1:H1');
                 $ws->getRowDimension(1)->setRowHeight(16);
                 $ws->getStyle('A1')->applyFromArray([
                     'font'      => ['bold' => true, 'size' => 10, 'color' => ['rgb' => 'F80000']],
@@ -179,7 +182,7 @@ class ExpensesExport implements
                 $last         = (int)$ws->getHighestRow();
 
                 // THEAD
-                $ws->getStyle("A{$headerRow}:G{$headerRow}")->applyFromArray([
+                $ws->getStyle("A{$headerRow}:H{$headerRow}")->applyFromArray([
                     'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
                     'alignment' => [
                         'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
@@ -192,17 +195,17 @@ class ExpensesExport implements
                 ]);
                 $ws->getRowDimension($headerRow)->setRowHeight(16);
 
-                $this->applyCompactWidths($ws, 'A', 'G');
+                $this->applyCompactWidths($ws, 'A', 'H');
 
                 // Ocultar columnas vacías (H en adelante)
-                foreach (range('H', 'Z') as $col) {
+                foreach (range('I', 'Z') as $col) {
                     $ws->getColumnDimension($col)->setVisible(false);
                 }
 
                 // $ws->freezePane(...); // removido
 
                 if ($last >= $dataStartRow) {
-                    $ws->getStyle("A{$dataStartRow}:G{$last}")
+                    $ws->getStyle("A{$dataStartRow}:H{$last}")
                         ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
                     $ws->getStyle("B{$dataStartRow}:B{$last}")
@@ -217,7 +220,7 @@ class ExpensesExport implements
                     ->getColor()->setARGB($BORDER);
 
                 if ($last >= $dataStartRow) {
-                    $ws->getStyle("A{$dataStartRow}:G{$last}")
+                    $ws->getStyle("A{$dataStartRow}:H{$last}")
                         ->getBorders()->getHorizontal()
                         ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_DOTTED)
                         ->getColor()->setARGB($BORDER);
@@ -231,7 +234,7 @@ class ExpensesExport implements
                     : 0
                 );
 
-                $ws->getStyle("A{$totalRow}:G{$totalRow}")->applyFromArray([
+                $ws->getStyle("A{$totalRow}:H{$totalRow}")->applyFromArray([
                     'font'      => ['bold' => true, 'color' => ['rgb' => '000000']],
                     'alignment' => [
                         'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
@@ -247,7 +250,7 @@ class ExpensesExport implements
                 $ws->getStyle("F{$totalRow}")
                     ->getNumberFormat()->setFormatCode('"S/ " #,##0');
 
-                $ws->getStyle("A{$headerRow}:G{$totalRow}")
+                $ws->getStyle("A{$headerRow}:H{$totalRow}")
                     ->getBorders()->getOutline()
                     ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN)
                     ->getColor()->setARGB($BORDER);

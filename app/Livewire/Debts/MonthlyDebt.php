@@ -165,7 +165,7 @@ class MonthlyDebt extends Component
             });
         }
 
-        $rows = $q->orderBy('id')->get();
+        $rows = $q->with('details.images')->orderBy('id')->get();
 
         // Map vehículos para COD/PLACA/COND
         $vehicleIds = $rows->pluck('vehicle_id')->filter()->unique()->values();
@@ -204,10 +204,18 @@ class MonthlyDebt extends Component
             $toPay      = max(0.0, $total - $exonerated);          // S/
             $pending    = max(0.0, $total - $exonerated - $amort); // S/
 
+            // Recopilar imágenes de todos los detalles
+            $images = [];
+            foreach ($row->details as $det) {
+                foreach ($det->images as $img) {
+                    $images[] = asset('storage/' . $img->image_path);
+                }
+            }
+
             $out[] = [
                 'id'          => $row->id,
-                'item'        => $item,      // será reenumerado luego
-                'cod'         => $cod,       // sort_order
+                'item'        => $item,
+                'cod'         => $cod,
                 'plate'       => $plateStr,
                 'condition'   => $cond,
                 'days_text'   => $daysText,
@@ -217,6 +225,7 @@ class MonthlyDebt extends Component
                 'to_pay'      => $toPay,
                 'amortized'   => $amort,
                 'pending'     => $pending,
+                'images'      => $images,
             ];
 
             // Acumuladores

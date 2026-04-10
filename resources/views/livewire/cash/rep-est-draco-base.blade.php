@@ -36,11 +36,11 @@
                                     <option value="{{ $y }}">{{ $y }}</option>
                                 @endfor
                             </select>
-                                                            <button class="btn btn-sm btn-dark flex-shrink-0 align-self-end" wire:click="$refresh">
+                                                            <button class="btn btn-sm btn-dark flex-shrink-0 align-self-end mg-e-10" wire:click="$refresh">
                                     <i class="ti ti-search f-s-12"></i>
                                 </button>
 
-                                <button class="btn btn-sm btn-export" wire:click="export">
+                                <button class="btn btn-sm btn-export mg-e-2" wire:click="export">
                                 <i class="ti ti-file-analytics f-s-12"></i>
                             </button>
                             <a href="{{ route('departures.index') }}" class="btn btn-sm btn-primary ms-2">

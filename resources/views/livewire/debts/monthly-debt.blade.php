@@ -114,6 +114,7 @@
                                 <th title="Total por pagar">T. D.X.P</th>
                                 <th title="Amortización">AMOR</th>
                                 <th title="Pendiente">PEND</th>
+                                <th class="text-center" title="Imágenes">Img</th>
                             </tr>
                             </thead>
 
@@ -141,10 +142,18 @@
                                     <td>{{ number_format($r['to_pay'], 2) }}</td>
                                     <td>{{ number_format($r['amortized'], 2) }}</td>
                                     <td>{{ number_format($r['pending'], 2) }}</td>
+                                    <td class="text-center">
+                                        @if(!empty($r['images']))
+                                            <i class="fa-solid fa-camera f-s-18 text-dark" style="cursor:pointer;"
+                                               onclick="openGallery(@js($r['images']))"></i>
+                                        @else
+                                            <span class="text-muted">—</span>
+                                        @endif
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="12">No se encontraron resultados.</td>
+                                    <td colspan="13">No se encontraron resultados.</td>
                                 </tr>
                             @endforelse
                             </tbody>
@@ -157,6 +166,7 @@
                                 <td>{{ number_format($totals['to_pay'] ?? 0, 2) }}</td>
                                 <td>{{ number_format($totals['amortized'] ?? 0, 2) }}</td>
                                 <td>{{ number_format($totals['pending'] ?? 0, 2) }}</td>
+                                <td></td>
                             </tr>
                             </tfoot>
                         </table>
@@ -171,4 +181,56 @@
         </div>
 
     </div>
+
+    {{-- Lightbox galería --}}
+    <div class="modal fade" id="modalGallery" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content" style="background:rgba(0,0,0,0.85);">
+                <div class="modal-header border-0 pb-0 d-flex justify-content-between">
+                    <span id="galleryCounter" class="text-white small"></span>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center p-2 position-relative">
+                    <button type="button" id="galleryPrev" class="btn btn-sm btn-light position-absolute start-0 top-50 translate-middle-y ms-2" style="z-index:10;opacity:.7;">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <img id="galleryImg" src="" alt="Comprobante" class="img-fluid rounded" style="max-height:80vh;">
+                    <button type="button" id="galleryNext" class="btn btn-sm btn-light position-absolute end-0 top-50 translate-middle-y me-2" style="z-index:10;opacity:.7;">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+@push('scripts')
+<script>
+let _galleryImages = [], _galleryIdx = 0;
+
+function openGallery(images) {
+    _galleryImages = images;
+    _galleryIdx = 0;
+    _renderGallery();
+    new bootstrap.Modal(document.getElementById('modalGallery')).show();
+}
+
+function _renderGallery() {
+    document.getElementById('galleryImg').src = _galleryImages[_galleryIdx];
+    document.getElementById('galleryCounter').textContent = (_galleryIdx + 1) + ' / ' + _galleryImages.length;
+    document.getElementById('galleryPrev').style.display = _galleryImages.length > 1 ? '' : 'none';
+    document.getElementById('galleryNext').style.display = _galleryImages.length > 1 ? '' : 'none';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('galleryPrev').addEventListener('click', function () {
+        _galleryIdx = (_galleryIdx - 1 + _galleryImages.length) % _galleryImages.length;
+        _renderGallery();
+    });
+    document.getElementById('galleryNext').addEventListener('click', function () {
+        _galleryIdx = (_galleryIdx + 1) % _galleryImages.length;
+        _renderGallery();
+    });
+});
+</script>
+@endpush

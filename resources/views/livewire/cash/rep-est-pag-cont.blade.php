@@ -29,20 +29,20 @@
                    <div class="row my-2 d-flex justify-content-end">
                        <div class="col-12 d-flex justify-content-end">
 
-                           <select id="year" class="form-select w-80 mg-e-10" wire:model="year">
+                           <select id="year" class="form-select form-select-sm w-80 mg-e-10" wire:model="year">
                                @for ($y = 2015; $y <= 2030; $y++)
                                    <option value="{{ $y }}">{{ $y }}</option>
                                @endfor
                            </select>
-                                                           <button class="btn btn-sm btn-dark flex-shrink-0 align-self-end" wire:click="$refresh">
+
+
+
+
+
+                           <button class="btn btn-sm btn-dark flex-shrink-0 align-self-end mg-e-10" wire:click="$refresh">
                                     <i class="ti ti-search f-s-12"></i>
                                 </button>
-
-
-
-
-
-                           <a href="{{ route('departures.index') }}" class="btn btn-sm btn-primary ms-2 mg-e-10">
+                           <a href="{{ route('departures.index') }}" class="btn btn-sm btn-primary mg-e-10">
                                <i class="ti ti-arrow-back-up f-s-12"></i>
                            </a>
                            <button class="btn btn-sm btn-export mg-e-10" wire:click="export">
