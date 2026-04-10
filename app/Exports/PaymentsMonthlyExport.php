@@ -85,7 +85,7 @@ class PaymentsMonthlyExport implements FromArray, WithHeadings, WithEvents, With
 
                 // Título
                 $s->mergeCells("A{$titleRow}:{$lastCol}{$titleRow}");
-                $s->setCellValue("A{$titleRow}", 'REPORTE MENSUAL DE PAGOS '.mb_strtoupper($this->mesTexto($this->month)).' '.$this->year);
+                $s->setCellValue("A{$titleRow}", 'REPORTE MENSUAL DE PAGO '.mb_strtoupper($this->mesTexto($this->month)).' '.$this->year);
                 $s->getStyle("A{$titleRow}:{$lastCol}{$titleRow}")->applyFromArray([
                     'fill' => ['fillType'=>Fill::FILL_SOLID,'startColor'=>['argb'=>$white]],
                     'font' => ['bold'=>true,'size'=>10,'color'=>['argb'=>$red]],
