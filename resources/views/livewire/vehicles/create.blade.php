@@ -29,7 +29,7 @@
            @include('livewire.vehicles._form')
 
            <div class="mt-3 d-flex gap-2 justify-content-end">
-               <button type="button" class="btn btn-sm btn-primary" wire:click="save">Guardar</button>
+               <button type="button" class="btn btn-sm btn-primary" wire:click="save" wire:loading.attr="disabled"><span wire:loading wire:target="save" class="spinner-border spinner-border-sm"></span><span wire:loading.remove wire:target="save">Guardar</span></button>
                <button type="button" class="btn btn-sm btn-danger" wire:click="clean">Limpiar</button>
                <a href="{{ route('settings.vehicles.index') }}" class="btn btn-sm btn-secondary"><i class="ti ti-arrow-back-up"></i> Regresar</a>
            </div>

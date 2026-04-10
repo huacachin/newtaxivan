@@ -218,7 +218,7 @@
             </div>
 
             <div class="mt-2 d-flex gap-2">
-                <button class="btn btn-primary btn-sm" wire:click="update">Actualizar</button>
+                <button class="btn btn-primary btn-sm" wire:click="update" wire:loading.attr="disabled"><span wire:loading wire:target="update" class="spinner-border spinner-border-sm"></span><span wire:loading.remove wire:target="update">Actualizar</span></button>
                 <a class="btn btn-secondary btn-sm" href="{{ route('settings.users.index') }}">Volver</a>
             </div>
         </div>

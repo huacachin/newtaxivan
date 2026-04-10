@@ -153,8 +153,9 @@
                     </div>
 
                     <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-sm btn-primary" wire:click="save">
-                            Agregar
+                        <button type="button" class="btn btn-sm btn-primary" wire:click="save" wire:loading.attr="disabled">
+                            <span wire:loading wire:target="save" class="spinner-border spinner-border-sm"></span>
+                            <span wire:loading.remove wire:target="save">Agregar</span>
                         </button>
                         <a href="{{ route('payments.index') }}" class="btn btn-sm btn-primary">Volver</a>
                     </div>

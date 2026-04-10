@@ -166,8 +166,9 @@
                     </div>
 
                     <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-sm btn-primary" wire:click="save">
-                            Guardar
+                        <button type="button" class="btn btn-sm btn-primary" wire:click="save" wire:loading.attr="disabled">
+                            <span wire:loading wire:target="save" class="spinner-border spinner-border-sm"></span>
+                            <span wire:loading.remove wire:target="save">Guardar</span>
                         </button>
                         <button type="button" class="btn btn-sm btn-warning" wire:click="clear">
                             Limpiar

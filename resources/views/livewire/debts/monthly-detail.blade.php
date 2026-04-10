@@ -240,8 +240,9 @@
                       <!-- Guardar -->
                       <button class="btn btn-sm btn-primary flex-shrink-0"
                               wire:click="save"
-                             >
-                          <i class="ti ti-device-floppy f-s-12"></i> Guardar
+                              wire:loading.attr="disabled">
+                          <span wire:loading wire:target="save" class="spinner-border spinner-border-sm"></span>
+                          <span wire:loading.remove wire:target="save"><i class="ti ti-device-floppy f-s-12"></i> Guardar</span>
                       </button>
 
                       <!-- Regresar -->

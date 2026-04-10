@@ -88,7 +88,7 @@
 
             <div class="mt-2 d-flex gap-2">
                 @if($canEdit)
-                <button class="btn btn-sm btn-primary" wire:click="savePerms">Guardar</button>
+                <button class="btn btn-sm btn-primary" wire:click="savePerms" wire:loading.attr="disabled"><span wire:loading wire:target="savePerms" class="spinner-border spinner-border-sm"></span><span wire:loading.remove wire:target="savePerms">Guardar</span></button>
                 @endif
                 <a class="btn btn-sm btn-secondary" href="{{ route('settings.users.index') }}">Volver</a>
             </div>

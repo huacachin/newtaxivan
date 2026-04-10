@@ -301,7 +301,10 @@
                     <button type="button" class="btn btn-sm btn-light-secondary" data-bs-dismiss="modal"
                             wire:click="closeModal('modalAddIncome')">Cerrar
                     </button>
-                    <button type="button" class="btn btn-sm btn-light-primary" wire:click="save">Guardar</button>
+                    <button type="button" class="btn btn-sm btn-light-primary" wire:click="save" wire:loading.attr="disabled">
+                        <span wire:loading wire:target="save" class="spinner-border spinner-border-sm"></span>
+                        <span wire:loading.remove wire:target="save">Guardar</span>
+                    </button>
                 </div>
             </div>
         </div>

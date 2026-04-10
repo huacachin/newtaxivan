@@ -88,8 +88,9 @@
                     </div>
 
                     <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-sm btn-primary" wire:click="update">
-                            Guardar cambios
+                        <button type="button" class="btn btn-sm btn-primary" wire:click="update" wire:loading.attr="disabled">
+                            <span wire:loading wire:target="update" class="spinner-border spinner-border-sm"></span>
+                            <span wire:loading.remove wire:target="update">Guardar cambios</span>
                         </button>
                         <button type="button" class="btn btn-sm btn-danger" wire:click="questionDelete({{ $conceptId }})">
                             Eliminar

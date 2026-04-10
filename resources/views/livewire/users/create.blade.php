@@ -199,7 +199,7 @@
             </div>
 
             <div class="mt-2 d-flex gap-2">
-                <button class="btn btn-primary btn-sm" wire:click="save">Guardar</button>
+                <button class="btn btn-primary btn-sm" wire:click="save" wire:loading.attr="disabled"><span wire:loading wire:target="save" class="spinner-border spinner-border-sm"></span><span wire:loading.remove wire:target="save">Guardar</span></button>
                 <button type="button" class="btn btn-danger btn-sm" wire:click="clean">Limpiar</button>
                 <a class="btn btn-secondary btn-sm" href="{{ route('settings.users.index') }}">Volver</a>
             </div>
