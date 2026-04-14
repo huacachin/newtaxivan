@@ -3,6 +3,7 @@
 namespace App\Livewire\Cash;
 
 use App\Models\Expense;
+use App\Models\ExpenseImage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -29,7 +30,21 @@ class CreateExpense extends Component
     public string  $in_charge     = '';
     public $users;
 
-    public $image_file = null;
+    public $new_images = [];
+    public $image_files = [];
+
+    public function updatedNewImages(): void
+    {
+        foreach ($this->new_images as $file) {
+            $this->image_files[] = $file;
+        }
+        $this->new_images = [];
+    }
+
+    public function removeImage(int $index): void
+    {
+        array_splice($this->image_files, $index, 1);
+    }
 
     public function mount(): void
     {
@@ -99,7 +114,8 @@ class CreateExpense extends Component
             'total'         => ['required', 'numeric', 'min:0.01'],
             'document_type' => ['nullable', 'string', 'max:100'],
             'in_charge'     => ['nullable', 'string', 'max:100'],
-            'image_file'      => ['nullable', 'image', 'max:3072'],
+            'new_images'      => ['nullable', 'array', 'max:10'],
+            'new_images.*'    => ['image', 'max:3072'],
             'headquarter_id'  => [$this->isDraco ? 'required' : 'nullable', 'integer'],
         ];
     }
@@ -127,7 +143,7 @@ class CreateExpense extends Component
 
     public function clear(): void
     {
-        $this->reset(['expenseKind', 'concept_id', 'reason_text', 'detail', 'total', 'document_type', 'in_charge', 'image_file', 'isDraco', 'headquarter_id']);
+        $this->reset(['expenseKind', 'concept_id', 'reason_text', 'detail', 'total', 'document_type', 'in_charge', 'image_files', 'new_images', 'isDraco', 'headquarter_id']);
         $this->date        = now()->toDateString();
         $this->expenseKind = 'Otros';
         $this->resetValidation();
@@ -201,11 +217,19 @@ class CreateExpense extends Component
                 'headquarter_id' => $this->isDraco ? $this->headquarter_id : null,
             ];
 
-            if ($this->image_file) {
-                $payload['image_path'] = $this->image_file->storePublicly('expenses', 'public');
-            }
+            DB::transaction(function () use ($payload) {
+                $exp = new Expense($payload);
+                $exp->incrementing = true;
+                $exp->save();
 
-            Expense::create($payload);
+                foreach ($this->image_files as $file) {
+                    $path = $file->storePublicly('expenses', 'public');
+                    ExpenseImage::create([
+                        'expense_id' => $exp->id,
+                        'image_path' => $path,
+                    ]);
+                }
+            });
 
             session()->flash('expense_success', 'Egreso registrado correctamente.');
             $this->redirectRoute('cash.expenses');

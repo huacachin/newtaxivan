@@ -117,7 +117,7 @@ class Incomes extends Component
         $user = Auth::user();
 
         $q = Income::query()
-            ->with(['user:id,name,username'])
+            ->with(['user:id,name,username', 'images'])
             ->orderBy('date')
             ->orderBy('id');
 

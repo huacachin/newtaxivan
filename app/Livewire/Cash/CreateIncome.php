@@ -3,7 +3,9 @@
 namespace App\Livewire\Cash;
 
 use App\Models\Income;
+use App\Models\IncomeImage;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -20,7 +22,21 @@ class CreateIncome extends Component
     public float  $exchange      = 3.80;
     public ?float $converted_total = null;
 
-    public $image_file = null;
+    public $new_images = [];
+    public $image_files = [];
+
+    public function updatedNewImages(): void
+    {
+        foreach ($this->new_images as $file) {
+            $this->image_files[] = $file;
+        }
+        $this->new_images = [];
+    }
+
+    public function removeImage(int $index): void
+    {
+        array_splice($this->image_files, $index, 1);
+    }
 
     public function mount(): void
     {
@@ -36,7 +52,8 @@ class CreateIncome extends Component
             'detail'       => ['required', 'string', 'max:255'],
             'currency'     => ['required', Rule::in(['Soles', 'Dolares'])],
             'amount_input' => ['required', 'numeric', 'gt:0'],
-            'image_file'   => ['nullable', 'image', 'max:2048'],
+            'new_images'   => ['nullable', 'array', 'max:10'],
+            'new_images.*' => ['image', 'max:3072'],
         ];
     }
 
@@ -50,8 +67,8 @@ class CreateIncome extends Component
             'amount_input.required' => 'El monto es obligatorio.',
             'amount_input.numeric'  => 'El monto debe ser numérico.',
             'amount_input.gt'       => 'El monto debe ser mayor a 0.',
-            'image_file.image'      => 'El archivo debe ser una imagen válida.',
-            'image_file.max'        => 'La imagen no debe superar 2MB.',
+            'new_images.*.image'    => 'Cada archivo debe ser una imagen válida.',
+            'new_images.*.max'      => 'Cada imagen no debe superar 3MB.',
         ];
     }
 
@@ -69,7 +86,7 @@ class CreateIncome extends Component
 
     public function clear(): void
     {
-        $this->reset(['reason', 'detail', 'currency', 'amount_input', 'converted_total', 'image_file']);
+        $this->reset(['reason', 'detail', 'currency', 'amount_input', 'converted_total', 'image_files', 'new_images']);
         $this->date     = now()->toDateString();
         $this->currency = 'Soles';
         $this->resetValidation();
@@ -102,11 +119,19 @@ class CreateIncome extends Component
                 'user_id' => Auth::id(),
             ];
 
-            if ($this->image_file) {
-                $payload['image_path'] = $this->image_file->store('incomes', 'public');
-            }
+            DB::transaction(function () use ($payload) {
+                $inc = new Income($payload);
+                $inc->incrementing = true;
+                $inc->save();
 
-            Income::create($payload);
+                foreach ($this->image_files as $file) {
+                    $path = $file->storePublicly('incomes', 'public');
+                    IncomeImage::create([
+                        'income_id'  => $inc->id,
+                        'image_path' => $path,
+                    ]);
+                }
+            });
 
             session()->flash('income_success', 'Ingreso registrado correctamente.');
             $this->redirectRoute('cash.incomes');

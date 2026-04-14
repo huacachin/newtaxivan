@@ -3,6 +3,7 @@
 namespace App\Livewire\Cash;
 
 use App\Models\Expense;
+use App\Models\ExpenseImage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -29,12 +30,42 @@ class EditExpense extends Component
     public string  $in_charge     = '';
     public $users;
 
-    public $image_file = null;
-    public ?string $image_path = null;
+    public $new_images = [];
+    public $image_files = [];
+    public array $existing_images = [];
+    public array $deleted_image_ids = [];
+
+    public function updatedNewImages(): void
+    {
+        foreach ($this->new_images as $file) {
+            $this->image_files[] = $file;
+        }
+        $this->new_images = [];
+    }
+
+    public function removeNewImage(int $index): void
+    {
+        array_splice($this->image_files, $index, 1);
+    }
+
+    public function removeExistingImage(int $imageId): void
+    {
+        if (!in_array($imageId, $this->deleted_image_ids, true)) {
+            $this->deleted_image_ids[] = $imageId;
+        }
+    }
+
+    public function restoreExistingImage(int $imageId): void
+    {
+        $this->deleted_image_ids = array_values(array_filter(
+            $this->deleted_image_ids,
+            fn($id) => $id !== $imageId
+        ));
+    }
 
     public function mount(int $id): void
     {
-        $this->expense   = Expense::findOrFail($id);
+        $this->expense   = Expense::with('images')->findOrFail($id);
 
         if (auth()->user()->cannot('update', $this->expense)) {
             abort(403);
@@ -50,7 +81,11 @@ class EditExpense extends Component
         $this->total         = (float)($e->total ?? 0);
         $this->document_type = (string)($e->document_type ?? '');
         $this->in_charge     = (string)($e->in_charge ?? '');
-        $this->image_path    = $e->image_path ?: null;
+
+        $this->existing_images = $e->images->map(fn($img) => [
+            'id'  => (int)$img->id,
+            'url' => asset('storage/' . $img->image_path),
+        ])->all();
 
         $match = collect($this->concepts)->firstWhere('name', (string)$e->reason);
         if ($match) {
@@ -100,7 +135,8 @@ class EditExpense extends Component
             'total'         => ['required', 'numeric', 'min:0.01'],
             'document_type' => ['nullable', 'string', 'max:100'],
             'in_charge'     => ['nullable', 'string', 'max:100'],
-            'image_file'    => ['nullable', 'image', 'max:3072'],
+            'new_images'    => ['nullable', 'array', 'max:10'],
+            'new_images.*'  => ['image', 'max:3072'],
         ];
     }
 
@@ -134,8 +170,10 @@ class EditExpense extends Component
             abort(403);
         }
 
-        if ($expense->image_path && Storage::disk('public')->exists($expense->image_path)) {
-            Storage::disk('public')->delete($expense->image_path);
+        foreach ($expense->images as $img) {
+            if ($img->image_path && Storage::disk('public')->exists($img->image_path)) {
+                Storage::disk('public')->delete($img->image_path);
+            }
         }
 
         $expense->delete();
@@ -156,14 +194,6 @@ class EditExpense extends Component
                 ? $this->conceptNameById($this->concept_id)
                 : trim($this->reason_text);
 
-            $newImagePath = null;
-            if ($this->image_file) {
-                $newImagePath = $this->image_file->storePublicly('expenses', 'public');
-                if ($this->expense->image_path && Storage::disk('public')->exists($this->expense->image_path)) {
-                    Storage::disk('public')->delete($this->expense->image_path);
-                }
-            }
-
             $payload = [
                 'date'          => $this->date,
                 'reason'        => $reason,
@@ -173,11 +203,29 @@ class EditExpense extends Component
                 'in_charge'     => trim((string)$this->in_charge),
             ];
 
-            if ($newImagePath) {
-                $payload['image_path'] = $newImagePath;
-            }
+            DB::transaction(function () use ($payload) {
+                $this->expense->update($payload);
 
-            $this->expense->update($payload);
+                if (!empty($this->deleted_image_ids)) {
+                    $imagesToDelete = ExpenseImage::where('expense_id', $this->expense->id)
+                        ->whereIn('id', $this->deleted_image_ids)
+                        ->get();
+                    foreach ($imagesToDelete as $img) {
+                        if ($img->image_path && Storage::disk('public')->exists($img->image_path)) {
+                            Storage::disk('public')->delete($img->image_path);
+                        }
+                        $img->delete();
+                    }
+                }
+
+                foreach ($this->image_files as $file) {
+                    $path = $file->storePublicly('expenses', 'public');
+                    ExpenseImage::create([
+                        'expense_id' => $this->expense->id,
+                        'image_path' => $path,
+                    ]);
+                }
+            });
 
             session()->flash('expense_success', 'Egreso actualizado correctamente.');
             $this->redirectRoute('cash.expenses');

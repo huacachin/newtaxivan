@@ -3,8 +3,10 @@
 namespace App\Livewire\Cash;
 
 use App\Models\Income;
+use App\Models\IncomeImage;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\On;
@@ -26,12 +28,42 @@ class EditIncome extends Component
     public float  $exchange      = 3.80;
     public ?float $converted_total = null;
 
-    public $image_file  = null;
-    public ?string $image_path = null;
+    public $new_images = [];
+    public $image_files = [];
+    public array $existing_images = [];
+    public array $deleted_image_ids = [];
+
+    public function updatedNewImages(): void
+    {
+        foreach ($this->new_images as $file) {
+            $this->image_files[] = $file;
+        }
+        $this->new_images = [];
+    }
+
+    public function removeNewImage(int $index): void
+    {
+        array_splice($this->image_files, $index, 1);
+    }
+
+    public function removeExistingImage(int $imageId): void
+    {
+        if (!in_array($imageId, $this->deleted_image_ids, true)) {
+            $this->deleted_image_ids[] = $imageId;
+        }
+    }
+
+    public function restoreExistingImage(int $imageId): void
+    {
+        $this->deleted_image_ids = array_values(array_filter(
+            $this->deleted_image_ids,
+            fn($id) => $id !== $imageId
+        ));
+    }
 
     public function mount(int $id): void
     {
-        $this->income   = Income::findOrFail($id);
+        $this->income   = Income::with('images')->findOrFail($id);
 
         if (auth()->user()->cannot('update', $this->income)) {
             abort(403);
@@ -46,7 +78,11 @@ class EditIncome extends Component
         $this->currency     = 'Soles';
         $this->amount_input = number_format((float)$i->total, 2, '.', '');
         $this->exchange     = 3.80;
-        $this->image_path   = $i->image_path ?: null;
+
+        $this->existing_images = $i->images->map(fn($img) => [
+            'id'  => (int)$img->id,
+            'url' => asset('storage/' . $img->image_path),
+        ])->all();
 
         $this->recalcConverted();
     }
@@ -59,7 +95,8 @@ class EditIncome extends Component
             'detail'       => ['required', 'string', 'max:255'],
             'currency'     => ['required', Rule::in(['Soles', 'Dolares'])],
             'amount_input' => ['required', 'numeric', 'gt:0'],
-            'image_file'   => ['nullable', 'image', 'max:2048'],
+            'new_images'   => ['nullable', 'array', 'max:10'],
+            'new_images.*' => ['image', 'max:3072'],
         ];
     }
 
@@ -73,8 +110,8 @@ class EditIncome extends Component
             'amount_input.required' => 'El monto es obligatorio.',
             'amount_input.numeric'  => 'El monto debe ser numérico.',
             'amount_input.gt'       => 'El monto debe ser mayor a 0.',
-            'image_file.image'      => 'El archivo debe ser una imagen válida.',
-            'image_file.max'        => 'La imagen no debe superar 2MB.',
+            'new_images.*.image'    => 'Cada archivo debe ser una imagen válida.',
+            'new_images.*.max'      => 'Cada imagen no debe superar 3MB.',
         ];
     }
 
@@ -114,8 +151,10 @@ class EditIncome extends Component
             abort(403);
         }
 
-        if ($income->image_path && Storage::disk('public')->exists($income->image_path)) {
-            Storage::disk('public')->delete($income->image_path);
+        foreach ($income->images as $img) {
+            if ($img->image_path && Storage::disk('public')->exists($img->image_path)) {
+                Storage::disk('public')->delete($img->image_path);
+            }
         }
 
         $income->delete();
@@ -144,14 +183,29 @@ class EditIncome extends Component
                 'user_id' => Auth::id(),
             ];
 
-            if ($this->image_file) {
-                if ($this->income->image_path && Storage::disk('public')->exists($this->income->image_path)) {
-                    Storage::disk('public')->delete($this->income->image_path);
-                }
-                $payload['image_path'] = $this->image_file->store('incomes', 'public');
-            }
+            DB::transaction(function () use ($payload) {
+                $this->income->update($payload);
 
-            $this->income->update($payload);
+                if (!empty($this->deleted_image_ids)) {
+                    $imagesToDelete = IncomeImage::where('income_id', $this->income->id)
+                        ->whereIn('id', $this->deleted_image_ids)
+                        ->get();
+                    foreach ($imagesToDelete as $img) {
+                        if ($img->image_path && Storage::disk('public')->exists($img->image_path)) {
+                            Storage::disk('public')->delete($img->image_path);
+                        }
+                        $img->delete();
+                    }
+                }
+
+                foreach ($this->image_files as $file) {
+                    $path = $file->storePublicly('incomes', 'public');
+                    IncomeImage::create([
+                        'income_id'  => $this->income->id,
+                        'image_path' => $path,
+                    ]);
+                }
+            });
 
             session()->flash('income_success', 'Ingreso actualizado correctamente.');
             $this->redirectRoute('cash.incomes');

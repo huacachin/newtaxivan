@@ -1,3 +1,21 @@
+@push('styles')
+<style>
+    .dropzone-area {
+        border: 2px dashed #b0bec5;
+        border-radius: 6px;
+        padding: 12px;
+        text-align: center;
+        cursor: pointer;
+        transition: border-color .2s, background .2s;
+        background: #fafafa;
+    }
+    .dropzone-area:hover, .dropzone-active { border-color: #2874A6; background: #e3f2fd; }
+    .dropzone-label { display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; color: #607d8b; }
+    .img-thumb-clickable { height: 72px; width: 72px; object-fit: cover; cursor: pointer; border-radius: 4px; border: 1px solid #ddd; }
+    .img-thumb-clickable:hover { opacity: .85; }
+</style>
+@endpush
+
 <div class="container-fluid">
 
     {{-- Header --}}
@@ -97,21 +115,53 @@
                             </div>
                         </div>
 
-                        {{-- Imagen --}}
+                        {{-- Imágenes (drag & drop multi) --}}
                         <div class="w-100"></div>
-                        <div class="col-md-5">
-                            <div class="mb-3">
-                                <label class="form-label">Comprobante (imagen)</label>
-                                <input type="file" class="form-control form-control-sm" wire:model="image_file" accept="image/*">
-                                @error('image_file') <div class="title-modules">{{ $message }}</div> @enderror
+                        <div class="col-md-8">
+                            <div class="mb-3" x-data="{ dragging: false }">
+                                <label class="form-label">
+                                    Comprobantes (imágenes)
+                                    @if(!empty($image_files))
+                                        <span class="badge bg-primary ms-1">{{ count($image_files) }}</span>
+                                        <a href="#" class="f-s-12 ms-1 text-danger"
+                                           wire:click.prevent="$set('image_files', [])">limpiar</a>
+                                    @endif
+                                </label>
+                                <div class="dropzone-area"
+                                     x-on:dragover.prevent="dragging = true"
+                                     x-on:dragleave.prevent="dragging = false"
+                                     x-on:drop.prevent="dragging = false; $refs.fileInput.files = $event.dataTransfer.files; $refs.fileInput.dispatchEvent(new Event('change', { bubbles: true }))"
+                                     :class="{ 'dropzone-active': dragging }">
+                                    <input type="file" multiple accept="image/*"
+                                           wire:model="new_images"
+                                           x-ref="fileInput"
+                                           class="d-none">
+                                    <div class="dropzone-label mb-0"
+                                         x-on:click.prevent="$refs.fileInput.click()">
+                                        <i class="ti ti-cloud-upload f-s-18"></i>
+                                        <span class="f-s-12">Arrastra o haz clic (varias imágenes)</span>
+                                    </div>
+                                </div>
+                                @error('new_images.*') <span class="title-modules f-s-12">{{ $message }}</span> @enderror
 
-                                @if ($image_file)
-                                    <div class="mt-2">
-                                        <img src="{{ $image_file->temporaryUrl() }}" alt="Vista previa"
-                                             class="img-fluid rounded border" style="max-height:220px;">
+                                @if(!empty($image_files))
+                                    <div class="d-flex flex-wrap gap-2 mt-2">
+                                        @foreach($image_files as $idx => $file)
+                                            @if($file instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile && $file->isPreviewable())
+                                                <div class="position-relative d-inline-block">
+                                                    <img src="{{ $file->temporaryUrl() }}" alt="Preview"
+                                                         class="img-thumb-clickable"
+                                                         onclick="window.open(this.src, '_blank')">
+                                                    <button type="button"
+                                                            wire:click="removeImage({{ $idx }})"
+                                                            class="position-absolute top-0 end-0 border-0 bg-danger text-white rounded-circle d-flex align-items-center justify-content-center"
+                                                            style="width:18px;height:18px;font-size:11px;line-height:1;padding:0;transform:translate(6px,-6px);">&times;</button>
+                                                </div>
+                                            @endif
+                                        @endforeach
                                     </div>
                                 @endif
-                                <small class="text-muted">TC usado (MVP): 3.80</small>
+                                <small class="text-muted d-block mt-1">TC usado (MVP): 3.80</small>
                             </div>
                         </div>
 

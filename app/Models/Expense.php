@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Traits\Auditable;
 
 class Expense extends Model
@@ -43,6 +44,11 @@ class Expense extends Model
     public function headquarter(): BelongsTo
     {
         return $this->belongsTo(\App\Models\Headquarter::class);
+    }
+
+    public function images(): HasMany
+    {
+        return $this->hasMany(ExpenseImage::class);
     }
 
     public function getImageUrlAttribute(): string

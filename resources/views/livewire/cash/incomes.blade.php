@@ -184,9 +184,18 @@
                                     <td data-label="Motivo">{{ $i->detail }}</td>
                                     <td class="text-end" data-label="S/">{{ number_format($i->total, 2) }}</td>
                                     <td class="text-center">
-                                        @if($i->image_path)
-                                            <i class="fa-solid fa-camera f-s-18 text-dark" style="cursor:pointer;"
-                                               onclick="showLightbox('{{ asset('storage/'.$i->image_path) }}')"></i>
+                                        @if($i->images->isNotEmpty())
+                                            @php
+                                                $urls = $i->images->map(fn($im) => asset('storage/'.$im->image_path))->values();
+                                            @endphp
+                                            <span x-data="{ urls: {{ json_encode($urls) }} }"
+                                                  style="cursor:pointer;position:relative;display:inline-block;"
+                                                  x-on:click="$dispatch('open-lightbox', { images: urls, index: 0 })">
+                                                <i class="fa-solid fa-camera f-s-18 text-dark"></i>
+                                                @if($i->images->count() > 1)
+                                                    <span class="badge bg-primary" style="position:absolute;top:-8px;right:-12px;font-size:9px;">{{ $i->images->count() }}</span>
+                                                @endif
+                                            </span>
                                         @else
                                             <span class="text-muted">—</span>
                                         @endif
@@ -310,29 +319,53 @@
         </div>
     </div>
 
-    {{-- Lightbox --}}
-    <div class="modal fade" id="modalImageLightbox" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content" style="background:rgba(0,0,0,0.85);">
-                <div class="modal-header border-0 pb-0">
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body text-center p-2">
-                    <img id="lightboxImg" src="" alt="Comprobante" class="img-fluid rounded" style="max-height:80vh;">
-                </div>
+    {{-- Lightbox Alpine --}}
+    <div x-data="{
+            open: false,
+            images: [],
+            current: 0,
+            show(imgs, idx) { this.images = imgs; this.current = idx; this.open = true; },
+            close() { this.open = false; this.images = []; this.current = 0; },
+            prev() { this.current = (this.current - 1 + this.images.length) % this.images.length; },
+            next() { this.current = (this.current + 1) % this.images.length; },
+         }"
+         x-on:open-lightbox.window="show($event.detail.images, $event.detail.index)"
+         x-on:keydown.escape.window="close()"
+         x-on:keydown.left.window="if(open) prev()"
+         x-on:keydown.right.window="if(open) next()"
+         x-show="open"
+         x-cloak
+         class="lightbox-overlay"
+         x-on:click.self="close()">
+        <template x-if="open && images.length">
+            <div>
+                <img :src="images[current]" class="lightbox-img" alt="Imagen">
+                <button class="lightbox-close" x-on:click="close()" title="Cerrar">&times;</button>
+                <template x-if="images.length > 1">
+                    <div>
+                        <button class="lightbox-btn lightbox-prev" x-on:click.stop="prev()">&#8249;</button>
+                        <button class="lightbox-btn lightbox-next" x-on:click.stop="next()">&#8250;</button>
+                        <div class="lightbox-counter" x-text="(current + 1) + ' / ' + images.length"></div>
+                    </div>
+                </template>
             </div>
-        </div>
+        </template>
     </div>
 
 </div>
 
-@push('scripts')
-<script>
-function showLightbox(src) {
-    document.getElementById('lightboxImg').src = src;
-    new bootstrap.Modal(document.getElementById('modalImageLightbox')).show();
-}
-</script>
+@push('styles')
+<style>
+    .lightbox-overlay { position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,.85); display: flex; align-items: center; justify-content: center; }
+    .lightbox-img { max-width: 90vw; max-height: 85vh; border-radius: 6px; box-shadow: 0 4px 24px rgba(0,0,0,.5); }
+    .lightbox-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,.15); border: none; color: #fff; font-size: 28px; padding: 8px 14px; border-radius: 50%; cursor: pointer; transition: background .2s; }
+    .lightbox-btn:hover { background: rgba(255,255,255,.3); }
+    .lightbox-prev { left: 16px; }
+    .lightbox-next { right: 16px; }
+    .lightbox-close { position: absolute; top: 16px; right: 20px; background: none; border: none; color: #fff; font-size: 32px; cursor: pointer; line-height: 1; }
+    .lightbox-counter { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); color: #fff; font-size: 14px; background: rgba(0,0,0,.5); padding: 4px 12px; border-radius: 12px; }
+    [x-cloak] { display: none !important; }
+</style>
 @endpush
 
 @push('datepicker_js')
