@@ -11,7 +11,7 @@
     }
     .dropzone-area:hover, .dropzone-active { border-color: #2874A6; background: #e3f2fd; }
     .dropzone-label { display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; color: #607d8b; }
-    .img-thumb-clickable { height: 72px; width: 72px; object-fit: cover; cursor: pointer; border-radius: 4px; border: 1px solid #ddd; }
+    .img-thumb-clickable { height: 220px; width: 220px; object-fit: cover; cursor: pointer; border-radius: 6px; border: 1px solid #ddd; }
     .img-thumb-clickable:hover { opacity: .85; }
     .img-thumb-deleted { opacity: .35; filter: grayscale(80%); }
 </style>
