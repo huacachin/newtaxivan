@@ -3,15 +3,15 @@
     .dropzone-area {
         border: 2px dashed #b0bec5;
         border-radius: 6px;
-        padding: 12px;
+        padding: 6px 14px;
         text-align: center;
         cursor: pointer;
         transition: border-color .2s, background .2s;
         background: #fafafa;
     }
     .dropzone-area:hover, .dropzone-active { border-color: #2874A6; background: #e3f2fd; }
-    .dropzone-label { display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; color: #607d8b; }
-    .img-thumb-clickable { height: 220px; width: 220px; object-fit: cover; cursor: pointer; border-radius: 6px; border: 1px solid #ddd; }
+    .dropzone-label { display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 8px; cursor: pointer; color: #607d8b; }
+    .img-thumb-clickable { height: 360px; width: 200px; object-fit: contain; background: #f5f5f5; cursor: pointer; border-radius: 6px; border: 1px solid #ddd; }
     .img-thumb-clickable:hover { opacity: .85; }
     .img-thumb-deleted { opacity: .35; filter: grayscale(80%); }
 </style>
@@ -147,15 +147,16 @@
                                 @error('new_images.*') <span class="title-modules f-s-12">{{ $message }}</span> @enderror
 
                                 @if(!empty($existing_images))
+                                    @php $existingUrls = array_column($existing_images, 'url'); @endphp
                                     <div class="mt-3">
                                         <div class="small text-muted mb-1">Actuales:</div>
-                                        <div class="d-flex flex-wrap gap-2">
-                                            @foreach($existing_images as $img)
+                                        <div class="d-flex flex-wrap gap-2" x-data="{ urls: {{ json_encode($existingUrls) }} }">
+                                            @foreach($existing_images as $i => $img)
                                                 @php $isDeleted = in_array($img['id'], $deleted_image_ids, true); @endphp
                                                 <div class="position-relative d-inline-block">
                                                     <img src="{{ $img['url'] }}" alt="Imagen"
                                                          class="img-thumb-clickable {{ $isDeleted ? 'img-thumb-deleted' : '' }}"
-                                                         onclick="window.open(this.src, '_blank')">
+                                                         x-on:click="$dispatch('open-lightbox', { images: urls, index: {{ $i }} })">
                                                     @if($isDeleted)
                                                         <button type="button"
                                                                 title="Restaurar"
@@ -175,22 +176,29 @@
                                     </div>
                                 @endif
 
-                                @if(!empty($image_files))
+                                @php
+                                    $newPreviewables = [];
+                                    foreach ($image_files as $idx => $f) {
+                                        if ($f instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile && $f->isPreviewable()) {
+                                            $newPreviewables[] = ['idx' => $idx, 'url' => $f->temporaryUrl()];
+                                        }
+                                    }
+                                    $newPreviewUrls = array_column($newPreviewables, 'url');
+                                @endphp
+                                @if(!empty($newPreviewables))
                                     <div class="mt-3">
                                         <div class="small text-muted mb-1">Nuevas a subir:</div>
-                                        <div class="d-flex flex-wrap gap-2">
-                                            @foreach($image_files as $idx => $file)
-                                                @if($file instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile && $file->isPreviewable())
-                                                    <div class="position-relative d-inline-block">
-                                                        <img src="{{ $file->temporaryUrl() }}" alt="Preview"
-                                                             class="img-thumb-clickable"
-                                                             onclick="window.open(this.src, '_blank')">
-                                                        <button type="button"
-                                                                wire:click="removeNewImage({{ $idx }})"
-                                                                class="position-absolute top-0 end-0 border-0 bg-danger text-white rounded-circle d-flex align-items-center justify-content-center"
-                                                                style="width:18px;height:18px;font-size:11px;line-height:1;padding:0;transform:translate(6px,-6px);">&times;</button>
-                                                    </div>
-                                                @endif
+                                        <div class="d-flex flex-wrap gap-2" x-data="{ urls: {{ json_encode($newPreviewUrls) }} }">
+                                            @foreach($newPreviewables as $i => $p)
+                                                <div class="position-relative d-inline-block">
+                                                    <img src="{{ $p['url'] }}" alt="Preview"
+                                                         class="img-thumb-clickable"
+                                                         x-on:click="$dispatch('open-lightbox', { images: urls, index: {{ $i }} })">
+                                                    <button type="button"
+                                                            wire:click="removeNewImage({{ $p['idx'] }})"
+                                                            class="position-absolute top-0 end-0 border-0 bg-danger text-white rounded-circle d-flex align-items-center justify-content-center"
+                                                            style="width:18px;height:18px;font-size:11px;line-height:1;padding:0;transform:translate(6px,-6px);">&times;</button>
+                                                </div>
                                             @endforeach
                                         </div>
                                     </div>
@@ -221,4 +229,5 @@
 
     {{-- Overlay de carga --}}
 
+    @include('partials.image-lightbox')
 </div>

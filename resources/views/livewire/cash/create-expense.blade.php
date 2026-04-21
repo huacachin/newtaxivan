@@ -3,15 +3,15 @@
     .dropzone-area {
         border: 2px dashed #b0bec5;
         border-radius: 6px;
-        padding: 12px;
+        padding: 6px 14px;
         text-align: center;
         cursor: pointer;
         transition: border-color .2s, background .2s;
         background: #fafafa;
     }
     .dropzone-area:hover, .dropzone-active { border-color: #2874A6; background: #e3f2fd; }
-    .dropzone-label { display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; color: #607d8b; }
-    .img-thumb-clickable { height: 220px; width: 220px; object-fit: cover; cursor: pointer; border-radius: 6px; border: 1px solid #ddd; }
+    .dropzone-label { display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 8px; cursor: pointer; color: #607d8b; }
+    .img-thumb-clickable { height: 360px; width: 200px; object-fit: contain; background: #f5f5f5; cursor: pointer; border-radius: 6px; border: 1px solid #ddd; }
     .img-thumb-clickable:hover { opacity: .85; }
 </style>
 @endpush
@@ -193,20 +193,27 @@
                                 </div>
                                 @error('new_images.*') <span class="title-modules f-s-12">{{ $message }}</span> @enderror
 
-                                @if(!empty($image_files))
-                                    <div class="d-flex flex-wrap gap-2 mt-2">
-                                        @foreach($image_files as $idx => $file)
-                                            @if($file instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile && $file->isPreviewable())
-                                                <div class="position-relative d-inline-block">
-                                                    <img src="{{ $file->temporaryUrl() }}" alt="Preview"
-                                                         class="img-thumb-clickable"
-                                                         onclick="window.open(this.src, '_blank')">
-                                                    <button type="button"
-                                                            wire:click="removeImage({{ $idx }})"
-                                                            class="position-absolute top-0 end-0 border-0 bg-danger text-white rounded-circle d-flex align-items-center justify-content-center"
-                                                            style="width:18px;height:18px;font-size:11px;line-height:1;padding:0;transform:translate(6px,-6px);">&times;</button>
-                                                </div>
-                                            @endif
+                                @php
+                                    $previewables = [];
+                                    foreach ($image_files as $idx => $f) {
+                                        if ($f instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile && $f->isPreviewable()) {
+                                            $previewables[] = ['idx' => $idx, 'url' => $f->temporaryUrl()];
+                                        }
+                                    }
+                                    $previewUrls = array_column($previewables, 'url');
+                                @endphp
+                                @if(!empty($previewables))
+                                    <div class="d-flex flex-wrap gap-2 mt-2" x-data="{ urls: {{ json_encode($previewUrls) }} }">
+                                        @foreach($previewables as $i => $p)
+                                            <div class="position-relative d-inline-block">
+                                                <img src="{{ $p['url'] }}" alt="Preview"
+                                                     class="img-thumb-clickable"
+                                                     x-on:click="$dispatch('open-lightbox', { images: urls, index: {{ $i }} })">
+                                                <button type="button"
+                                                        wire:click="removeImage({{ $p['idx'] }})"
+                                                        class="position-absolute top-0 end-0 border-0 bg-danger text-white rounded-circle d-flex align-items-center justify-content-center"
+                                                        style="width:18px;height:18px;font-size:11px;line-height:1;padding:0;transform:translate(6px,-6px);">&times;</button>
+                                            </div>
                                         @endforeach
                                     </div>
                                 @endif
@@ -233,5 +240,5 @@
 
     {{-- Overlay de carga --}}
 
-
+    @include('partials.image-lightbox')
 </div>
