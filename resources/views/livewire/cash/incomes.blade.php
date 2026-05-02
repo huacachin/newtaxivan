@@ -127,7 +127,7 @@
                                         <!-- Nuevo -->
                                         @hasanyrole('director|gerente|administrador')
                                         <a href="{{ route('cash.incomes.create') }}"
-                                           class="btn btn-sm btn-success flex-shrink-0" target="_blank">
+                                           class="btn btn-sm btn-success flex-shrink-0">
                                             <i class="ti ti-square-plus f-s-12"></i> Nuevo
                                         </a>
                                         @endhasanyrole
