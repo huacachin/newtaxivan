@@ -26,7 +26,7 @@ class MonthlyDetail extends Component
     public float  $total = 0.0;
 
     // Inputs del formulario
-    public float  $exonerateInput = 0.0;
+    public ?float $exonerateInput = null;
     public string $detailInput = '';
     public float  $amortizeInput = 0.0; // opcional (en legacy estaba oculto)
 

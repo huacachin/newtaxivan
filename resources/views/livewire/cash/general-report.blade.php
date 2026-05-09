@@ -37,7 +37,7 @@
                                     <select wire:model="month" class="form-select form-select-sm">
                                         @for($m=1;$m<=12;$m++)
                                             <option value="{{ $m }}">
-                                                {{ \Carbon\Carbon::create(null, $m, 1)->locale('es')->translatedFormat('F') }}
+                                                {{ \Illuminate\Support\Str::ucfirst(\Carbon\Carbon::create(null, $m, 1)->locale('es')->translatedFormat('F')) }}
                                             </option>
                                         @endfor
                                     </select>
