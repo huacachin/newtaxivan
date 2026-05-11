@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Departures;
 
+use App\Models\Departure;
 use App\Models\Headquarter;
 use App\Models\Vehicle;
 use Illuminate\Contracts\View\View;
@@ -166,6 +167,41 @@ class AddDeparture extends Component
             }
         }
 
+        $this->applyPriceByHeadquarter($this->headquarter_id);
+    }
+
+    public function updatedHeadquarterId($value): void
+    {
+        $this->applyPriceByHeadquarter($value !== null && $value !== '' ? (int)$value : null);
+    }
+
+    private function applyPriceByHeadquarter(?int $hqId): void
+    {
+        if (!$hqId) {
+            $this->price = 0;
+            return;
+        }
+
+        $name = mb_strtolower(trim((string) Headquarter::find($hqId)?->name));
+
+        switch ($name) {
+            case 'huaycan':
+                $this->price = 3;
+                break;
+            case 'h.gamarra':
+                $this->price = 4;
+                break;
+            case 'la victoria':
+                $exists = Departure::where('user_id', Auth::id())
+                    ->where('date', $this->date)
+                    ->where('headquarter_id', $hqId)
+                    ->exists();
+                $this->price = $exists ? 3 : 4;
+                break;
+            default:
+                $this->price = 0;
+                break;
+        }
     }
 
     // ==============================
@@ -310,6 +346,8 @@ class AddDeparture extends Component
         $this->passage = 0;
         $this->latitude = null;
         $this->longitude = null;
+
+        $this->applyPriceByHeadquarter($this->headquarter_id);
     }
 
     // ==============================
