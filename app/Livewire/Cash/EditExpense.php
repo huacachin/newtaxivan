@@ -21,6 +21,7 @@ class EditExpense extends Component
     public string $expenseKind = 'Otros';
     public ?int   $concept_id  = null;
     public array  $concepts    = [];
+    public array  $controladores = [];
     public string $reason_text = '';
 
     public ?string $date          = null;
@@ -73,6 +74,7 @@ class EditExpense extends Component
         $this->expenseId = $id;
         $this->users     = DB::table('users')->where('status', 'active')->pluck('username', 'id');
         $this->refreshConcepts();
+        $this->loadControladores();
 
         $e = $this->expense;
 
@@ -87,14 +89,23 @@ class EditExpense extends Component
             'url' => asset('storage/' . $img->image_path),
         ])->all();
 
-        $match = collect($this->concepts)->firstWhere('name', (string)$e->reason);
-        if ($match) {
-            $this->expenseKind = 'Fijos';
-            $this->concept_id  = (int)$match['id'];
+        $this->expenseKind = in_array($e->kind, ['Fijos','Otros','Planilla'], true) ? $e->kind : 'Otros';
+
+        if ($this->expenseKind === 'Fijos') {
+            $match = collect($this->concepts)->firstWhere('name', (string)$e->reason);
+            $this->concept_id = $match ? (int)$match['id'] : null;
         } else {
-            $this->expenseKind = 'Otros';
             $this->reason_text = (string)($e->reason ?? '');
         }
+    }
+
+    private function loadControladores(): void
+    {
+        $this->controladores = \App\Models\User::role('controlador')
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->pluck('username')
+            ->all();
     }
 
     private function refreshConcepts(): void
@@ -144,6 +155,9 @@ class EditExpense extends Component
     {
         if ($val === 'Fijos') $this->refreshConcepts();
         if (in_array($val, ['Otros', 'Planilla'])) $this->concept_id = null;
+        if ($val === 'Planilla' && !in_array($this->reason_text, $this->controladores, true)) {
+            $this->reason_text = $this->controladores[0] ?? '';
+        }
     }
 
     public function updatedConceptId($value): void
@@ -197,6 +211,7 @@ class EditExpense extends Component
             $payload = [
                 'date'          => $this->date,
                 'reason'        => $reason,
+                'kind'          => $this->expenseKind,
                 'detail'        => trim($this->detail),
                 'total'         => round((float)$this->total, 2),
                 'document_type' => trim((string)$this->document_type),

@@ -61,7 +61,7 @@ class CreateExpense extends Component
         $this->controladores = \App\Models\User::role('controlador')
             ->where('status', 'active')
             ->orderBy('name')
-            ->pluck('name')
+            ->pluck('username')
             ->all();
     }
 
@@ -209,6 +209,7 @@ class CreateExpense extends Component
             $payload = [
                 'date'           => $this->date,
                 'reason'         => $reason,
+                'kind'           => $this->expenseKind,
                 'detail'         => trim($this->detail),
                 'total'          => round((float)$this->total, 2),
                 'document_type'  => trim((string)$this->document_type),

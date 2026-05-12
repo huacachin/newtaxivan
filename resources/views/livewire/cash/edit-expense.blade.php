@@ -93,6 +93,14 @@
                                         @endforeach
                                     </select>
                                     @error('concept_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                @elseif($expenseKind === 'Planilla')
+                                    <select class="form-select form-select-sm @error('reason_text') is-invalid @enderror"
+                                            wire:model.defer="reason_text">
+                                        @foreach($controladores as $nombre)
+                                            <option value="{{ $nombre }}">{{ $nombre }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('reason_text') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 @else
                                     <input type="text" class="form-control form-control-sm @error('reason_text') is-invalid @enderror"
                                            placeholder="Ej: Combustible, Servicio, etc."

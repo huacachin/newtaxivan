@@ -22,6 +22,7 @@ class Expense extends Model
         'id',
         'date',
         'reason',
+        'kind',
         'detail',
         'image_path',
         'total',

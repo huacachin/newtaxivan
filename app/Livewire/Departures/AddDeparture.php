@@ -192,11 +192,24 @@ class AddDeparture extends Component
                 $this->price = 4;
                 break;
             case 'la victoria':
-                $exists = Departure::where('user_id', Auth::id())
-                    ->where('date', $this->date)
-                    ->where('headquarter_id', $hqId)
-                    ->exists();
-                $this->price = $exists ? 3 : 4;
+                $normalizedPlate = preg_replace('/\s+/', '', strtoupper(trim((string) $this->plate)));
+                if (strlen($normalizedPlate) < 6) {
+                    $this->price = 0;
+                    break;
+                }
+
+                ['vehicle_id' => $vehicleId] = $this->resolveVehicleByPlate($this->plate);
+
+                $query = Departure::where('date', $this->date)
+                    ->where('headquarter_id', $hqId);
+
+                if ($vehicleId) {
+                    $query->where('vehicle_id', $vehicleId);
+                } else {
+                    $query->whereRaw('UPPER(REPLACE(legacy_plate," ","")) = ?', [$normalizedPlate]);
+                }
+
+                $this->price = $query->exists() ? 3 : 4;
                 break;
             default:
                 $this->price = 0;
@@ -215,6 +228,10 @@ class AddDeparture extends Component
                 ->exists();
         } else {
             $this->plateExists = true;
+        }
+
+        if ($this->headquarter_id) {
+            $this->applyPriceByHeadquarter($this->headquarter_id);
         }
     }
 
