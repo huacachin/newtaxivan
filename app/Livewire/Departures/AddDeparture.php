@@ -194,7 +194,7 @@ class AddDeparture extends Component
             case 'la victoria':
                 $normalizedPlate = preg_replace('/\s+/', '', strtoupper(trim((string) $this->plate)));
                 if (strlen($normalizedPlate) < 6) {
-                    $this->price = 0;
+                    $this->price = 4;
                     break;
                 }
 
