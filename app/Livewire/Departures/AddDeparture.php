@@ -168,6 +168,10 @@ class AddDeparture extends Component
         }
 
         $this->applyPriceByHeadquarter($this->headquarter_id);
+
+        $this->passage   = 8;
+        $this->passenger = 10;
+        $this->applyPassengerByPlate();
     }
 
     public function updatedHeadquarterId($value): void
@@ -239,6 +243,23 @@ class AddDeparture extends Component
 
         if ($this->headquarter_id) {
             $this->applyPriceByHeadquarter($this->headquarter_id);
+        }
+
+        $this->applyPassengerByPlate();
+    }
+
+    private function applyPassengerByPlate(): void
+    {
+        $normalizedPlate = preg_replace('/\s+/', '', strtoupper(trim((string) $this->plate)));
+
+        if (strlen($normalizedPlate) >= 6 && $this->plateExists) {
+            $seats = DB::table('vehicles')
+                ->where('status', 'active')
+                ->whereRaw('UPPER(REPLACE(plate," ","")) = ?', [$normalizedPlate])
+                ->value('seats');
+            $this->passenger = (int) ($seats ?: 10);
+        } else {
+            $this->passenger = 10;
         }
     }
 
@@ -366,12 +387,13 @@ class AddDeparture extends Component
         }
 
         $this->price = 0;
-        $this->passenger = 0;
-        $this->passage = 0;
+        $this->passenger = 10;
+        $this->passage = 8;
         $this->latitude = null;
         $this->longitude = null;
 
         $this->applyPriceByHeadquarter($this->headquarter_id);
+        $this->applyPassengerByPlate();
     }
 
     // ==============================
