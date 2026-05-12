@@ -184,17 +184,24 @@ class AddDeparture extends Component
 
         $name = mb_strtolower(trim((string) Headquarter::find($hqId)?->name));
 
+        $normalizedPlate = preg_replace('/\s+/', '', strtoupper(trim((string) $this->plate)));
+        $plateNotFound   = strlen($normalizedPlate) >= 6 && !$this->plateExists;
+
         switch ($name) {
             case 'huaycan':
-                $this->price = 3;
+                $this->price = $plateNotFound ? 7 : 3;
                 break;
             case 'h.gamarra':
-                $this->price = 4;
+                $this->price = $plateNotFound ? 7 : 4;
                 break;
             case 'la victoria':
-                $normalizedPlate = preg_replace('/\s+/', '', strtoupper(trim((string) $this->plate)));
                 if (strlen($normalizedPlate) < 6) {
                     $this->price = 4;
+                    break;
+                }
+
+                if ($plateNotFound) {
+                    $this->price = 2;
                     break;
                 }
 
