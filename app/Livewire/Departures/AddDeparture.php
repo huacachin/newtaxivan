@@ -253,11 +253,11 @@ class AddDeparture extends Component
         $normalizedPlate = preg_replace('/\s+/', '', strtoupper(trim((string) $this->plate)));
 
         if (strlen($normalizedPlate) >= 6 && $this->plateExists) {
-            $seats = DB::table('vehicles')
+            $passengers = DB::table('vehicles')
                 ->where('status', 'active')
                 ->whereRaw('UPPER(REPLACE(plate," ","")) = ?', [$normalizedPlate])
-                ->value('seats');
-            $this->passenger = (int) ($seats ?: 10);
+                ->value('passengers');
+            $this->passenger = (int) ($passengers ?: 10);
         } else {
             $this->passenger = 10;
         }
