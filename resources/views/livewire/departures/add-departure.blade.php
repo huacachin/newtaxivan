@@ -80,30 +80,63 @@
                         </div>
 
                         <div class="col-md-2 col-12">
-                            <div class="mb-3">
+                            <div class="mb-3" x-data="numericChips({ storageKey: 'departures.price', decimals: 2 })">
                                 <label class="form-label">Salida (S/)</label>
-                                <input type="number" step="0.01" min="1" class="form-control form-control-sm"
-                                       wire:model.defer="price" inputmode="decimal" placeholder="0.00">
+                                <input type="text" inputmode="decimal" class="form-control form-control-sm"
+                                       x-ref="input"
+                                       name="departure_price" autocomplete="on"
+                                       wire:model.defer="price" placeholder="0.00">
+                                <div class="num-chips" x-show="suggestions.length" x-cloak>
+                                    <template x-for="(s, i) in suggestions" :key="s.value">
+                                        <button type="button" :class="badgeClass(s.source)"
+                                                :title="`${s.hint} (Alt+${i+1})`"
+                                                @click="pick(s.value)" x-text="formatted(s.value)"></button>
+                                    </template>
+                                </div>
                                 @error('price') <span class="title-modules">{{ $message }}</span> @enderror
                             </div>
                         </div>
 
                         <div class="col-md-2 col-12">
-                            <div class="mb-3">
+                            <div class="mb-3" x-data="numericChips({
+                                storageKey: 'departures.passenger',
+                                server: () => $wire.passengerSuggestions,
+                                decimals: 0
+                            })">
                                 <label class="form-label">Pasajeros</label>
-                                <input type="number" class="form-control form-control-sm"
-                                       wire:model.defer="passenger" min="1"
-                                       inputmode="numeric" pattern="[0-9]*" placeholder="0.00">
+                                <input type="text" inputmode="numeric" class="form-control form-control-sm"
+                                       x-ref="input"
+                                       name="departure_passenger" autocomplete="on"
+                                       wire:model.defer="passenger" placeholder="0">
+                                <div class="num-chips" x-show="suggestions.length" x-cloak>
+                                    <template x-for="(s, i) in suggestions" :key="s.value">
+                                        <button type="button" :class="badgeClass(s.source)"
+                                                :title="`${s.hint} (Alt+${i+1})`"
+                                                @click="pick(s.value)" x-text="formatted(s.value)"></button>
+                                    </template>
+                                </div>
                                 @error('passenger') <span class="title-modules">{{ $message }}</span> @enderror
                             </div>
                         </div>
 
                         <div class="col-md-2 col-12">
-                            <div class="mb-3">
+                            <div class="mb-3" x-data="numericChips({
+                                storageKey: 'departures.passage',
+                                server: () => $wire.passageSuggestions,
+                                decimals: 2
+                            })">
                                 <label class="form-label">Pasaje (S/)</label>
-                                <input type="number" class="form-control form-control-sm"
-                                       wire:model.defer="passage" step="0.01" min="1"
-                                       inputmode="decimal" placeholder="0.00">
+                                <input type="text" inputmode="decimal" class="form-control form-control-sm"
+                                       x-ref="input"
+                                       name="departure_passage" autocomplete="on"
+                                       wire:model.defer="passage" placeholder="0.00">
+                                <div class="num-chips" x-show="suggestions.length" x-cloak>
+                                    <template x-for="(s, i) in suggestions" :key="s.value">
+                                        <button type="button" :class="badgeClass(s.source)"
+                                                :title="`${s.hint} (Alt+${i+1})`"
+                                                @click="pick(s.value)" x-text="formatted(s.value)"></button>
+                                    </template>
+                                </div>
                                 @error('passage') <span class="title-modules">{{ $message }}</span> @enderror
                             </div>
                         </div>

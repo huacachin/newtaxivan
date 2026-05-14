@@ -3,6 +3,7 @@
 namespace App\Livewire\Cash;
 
 use App\Models\Income;
+use App\Traits\NormalizesDecimals;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -15,6 +16,7 @@ class Incomes extends Component
 {
     use WithPagination;
     use WithFileUploads;
+    use NormalizesDecimals;
 
     // ===== Filtros/Listado =====
     public $search = '';
@@ -206,6 +208,7 @@ class Incomes extends Component
     // ===== Guardar/Actualizar =====
     public function save(): void
     {
+        $this->normalizeDecimalProps(['amount_input']);
         $this->validate();
 
         $total = $this->currency === 'Dolares'
@@ -236,6 +239,7 @@ class Incomes extends Component
     {
         if (!$this->incomeId) return;
 
+        $this->normalizeDecimalProps(['amount_input']);
         $this->validate();
 
         $total = $this->currency === 'Dolares'

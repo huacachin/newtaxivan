@@ -1,0 +1,82 @@
+// >>-- Numeric chips css start --<<
+//
+// Pills de sugerencias debajo de inputs numéricos críticos.
+// Tres orígenes con código de color sutil:
+//   context (capacidad del vehículo)     → cyan
+//   server  (frecuente / histórico)      → ámbar
+//   lru     (último valor del usuario)   → gris
+//
+// Estilo alineado al template: bordes redondeados, hover suave, sin
+// quebrar el ritmo vertical (max-height controlado en la fila).
+
+.num-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+  min-height: 24px;
+  animation: numChipsIn 240ms ease-out;
+}
+
+.num-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 600;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: rgba(var(--secondary), 0.08);
+  color: rgba(var(--secondary), 1);
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+  transition: background 140ms ease, color 140ms ease, border-color 140ms ease, transform 120ms ease;
+  user-select: none;
+
+  &::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.55;
+  }
+
+  &:hover {
+    background: rgba(var(--primary), 0.12);
+    color: rgba(var(--primary), 1);
+    border-color: rgba(var(--primary), 0.3);
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+
+  // Variantes por origen
+  &-context {
+    background: rgba(var(--primary), 0.08);
+    color: rgba(var(--primary), 1);
+    &:hover {
+      background: rgba(var(--primary), 0.18);
+      border-color: rgba(var(--primary), 0.4);
+    }
+  }
+  &-server {
+    background: rgba(var(--warning), 0.12);
+    color: #b45309;
+    &:hover {
+      background: rgba(var(--warning), 0.22);
+      border-color: rgba(var(--warning), 0.45);
+    }
+  }
+  // num-chip-lru queda con el estilo base gris
+}
+
+@keyframes numChipsIn {
+  from { opacity: 0; transform: translateY(-2px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+// >>-- Numeric chips css end --<<

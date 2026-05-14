@@ -4,6 +4,7 @@ namespace App\Livewire\Cash;
 
 use App\Models\Expense;
 use App\Models\ExpenseImage;
+use App\Traits\NormalizesDecimals;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -13,7 +14,7 @@ use Livewire\WithFileUploads;
 
 class EditExpense extends Component
 {
-    use WithFileUploads;
+    use WithFileUploads, NormalizesDecimals;
 
     public Expense $expense;
     public int $expenseId;
@@ -23,6 +24,7 @@ class EditExpense extends Component
     public array  $concepts    = [];
     public array  $controladores = [];
     public string $reason_text = '';
+    public array  $amountSuggestions = [];
 
     public ?string $date          = null;
     public string  $detail        = '';
@@ -97,6 +99,8 @@ class EditExpense extends Component
         } else {
             $this->reason_text = (string)($e->reason ?? '');
         }
+
+        $this->recomputeAmountSuggestions();
     }
 
     private function loadControladores(): void
@@ -158,16 +162,53 @@ class EditExpense extends Component
         if ($val === 'Planilla' && !in_array($this->reason_text, $this->controladores, true)) {
             $this->reason_text = $this->controladores[0] ?? '';
         }
+        $this->recomputeAmountSuggestions();
     }
 
     public function updatedConceptId($value): void
     {
-        if ($this->expenseKind !== 'Fijos' || empty($value)) return;
-        $row = collect($this->concepts)->firstWhere('id', (int)$value);
-        if ($row && ($this->total === null || $this->total == 0)) {
-            $def = $row['default_amount'] ?? null;
-            if ($def !== null) $this->total = (float)$def;
+        if ($this->expenseKind === 'Fijos' && !empty($value)) {
+            $row = collect($this->concepts)->firstWhere('id', (int)$value);
+            if ($row && ($this->total === null || $this->total == 0)) {
+                $def = $row['default_amount'] ?? null;
+                if ($def !== null) $this->total = (float)$def;
+            }
         }
+        $this->recomputeAmountSuggestions();
+    }
+
+    public function updatedReasonText(): void
+    {
+        $this->recomputeAmountSuggestions();
+    }
+
+    protected function recomputeAmountSuggestions(): void
+    {
+        $since = now()->subDays(180)->toDateString();
+        $q = \DB::table('expenses')
+            ->where('total', '>', 0)
+            ->where('date', '>=', $since);
+
+        $reasonLabel = $this->resolveCurrentReasonLabel();
+        if ($reasonLabel !== '') {
+            $q->where('reason', $reasonLabel);
+        }
+
+        $this->amountSuggestions = $q
+            ->select('total', \DB::raw('COUNT(*) as c'))
+            ->groupBy('total')->orderByDesc('c')->limit(3)
+            ->pluck('total')
+            ->map(fn ($v) => number_format((float) $v, 2, '.', ''))
+            ->values()->all();
+    }
+
+    protected function resolveCurrentReasonLabel(): string
+    {
+        if ($this->expenseKind === 'Fijos' && $this->concept_id) {
+            $row = collect($this->concepts)->firstWhere('id', (int) $this->concept_id);
+            return $row ? (string) ($row['name'] ?? '') : '';
+        }
+        return trim((string) $this->reason_text);
     }
 
     public function questionDelete(int $id): void
@@ -202,6 +243,7 @@ class EditExpense extends Component
         }
 
         try {
+            $this->normalizeDecimalProps(['total']);
             $this->validate();
 
             $reason = $this->expenseKind === 'Fijos'

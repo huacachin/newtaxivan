@@ -287,7 +287,8 @@
 
                         <div class="col-md-4">
                             <label class="form-label">Monto (S/)</label>
-                            <input type="number" step="0.01" min="0"
+                            <input type="text" inputmode="decimal"
+                                   name="expense_amount_inline" autocomplete="on"
                                    class="form-control @error('total') is-invalid @enderror"
                                    wire:model.defer="total">
                             @error('total') <div class="invalid-feedback">{{ $message }}</div> @enderror

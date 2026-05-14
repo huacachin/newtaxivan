@@ -133,9 +133,24 @@
                         <div class="col-md-auto">
                             <div class="mb-3">
                                 <label class="form-label">Monto (S/) (*)</label>
-                                <input type="number" step="0.01" min="0"
-                                       class="form-control form-control-sm @error('total') is-invalid @enderror"
-                                       wire:model.defer="total">
+                                <div x-data="numericChips({
+                                    storageKey: 'expenses.amount',
+                                    server: () => $wire.amountSuggestions,
+                                    decimals: 2
+                                })">
+                                    <input type="text" inputmode="decimal"
+                                           x-ref="input"
+                                           name="expense_amount" autocomplete="on"
+                                           class="form-control form-control-sm @error('total') is-invalid @enderror"
+                                           wire:model.defer="total">
+                                    <div class="num-chips" x-show="suggestions.length" x-cloak>
+                                        <template x-for="(s, i) in suggestions" :key="s.value">
+                                            <button type="button" :class="badgeClass(s.source)"
+                                                    :title="`${s.hint} (Alt+${i+1})`"
+                                                    @click="pick(s.value)" x-text="formatted(s.value)"></button>
+                                        </template>
+                                    </div>
+                                </div>
                                 @error('total') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                         </div>

@@ -5,6 +5,7 @@ namespace App\Livewire\Departures;
 use App\Models\Departure;
 use App\Models\Headquarter;
 use App\Models\Vehicle;
+use App\Traits\NormalizesDecimals;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -12,6 +13,8 @@ use Livewire\Component;
 
 class AddDeparture extends Component
 {
+    use NormalizesDecimals;
+
     // ==============================
     // Campos del formulario (idénticos al modal original)
     // ==============================
@@ -26,6 +29,10 @@ class AddDeparture extends Component
     public ?string $hour = null;
     public ?string $latitude = null;
     public ?string $longitude = null;
+
+    // Sugerencias para los chips (consumidas por Alpine via $wire)
+    public array $passageSuggestions   = [];
+    public array $passengerSuggestions = [];
 
     /**
      * Catálogos para selects (id, name)
@@ -177,6 +184,7 @@ class AddDeparture extends Component
     public function updatedHeadquarterId($value): void
     {
         $this->applyPriceByHeadquarter($value !== null && $value !== '' ? (int)$value : null);
+        $this->recomputeSuggestions();
     }
 
     private function applyPriceByHeadquarter(?int $hqId): void
@@ -246,6 +254,76 @@ class AddDeparture extends Component
         }
 
         $this->applyPassengerByPlate();
+        $this->recomputeSuggestions();
+    }
+
+    /**
+     * Recalcula sugerencias de chips para pasaje y pasajeros.
+     * - passage: top 3 valores más frecuentes en últimos 90 días para la
+     *   placa actual; si no hay placa, top 3 para la sede actual.
+     * - passenger: deriva [seats, seats-1, seats-2] del vehículo + top 3 histórico.
+     */
+    protected function recomputeSuggestions(): void
+    {
+        $vehicle = null;
+        $plate = strtoupper(trim((string) $this->plate));
+        $plate = preg_replace('/\s+/', '', $plate);
+        if (strlen($plate) >= 6) {
+            $vehicle = Vehicle::whereRaw('UPPER(TRIM(plate)) = ?', [$plate])->first();
+        }
+
+        $since = now(config('app.timezone','America/Lima'))->subDays(90)->toDateString();
+
+        // ---------- Pasaje ----------
+        $passageQ = \DB::table('departures')->where('passage', '>', 0)->where('date', '>=', $since);
+        if ($vehicle?->id) {
+            $passageQ->where('vehicle_id', $vehicle->id);
+        } elseif ($this->headquarter_id) {
+            $passageQ->where('headquarter_id', $this->headquarter_id);
+        }
+        $this->passageSuggestions = $passageQ
+            ->select('passage', \DB::raw('COUNT(*) as c'))
+            ->groupBy('passage')
+            ->orderByDesc('c')
+            ->limit(3)
+            ->pluck('passage')
+            ->map(fn ($v) => number_format((float) $v, 2, '.', ''))
+            ->values()
+            ->all();
+
+        // ---------- Pasajeros ----------
+        $derived = [];
+        if ($vehicle && $vehicle->seats > 0) {
+            $derived = collect([$vehicle->seats, $vehicle->seats - 1, $vehicle->seats - 2])
+                ->filter(fn ($v) => $v >= 1)
+                ->map(fn ($v) => (string) (int) $v)
+                ->unique()
+                ->values()
+                ->all();
+        }
+
+        $passQ = \DB::table('departures')->where('passenger', '>', 0)->where('date', '>=', $since);
+        if ($vehicle?->id) {
+            $passQ->where('vehicle_id', $vehicle->id);
+        } elseif ($this->headquarter_id) {
+            $passQ->where('headquarter_id', $this->headquarter_id);
+        }
+        $hist = $passQ
+            ->select('passenger', \DB::raw('COUNT(*) as c'))
+            ->groupBy('passenger')
+            ->orderByDesc('c')
+            ->limit(3)
+            ->pluck('passenger')
+            ->map(fn ($v) => (string) (int) $v)
+            ->all();
+
+        // Mezcla: derived primero, luego histórico, sin duplicados
+        $this->passengerSuggestions = collect($derived)
+            ->merge($hist)
+            ->unique()
+            ->values()
+            ->take(5)
+            ->all();
     }
 
     private function applyPassengerByPlate(): void
@@ -272,6 +350,7 @@ class AddDeparture extends Component
             return;
         }
 
+        $this->normalizeDecimalProps(['price', 'passenger', 'passage']);
         $this->validate();
 
         // Validación de acceso a sede para no-admin (unificada)

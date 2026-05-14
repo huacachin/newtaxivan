@@ -4,6 +4,7 @@ namespace App\Livewire\Cash;
 
 use App\Models\Expense;
 use App\Models\ExpenseImage;
+use App\Traits\NormalizesDecimals;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -12,12 +13,13 @@ use Livewire\WithFileUploads;
 
 class CreateExpense extends Component
 {
-    use WithFileUploads;
+    use WithFileUploads, NormalizesDecimals;
 
     public string $expenseKind = 'Otros';
     public ?int   $concept_id  = null;
     public array  $concepts    = [];
     public string $reason_text = '';
+    public array  $amountSuggestions = [];
     public array  $controladores = [];
     public ?int   $headquarter_id = null;
     public array  $headquarters   = [];
@@ -54,6 +56,7 @@ class CreateExpense extends Component
         $this->refreshConcepts();
         $this->loadControladores();
         $this->loadHeadquarters();
+        $this->recomputeAmountSuggestions();
     }
 
     private function loadControladores(): void
@@ -139,6 +142,7 @@ class CreateExpense extends Component
             $this->isDraco = false;
             $this->headquarter_id = null;
         }
+        $this->recomputeAmountSuggestions();
     }
 
     public function clear(): void
@@ -151,13 +155,48 @@ class CreateExpense extends Component
 
     public function updatedConceptId($value): void
     {
-        if ($this->expenseKind !== 'Fijos' || empty($value)) return;
-        $row = collect($this->concepts)->firstWhere('id', (int)$value);
-        if ($row && ($this->total === null || $this->total == 0)) {
-            $def = $row['default_amount'] ?? null;
-            if ($def !== null) $this->total = (float)$def;
+        if ($this->expenseKind === 'Fijos' && !empty($value)) {
+            $row = collect($this->concepts)->firstWhere('id', (int)$value);
+            if ($row && ($this->total === null || $this->total == 0)) {
+                $def = $row['default_amount'] ?? null;
+                if ($def !== null) $this->total = (float)$def;
+            }
+            $this->checkDraco();
         }
-        $this->checkDraco();
+        $this->recomputeAmountSuggestions();
+    }
+
+    public function updatedReasonText(): void
+    {
+        $this->recomputeAmountSuggestions();
+    }
+
+    protected function recomputeAmountSuggestions(): void
+    {
+        $since = now()->subDays(180)->toDateString();
+        $q = \DB::table('expenses')
+            ->where('total', '>', 0)
+            ->where('date', '>=', $since);
+
+        $reasonLabel = $this->resolveCurrentReasonLabel();
+        if ($reasonLabel !== '') {
+            $q->where('reason', $reasonLabel);
+        }
+
+        $this->amountSuggestions = $q
+            ->select('total', \DB::raw('COUNT(*) as c'))
+            ->groupBy('total')->orderByDesc('c')->limit(3)
+            ->pluck('total')
+            ->map(fn ($v) => number_format((float) $v, 2, '.', ''))
+            ->values()->all();
+    }
+
+    protected function resolveCurrentReasonLabel(): string
+    {
+        if ($this->expenseKind === 'Fijos' && $this->concept_id) {
+            return (string) $this->conceptNameById($this->concept_id);
+        }
+        return trim((string) $this->reason_text);
     }
 
     private function checkDraco(): void
@@ -200,6 +239,7 @@ class CreateExpense extends Component
     public function save(): void
     {
         try {
+            $this->normalizeDecimalProps(['total']);
             $this->validate();
 
             $reason = $this->expenseKind === 'Fijos'

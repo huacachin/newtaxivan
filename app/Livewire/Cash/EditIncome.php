@@ -4,6 +4,7 @@ namespace App\Livewire\Cash;
 
 use App\Models\Income;
 use App\Models\IncomeImage;
+use App\Traits\NormalizesDecimals;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +16,7 @@ use Livewire\WithFileUploads;
 
 class EditIncome extends Component
 {
-    use WithFileUploads;
+    use WithFileUploads, NormalizesDecimals;
 
     public Income $income;
     public int $incomeId;
@@ -26,6 +27,7 @@ class EditIncome extends Component
     public string $currency      = 'Soles';
     public float|string $amount_input  = '';
     public float  $exchange      = 3.80;
+    public array $amountSuggestions = [];
     public ?float $converted_total = null;
 
     public $new_images = [];
@@ -85,6 +87,31 @@ class EditIncome extends Component
         ])->all();
 
         $this->recalcConverted();
+        $this->recomputeAmountSuggestions();
+    }
+
+    public function updatedReason(): void
+    {
+        $this->recomputeAmountSuggestions();
+    }
+
+    protected function recomputeAmountSuggestions(): void
+    {
+        $since = now()->subDays(180)->toDateString();
+        $q = \DB::table('incomes')
+            ->where('total', '>', 0)
+            ->where('date', '>=', $since);
+
+        if (!empty($this->reason)) {
+            $q->where('reason', $this->reason);
+        }
+
+        $this->amountSuggestions = $q
+            ->select('total', \DB::raw('COUNT(*) as c'))
+            ->groupBy('total')->orderByDesc('c')->limit(3)
+            ->pluck('total')
+            ->map(fn ($v) => number_format((float) $v, 2, '.', ''))
+            ->values()->all();
     }
 
     protected function rules(): array
@@ -169,6 +196,7 @@ class EditIncome extends Component
         }
 
         try {
+            $this->normalizeDecimalProps(['amount_input']);
             $this->validate();
 
             $total = $this->currency === 'Dolares'

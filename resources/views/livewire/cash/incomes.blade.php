@@ -265,7 +265,8 @@
 
                         <div class="col-md-4">
                             <label class="form-label">Monto</label>
-                            <input type="number" step="0.01" min="0.01" class="form-control" placeholder="0.00"
+                            <input type="text" inputmode="decimal" class="form-control" placeholder="0.00"
+                                   name="income_amount_inline" autocomplete="on"
                                    wire:model.live="amount_input">
                             @error('amount_input') <span class="title-modules">{{ $message }}</span> @enderror
                             @if(!is_null($converted_total))

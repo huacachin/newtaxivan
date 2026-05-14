@@ -128,7 +128,7 @@ class Vehicle extends Model
 
             if ($days < 0) {
                 $badges[] = [
-                    'abbr'  => $abbrType, // SD | RT | CD
+                    'abbr'  => $abbrType, // ST | RT | CD
                     'title' => "{$label} venció hace " . abs($days) . " día(s) ({$due})",
                     'class' => 'bg-danger',
                 ];
@@ -153,7 +153,7 @@ class Vehicle extends Model
             }
         };
 
-        $add($this->soat_date,        'SD', 'SOAT');
+        $add($this->soat_date,        'ST', 'SOAT');
         $add($this->technical_review, 'RT', 'Revisión Técnica');
         $add($this->certificate_date, 'CD', 'Certificado');
 
@@ -163,8 +163,10 @@ class Vehicle extends Model
     public function expiringAlerts(): array
     {
         $alerts = [];
+        $id = $this->id;
+        $plate = $this->plate;
 
-        $add = function ($date, string $abbrType, string $label) use (&$alerts) {
+        $add = function ($date, string $abbrType, string $label, string $fieldSlug) use (&$alerts, $id, $plate) {
             if (!$date) return;
 
             $days = $this->dayDelta($date);
@@ -174,12 +176,17 @@ class Vehicle extends Model
                 ? $date->toDateString()
                 : \Carbon\Carbon::parse($date)->toDateString();
 
+            $base = [
+                'id'    => $id,
+                'plate' => $plate,
+                'abbr'  => $abbrType,   // ST | RT | CD
+                'field' => $fieldSlug,  // soat | tecnica | certificado
+                'label' => $label,
+            ];
+
             if ($days < 0) {
-                $alerts[] = [
-                    'plate'    => $this->plate,
-                    'abbr'     => $abbrType,   // SD | RT | CD
-                    'label'    => $label,
-                    'days'     => abs($days),  // cuántos días lleva vencido
+                $alerts[] = $base + [
+                    'days'     => abs($days),
                     'due_date' => $due,
                     'color'    => 'danger',
                     'status'   => 'expired',
@@ -189,10 +196,7 @@ class Vehicle extends Model
             }
 
             if ($days === 0) {
-                $alerts[] = [
-                    'plate'    => $this->plate,
-                    'abbr'     => $abbrType,
-                    'label'    => $label,
+                $alerts[] = $base + [
                     'days'     => 0,
                     'due_date' => $due,
                     'color'    => 'danger',
@@ -203,10 +207,7 @@ class Vehicle extends Model
             }
 
             if ($days <= 10) {
-                $alerts[] = [
-                    'plate'    => $this->plate,
-                    'abbr'     => $abbrType,
-                    'label'    => $label,
+                $alerts[] = $base + [
                     'days'     => $days,
                     'due_date' => $due,
                     'color'    => $days <= 5 ? 'danger' : 'warning',
@@ -216,9 +217,9 @@ class Vehicle extends Model
             }
         };
 
-        $add($this->soat_date,        'SD', 'SOAT');
-        $add($this->technical_review, 'RT', 'Revisión Técnica');
-        $add($this->certificate_date, 'CD', 'Certificado');
+        $add($this->soat_date,        'ST', 'SOAT',             'soat');
+        $add($this->technical_review, 'RT', 'Revisión Técnica', 'tecnica');
+        $add($this->certificate_date, 'CD', 'Certificado',      'certificado');
 
         return $alerts;
     }

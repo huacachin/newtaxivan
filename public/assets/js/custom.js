@@ -292,3 +292,168 @@ document.addEventListener('livewire:navigated', function () {
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map(function (el) { return new bootstrap.Tooltip(el); });
 });
+
+// =========================================================
+// numericLRU: LRU por usuario + campo en localStorage
+// Uso:
+//   numericLRU.record('departures.passage', 35);
+//   numericLRU.get('departures.passage'); // ['35','40','30']
+// =========================================================
+window.numericLRU = (function () {
+    var PREFIX = 'taxivan.lru.';
+    function key(k) {
+        var meta = document.querySelector('meta[name="lru-user"]');
+        var uid  = meta ? meta.getAttribute('content') : 'anon';
+        return PREFIX + uid + '.' + k;
+    }
+    function get(k) {
+        try {
+            var raw = localStorage.getItem(key(k));
+            if (!raw) return [];
+            var arr = JSON.parse(raw);
+            return Array.isArray(arr) ? arr : [];
+        } catch (e) { return []; }
+    }
+    function record(k, value, max) {
+        max = max || 5;
+        var v = String(value).trim();
+        if (!v) return;
+        var arr = get(k).filter(function (x) { return String(x) !== v; });
+        arr.unshift(v);
+        if (arr.length > max) arr = arr.slice(0, max);
+        try { localStorage.setItem(key(k), JSON.stringify(arr)); } catch (e) {}
+    }
+    return { get: get, record: record };
+})();
+
+// =========================================================
+// Alpine factory: numericChips
+// Mezcla fuentes (contextual derivado, server-side via Livewire, LRU local)
+// con prioridad y deduplicación. Maneja Alt+1..5 para pick rápido.
+// =========================================================
+document.addEventListener('alpine:init', function () {
+    if (!window.Alpine) return;
+
+    window.Alpine.data('numericChips', function (opts) {
+        return {
+            opts: opts || {},
+            suggestions: [],
+
+            init: function () {
+                var self = this;
+                self.refresh();
+
+                // Recalcular cuando Livewire commitea cambios de estado
+                if (window.Livewire && Livewire.hook) {
+                    Livewire.hook('commit', function (_ref) {
+                        var succeed = _ref.succeed;
+                        succeed(function () { self.refresh(); });
+                    });
+                }
+
+                var input = self.$refs.input;
+                if (input) {
+                    // Atajos Alt+1..5 dentro del input
+                    input.addEventListener('keydown', function (e) {
+                        if (!e.altKey) return;
+                        var num = parseInt(e.key, 10);
+                        if (!num || num < 1 || num > 9) return;
+                        var item = self.suggestions[num - 1];
+                        if (!item) return;
+                        e.preventDefault();
+                        self.pick(item.value);
+                    });
+
+                    // Registrar LRU cuando el input pierde foco con un valor válido
+                    input.addEventListener('blur', function () {
+                        var v = (input.value || '').replace(',', '.').trim();
+                        if (!v) return;
+                        if (self.opts.storageKey && !isNaN(parseFloat(v))) {
+                            window.numericLRU.record(self.opts.storageKey, v, 5);
+                        }
+                    });
+                }
+            },
+
+            refresh: function () {
+                var max = this.opts.max || 5;
+                var pool = []; // { value, hint, source }
+
+                var add = function (value, hint, source) {
+                    if (value === null || value === undefined || value === '') return;
+                    var v = String(value).trim();
+                    if (!v) return;
+                    if (pool.some(function (p) { return p.value === v; })) return;
+                    pool.push({ value: v, hint: hint || '', source: source });
+                };
+
+                // 1) Contextual derivado (mayor prioridad)
+                if (typeof this.opts.contextual === 'function') {
+                    try {
+                        var ctx = this.opts.contextual() || [];
+                        ctx.forEach(function (item) {
+                            if (typeof item === 'object' && item !== null) {
+                                add(item.value, item.hint, 'context');
+                            } else {
+                                add(item, 'Contexto del vehículo', 'context');
+                            }
+                        });
+                    } catch (e) {}
+                }
+
+                // 2) Server-side via Livewire
+                if (typeof this.opts.server === 'function') {
+                    try {
+                        var srv = this.opts.server() || [];
+                        srv.forEach(function (item) {
+                            if (typeof item === 'object' && item !== null) {
+                                add(item.value, item.hint || 'Frecuente', 'server');
+                            } else {
+                                add(item, 'Frecuente', 'server');
+                            }
+                        });
+                    } catch (e) {}
+                }
+
+                // 3) LRU local
+                if (this.opts.storageKey) {
+                    var lru = window.numericLRU.get(this.opts.storageKey);
+                    lru.forEach(function (v) { add(v, 'Tu último valor', 'lru'); });
+                }
+
+                this.suggestions = pool.slice(0, max);
+            },
+
+            pick: function (value) {
+                var self = this;
+                var input = self.$refs.input;
+                if (!input) return;
+                input.value = value;
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+                input.dispatchEvent(new Event('change', { bubbles: true }));
+                input.focus();
+
+                if (self.opts.storageKey) {
+                    window.numericLRU.record(self.opts.storageKey, value, 5);
+                }
+            },
+
+            badgeClass: function (source) {
+                if (source === 'context') return 'num-chip num-chip-context';
+                if (source === 'server')  return 'num-chip num-chip-server';
+                return 'num-chip num-chip-lru';
+            },
+
+            formatted: function (v) {
+                if (typeof this.opts.format === 'function') {
+                    try { return this.opts.format(v); } catch (e) {}
+                }
+                var n = parseFloat(v);
+                if (isNaN(n)) return v;
+                if (this.opts.decimals === 0) return String(Math.round(n));
+                if (this.opts.decimals)       return n.toFixed(this.opts.decimals);
+                return String(n);
+            }
+        };
+    });
+});

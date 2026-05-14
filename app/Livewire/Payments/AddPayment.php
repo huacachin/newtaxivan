@@ -6,6 +6,7 @@ use App\Models\CostPerPlateDay;
 use App\Models\Headquarter;
 use App\Models\Payment;
 use App\Models\Vehicle;
+use App\Traits\NormalizesDecimals;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +15,8 @@ use Livewire\Component;
 
 class AddPayment extends Component
 {
+    use NormalizesDecimals;
+
     // ===== Formulario (mismos campos del modal) =====
     public ?int $paymentId = null; // no se usa al crear, pero queda por compatibilidad
     public string $plate = '';
@@ -30,6 +33,9 @@ class AddPayment extends Component
     // auxiliares
     public ?float $detected_cost = null;  // costo del día (PAGO/RETRASO)
     public ?float $pending_debt = null;   // deuda pendiente (mes anterior)
+
+    // Chips de sugerencias para el campo amount
+    public array $amountSuggestions = [];
 
     // sedes para el select
     public $headquarters = [];
@@ -331,6 +337,27 @@ class AddPayment extends Component
         $this->plate = strtoupper($this->plate ?? '');
         $this->prefillAmountFromCost();
         $this->recalcPendingDebt();
+        $this->recomputeAmountSuggestions();
+    }
+
+    protected function recomputeAmountSuggestions(): void
+    {
+        $plate = preg_replace('/\s+/', '', strtoupper(trim((string) $this->plate)));
+        if (strlen($plate) < 6) { $this->amountSuggestions = []; return; }
+
+        $vehicle = Vehicle::whereRaw('UPPER(TRIM(plate)) = ?', [$plate])->first();
+        if (!$vehicle) { $this->amountSuggestions = []; return; }
+
+        $since = now(config('app.timezone','America/Lima'))->subDays(180)->toDateString();
+        $this->amountSuggestions = \DB::table('payments')
+            ->where('vehicle_id', $vehicle->id)
+            ->where('amount', '>', 0)
+            ->where('date_payment', '>=', $since)
+            ->select('amount', \DB::raw('COUNT(*) as c'))
+            ->groupBy('amount')->orderByDesc('c')->limit(3)
+            ->pluck('amount')
+            ->map(fn ($v) => number_format((float) $v, 2, '.', ''))
+            ->values()->all();
     }
     public function updated($name, $value): void
     {
@@ -447,6 +474,7 @@ class AddPayment extends Component
         // Calcular auxiliares + validar
         $this->recalcPendingDebt();
         $this->prefillAmountFromCost();
+        $this->normalizeDecimalProps(['amount']);
         $this->validate();
         $this->validateBusinessCommon();
 

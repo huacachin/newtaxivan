@@ -61,7 +61,9 @@
       "Bash(cp /Users/antonyalfredoculquicarranza/projects/laravel_taxivan/app/Livewire/Auth/Login.php /Users/antonyalfredoculquicarranza/projects/laravel_prestamos/app/Livewire/Auth/)",
       "Bash(cp /Users/antonyalfredoculquicarranza/projects/laravel_taxivan/resources/views/livewire/auth/login.blade.php /Users/antonyalfredoculquicarranza/projects/laravel_prestamos/resources/views/livewire/auth/)",
       "Bash(lsof -ti:8000,8001,8002)",
-      "Bash(lsof -i:8000,8001,8002)"
+      "Bash(lsof -i:8000,8001,8002)",
+      "Skill(frontend-design:frontend-design)",
+      "Bash(xargs -I {} sh -c 'echo \"$\\(grep -c type=\\\\\\\\\"number\\\\\\\\\" {}\\) {}\"')"
     ]
   }
 }

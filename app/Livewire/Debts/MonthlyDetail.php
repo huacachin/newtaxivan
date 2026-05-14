@@ -5,6 +5,7 @@ namespace App\Livewire\Debts;
 use App\Models\DebtDay;
 use App\Models\DebtDayDetail;
 use App\Models\DebtDayDetailImage;
+use App\Traits\NormalizesDecimals;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\On;
@@ -14,7 +15,7 @@ use Illuminate\Validation\ValidationException;
 
 class MonthlyDetail extends Component
 {
-    use WithFileUploads;
+    use WithFileUploads, NormalizesDecimals;
 
     public int $id;                 // debt_days.id desde la ruta
     public ?DebtDay $debtDay = null;
@@ -83,6 +84,7 @@ class MonthlyDetail extends Component
 
     public function save(): void
     {
+        $this->normalizeDecimalProps(['exonerateInput', 'amortizeInput']);
         $this->validate();
 
         $ex = (float)($this->exonerateInput ?: 0);

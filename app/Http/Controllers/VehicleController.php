@@ -26,6 +26,12 @@ class VehicleController extends Controller
         return view('vehicles.edit',compact('id'));
     }
 
+    public function expiration(int $id, string $field)
+    {
+        abort_unless(in_array($field, ['soat','tecnica','certificado'], true), 404);
+        return view('vehicles.expiration', compact('id','field'));
+    }
+
     public function export(Request $request){
         $status = $request->query('status', 'active');
         $search = $request->query('search');

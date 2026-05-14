@@ -3,6 +3,7 @@
 namespace App\Livewire\Cash;
 
 use App\Models\Expense;
+use App\Traits\NormalizesDecimals;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
@@ -16,6 +17,7 @@ class Expenses extends Component
 {
     use WithPagination;
     use WithFileUploads;
+    use NormalizesDecimals;
 
     /** ====== Filtros de la tabla ====== */
     public string $search = '';
@@ -243,6 +245,7 @@ class Expenses extends Component
     /** ====== Guardar (crear/editar) ====== */
     public function save(): void
     {
+        $this->normalizeDecimalProps(['total']);
         $this->validate();
 
         $userId = Auth::id();

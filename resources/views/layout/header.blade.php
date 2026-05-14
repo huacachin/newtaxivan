@@ -70,62 +70,81 @@
                                                   </span> --}}
                                             </a>
 
-                                            <div class="dropdown-menu dropdown-menu-end bg-transparent border-0">
-                                                <div class="card">
-                                                    <div class="card-header bg-primary">
-                                                        <h5 class="text-white">
-                                                            Vencimientos próximos
-                                                            <span class="float-end">
-              <i class="ti ti-bell text-white"></i>
-            </span>
-                                                        </h5>
-                                                    </div>
-
-                                                    <div class="card-body p-0">
-                                                        <div class="head-container app-scroll">
-                                                            @forelse(($vehicleExpAlerts ?? []) as $n)
-                                                                <div class="head-box">
-                <span class="text-light-{{ $n['color'] }} h-40 w-40 d-flex-center b-r-50">
-                  {{-- SD/RT/CD con color rojo/amarillo --}}
-                  <span class="badge bg-{{ $n['color'] }} text-white">{{ $n['abbr'] }}</span>
-                </span>
-
-                                                                    <div class="flex-grow-1 ps-2">
-                                                                        <h6 class="mb-0">
-                                                                            {{ $n['plate'] }}
-                                                                            <span class="badge bg-light text-dark ms-1">{{ $n['days'] }} día(s)</span>
-                                                                        </h6>
-                                                                        <p class="text-secondary f-s-13 mb-0">
-                                                                            {{ $n['label'] }} vence en {{ $n['days'] }}
-                                                                            día(s)
-                                                                            <span class="text-muted">({{ \Carbon\Carbon::parse($n['due_date'])->format('d/m/Y') }})</span>
-                                                                        </p>
-                                                                    </div>
-
-                                                                    <div class="text-end">
-                                                                        {{-- Si quieres un botón que lleve al listado filtrado por placa: --}}
-                                                                        <a href="{{ route('settings.vehicles.index') }}?filter=plate&search={{ urlencode($n['plate']) }}"
-                                                                           class="f-s-12 text-muted text-decoration-underline">ver</a>
-                                                                    </div>
-                                                                </div>
-                                                            @empty
-                                                                <div class="hidden-massage py-4 px-3 text-center">
-                                                                    <img src="{{asset('assets/images/icons/bell.png')}}"
-                                                                         class="w-50 h-50 mb-3 mt-2" alt="">
-                                                                    <div>
-                                                                        <h6 class="mb-0">Sin notificaciones</h6>
-                                                                        <p class="text-secondary">No hay vencimientos
-                                                                            próximos (≤ 10 días).</p>
-                                                                    </div>
-                                                                </div>
-                                                            @endforelse
+                                            <div class="dropdown-menu dropdown-menu-end notif-panel">
+                                                <div class="notif-panel__shell">
+                                                    <div class="notif-panel__head">
+                                                        <div>
+                                                            <h6 class="notif-panel__title">Vencimientos próximos</h6>
+                                                            <div class="notif-panel__subtitle">SOAT · Revisión técnica · Certificado</div>
                                                         </div>
+                                                        @if(($vehicleExpCount ?? 0) > 0)
+                                                            <span class="notif-panel__chip">
+                                                                <i class="ti ti-bell"></i>
+                                                                {{ $vehicleExpCount }}
+                                                            </span>
+                                                        @else
+                                                            <i class="ti ti-bell text-white f-s-20"></i>
+                                                        @endif
                                                     </div>
 
-                                                    <div class="card-footer">
-                                                        <a href="{{ route('settings.vehicles.index') }}"
-                                                           class="btn btn-primary w-100">
-                                                            <i class="ti ti-plus"></i> Ver todo
+                                                    <div class="notif-panel__body">
+                                                        @forelse(($vehicleExpAlerts ?? []) as $n)
+                                                            @php
+                                                                $rowClass = ($n['color'] ?? 'danger') === 'warning'
+                                                                    ? 'notif-panel__row--warning'
+                                                                    : 'notif-panel__row--danger';
+                                                                $status = $n['status'] ?? 'upcoming';
+                                                                $statusLabel = match($status) {
+                                                                    'expired'  => 'Vencido',
+                                                                    'today'    => 'Hoy',
+                                                                    default    => 'Por vencer',
+                                                                };
+                                                                $countClass = $status === 'today' ? 'notif-panel__count notif-panel__count--today' : 'notif-panel__count';
+                                                            @endphp
+                                                            <a href="{{ route('settings.vehicles.expiration', ['id' => $n['id'], 'field' => $n['field']]) }}"
+                                                               class="notif-panel__row {{ $rowClass }}"
+                                                               title="{{ $n['message'] ?? '' }}">
+                                                                <span class="notif-panel__rail"></span>
+                                                                <span class="notif-panel__abbr">{{ $n['abbr'] }}</span>
+                                                                <div class="notif-panel__main">
+                                                                    <div>
+                                                                        <span class="notif-panel__plate">{{ $n['plate'] }}</span>
+                                                                        <span class="notif-panel__label">{{ $n['label'] }}</span>
+                                                                    </div>
+                                                                    <div class="notif-panel__meta">
+                                                                        <span>{{ \Carbon\Carbon::parse($n['due_date'])->format('d/m/Y') }}</span>
+                                                                        <span class="notif-panel__dot"></span>
+                                                                        <span class="notif-panel__status">{{ $statusLabel }}</span>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="{{ $countClass }}">
+                                                                    @if($status === 'today')
+                                                                        <div class="notif-panel__count-num">HOY</div>
+                                                                        <div class="notif-panel__count-unit">vence</div>
+                                                                    @else
+                                                                        <div class="notif-panel__count-num">{{ $n['days'] }}</div>
+                                                                        <div class="notif-panel__count-unit">
+                                                                            {{ $status === 'expired' ? 'días atrás' : 'días' }}
+                                                                        </div>
+                                                                    @endif
+                                                                </div>
+                                                            </a>
+                                                        @empty
+                                                            <div class="notif-panel__empty">
+                                                                <span class="notif-panel__empty-icon">
+                                                                    <i class="ti ti-check"></i>
+                                                                </span>
+                                                                <div class="notif-panel__empty-title">Todo al día</div>
+                                                                <p class="notif-panel__empty-text">
+                                                                    No hay vencimientos próximos en los siguientes 10 días.
+                                                                </p>
+                                                            </div>
+                                                        @endforelse
+                                                    </div>
+
+                                                    <div class="notif-panel__foot">
+                                                        <a href="{{ route('settings.vehicles.index') }}" class="btn btn-primary w-100">
+                                                            Ver todos los vehículos <i class="ti ti-arrow-right"></i>
                                                         </a>
                                                     </div>
                                                 </div>

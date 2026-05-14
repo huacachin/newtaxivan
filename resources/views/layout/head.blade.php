@@ -9,6 +9,9 @@
 <link rel="icon" href="{{('../assets/images/logo/logo.png')}}" type="image/x-icon">
 <link rel="shortcut icon" href="{{('../assets/images/logo/logo.png')}}" type="image/x-icon">
 <title>@yield('title') | Taxivan | Huacachin</title>
+@auth
+    <meta name="lru-user" content="{{ auth()->id() }}">
+@endauth
 
 <!-- TODO: Cambiar de datepicker y dejar de usar jquery -->
 @stack('datepicker_css')

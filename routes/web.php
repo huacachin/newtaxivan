@@ -34,6 +34,10 @@ Route::middleware('auth')->group(function () {
     Route::get('vehicles', [VehicleController::class,'index'])->name('settings.vehicles.index');
     Route::get('vehicles/create', [VehicleController::class,'create'])->name('settings.vehicles.create')->middleware('role:director|gerente|administrador');
     Route::get('vehicles/{id}/edit', [VehicleController::class,'edit'])->name('settings.vehicles.edit')->middleware('role:director|gerente|administrador');
+    Route::get('vehicles/{id}/expiration/{field}', [VehicleController::class,'expiration'])
+        ->name('settings.vehicles.expiration')
+        ->whereNumber('id')
+        ->whereIn('field', ['soat','tecnica','certificado']);
     Route::get('owners', [OwnerController::class,'index'])->name('settings.owners.index');
     Route::get('owners/create', [OwnerController::class,'create'])->name('settings.owners.create')->middleware('role:director|gerente|administrador');
     Route::get('owners/{id}/edit', [OwnerController::class,'edit'])->name('settings.owners.edit')->middleware('role:director|gerente|administrador');

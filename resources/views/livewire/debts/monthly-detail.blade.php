@@ -148,7 +148,8 @@
                           {{-- Exonerado (input) --}}
                           <div class="flex-item flex-item-md">
                               <label class="form-label mb-1">Exonerado (S/)</label>
-                              <input type="number" step="0.01"
+                              <input type="text" inputmode="decimal"
+                                     name="debt_exonerate" autocomplete="on"
                                      class="form-control form-control-sm text-end @error('exonerateInput') is-invalid @enderror"
                                      style="background-color: yellow;"
                                      wire:model.live.debounce.400ms="exonerateInput">
@@ -160,7 +161,8 @@
                           {{-- Amortización (oculto legacy) --}}
                           <div class="d-none">
                               <label class="form-label mb-1">Amortización (S/)</label>
-                              <input type="number" step="0.01"
+                              <input type="text" inputmode="decimal"
+                                     name="debt_amortize" autocomplete="on"
                                      class="form-control form-control-sm text-end @error('amortizeInput') is-invalid @enderror"
                                      wire:model.live.debounce.400ms="amortizeInput">
                               @error('amortizeInput')

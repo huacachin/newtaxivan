@@ -5,6 +5,7 @@ namespace App\Livewire\Departures;
 use App\Models\Departure;
 use App\Models\Headquarter;
 use App\Models\Vehicle;
+use App\Traits\NormalizesDecimals;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,8 @@ use Livewire\Component;
 
 class EditDeparture extends Component
 {
+    use NormalizesDecimals;
+
     // ==============================
     // Identificador del registro a editar
     // ==============================
@@ -30,6 +33,8 @@ class EditDeparture extends Component
     public ?float  $passage = 0;
 
     public ?string $hour = null;
+    public array $passageSuggestions   = [];
+    public array $passengerSuggestions = [];
     public ?string $latitude = null;
     public ?string $longitude = null;
 
@@ -157,6 +162,7 @@ class EditDeparture extends Component
 
         // Cargar los datos del registro a editar
         $this->loadRowOrAbort();
+        $this->recomputeSuggestions();
     }
 
     /**
@@ -214,6 +220,60 @@ class EditDeparture extends Component
         } else {
             $this->plateExists = true;
         }
+        $this->recomputeSuggestions();
+    }
+
+    public function updatedHeadquarterId($value): void
+    {
+        $this->recomputeSuggestions();
+    }
+
+    /**
+     * Recalcula sugerencias de chips para pasaje y pasajeros.
+     */
+    protected function recomputeSuggestions(): void
+    {
+        $vehicle = null;
+        $plate = strtoupper(trim((string) $this->plate));
+        $plate = preg_replace('/\s+/', '', $plate);
+        if (strlen($plate) >= 6) {
+            $vehicle = Vehicle::whereRaw('UPPER(TRIM(plate)) = ?', [$plate])->first();
+        }
+
+        $since = now(config('app.timezone','America/Lima'))->subDays(90)->toDateString();
+
+        $passageQ = \DB::table('departures')->where('passage', '>', 0)->where('date', '>=', $since);
+        if ($vehicle?->id) {
+            $passageQ->where('vehicle_id', $vehicle->id);
+        } elseif ($this->headquarter_id) {
+            $passageQ->where('headquarter_id', $this->headquarter_id);
+        }
+        $this->passageSuggestions = $passageQ
+            ->select('passage', \DB::raw('COUNT(*) as c'))
+            ->groupBy('passage')->orderByDesc('c')->limit(3)
+            ->pluck('passage')
+            ->map(fn ($v) => number_format((float) $v, 2, '.', ''))
+            ->values()->all();
+
+        $derived = [];
+        if ($vehicle && $vehicle->seats > 0) {
+            $derived = collect([$vehicle->seats, $vehicle->seats - 1, $vehicle->seats - 2])
+                ->filter(fn ($v) => $v >= 1)->map(fn ($v) => (string) (int) $v)
+                ->unique()->values()->all();
+        }
+        $passQ = \DB::table('departures')->where('passenger', '>', 0)->where('date', '>=', $since);
+        if ($vehicle?->id) {
+            $passQ->where('vehicle_id', $vehicle->id);
+        } elseif ($this->headquarter_id) {
+            $passQ->where('headquarter_id', $this->headquarter_id);
+        }
+        $hist = $passQ
+            ->select('passenger', \DB::raw('COUNT(*) as c'))
+            ->groupBy('passenger')->orderByDesc('c')->limit(3)
+            ->pluck('passenger')->map(fn ($v) => (string) (int) $v)->all();
+
+        $this->passengerSuggestions = collect($derived)->merge($hist)
+            ->unique()->values()->take(5)->all();
     }
 
     // Persistencia: actualizar (misma lógica del modal de editar)
@@ -221,6 +281,7 @@ class EditDeparture extends Component
     public function update(): void
     {
         try {
+            $this->normalizeDecimalProps(['price', 'passenger', 'passage']);
             $this->validate();
             if (!$this->depId) return;
 

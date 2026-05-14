@@ -111,10 +111,27 @@
                         <div class="col-md-auto">
                             <div class="mb-3">
                                 <label class="form-label">Monto (S/)</label>
-                                <input type="number" step="0.01" min="0.01" class="form-control form-control-sm"
-                                       wire:model.defer="amount"
-                                       @if($type_form !== 'DEUDA' && !is_null($detected_cost)) readonly @endif
-                                       inputmode="decimal" placeholder="0.00">
+                                <div x-data="numericChips({
+                                    storageKey: 'payments.amount',
+                                    server: () => $wire.amountSuggestions,
+                                    decimals: 2
+                                })">
+                                    <input type="text" inputmode="decimal" class="form-control form-control-sm"
+                                           x-ref="input"
+                                           name="payment_amount" autocomplete="on"
+                                           wire:model.defer="amount"
+                                           @if($type_form !== 'DEUDA' && !is_null($detected_cost)) readonly @endif
+                                           placeholder="0.00">
+                                    @if($type_form === 'DEUDA' || is_null($detected_cost))
+                                        <div class="num-chips" x-show="suggestions.length" x-cloak>
+                                            <template x-for="(s, i) in suggestions" :key="s.value">
+                                                <button type="button" :class="badgeClass(s.source)"
+                                                        :title="`${s.hint} (Alt+${i+1})`"
+                                                        @click="pick(s.value)" x-text="formatted(s.value)"></button>
+                                            </template>
+                                        </div>
+                                    @endif
+                                </div>
                                 @error('amount') <span class="title-modules">{{ $message }}</span> @enderror
 
                                 @if($type_form === 'DEUDA')

@@ -12,6 +12,7 @@
     'settings.drivers.edit',
     'settings.vehicles.create',
     'settings.vehicles.edit',
+    'settings.vehicles.expiration',
     'departures.edit'
 ]))
     <script src="{{ asset('assets/js/jquery-3.6.3.min.js') }}"></script>

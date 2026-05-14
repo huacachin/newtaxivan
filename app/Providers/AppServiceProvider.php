@@ -41,10 +41,17 @@ class AppServiceProvider extends ServiceProvider
         View::composer('layout.header', function ($view) {
             // Cachea 60s para no pegar a DB en cada request
             $alerts = Cache::remember('vehicle_expiring_alerts', 60, function () {
+                $today = now(config('app.timezone', 'America/Lima'))->toDateString();
+
                 return Vehicle::query()
-                    ->select('id','plate','soat_date','technical_review','certificate_date')
+                    ->select('id','plate','soat_date','technical_review','certificate_date','status','termination_date')
+                    ->where('status', 'active')
+                    ->where(function ($w) use ($today) {
+                        $w->whereNull('termination_date')
+                          ->orWhere('termination_date', '>', $today);
+                    })
                     ->get()
-                    ->flatMap(fn($v) => $v->expiringAlerts())   // une SD/RT/CD por vehículo
+                    ->flatMap(fn($v) => $v->expiringAlerts())   // une ST/RT/CD por vehículo
                     ->sortBy('days')                            // los más urgentes primero
                     ->values()
                     ->all();

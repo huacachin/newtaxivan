@@ -6,6 +6,7 @@ use App\Models\CostPerPlateDay;
 use App\Models\Headquarter;
 use App\Models\Payment;
 use App\Models\Vehicle;
+use App\Traits\NormalizesDecimals;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +16,8 @@ use Livewire\Component;
 
 class EditPayment extends Component
 {
+    use NormalizesDecimals;
+
     // ===== Identificador =====
     public ?int $paymentId = null;
 
@@ -33,6 +36,9 @@ class EditPayment extends Component
     // Auxiliares
     public ?float $detected_cost = null;  // costo del día (PAGO/RETRASO)
     public ?float $pending_debt = null;   // deuda pendiente (mes anterior)
+
+    // Chips de sugerencias para amount
+    public array $amountSuggestions = [];
 
     // Sedes para el select
     public $headquarters = [];
@@ -169,6 +175,7 @@ class EditPayment extends Component
         $this->loadRowOrAbort();           // Carga el registro a editar
         $this->recalcPendingDebt();        // Calcula deuda visible
         $this->prefillAmountFromCost();    // Calcula costo si aplica
+        $this->recomputeAmountSuggestions();
     }
 
     private function loadRowOrAbort(): void
@@ -401,6 +408,27 @@ class EditPayment extends Component
         $this->plate = strtoupper($this->plate ?? '');
         $this->prefillAmountFromCost();
         $this->recalcPendingDebt();
+        $this->recomputeAmountSuggestions();
+    }
+
+    protected function recomputeAmountSuggestions(): void
+    {
+        $plate = preg_replace('/\s+/', '', strtoupper(trim((string) $this->plate)));
+        if (strlen($plate) < 6) { $this->amountSuggestions = []; return; }
+
+        $vehicle = Vehicle::whereRaw('UPPER(TRIM(plate)) = ?', [$plate])->first();
+        if (!$vehicle) { $this->amountSuggestions = []; return; }
+
+        $since = now(config('app.timezone','America/Lima'))->subDays(180)->toDateString();
+        $this->amountSuggestions = \DB::table('payments')
+            ->where('vehicle_id', $vehicle->id)
+            ->where('amount', '>', 0)
+            ->where('date_payment', '>=', $since)
+            ->select('amount', \DB::raw('COUNT(*) as c'))
+            ->groupBy('amount')->orderByDesc('c')->limit(3)
+            ->pluck('amount')
+            ->map(fn ($v) => number_format((float) $v, 2, '.', ''))
+            ->values()->all();
     }
     public function updated($name, $value): void
     {
@@ -455,6 +483,7 @@ class EditPayment extends Component
 
         $this->recalcPendingDebt();
         $this->prefillAmountFromCost();
+        $this->normalizeDecimalProps(['amount']);
         $this->validate();
         $this->validateBusinessCommon();
 
