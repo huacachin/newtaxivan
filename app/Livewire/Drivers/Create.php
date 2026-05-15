@@ -212,6 +212,12 @@ class Create extends Component
         $this->mount();
     }
 
+    /** Limpia la imagen recién subida (aún no guardada). */
+    public function removeNewImage(): void
+    {
+        $this->image_file = null;
+    }
+
     protected function calculateAge(?string $date): ?int
     {
         if (empty($date)) {

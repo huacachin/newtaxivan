@@ -249,13 +249,48 @@
         <input type="file" class="form-control form-control-sm" wire:model="image_file" accept="image/*" capture="environment">
         @error('image_file') <span class="title-modules">{{ $message }}</span> @enderror
 
-        {{-- Preview de imagen nueva --}}
+        {{-- Preview de imagen nueva (no guardada) --}}
         @if($image_file)
-            <img src="{{ $image_file->temporaryUrl() }}" alt="Preview" class="mt-2 rounded" style="max-height:80px; cursor:pointer"
-                 onclick="window.open(this.src, '_blank')">
+            <div class="position-relative d-inline-block mt-2" style="max-height:80px">
+                <img src="{{ $image_file->temporaryUrl() }}" alt="Preview" class="rounded"
+                     style="max-height:80px; cursor:pointer"
+                     onclick="openImagePreview(this.src)"
+                     title="Click para ampliar">
+                <button type="button"
+                        class="btn btn-sm btn-danger rounded-circle position-absolute top-0 end-0 p-0 d-flex align-items-center justify-content-center"
+                        style="width:22px; height:22px; transform: translate(50%, -50%);"
+                        wire:click="removeNewImage"
+                        title="Quitar foto">
+                    <i class="ti ti-x" style="font-size:14px"></i>
+                </button>
+            </div>
         @elseif(isset($existing_image) && $existing_image)
-            <img src="{{ asset('storage/' . $existing_image) }}" alt="Foto conductor" class="mt-2 rounded" style="max-height:80px; cursor:pointer"
-                 onclick="window.open(this.src, '_blank')">
+            <div class="position-relative d-inline-block mt-2" style="max-height:80px">
+                <img src="{{ asset('storage/' . $existing_image) }}" alt="Foto conductor" class="rounded"
+                     style="max-height:80px; cursor:pointer"
+                     onclick="openImagePreview(this.src)"
+                     title="Click para ampliar">
+                <button type="button"
+                        class="btn btn-sm btn-danger rounded-circle position-absolute top-0 end-0 p-0 d-flex align-items-center justify-content-center"
+                        style="width:22px; height:22px; transform: translate(50%, -50%);"
+                        onclick="confirmRemoveExistingImage()"
+                        title="Eliminar foto guardada">
+                    <i class="ti ti-x" style="font-size:14px"></i>
+                </button>
+            </div>
         @endif
+    </div>
+</div>
+
+{{-- Lightbox compartido para preview ampliado --}}
+<div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-hidden="true" wire:ignore>
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-fullscreen-sm-down">
+        <div class="modal-content bg-transparent border-0 shadow-none">
+            <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3"
+                    data-bs-dismiss="modal" aria-label="Cerrar" style="z-index:10"></button>
+            <div class="modal-body text-center p-0 d-flex align-items-center justify-content-center">
+                <img id="imagePreviewModalImg" src="" alt="" class="img-fluid rounded shadow-lg" style="max-height:90vh">
+            </div>
+        </div>
     </div>
 </div>

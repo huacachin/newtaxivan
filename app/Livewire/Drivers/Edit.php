@@ -4,6 +4,7 @@ namespace App\Livewire\Drivers;
 
 use App\Models\Driver;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -172,6 +173,25 @@ class Edit extends Component
     }
 
     // ---------------------------------------------------------
+
+    /** Limpia la imagen recién subida (aún no guardada). */
+    public function removeNewImage(): void
+    {
+        $this->image_file = null;
+    }
+
+    /** Elimina la imagen ya guardada del storage y del DB. */
+    #[On('remove_existing_image')]
+    public function removeExistingImage(): void
+    {
+        if (empty($this->existing_image)) return;
+
+        Storage::disk('public')->delete($this->existing_image);
+        $this->driver->update(['image_path' => null]);
+        $this->existing_image = null;
+
+        $this->dispatch('successAlert', ['message' => 'Foto eliminada correctamente.']);
+    }
 
     public function questionDelete(int $id): void
     {
