@@ -101,10 +101,10 @@ class Edit extends Component
         try {
             $this->validate();
 
+            // 'document_type' y 'document_number' se omiten intencionalmente:
+            // campos bloqueados en edicion para preservar la identidad del propietario.
             $this->owner->update([
                 'name'                     => $this->name,
-                'document_type'            => $this->document_type,
-                'document_number'          => $this->document_number,
                 'document_expiration_date' => $this->document_expiration_date,
                 'birthdate'                => $this->birthdate,
                 'address'                  => $this->address,

@@ -1,9 +1,10 @@
 {{-- resources/views/livewire/vehicles/_form.blade.php --}}
+@php $isEdit = isset($vehicle) && ($vehicle?->exists ?? false); @endphp
 <div class="row g-3">
     {{-- Placa --}}
     <div class="col-6 col-md-2">
-        <label for="plate" class="form-label">Placa</label>
-        <input id="plate" type="text" class="form-control form-control-sm" placeholder="Ingresar placa" wire:model="plate" autocomplete="off">
+        <label for="plate" class="form-label {{ $isEdit ? 'text-muted' : '' }}">Placa</label>
+        <input id="plate" type="text" class="form-control form-control-sm" placeholder="Ingresar placa" wire:model="plate" autocomplete="off" @if($isEdit) disabled @endif>
         @error('plate') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 

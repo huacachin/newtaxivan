@@ -37,10 +37,12 @@
     $highlightExpiration = $highlightExpiration ?? false;
 @endphp
 
+@php $isEdit = isset($driver) && ($driver?->exists ?? false); @endphp
+
 <div class="row g-3">
     <div class="col-auto">
-        <label class="form-label">N° Documento</label>
-        <input type="text" class="form-control form-control-sm" placeholder="DNI" wire:model="document_number" @if(!($highlightExpiration ?? false)) wire:change="checkDocumentNumber" @endif autocomplete="off">
+        <label class="form-label {{ $isEdit ? 'text-muted' : '' }}">N° Documento</label>
+        <input type="text" class="form-control form-control-sm" placeholder="DNI" wire:model="document_number" @if(!($highlightExpiration ?? false) && !$isEdit) wire:change="checkDocumentNumber" @endif autocomplete="off" @if($isEdit) disabled @endif>
         @error('document_number') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 

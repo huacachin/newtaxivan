@@ -146,9 +146,10 @@ class Edit extends Component
 
             $this->validate();
 
+            // 'plate' se omite intencionalmente: campo bloqueado en edicion
+            // para preservar referencias en otras tablas (legacy_plate, etc.).
             $this->vehicle->update([
                 "sort_order" => $this->sort_order,
-                "plate" => $this->plate,
                 "headquarters" => $this->headquarter,
                 "entry_date" => $this->entry_date,
                 "termination_date" => $this->termination_date,

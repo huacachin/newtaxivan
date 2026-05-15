@@ -3,12 +3,13 @@
 @php
     // Si no viene inyectada, por defecto no resaltamos expiraciones (Create)
     $highlightExpiration = $highlightExpiration ?? false;
+    $isEdit = isset($owner) && ($owner?->exists ?? false);
 @endphp
 
 <div class="row g-3">
     <div class="col-auto">
-        <label for="document_type" class="form-label">Tipo de documento</label>
-        <select id="document_type" class="form-select form-select-sm" wire:model="document_type">
+        <label for="document_type" class="form-label {{ $isEdit ? 'text-muted' : '' }}">Tipo de documento</label>
+        <select id="document_type" class="form-select form-select-sm" wire:model="document_type" @if($isEdit) disabled @endif>
             <option value="">Seleccionar</option>
             <option value="dni">DNI</option>
             <option value="ruc">RUC</option>
@@ -17,8 +18,8 @@
     </div>
 
     <div class="col-auto">
-        <label for="document_number" class="form-label">Número de documento</label>
-        <input id="document_number" type="text" class="form-control form-control-sm" placeholder="Documento" wire:model="document_number" @if(!($highlightExpiration ?? false)) wire:change="checkDocumentNumber" @endif autocomplete="off">
+        <label for="document_number" class="form-label {{ $isEdit ? 'text-muted' : '' }}">Número de documento</label>
+        <input id="document_number" type="text" class="form-control form-control-sm" placeholder="Documento" wire:model="document_number" @if(!($highlightExpiration ?? false) && !$isEdit) wire:change="checkDocumentNumber" @endif autocomplete="off" @if($isEdit) disabled @endif>
         @error('document_number') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 

@@ -214,9 +214,10 @@ class Edit extends Component
         try {
             $this->validate();
 
+            // 'document_number' se omite intencionalmente: campo bloqueado en
+            // edicion para preservar la identidad del conductor.
             $payload = [
                 "name"                           => $this->name,
-                "document_number"                => $this->document_number,
                 "document_expiration_date"       => $this->document_expiration_date,
                 "birthdate"                      => $this->birthdate,
                 "address"                        => $this->address,
