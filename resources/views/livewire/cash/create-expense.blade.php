@@ -121,20 +121,22 @@
                                     </select>
                                     @error('headquarter_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 @else
-                                    <div class="input-group input-group-sm reason-tpl-wrap">
-                                        <input type="text" class="form-control @error('detail') is-invalid @enderror"
-                                               placeholder="Descripcion breve"
-                                               wire:model.defer="detail">
-                                        @if(!empty($reasonTemplates))
-                                            <select class="form-select reason-template-select" wire:ignore wire:key="tpl-select-create-expense">
-                                                <option value=""></option>
-                                                @foreach($reasonTemplates as $tpl)
-                                                    <option value="{{ $tpl }}">{{ \Illuminate\Support\Str::limit($tpl, 60) }}</option>
-                                                @endforeach
-                                            </select>
-                                        @endif
+                                    <div class="reason-input-wrap">
+                                        <select class="form-select form-select-sm reason-input-select @error('detail') is-invalid @enderror"
+                                                wire:ignore wire:key="reason-create-expense">
+                                            <option value=""></option>
+                                            @if($detail)
+                                                <option value="{{ $detail }}" selected>{{ $detail }}</option>
+                                            @endif
+                                            @foreach($reasonTemplates as $tpl)
+                                                @if($tpl !== $detail)
+                                                    <option value="{{ $tpl }}" data-template="1">{{ \Illuminate\Support\Str::limit($tpl, 60) }}</option>
+                                                @endif
+                                            @endforeach
+                                        </select>
+                                        <input type="hidden" data-reason-sync wire:model.defer="detail">
+                                        @error('detail') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                                     </div>
-                                    @error('detail') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                                 @endif
                             </div>
                         </div>

@@ -124,6 +124,7 @@ class EditIncome extends Component
         $this->detail = (string) $this->reasonModalText;
         $this->reasonModalText = null;
         $this->dispatch('modal-close', ['name' => 'reasonTemplateModal']);
+        $this->dispatch('reason-detail-updated', detail: $this->detail);
     }
 
     protected function recomputeAmountSuggestions(): void

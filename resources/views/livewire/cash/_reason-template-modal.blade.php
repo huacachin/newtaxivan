@@ -1,9 +1,7 @@
-{{-- Modal compartido para editar una plantilla de motivo antes de insertarla
-     en el campo "detail" (Motivo). Lo incluyen CreateIncome/EditIncome/
-     CreateExpense/EditExpense. Cada componente expone:
-     - public ?string $reasonModalText
-     - acceptReasonModal() : copia el text a detail y cierra el modal
-     El partial NO declara estado, solo el markup. --}}
+{{-- Modal compartido para editar una plantilla larga antes de insertarla
+     en el campo "Motivo" (detail). El campo Motivo en cada vista es un
+     unico Select2 con tags+templates; al elegir una plantilla se abre
+     este modal para editar el texto antes de aceptar. --}}
 <div class="modal fade" id="reasonTemplateModal" tabindex="-1" wire:ignore.self>
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
@@ -30,20 +28,31 @@
 @pushOnce('styles')
     <link rel="stylesheet" href="{{ asset('assets/vendor/select/select2.min.css') }}">
     <style>
-        /* Match Bootstrap form-control-sm en input-group */
-        .reason-tpl-wrap .select2-container .select2-selection--single {
+        /* Select2 visualmente equivalente a form-control-sm */
+        .reason-input-wrap .select2-container .select2-selection--single {
             height: 31px;
             border: 1px solid #ced4da;
-            border-top-left-radius: 0;
-            border-bottom-left-radius: 0;
+            border-radius: 0.25rem;
         }
-        .reason-tpl-wrap .select2-container--default .select2-selection--single .select2-selection__rendered {
+        .reason-input-wrap .select2-container--default .select2-selection--single .select2-selection__rendered {
             line-height: 29px;
-            padding-left: 8px;
-            font-size: 12px;
+            padding-left: 12px;
+            font-size: 14px;
+            color: #212529;
         }
-        .reason-tpl-wrap .select2-container--default .select2-selection--single .select2-selection__arrow {
+        .reason-input-wrap .select2-container--default .select2-selection--single .select2-selection__arrow {
             height: 29px;
+        }
+        .reason-input-wrap .select2-dropdown .select2-search__field {
+            font-size: 13px;
+        }
+        .reason-input-wrap .select2-results__option {
+            font-size: 13px;
+            white-space: normal;
+            line-height: 1.3;
+        }
+        .reason-input-wrap .is-invalid + .select2-container .select2-selection--single {
+            border-color: #dc3545;
         }
     </style>
 @endPushOnce
@@ -52,45 +61,93 @@
     <script src="{{ asset('assets/vendor/select/select2.min.js') }}"></script>
     <script>
         (function () {
-            function initReasonTemplateSelects(root) {
+            function syncHidden($sel, val) {
+                var $hidden = $sel.closest('.reason-input-wrap').find('[data-reason-sync]');
+                if ($hidden.length) {
+                    var input = $hidden[0];
+                    input.value = val == null ? '' : val;
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            }
+
+            function initReasonInputSelects(root) {
                 if (typeof $ === 'undefined' || !$.fn.select2) return;
                 var $scope = root ? $(root) : $(document);
-                $scope.find('select.reason-template-select').each(function () {
-                    var $el = $(this);
-                    if ($el.data('select2')) return; // ya inicializado
-                    $el.select2({
-                        placeholder: 'Buscar plantilla…',
+                $scope.find('select.reason-input-select').each(function () {
+                    var $sel = $(this);
+                    if ($sel.data('select2')) return;
+
+                    $sel.select2({
+                        tags: true,
+                        placeholder: 'Tipear motivo o seleccionar plantilla…',
                         allowClear: true,
-                        width: '130px',
-                        dropdownAutoWidth: true,
-                        dropdownParent: $el.closest('.input-group').length ? $el.closest('.input-group') : $(document.body),
+                        width: '100%',
+                        dropdownParent: $sel.closest('.reason-input-wrap'),
+                        createTag: function (params) {
+                            var term = $.trim(params.term);
+                            return term ? { id: term, text: term, newTag: true } : null;
+                        },
                     });
-                    $el.on('select2:select', function (e) {
-                        var val = e.params.data.id;
-                        if (!val) return;
-                        var $component = $el.closest('[wire\\:id]');
-                        var wireId = $component.attr('wire:id');
-                        if (window.Livewire && wireId) {
-                            var c = window.Livewire.find(wireId);
-                            if (c) c.call('openReasonModal', val);
+
+                    // Sync inicial
+                    syncHidden($sel, $sel.val());
+
+                    $sel.on('select2:select', function (e) {
+                        var data = e.params.data;
+                        var val = data.id;
+                        if (val === null || val === undefined) return;
+
+                        var isTemplate = !data.newTag &&
+                            $sel.find('option[value="' + (window.CSS && CSS.escape ? CSS.escape(val) : val.replace(/"/g, '\\"')) + '"]').data('template') === 1;
+
+                        if (isTemplate) {
+                            // Plantilla larga: abrir modal de edicion. NO sync aun;
+                            // se sincronizara tras acceptReasonModal via evento.
+                            var wireId = $sel.closest('[wire\\:id]').attr('wire:id');
+                            if (window.Livewire && wireId) {
+                                var c = window.Livewire.find(wireId);
+                                if (c) c.call('openReasonModal', val);
+                            }
+                        } else {
+                            // Tag nuevo o seleccion directa: sync inmediato
+                            syncHidden($sel, val);
                         }
-                        // reset el select para que pueda reseleccionar la misma plantilla
-                        setTimeout(function () {
-                            $el.val('').trigger('change.select2');
-                        }, 50);
+                    });
+
+                    $sel.on('select2:clear', function () {
+                        syncHidden($sel, '');
                     });
                 });
             }
 
+            function onReasonDetailUpdated(payload) {
+                var detail = (payload && (payload.detail ?? (Array.isArray(payload) ? payload[0]?.detail : null))) || '';
+                document.querySelectorAll('select.reason-input-select').forEach(function (sel) {
+                    var $sel = $(sel);
+                    var escVal = (window.CSS && CSS.escape ? CSS.escape(detail) : detail.replace(/"/g, '\\"'));
+                    if (!$sel.find('option[value="' + escVal + '"]').length) {
+                        $sel.append(new Option(detail, detail, true, true));
+                    }
+                    $sel.val(detail).trigger('change.select2');
+                    syncHidden($sel, detail);
+                });
+            }
+
             document.addEventListener('DOMContentLoaded', function () {
-                initReasonTemplateSelects();
+                initReasonInputSelects();
             });
             document.addEventListener('livewire:initialized', function () {
-                initReasonTemplateSelects();
-                if (window.Livewire && Livewire.hook) {
-                    Livewire.hook('morph.added', function (ref) {
-                        if (ref && ref.el) initReasonTemplateSelects(ref.el);
-                    });
+                initReasonInputSelects();
+                if (window.Livewire) {
+                    if (Livewire.hook) {
+                        Livewire.hook('morph.added', function (ref) {
+                            if (ref && ref.el) initReasonInputSelects(ref.el);
+                        });
+                    }
+                    if (Livewire.on) {
+                        Livewire.on('reason-detail-updated', onReasonDetailUpdated);
+                    }
                 }
             });
         })();
