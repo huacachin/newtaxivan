@@ -76,7 +76,7 @@ class Create extends Component
             'credential_expiration_date' => 'nullable|date',
             'credential_municipality' => 'nullable|string|max:255',
             'details' => 'nullable|string|max:1000',
-            'image_file' => 'nullable|image|max:3072',
+            'image_file' => 'nullable|image|max:5120',
         ];
     }
 

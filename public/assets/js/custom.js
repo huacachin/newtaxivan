@@ -144,6 +144,97 @@ function alertError() {
 }
 
 // =========================================================
+// Compresión client-side de imágenes con Canvas API.
+//
+// Uso desde Blade: añadir el atributo `data-compress-image` al <input type="file">.
+// Antes de que Livewire suba el archivo, se redimensiona a max 1920px de lado
+// y se re-comprime a JPEG calidad 85. Una foto de 8MB pasa a ~500-800KB.
+// =========================================================
+
+function _compressImageFile(file, maxSide, quality) {
+    return new Promise(function (resolve, reject) {
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            var img = new Image();
+            img.onload = function () {
+                var w = img.width, h = img.height;
+                if (w > h && w > maxSide)      { h = h * (maxSide / w); w = maxSide; }
+                else if (h >= w && h > maxSide){ w = w * (maxSide / h); h = maxSide; }
+                var canvas = document.createElement('canvas');
+                canvas.width = Math.round(w);
+                canvas.height = Math.round(h);
+                var ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                canvas.toBlob(function (blob) {
+                    if (!blob) return reject(new Error('toBlob falló'));
+                    resolve(blob);
+                }, 'image/jpeg', quality);
+            };
+            img.onerror = reject;
+            img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+function _renameToJpeg(name) {
+    return (name || 'photo').replace(/\.[^.]+$/, '') + '.jpg';
+}
+
+function attachImageCompression(input) {
+    if (!input || input.dataset._compressBound === '1') return;
+    input.dataset._compressBound = '1';
+
+    var maxSide = parseInt(input.dataset.compressMax || '1920', 10);
+    var quality = parseFloat(input.dataset.compressQuality || '0.85');
+
+    input.addEventListener('change', function (event) {
+        // Reentrada: nuestro propio re-dispatch ya viene comprimido.
+        if (input.dataset._compressed === '1') {
+            delete input.dataset._compressed;
+            return;
+        }
+
+        var file = input.files && input.files[0];
+        if (!file || !/^image\//.test(file.type)) return;
+
+        // Detener listeners en burbuja (Livewire) hasta tener el blob comprimido.
+        event.stopImmediatePropagation();
+
+        _compressImageFile(file, maxSide, quality).then(function (blob) {
+            var compressed = new File([blob], _renameToJpeg(file.name), {
+                type: 'image/jpeg',
+                lastModified: Date.now()
+            });
+            var dt = new DataTransfer();
+            dt.items.add(compressed);
+            input.files = dt.files;
+            input.dataset._compressed = '1';
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        }).catch(function (err) {
+            console.warn('Compresión falló, subiendo archivo original:', err);
+            input.dataset._compressed = '1';
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+    }, true); // capture phase: corremos ANTES que el listener de Livewire
+}
+
+// Auto-bind al cargar la página y tras cada morph de Livewire.
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('input[type=file][data-compress-image]').forEach(attachImageCompression);
+});
+document.addEventListener('livewire:init', function () {
+    if (!window.Livewire || !Livewire.hook) return;
+    Livewire.hook('morph.added', function (ref) {
+        var el = ref && ref.el;
+        if (!el) return;
+        if (el.matches && el.matches('input[type=file][data-compress-image]')) attachImageCompression(el);
+        if (el.querySelectorAll) el.querySelectorAll('input[type=file][data-compress-image]').forEach(attachImageCompression);
+    });
+});
+
+// =========================================================
 // Lightbox: abre el modal #imagePreviewModal con la imagen ampliada.
 // Uso desde Blade: <img ... onclick="openImagePreview(this.src)">
 // =========================================================
