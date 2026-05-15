@@ -34,6 +34,37 @@
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
   }
 
+  // Variante "Apoyo" — vehículos con condition EX*. Más prominente: borde
+  // izquierdo ámbar, sutil tinte de fondo, header con anillo destacado.
+  &--support {
+    border-left: 4px solid #d97706;
+    background: linear-gradient(180deg, rgba(217, 119, 6, 0.05) 0%, #fff 18px);
+
+    .list-card__index {
+      background: rgba(217, 119, 6, 0.18);
+      color: #92400e;
+    }
+  }
+
+  // Pill "APOYO" destacado para el header de las cards de apoyo.
+  &__support-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: #d97706;
+    color: #fff;
+    line-height: 1;
+    box-shadow: 0 2px 4px rgba(217, 119, 6, 0.35);
+
+    i { font-size: 12px; }
+  }
+
   &__head {
     display: flex;
     justify-content: space-between;
