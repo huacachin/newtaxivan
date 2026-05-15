@@ -1,0 +1,183 @@
+// >>-- Vehicles mobile cards css start --<<
+//
+// Lista de vehículos como tarjetas en mobile (<768px). En desktop se usa
+// la tabla tradicional. Cada card resume: placa + badges de vencimiento,
+// marca/año, chips (condición, fuel, categoría, modalidad) y meta
+// (propietario, conductor, empresa, fecha cese si aplica).
+
+.vh-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.vh-cards__empty {
+  text-align: center;
+  padding: 24px 16px;
+  color: rgba(var(--secondary), 1);
+  font-size: 14px;
+  background: #fff;
+  border: 1px dashed rgba(var(--secondary), 0.3);
+  border-radius: 12px;
+}
+
+.vh-card {
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 14px;
+  padding: 14px 16px 12px;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+  transition: box-shadow 160ms ease, transform 160ms ease;
+
+  &:active {
+    transform: scale(0.99);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  }
+
+  &__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+
+  &__plate-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+
+  &__plate {
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: #0f172a;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+
+  &__badges {
+    display: inline-flex;
+    gap: 4px;
+    flex-wrap: wrap;
+
+    .badge {
+      font-size: 10px;
+      padding: 3px 6px;
+      letter-spacing: 0.04em;
+    }
+  }
+
+  &__edit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(0, 155, 220, 0.08);
+    color: #0369a1;
+    text-decoration: none;
+    flex-shrink: 0;
+    transition: background 140ms ease;
+
+    i { font-size: 18px; }
+
+    &:active { background: rgba(0, 155, 220, 0.18); }
+  }
+
+  &__title {
+    font-size: 0.92rem;
+    color: rgba(15, 23, 42, 0.7);
+    font-weight: 500;
+    margin-bottom: 10px;
+    line-height: 1.3;
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  &__meta {
+    list-style: none;
+    margin: 0;
+    padding: 10px 0 0;
+    border-top: 1px dashed rgba(15, 23, 42, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82rem;
+      line-height: 1.3;
+    }
+  }
+
+  &__meta-lbl {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: rgba(15, 23, 42, 0.55);
+    font-weight: 500;
+    flex-shrink: 0;
+
+    i { font-size: 14px; opacity: 0.8; }
+  }
+
+  &__meta-val {
+    color: #0f172a;
+    font-weight: 600;
+    text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+}
+
+// Chips genéricos (condición / fuel / class / type)
+.vh-chip {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.06);
+  color: rgba(15, 23, 42, 0.75);
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+
+  &--muted {
+    background: transparent;
+    border: 1px dashed rgba(15, 23, 42, 0.18);
+    color: rgba(15, 23, 42, 0.6);
+  }
+}
+
+// Chip de condición coloreado (DT / GN / EX)
+.vh-cond {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+
+  &--dt { background: rgba(34, 197, 94, 0.14);  color: #166534; }
+  &--gn { background: rgba(0, 155, 220, 0.14);   color: #0369a1; }
+  &--ex { background: rgba(217, 119, 6, 0.16);   color: #92400e; }
+}
+
+// >>-- Vehicles mobile cards css end --<<
