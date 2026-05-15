@@ -27,7 +27,7 @@
     <div class="card">
         <div class="card-body">
             <div class="row g-3">
-                <div class="col-6 col-md-3">
+                <div class="col-6 col-md-2">
                     <label class="form-label text-muted">Propietario</label>
                     <input type="text" class="form-control form-control-sm" value="{{ $owner->name }}" disabled>
                 </div>
@@ -37,7 +37,7 @@
                     <input type="text" class="form-control form-control-sm" value="{{ $meta['label'] }}" disabled>
                 </div>
 
-                <div class="col-6 col-md-3">
+                <div class="col-6 col-md-4">
                     <label class="form-label text-muted">
                         Vencimiento actual
                         @switch($meta['status'])
@@ -62,7 +62,7 @@
 
                 <div class="col-6 col-md-3">
                     <label for="expiration_value" class="form-label">Nueva fecha de vencimiento <span class="text-danger">*</span></label>
-                    <input id="expiration_value" type="text" class="form-control form-control-sm" wire:model="value" autocomplete="off" placeholder="aaaa-mm-dd">
+                    <input id="expiration_value" type="text" class="form-control form-control-sm" style="background-color: yellow;" wire:model="value" autocomplete="off" placeholder="aaaa-mm-dd">
                     @error('value') <span class="title-modules">{{ $message }}</span> @enderror
                 </div>
             </div>
