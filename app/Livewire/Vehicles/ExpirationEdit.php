@@ -56,6 +56,8 @@ class ExpirationEdit extends Component
         $this->dispatch('successAlert', [
             'message' => self::FIELDS[$this->field]['label'] . ' de ' . $this->vehicle->plate . ' actualizado correctamente.'
         ]);
+
+        $this->dispatch('expiration-saved');
     }
 
     public function getMetaProperty(): array
