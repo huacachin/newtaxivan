@@ -18,7 +18,7 @@
                     </a>
                 </li>
                 <li class="d-flex active">
-                    <a href="#" class="f-s-14">{{ $meta['label'] }}</a>
+                    <span class="f-s-14">{{ $meta['label'] }}</span>
                 </li>
             </ul>
         </div>

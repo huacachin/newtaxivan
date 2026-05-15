@@ -111,6 +111,13 @@ header {
       }
       .head-icon{
         padding:0px 0.5rem;
+
+        // Reset cuando el trigger es <button> en lugar de <a>
+        background: transparent;
+        border: 0;
+        line-height: 1;
+        &:focus { outline: none; box-shadow: none; }
+
         &:hover{
               animation: pulse 0.5s ease-in-out;
         }

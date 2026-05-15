@@ -283,29 +283,50 @@
 
   &__foot {
     border-top: 1px solid var(--notif-border);
-    padding: 12px 14px;
+    padding: 10px 16px;
     background: var(--notif-surface);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
 
-    // Override del btn-primary del template para usar el color del sidebar.
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      background: var(--notif-head);
-      border-color: var(--notif-head);
-      color: #fff;
+  &__foot-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.72rem;
+    color: var(--notif-muted);
+    line-height: 1.3;
+    min-width: 0;
 
-      i { transition: transform 160ms ease; }
+    i {
+      font-size: 0.95rem;
+      color: var(--notif-accent);
+      flex-shrink: 0;
+    }
+  }
 
-      &:hover,
-      &:focus,
-      &:active {
-        background: var(--notif-head-hover) !important;
-        border-color: var(--notif-head-hover) !important;
-        color: #fff !important;
-        i { transform: translateX(3px); }
-      }
+  &__foot-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--notif-text);
+    text-decoration: none;
+    letter-spacing: 0.02em;
+    padding: 4px 0;
+    white-space: nowrap;
+    border-bottom: 1px solid transparent;
+    transition: color 140ms ease, border-color 140ms ease;
+
+    i { font-size: 0.95rem; transition: transform 140ms ease; }
+
+    &:hover {
+      color: var(--notif-accent);
+      border-bottom-color: var(--notif-accent);
+      i { transform: translateX(3px); }
     }
   }
 }

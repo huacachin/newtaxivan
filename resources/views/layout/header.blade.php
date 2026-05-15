@@ -15,10 +15,10 @@
                             <div class="col-6 d-flex align-items-center justify-content-end header-right">
                                 <ul class="d-flex align-items-center">
                                     <li class="header-search">
-                                        <a href="#" class="d-block head-icon" role=button data-bs-toggle="offcanvas"
-                                           data-bs-target="#offcanvasTop" aria-controls="offcanvasTop">
+                                        <button type="button" class="d-block head-icon" data-bs-toggle="offcanvas"
+                                                data-bs-target="#offcanvasTop" aria-controls="offcanvasTop" aria-label="Buscar">
                                             <i class="ti ti-search"></i>
-                                        </a>
+                                        </button>
 
                                         <div class="offcanvas offcanvas-top search-canvas" tabindex="-1"
                                              id="offcanvasTop">
@@ -52,9 +52,10 @@
 
                                     <li class="header-notification">
                                         <div class="flex-shrink-0 app-dropdown">
-                                            <a href="#" class="d-block head-icon position-relative"
-                                               data-bs-toggle="dropdown"
-                                               data-bs-auto-close="outside" aria-expanded="false">
+                                            <button type="button" class="d-block head-icon position-relative"
+                                                    data-bs-toggle="dropdown"
+                                                    data-bs-auto-close="outside" aria-expanded="false"
+                                                    aria-label="Notificaciones">
 
                                                 <i class="ti ti-bell"></i>
 
@@ -63,12 +64,7 @@
                                                     <span
                                                         class="position-absolute translate-middle p-1 bg-danger border border-light rounded-circle animate__animated animate__fadeIn animate__infinite animate__slower"></span>
                                                 @endif
-
-                                                {{-- Contador (opcional). Descomenta si quieres ver el número --}}
-                                                {{-- <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                                    {{ $vehicleExpCount ?? 0 }}
-                                                  </span> --}}
-                                            </a>
+                                            </button>
 
                                             <div class="dropdown-menu dropdown-menu-end notif-panel">
                                                 <div class="notif-panel__shell">
@@ -143,8 +139,16 @@
                                                     </div>
 
                                                     <div class="notif-panel__foot">
-                                                        <a href="{{ route('settings.vehicles.index') }}" class="btn btn-primary w-100">
-                                                            Ver todos los vehículos <i class="ti ti-arrow-right"></i>
+                                                        <span class="notif-panel__foot-hint">
+                                                            <i class="ti ti-info-circle"></i>
+                                                            @if(($vehicleExpCount ?? 0) > 0)
+                                                                Click en una placa para actualizar el vencimiento
+                                                            @else
+                                                                Sin alertas activas
+                                                            @endif
+                                                        </span>
+                                                        <a href="{{ route('settings.vehicles.index') }}" class="notif-panel__foot-link">
+                                                            Ver vehículos <i class="ti ti-arrow-narrow-right"></i>
                                                         </a>
                                                     </div>
                                                 </div>
@@ -154,11 +158,11 @@
 
                                     <li class="header-profile">
                                         <div class="flex-shrink-0 dropdown">
-                                            <a href="#" class="d-block head-icon pe-0" data-bs-toggle="dropdown"
-                                               aria-expanded="false">
-                                                <img src="{{auth()->user()->avatar_url}}" alt="mdo"
+                                            <button type="button" class="d-block head-icon pe-0" data-bs-toggle="dropdown"
+                                                    aria-expanded="false" aria-label="Perfil">
+                                                <img src="{{auth()->user()->avatar_url}}" alt=""
                                                      class="rounded-circle h-35 w-35">
-                                            </a>
+                                            </button>
                                             <ul class="dropdown-menu dropdown-menu-end header-card border-0 px-2">
                                                 <li class="dropdown-item d-flex align-items-center p-2">
                                   <span class="h-35 w-35 d-flex-center b-r-50 position-relative">
