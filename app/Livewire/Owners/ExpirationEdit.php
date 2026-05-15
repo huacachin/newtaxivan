@@ -47,12 +47,9 @@ class ExpirationEdit extends Component
 
         Cache::forget('header_expiring_alerts');
 
-        session()->flash(
-            'owner_success',
-            self::FIELDS[$this->field]['label'] . ' de ' . $this->owner->name . ' actualizado correctamente.'
-        );
-
-        $this->redirectRoute('settings.owners.index');
+        $this->dispatch('successAlert', [
+            'message' => self::FIELDS[$this->field]['label'] . ' de ' . $this->owner->name . ' actualizado correctamente.'
+        ]);
     }
 
     public function getMetaProperty(): array

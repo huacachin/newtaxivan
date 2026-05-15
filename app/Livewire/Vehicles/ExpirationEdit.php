@@ -53,12 +53,9 @@ class ExpirationEdit extends Component
 
         Cache::forget('header_expiring_alerts');
 
-        session()->flash(
-            'vehicle_success',
-            self::FIELDS[$this->field]['label'] . ' de ' . $this->vehicle->plate . ' actualizado correctamente.'
-        );
-
-        $this->redirectRoute('settings.vehicles.index');
+        $this->dispatch('successAlert', [
+            'message' => self::FIELDS[$this->field]['label'] . ' de ' . $this->vehicle->plate . ' actualizado correctamente.'
+        ]);
     }
 
     public function getMetaProperty(): array
