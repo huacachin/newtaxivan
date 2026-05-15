@@ -111,6 +111,7 @@
                                 <article class="list-card">
                                     <header class="list-card__head">
                                         <div class="list-card__title-wrap">
+                                            <span class="list-card__index">{{ $loop->iteration }}</span>
                                             <span class="list-card__title">{{ $owner->name }}</span>
                                         </div>
                                         @hasanyrole('director|gerente|administrador|controlador')
@@ -231,6 +232,7 @@
                             <article class="list-card">
                                 <header class="list-card__head">
                                     <div class="list-card__title-wrap">
+                                        <span class="list-card__index">{{ $loop->iteration }}</span>
                                         <span class="list-card__title">{{ $owner->name }}</span>
                                     </div>
                                     @hasanyrole('director|gerente|administrador|controlador')

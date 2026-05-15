@@ -176,6 +176,7 @@
                                     <article class="list-card">
                                         <header class="list-card__head">
                                             <div class="list-card__title-wrap">
+                                                <span class="list-card__index">{{ $loop->iteration }}</span>
                                                 <span class="list-card__title list-card__title--plate">{{ $d->plate }}</span>
                                             </div>
                                             @if(auth()->user()->hasRole('director') || (auth()->user()->hasAnyRole(['administrador','gerente']) && \Carbon\Carbon::parse($d->date)->isToday()))

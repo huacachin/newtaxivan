@@ -137,6 +137,7 @@
                                 <article class="list-card">
                                     <header class="list-card__head">
                                         <div class="list-card__title-wrap">
+                                            <span class="list-card__index">{{ $loop->iteration }}</span>
                                             <span class="list-card__title list-card__title--plate">{{ $vehicle->plate }}</span>
                                             @if(!empty($vehicle->badges))
                                                 <span class="list-card__badges">
