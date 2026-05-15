@@ -138,19 +138,6 @@
                                                         @endforelse
                                                     </div>
 
-                                                    <div class="notif-panel__foot">
-                                                        <span class="notif-panel__foot-hint">
-                                                            <i class="ti ti-info-circle"></i>
-                                                            @if(($vehicleExpCount ?? 0) > 0)
-                                                                Click en una placa para actualizar el vencimiento
-                                                            @else
-                                                                Sin alertas activas
-                                                            @endif
-                                                        </span>
-                                                        <a href="{{ route('settings.vehicles.index') }}" class="notif-panel__foot-link">
-                                                            Ver vehículos <i class="ti ti-arrow-narrow-right"></i>
-                                                        </a>
-                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
