@@ -249,18 +249,39 @@
     <div class="col-12 col-md-6">
         <label class="form-label d-block">Foto</label>
 
-        {{-- Input file oculto (mantiene capture, compresion JS, wire:model) --}}
-        <input id="image_file" type="file" class="visually-hidden" wire:model="image_file"
+        {{-- Input camara (movil): capture=environment dispara la camara trasera --}}
+        <input id="image_file_camera" type="file" class="visually-hidden" wire:model="image_file"
                accept="image/*" capture="environment" data-compress-image>
 
-        {{-- Botón visible que dispara el input --}}
+        {{-- Input archivo (galeria/desktop): sin capture, abre selector estandar --}}
+        <input id="image_file_gallery" type="file" class="visually-hidden" wire:model="image_file"
+               accept="image/*" data-compress-image>
+
         @php $hasPhoto = $image_file || (isset($existing_image) && $existing_image); @endphp
-        <label for="image_file"
-               class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-2"
+
+        {{-- Desktop (>=md): solo cargar archivo --}}
+        <label for="image_file_gallery"
+               class="btn btn-outline-primary btn-sm d-none d-md-inline-flex align-items-center gap-2"
                style="cursor:pointer">
-            <i class="ti ti-camera" style="font-size:18px"></i>
-            <span>{{ $hasPhoto ? 'Cambiar foto' : 'Tomar foto' }}</span>
+            <i class="ti ti-upload" style="font-size:18px"></i>
+            <span>{{ $hasPhoto ? 'Cambiar archivo' : 'Cargar archivo' }}</span>
         </label>
+
+        {{-- Mobile (<md): tomar foto + agregar archivo --}}
+        <div class="d-flex d-md-none gap-2 flex-wrap">
+            <label for="image_file_camera"
+                   class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-2"
+                   style="cursor:pointer">
+                <i class="ti ti-camera" style="font-size:18px"></i>
+                <span>{{ $hasPhoto ? 'Cambiar foto' : 'Tomar foto' }}</span>
+            </label>
+            <label for="image_file_gallery"
+                   class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-2"
+                   style="cursor:pointer">
+                <i class="ti ti-photo" style="font-size:18px"></i>
+                <span>Agregar archivo</span>
+            </label>
+        </div>
 
         @error('image_file') <span class="title-modules d-block mt-1">{{ $message }}</span> @enderror
 
