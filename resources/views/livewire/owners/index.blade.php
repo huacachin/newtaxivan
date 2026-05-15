@@ -93,7 +93,59 @@
                             </div>
                         </div>
                     </div>
-                    <div class="table-responsive">
+
+                    {{-- ════════ MOBILE: cards de propietarios con vehículo ════════ --}}
+                    <div class="d-md-none list-cards">
+                        @if($owners->count() > 0)
+                            @foreach($owners as $owner)
+                                @php
+                                    $expBadge = null;
+                                    if (!empty($owner->document_expiration_date)) {
+                                        $exp = \Carbon\Carbon::parse($owner->document_expiration_date)->startOfDay();
+                                        $today = now()->startOfDay();
+                                        $diff = $today->diffInDays($exp, false);
+                                        if ($diff <= 0) { $expBadge = ['cls' => 'bg-danger', 'txt' => 'Vencido']; }
+                                        elseif ($diff <= 10) { $expBadge = ['cls' => 'bg-warning text-dark', 'txt' => 'Por vencer']; }
+                                    }
+                                @endphp
+                                <article class="list-card">
+                                    <header class="list-card__head">
+                                        <div class="list-card__title-wrap">
+                                            <span class="list-card__title">{{ $owner->name }}</span>
+                                        </div>
+                                        @hasanyrole('director|gerente|administrador|controlador')
+                                            <a href="{{ route('settings.owners.edit', $owner->id) }}" class="list-card__edit" aria-label="Editar">
+                                                <i class="ti ti-edit"></i>
+                                            </a>
+                                        @endhasanyrole
+                                    </header>
+
+                                    <div class="list-card__chips">
+                                        @if($owner->plate)<span class="list-chip list-chip--info">{{ $owner->plate }}</span>@endif
+                                        @if($expBadge)<span class="badge {{ $expBadge['cls'] }}">{{ $expBadge['txt'] }}</span>@endif
+                                    </div>
+
+                                    <ul class="list-card__meta">
+                                        <li>
+                                            <span class="list-card__meta-lbl"><i class="ti ti-id"></i> DNI/RUC</span>
+                                            <span class="list-card__meta-val">{{ $owner->document_number ?: '—' }}</span>
+                                        </li>
+                                        @if($owner->phone)
+                                            <li>
+                                                <span class="list-card__meta-lbl"><i class="ti ti-phone"></i> Celular</span>
+                                                <span class="list-card__meta-val">{{ $owner->phone }}</span>
+                                            </li>
+                                        @endif
+                                    </ul>
+                                </article>
+                            @endforeach
+                        @else
+                            <div class="list-cards__empty">Sin propietarios</div>
+                        @endif
+                    </div>
+
+                    {{-- ════════ DESKTOP: tabla original ════════ --}}
+                    <div class="table-responsive d-none d-md-block">
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">
                             <tr>
@@ -162,7 +214,57 @@
                         </table>
                     </div>
                     <h5 class="mb-2 title-modules text-center">Propietarios Libres: {{ $ownersFree->count() }}</h5>
-                    <div class="table-responsive">
+
+                    {{-- ════════ MOBILE: cards de propietarios libres ════════ --}}
+                    <div class="d-md-none list-cards">
+                        @forelse($ownersFree as $owner)
+                            @php
+                                $expBadge = null;
+                                if (!empty($owner->document_expiration_date)) {
+                                    $exp = \Carbon\Carbon::parse($owner->document_expiration_date)->startOfDay();
+                                    $today = now()->startOfDay();
+                                    $diff = $today->diffInDays($exp, false);
+                                    if ($diff <= 0) { $expBadge = ['cls' => 'bg-danger', 'txt' => 'Vencido']; }
+                                    elseif ($diff <= 10) { $expBadge = ['cls' => 'bg-warning text-dark', 'txt' => 'Por vencer']; }
+                                }
+                            @endphp
+                            <article class="list-card">
+                                <header class="list-card__head">
+                                    <div class="list-card__title-wrap">
+                                        <span class="list-card__title">{{ $owner->name }}</span>
+                                    </div>
+                                    @hasanyrole('director|gerente|administrador|controlador')
+                                        <a href="{{ route('settings.owners.edit', $owner->id) }}" class="list-card__edit" aria-label="Editar">
+                                            <i class="ti ti-edit"></i>
+                                        </a>
+                                    @endhasanyrole
+                                </header>
+
+                                <div class="list-card__chips">
+                                    <span class="list-chip list-chip--muted">Sin vehículo</span>
+                                    @if($expBadge)<span class="badge {{ $expBadge['cls'] }}">{{ $expBadge['txt'] }}</span>@endif
+                                </div>
+
+                                <ul class="list-card__meta">
+                                    <li>
+                                        <span class="list-card__meta-lbl"><i class="ti ti-id"></i> DNI/RUC</span>
+                                        <span class="list-card__meta-val">{{ $owner->document_number ?: '—' }}</span>
+                                    </li>
+                                    @if($owner->phone)
+                                        <li>
+                                            <span class="list-card__meta-lbl"><i class="ti ti-phone"></i> Celular</span>
+                                            <span class="list-card__meta-val">{{ $owner->phone }}</span>
+                                        </li>
+                                    @endif
+                                </ul>
+                            </article>
+                        @empty
+                            <div class="list-cards__empty">Sin propietarios libres</div>
+                        @endforelse
+                    </div>
+
+                    {{-- ════════ DESKTOP: tabla original ════════ --}}
+                    <div class="table-responsive d-none d-md-block">
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">
                             <tr>
