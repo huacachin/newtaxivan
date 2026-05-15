@@ -21,7 +21,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Garantiza que versioned_asset() esté disponible aunque no se haya
+        // corrido `composer dump-autoload` después de cambiar composer.json.
+        $helper = app_path('Helpers/assets.php');
+        if (is_file($helper) && !function_exists('versioned_asset')) {
+            require_once $helper;
+        }
     }
 
     /**
