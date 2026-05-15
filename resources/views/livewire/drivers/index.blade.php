@@ -257,11 +257,14 @@
                                         elseif ($daysDiff <= 10) { $expBadge = ['cls' => 'bg-warning text-dark', 'txt' => 'Por vencer']; }
                                     }
                                 @endphp
-                                <article class="list-card">
+                                <article class="list-card list-card--support">
                                     <header class="list-card__head">
                                         <div class="list-card__title-wrap">
                                             <span class="list-card__index">{{ $loop->iteration }}</span>
                                             <span class="list-card__title">{{ $driver->name }}</span>
+                                            <span class="list-card__support-tag">
+                                                <i class="ti ti-user-question"></i> Libre
+                                            </span>
                                         </div>
                                         @hasanyrole('director|gerente|administrador|controlador')
                                             <a href="{{ route('settings.drivers.edit', $driver->id) }}" class="list-card__edit" aria-label="Editar">
@@ -271,7 +274,6 @@
                                     </header>
 
                                     <div class="list-card__chips">
-                                        <span class="list-chip list-chip--muted">Sin vehículo</span>
                                         @if($driver->condition)<span class="list-chip">{{ $driver->condition }}</span>@endif
                                         @if($expBadge)<span class="badge {{ $expBadge['cls'] }}">{{ $expBadge['txt'] }}</span>@endif
                                     </div>
