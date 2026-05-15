@@ -250,12 +250,12 @@
         @error('image_file') <span class="title-modules">{{ $message }}</span> @enderror
 
         {{-- Estado de compresión (JS, antes de Livewire) --}}
-        <small data-photo-compress-status class="text-muted d-flex align-items-center gap-2 mt-1" style="display:none">
+        <small data-photo-compress-status class="text-muted align-items-center gap-2 mt-1 d-none">
             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
             <span>Procesando imagen...</span>
         </small>
         {{-- Estado de upload (Livewire) --}}
-        <small wire:loading wire:target="image_file" class="text-primary d-flex align-items-center gap-2 mt-1">
+        <small wire:loading.flex wire:target="image_file" class="text-primary align-items-center gap-2 mt-1">
             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
             <span>Subiendo foto...</span>
         </small>

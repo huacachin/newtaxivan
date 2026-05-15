@@ -204,9 +204,17 @@ function attachImageCompression(input) {
 
         // Mostrar status de compresión si existe un hermano con data-photo-compress-status
         var statusEl = input.parentNode && input.parentNode.querySelector('[data-photo-compress-status]');
-        if (statusEl) statusEl.style.display = '';
+        if (statusEl) {
+            statusEl.classList.remove('d-none');
+            statusEl.classList.add('d-flex');
+        }
 
-        var done = function () { if (statusEl) statusEl.style.display = 'none'; };
+        var done = function () {
+            if (statusEl) {
+                statusEl.classList.add('d-none');
+                statusEl.classList.remove('d-flex');
+            }
+        };
 
         _compressImageFile(file, maxSide, quality).then(function (blob) {
             var compressed = new File([blob], _renameToJpeg(file.name), {
