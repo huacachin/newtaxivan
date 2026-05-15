@@ -4,9 +4,11 @@ namespace App\Livewire\Dashboard;
 
 use App\Models\DebtDay;
 use App\Models\Departure;
+use App\Models\Driver;
 use App\Models\Expense;
 use App\Models\Headquarter;
 use App\Models\Income;
+use App\Models\Owner;
 use App\Models\Payment;
 use App\Models\Vehicle;
 use Carbon\Carbon;
@@ -193,18 +195,38 @@ class Index extends Component
             ->count();
     }
 
-    /** Top 5 alertas SOAT/RT/CD (reusa Vehicle::expiringAlerts) */
+    /** Top N alertas de vencimiento: vehículos + propietarios + conductores */
     protected function expiringSoonAlerts(int $limit = 5): array
     {
         $today = now()->toDateString();
-        return Vehicle::query()
+
+        $vehicleAlerts = Vehicle::query()
             ->select('id','plate','soat_date','technical_review','certificate_date','status','termination_date')
             ->where('status', 'active')
             ->where(function ($q) use ($today) {
                 $q->whereNull('termination_date')->orWhere('termination_date', '>', $today);
             })
             ->get()
-            ->flatMap(fn($v) => $v->expiringAlerts())
+            ->flatMap(fn ($v) => $v->expiringAlerts());
+
+        $ownerAlerts = Owner::query()
+            ->select('id','name','document_expiration_date','status')
+            ->where('status', 'active')
+            ->whereNotNull('document_expiration_date')
+            ->get()
+            ->flatMap(fn ($o) => $o->expiringAlerts());
+
+        $driverAlerts = Driver::query()
+            ->select('id','name','document_expiration_date',
+                     'license_revalidation_date','road_education_expiration_date',
+                     'credential_expiration_date','status')
+            ->where('status', 'active')
+            ->get()
+            ->flatMap(fn ($d) => $d->expiringAlerts());
+
+        return $vehicleAlerts
+            ->concat($ownerAlerts)
+            ->concat($driverAlerts)
             ->sortBy('days')
             ->take($limit)
             ->values()

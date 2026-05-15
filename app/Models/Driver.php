@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Traits\Auditable;
+use App\Traits\HasExpiringDocuments;
 
 class Driver extends Model
 {
-    use Auditable;
+    use Auditable, HasExpiringDocuments;
     protected $auditModule = 'Conductores';
 
     protected $fillable = [
@@ -56,5 +57,26 @@ class Driver extends Model
     public function vehicles(): HasMany
     {
         return $this->hasMany(Vehicle::class);
+    }
+
+    public function expiringAlerts(): array
+    {
+        $alerts = [];
+        $id   = (int) $this->id;
+        $name = (string) ($this->name ?: '—');
+
+        $rows = [
+            [$this->document_expiration_date,        'DOC', 'documento',       'Documento'],
+            [$this->license_revalidation_date,       'LIC', 'licencia',        'Licencia'],
+            [$this->road_education_expiration_date,  'EV',  'educacion-vial',  'Educación Vial'],
+            [$this->credential_expiration_date,      'CR',  'credencial',      'Credencial'],
+        ];
+
+        foreach ($rows as [$date, $abbr, $slug, $label]) {
+            $a = $this->buildExpirationAlert($date, 'driver', 'Conductor', $id, $name, $abbr, $slug, $label);
+            if ($a) $alerts[] = $a;
+        }
+
+        return $alerts;
     }
 }

@@ -57,6 +57,6 @@
 @include('layout.script')
 <!-- scripts end-->
 <script src="{{asset('assets/vendor/sweetalert/sweetalert.js')}}"></script>
-<script src="{{ asset('assets/js/custom.js') }}"></script>
+<script src="{{ versioned_asset('assets/js/custom.js') }}"></script>
 
 </html>

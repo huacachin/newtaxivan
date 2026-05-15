@@ -218,6 +218,25 @@
   &__row--danger  .notif-panel__status { color: var(--notif-danger); }
   &__row--warning .notif-panel__status { color: var(--notif-warning); }
 
+  // Indicador sutil del tipo de entidad: punto a la izquierda de la placa/nombre
+  &__plate {
+    position: relative;
+  }
+  &__row--owner  .notif-panel__plate::before,
+  &__row--driver .notif-panel__plate::before,
+  &__row--vehicle .notif-panel__plate::before {
+    content: "";
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 999px;
+    margin-right: 8px;
+    vertical-align: middle;
+    transform: translateY(-1px);
+  }
+  &__row--vehicle .notif-panel__plate::before { background: #0369a1; }
+  &__row--owner   .notif-panel__plate::before { background: #a855f7; }
+  &__row--driver  .notif-panel__plate::before { background: #16a34a; }
+
   &__count {
     text-align: right;
     line-height: 1;

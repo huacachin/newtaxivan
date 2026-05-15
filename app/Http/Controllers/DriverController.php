@@ -26,6 +26,12 @@ class DriverController extends Controller
         return view('drivers.edit',compact('id'));
     }
 
+    public function expiration(int $id, string $field)
+    {
+        abort_unless(in_array($field, ['documento','licencia','educacion-vial','credencial'], true), 404);
+        return view('drivers.expiration', compact('id','field'));
+    }
+
     public function export(Request $request){
         $search = $request->query('search');
         $filter = $request->query('filter', 'plate');

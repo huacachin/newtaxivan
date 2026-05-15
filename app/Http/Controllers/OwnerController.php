@@ -26,6 +26,12 @@ class OwnerController extends Controller
         return view('owners.edit',compact('id'));
     }
 
+    public function expiration(int $id, string $field)
+    {
+        abort_unless(in_array($field, ['documento'], true), 404);
+        return view('owners.expiration', compact('id','field'));
+    }
+
     public function export(Request $request){
         $search = $request->query('search');
         $filter = $request->query('filter', 'plate');

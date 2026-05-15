@@ -177,11 +177,14 @@ class Vehicle extends Model
                 : \Carbon\Carbon::parse($date)->toDateString();
 
             $base = [
-                'id'    => $id,
-                'plate' => $plate,
-                'abbr'  => $abbrType,   // ST | RT | CD
-                'field' => $fieldSlug,  // soat | tecnica | certificado
-                'label' => $label,
+                'id'         => $id,
+                'kind'       => 'vehicle',
+                'kind_label' => 'Vehículo',
+                'subject'    => $plate,
+                'plate'      => $plate,        // mantener compat
+                'abbr'       => $abbrType,     // ST | RT | CD
+                'field'      => $fieldSlug,    // soat | tecnica | certificado
+                'label'      => $label,
             ];
 
             if ($days < 0) {

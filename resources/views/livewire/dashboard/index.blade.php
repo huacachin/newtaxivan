@@ -272,14 +272,26 @@
                     @else
                         <ul class="tx-alerts">
                             @foreach($expiringAlerts as $a)
+                                @php
+                                    $kind = $a['kind'] ?? 'vehicle';
+                                    $routeName = match($kind) {
+                                        'owner'  => 'settings.owners.expiration',
+                                        'driver' => 'settings.drivers.expiration',
+                                        default  => 'settings.vehicles.expiration',
+                                    };
+                                    $subject = $a['subject'] ?? ($a['plate'] ?? '—');
+                                @endphp
                                 <li class="tx-alerts__row">
                                     <span class="tx-alerts__pill tx-alerts__pill--{{ $a['color'] }}">{{ $a['abbr'] }}</span>
                                     <div class="tx-alerts__main">
-                                        <a href="{{ route('settings.vehicles.expiration', ['id' => $a['id'], 'field' => $a['field']]) }}"
+                                        <a href="{{ route($routeName, ['id' => $a['id'], 'field' => $a['field']]) }}"
                                            class="tx-alerts__name">
-                                            {{ $a['plate'] }}
+                                            {{ $subject }}
                                         </a>
-                                        <span class="tx-alerts__meta">{{ $a['label'] }}</span>
+                                        <span class="tx-alerts__meta">
+                                            <span class="tx-alerts__kind tx-alerts__kind--{{ $kind }}">{{ $a['kind_label'] ?? ucfirst($kind) }}</span>
+                                            · {{ $a['label'] }}
+                                        </span>
                                     </div>
                                     <div class="tx-alerts__num">
                                         @if($a['status'] === 'today')
@@ -672,7 +684,15 @@
 .tx-alerts__main { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .tx-alerts__name { font-size: 13px; color: var(--tx-ink); font-weight: 600; text-decoration: none; }
 .tx-alerts__name:hover { color: var(--tx-accent); }
-.tx-alerts__meta { font-size: 10px; color: var(--tx-mute-2); }
+.tx-alerts__meta { font-size: 10px; color: var(--tx-mute-2); display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.tx-alerts__kind {
+    display: inline-block; font-size: 9px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 2px 5px; border-radius: 3px; line-height: 1;
+}
+.tx-alerts__kind--vehicle { background: rgba(0, 155, 220, 0.12); color: #0369a1; }
+.tx-alerts__kind--owner   { background: rgba(168, 85, 247, 0.12); color: #6b21a8; }
+.tx-alerts__kind--driver  { background: rgba(34, 197, 94, 0.12); color: #166534; }
 .tx-alerts__num { text-align: right; }
 .tx-alerts__val { display: block; font-weight: 700; font-size: 15px; color: var(--tx-ink); font-feature-settings: 'tnum' 1; }
 .tx-alerts__days {

@@ -41,9 +41,17 @@ Route::middleware('auth')->group(function () {
     Route::get('owners', [OwnerController::class,'index'])->name('settings.owners.index');
     Route::get('owners/create', [OwnerController::class,'create'])->name('settings.owners.create')->middleware('role:director|gerente|administrador');
     Route::get('owners/{id}/edit', [OwnerController::class,'edit'])->name('settings.owners.edit')->middleware('role:director|gerente|administrador');
+    Route::get('owners/{id}/expiration/{field}', [OwnerController::class,'expiration'])
+        ->name('settings.owners.expiration')
+        ->whereNumber('id')
+        ->whereIn('field', ['documento']);
     Route::get('drivers', [DriverController::class,'index'])->name('settings.drivers.index');
     Route::get('drivers/create', [DriverController::class,'create'])->name('settings.drivers.create')->middleware('role:director|gerente|administrador');
     Route::get('drivers/{id}/edit', [DriverController::class,'edit'])->name('settings.drivers.edit')->middleware('role:director|gerente|administrador');
+    Route::get('drivers/{id}/expiration/{field}', [DriverController::class,'expiration'])
+        ->name('settings.drivers.expiration')
+        ->whereNumber('id')
+        ->whereIn('field', ['documento','licencia','educacion-vial','credencial']);
 
     // Costo por placa
     Route::get('cost-per-plate', [CostPerPlateController::class,'index'])->name('settings.cost-per-plate.index');

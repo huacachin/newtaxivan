@@ -71,7 +71,7 @@
                                                     <div class="notif-panel__head">
                                                         <div>
                                                             <h6 class="notif-panel__title">Vencimientos próximos</h6>
-                                                            <div class="notif-panel__subtitle">SOAT · Revisión técnica · Certificado</div>
+                                                            <div class="notif-panel__subtitle">Vehículos · Propietarios · Conductores</div>
                                                         </div>
                                                         @if(($vehicleExpCount ?? 0) > 0)
                                                             <span class="notif-panel__chip">
@@ -96,15 +96,23 @@
                                                                     default    => 'Por vencer',
                                                                 };
                                                                 $countClass = $status === 'today' ? 'notif-panel__count notif-panel__count--today' : 'notif-panel__count';
+
+                                                                $kind = $n['kind'] ?? 'vehicle';
+                                                                $routeName = match($kind) {
+                                                                    'owner'  => 'settings.owners.expiration',
+                                                                    'driver' => 'settings.drivers.expiration',
+                                                                    default  => 'settings.vehicles.expiration',
+                                                                };
+                                                                $href = route($routeName, ['id' => $n['id'], 'field' => $n['field']]);
                                                             @endphp
-                                                            <a href="{{ route('settings.vehicles.expiration', ['id' => $n['id'], 'field' => $n['field']]) }}"
-                                                               class="notif-panel__row {{ $rowClass }}"
-                                                               title="{{ $n['message'] ?? '' }}">
+                                                            <a href="{{ $href }}"
+                                                               class="notif-panel__row notif-panel__row--{{ $kind }} {{ $rowClass }}"
+                                                               title="{{ ($n['kind_label'] ?? '') . ' · ' . ($n['message'] ?? '') }}">
                                                                 <span class="notif-panel__rail"></span>
                                                                 <span class="notif-panel__abbr">{{ $n['abbr'] }}</span>
                                                                 <div class="notif-panel__main">
                                                                     <div>
-                                                                        <span class="notif-panel__plate">{{ $n['plate'] }}</span>
+                                                                        <span class="notif-panel__plate">{{ $n['subject'] ?? ($n['plate'] ?? '—') }}</span>
                                                                         <span class="notif-panel__label">{{ $n['label'] }}</span>
                                                                     </div>
                                                                     <div class="notif-panel__meta">

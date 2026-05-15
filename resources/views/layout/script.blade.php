@@ -13,6 +13,8 @@
     'settings.vehicles.create',
     'settings.vehicles.edit',
     'settings.vehicles.expiration',
+    'settings.owners.expiration',
+    'settings.drivers.expiration',
     'departures.edit'
 ]))
     <script src="{{ asset('assets/js/jquery-3.6.3.min.js') }}"></script>
@@ -26,13 +28,13 @@
 
 
 <!-- Customizer js-->
-<script src="{{asset('assets/js/customizer.js')}}"></script>
+<script src="{{ versioned_asset('assets/js/customizer.js') }}"></script>
 
 <!-- prism js-->
 <script src="{{asset('assets/vendor/prism/prism.min.js')}}"></script>
 
 <!-- App js-->
-<script src="{{asset('assets/js/script.js')}}"></script>
+<script src="{{ versioned_asset('assets/js/script.js') }}"></script>
 
 
 @stack('scripts')

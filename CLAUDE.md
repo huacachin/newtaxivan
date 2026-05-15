@@ -81,3 +81,16 @@ Vite processes three entry points:
 1. `resources/css/app.css` (Tailwind)
 2. `resources/js/app.js`
 3. `public/assets/scss/style.scss` (custom SCSS, SASS deprecation warnings suppressed)
+
+### Asset cache-busting
+
+Two strategies coexist:
+
+- **Vite assets** (CSS via SCSS, JS via `app.js`): Vite injects a hash into the filename (`style-{hash}.css`). Cache-busting is automatic — never manual.
+- **Static `public/assets/js/*.js` files** (`custom.js`, `script.js`, `customizer.js`): NOT compiled by Vite. They use the `versioned_asset()` helper which appends `?v={filemtime}` so the URL changes when the file is edited.
+
+**When editing a JS in `public/assets/js/`** (e.g., `custom.js`), do NOT add a manual version query string. The helper handles it — just commit the file change, deploy, and `filemtime` updates the URL automatically so browsers (including stubborn mobile caches) fetch the fresh file.
+
+**When loading a new static asset from `public/`** in a Blade template, use `versioned_asset('assets/...')` instead of `asset('assets/...')`. Vendor assets (Bootstrap, jQuery, Tabler icons) stay with `asset()` because they don't change.
+
+Helper lives in `app/Helpers/assets.php` and is autoloaded via `composer.json`'s `autoload.files`.

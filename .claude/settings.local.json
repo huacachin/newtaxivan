@@ -63,7 +63,8 @@
       "Bash(lsof -ti:8000,8001,8002)",
       "Bash(lsof -i:8000,8001,8002)",
       "Skill(frontend-design:frontend-design)",
-      "Bash(xargs -I {} sh -c 'echo \"$\\(grep -c type=\\\\\\\\\"number\\\\\\\\\" {}\\) {}\"')"
+      "Bash(xargs -I {} sh -c 'echo \"$\\(grep -c type=\\\\\\\\\"number\\\\\\\\\" {}\\) {}\"')",
+      "Bash(composer dump-autoload *)"
     ]
   }
 }
