@@ -247,8 +247,6 @@
     </div>
 
     <div class="col-12 col-md-6">
-        <label class="form-label d-block">Foto</label>
-
         {{-- Input camara (movil): capture=environment dispara la camara trasera --}}
         <input id="image_file_camera" type="file" class="visually-hidden" wire:model="image_file"
                accept="image/*" capture="environment" data-compress-image>
