@@ -246,7 +246,7 @@
         @error('details') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
-    <div class="col-12 col-md-6">
+    <div class="col-12 col-md-6 d-md-flex flex-md-column justify-content-md-center">
         {{-- Input camara (movil): capture=environment dispara la camara trasera --}}
         <input id="image_file_camera" type="file" class="visually-hidden" wire:model="image_file"
                accept="image/*" capture="environment" data-compress-image>
