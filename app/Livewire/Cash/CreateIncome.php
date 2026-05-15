@@ -25,6 +25,10 @@ class CreateIncome extends Component
 
     public array $amountSuggestions = [];
 
+    // Plantillas de motivo (textos largos frecuentes) + estado del modal de edicion.
+    public array $reasonTemplates = [];
+    public ?string $reasonModalText = null;
+
     public $new_images = [];
     public $image_files = [];
 
@@ -46,6 +50,34 @@ class CreateIncome extends Component
         $this->date     = now()->toDateString();
         $this->currency = 'Soles';
         $this->recomputeAmountSuggestions();
+        $this->loadReasonTemplates();
+    }
+
+    protected function loadReasonTemplates(): void
+    {
+        $this->reasonTemplates = \DB::table('incomes')
+            ->whereNotNull('detail')
+            ->whereRaw('CHAR_LENGTH(detail) >= ?', [30])
+            ->select('detail', \DB::raw('COUNT(*) as freq'))
+            ->groupBy('detail')
+            ->orderByDesc('freq')
+            ->limit(20)
+            ->pluck('detail')
+            ->all();
+    }
+
+    public function openReasonModal(string $text): void
+    {
+        if (trim($text) === '') return;
+        $this->reasonModalText = $text;
+        $this->dispatch('open-modal', ['name' => 'reasonTemplateModal']);
+    }
+
+    public function acceptReasonModal(): void
+    {
+        $this->detail = (string) $this->reasonModalText;
+        $this->reasonModalText = null;
+        $this->dispatch('modal-close', ['name' => 'reasonTemplateModal']);
     }
 
     public function updatedReason(): void
