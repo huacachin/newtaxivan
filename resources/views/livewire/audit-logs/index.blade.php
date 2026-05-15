@@ -105,9 +105,7 @@
                 </table>
             </div>
 
-            <div class="mt-2">
-                {{ $logs->links() }}
-            </div>
+            <x-pagination :paginator="$logs" />
         </div>
     </div>
 
