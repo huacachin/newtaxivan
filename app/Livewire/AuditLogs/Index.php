@@ -21,6 +21,60 @@ class Index extends Component
 
     protected $paginationTheme = 'bootstrap';
 
+    /**
+     * Mapeo módulo auditable → rutas posibles.
+     *   edit:  ruta a la vista de edición del registro (acepta el id)
+     *   index: ruta al listado del modulo (fallback)
+     */
+    protected const MODULE_ROUTES = [
+        'Vehículos'           => ['edit' => 'settings.vehicles.edit',     'index' => 'settings.vehicles.index'],
+        'Conductores'         => ['edit' => 'settings.drivers.edit',      'index' => 'settings.drivers.index'],
+        'Propietarios'        => ['edit' => 'settings.owners.edit',       'index' => 'settings.owners.index'],
+        'Salidas'             => ['edit' => 'departures.edit',            'index' => 'departures.index'],
+        'Pagos'               => ['edit' => 'payments.edit',              'index' => 'payments.index'],
+        'Ingresos'            => ['edit' => 'cash.incomes.edit',          'index' => 'cash.incomes'],
+        'Egresos'             => ['edit' => 'cash.expenses.edit',         'index' => 'cash.expenses'],
+        'Sucursales'          => ['edit' => 'settings.headquarters.edit', 'index' => 'settings.headquarters.index'],
+        'Usuarios'            => ['edit' => 'settings.users.edit',        'index' => 'settings.users.index'],
+        'Conceptos'           => ['edit' => 'settings.concepts.edit',     'index' => 'settings.concepts.index'],
+        'Detalle Deuda'       => [                                         'index' => 'debts.monthly'],
+        'Deuda por Días'      => [                                         'index' => 'debts.debt-per-days'],
+        'Costo por Placa'     => [                                         'index' => 'settings.cost-per-plate.index'],
+        'Costo por Placa Día' => [                                         'index' => 'settings.cost-per-plate.index'],
+    ];
+
+    /**
+     * Devuelve la URL destino para un log de auditoria:
+     * - Si la acción es 'deleted' o el módulo no tiene ruta edit → ruta index.
+     * - En cualquier otro caso, ruta edit con el record_id.
+     * - null si el módulo no está mapeado (no muestra el boton).
+     */
+    public function targetUrlFor(ActivityLog $log): ?string
+    {
+        $routes = self::MODULE_ROUTES[$log->module] ?? null;
+        if (!$routes) return null;
+
+        $isDeleted = $log->action === 'deleted';
+
+        if (!$isDeleted && isset($routes['edit']) && $log->record_id) {
+            try {
+                return route($routes['edit'], $log->record_id);
+            } catch (\Throwable $e) {
+                // fall through al index
+            }
+        }
+
+        if (isset($routes['index'])) {
+            try {
+                return route($routes['index']);
+            } catch (\Throwable $e) {
+                return null;
+            }
+        }
+
+        return null;
+    }
+
     public function mount(): void
     {
         $today = now()->toDateString();

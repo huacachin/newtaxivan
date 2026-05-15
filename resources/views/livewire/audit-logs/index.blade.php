@@ -91,9 +91,18 @@
                                 <td>{{ $log->module }}</td>
                                 <td>#{{ $log->record_id }}</td>
                                 <td>
-                                    <button class="btn btn-sm btn-outline-primary" wire:click="showDetail({{ $log->id }})">
-                                        <i class="ti ti-eye"></i>
-                                    </button>
+                                    @php $targetUrl = $this->targetUrlFor($log); @endphp
+                                    <div class="d-inline-flex gap-1">
+                                        <button class="btn btn-sm btn-outline-primary" wire:click="showDetail({{ $log->id }})" title="Ver detalle">
+                                            <i class="ti ti-eye"></i>
+                                        </button>
+                                        @if($targetUrl)
+                                            <a href="{{ $targetUrl }}" target="_blank" class="btn btn-sm btn-outline-success"
+                                               title="{{ $log->action === 'deleted' ? 'Ir al listado' : 'Ir al registro' }}">
+                                                <i class="ti ti-external-link"></i>
+                                            </a>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                         @empty
