@@ -8,8 +8,8 @@
 
 <div class="row g-3">
     <div class="col-auto">
-        <label for="document_type" class="form-label {{ $isEdit ? 'text-muted' : '' }}">Tipo de documento</label>
-        <select id="document_type" class="form-select form-select-sm" wire:model="document_type" @if($isEdit) disabled @endif>
+        <label for="document_type" class="form-label">Tipo de documento</label>
+        <select id="document_type" class="form-select form-select-sm" wire:model="document_type">
             <option value="">Seleccionar</option>
             <option value="dni">DNI</option>
             <option value="ruc">RUC</option>
