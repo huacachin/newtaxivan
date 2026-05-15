@@ -121,17 +121,15 @@
                                     </select>
                                     @error('headquarter_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 @else
-                                    <div class="input-group input-group-sm">
+                                    <div class="input-group input-group-sm reason-tpl-wrap">
                                         <input type="text" class="form-control @error('detail') is-invalid @enderror"
                                                placeholder="Descripcion breve"
                                                wire:model.defer="detail">
                                         @if(!empty($reasonTemplates))
-                                            <select class="form-select" style="max-width:130px"
-                                                    wire:change="openReasonModal($event.target.value); $event.target.value=''"
-                                                    wire:key="tpl-select-create-expense">
-                                                <option value="">Plantillas…</option>
+                                            <select class="form-select reason-template-select" wire:ignore wire:key="tpl-select-create-expense">
+                                                <option value=""></option>
                                                 @foreach($reasonTemplates as $tpl)
-                                                    <option value="{{ $tpl }}">{{ \Illuminate\Support\Str::limit($tpl, 35) }}</option>
+                                                    <option value="{{ $tpl }}">{{ \Illuminate\Support\Str::limit($tpl, 60) }}</option>
                                                 @endforeach
                                             </select>
                                         @endif
