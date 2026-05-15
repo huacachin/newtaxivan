@@ -249,6 +249,17 @@
         <input type="file" class="form-control form-control-sm" wire:model="image_file" accept="image/*" capture="environment" data-compress-image>
         @error('image_file') <span class="title-modules">{{ $message }}</span> @enderror
 
+        {{-- Estado de compresión (JS, antes de Livewire) --}}
+        <small data-photo-compress-status class="text-muted d-flex align-items-center gap-2 mt-1" style="display:none">
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            <span>Procesando imagen...</span>
+        </small>
+        {{-- Estado de upload (Livewire) --}}
+        <small wire:loading wire:target="image_file" class="text-primary d-flex align-items-center gap-2 mt-1">
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            <span>Subiendo foto...</span>
+        </small>
+
         {{-- Preview de imagen nueva (no guardada) --}}
         @if($image_file)
             <div class="position-relative d-inline-block mt-2" style="max-height:80px">
@@ -286,8 +297,13 @@
 <div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-hidden="true" wire:ignore>
     <div class="modal-dialog modal-lg modal-dialog-centered modal-fullscreen-sm-down">
         <div class="modal-content bg-transparent border-0 shadow-none">
-            <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3"
-                    data-bs-dismiss="modal" aria-label="Cerrar" style="z-index:10"></button>
+            <button type="button"
+                    class="position-absolute d-flex align-items-center justify-content-center"
+                    data-bs-dismiss="modal"
+                    aria-label="Cerrar"
+                    style="top:14px; right:14px; width:44px; height:44px; border:0; border-radius:50%; background:#fff; color:#0f172a; box-shadow:0 8px 20px rgba(0,0,0,.4); z-index:10; cursor:pointer;">
+                <i class="ti ti-x" style="font-size:24px; font-weight:bold;"></i>
+            </button>
             <div class="modal-body text-center p-0 d-flex align-items-center justify-content-center">
                 <img id="imagePreviewModalImg" src="" alt="" class="img-fluid rounded shadow-lg" style="max-height:90vh">
             </div>

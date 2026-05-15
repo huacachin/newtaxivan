@@ -202,6 +202,12 @@ function attachImageCompression(input) {
         // Detener listeners en burbuja (Livewire) hasta tener el blob comprimido.
         event.stopImmediatePropagation();
 
+        // Mostrar status de compresión si existe un hermano con data-photo-compress-status
+        var statusEl = input.parentNode && input.parentNode.querySelector('[data-photo-compress-status]');
+        if (statusEl) statusEl.style.display = '';
+
+        var done = function () { if (statusEl) statusEl.style.display = 'none'; };
+
         _compressImageFile(file, maxSide, quality).then(function (blob) {
             var compressed = new File([blob], _renameToJpeg(file.name), {
                 type: 'image/jpeg',
@@ -211,10 +217,12 @@ function attachImageCompression(input) {
             dt.items.add(compressed);
             input.files = dt.files;
             input.dataset._compressed = '1';
+            done();
             input.dispatchEvent(new Event('change', { bubbles: true }));
         }).catch(function (err) {
             console.warn('Compresión falló, subiendo archivo original:', err);
             input.dataset._compressed = '1';
+            done();
             input.dispatchEvent(new Event('change', { bubbles: true }));
         });
     }, true); // capture phase: corremos ANTES que el listener de Livewire
