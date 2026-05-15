@@ -440,8 +440,6 @@
         </div>
     </div>
 
-</div>
-
 {{-- ════════════════════════ ESTILOS (scoped) ════════════════════════ --}}
 <style>
 .tx-dashboard {
@@ -760,8 +758,8 @@
 }
 </style>
 
-{{-- ════════════════════════ APEXCHARTS ════════════════════════ --}}
-<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.49.1/dist/apexcharts.min.js"></script>
+</div>
+
 @script
 <script>
 (function () {
