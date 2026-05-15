@@ -218,7 +218,7 @@ class Index extends Component
 
         $driverAlerts = Driver::query()
             ->select('id','name','document_expiration_date',
-                     'license_revalidation_date','road_education_expiration_date',
+                     'license_revalidation_date','cartilla_informativa_expiration_date',
                      'credential_expiration_date','status')
             ->where('status', 'active')
             ->get()

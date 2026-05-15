@@ -15,10 +15,10 @@ class ExpirationEdit extends Component
     public ?string $value = null;
 
     protected const FIELDS = [
-        'documento'       => ['column' => 'document_expiration_date',       'abbr' => 'DOC', 'label' => 'Documento'],
-        'licencia'        => ['column' => 'license_revalidation_date',      'abbr' => 'LIC', 'label' => 'Licencia'],
-        'educacion-vial'  => ['column' => 'road_education_expiration_date', 'abbr' => 'EV',  'label' => 'Educación Vial'],
-        'credencial'      => ['column' => 'credential_expiration_date',     'abbr' => 'CR',  'label' => 'Credencial'],
+        'documento'             => ['column' => 'document_expiration_date',             'abbr' => 'DOC', 'label' => 'Documento'],
+        'licencia'              => ['column' => 'license_revalidation_date',            'abbr' => 'LIC', 'label' => 'Licencia'],
+        'cartilla-informativa'  => ['column' => 'cartilla_informativa_expiration_date', 'abbr' => 'CI',  'label' => 'Cartilla Informativa'],
+        'credencial'            => ['column' => 'credential_expiration_date',           'abbr' => 'CR',  'label' => 'Credencial'],
     ];
 
     public function mount(int $id, string $field): void

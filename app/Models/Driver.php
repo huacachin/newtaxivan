@@ -30,9 +30,9 @@ class Driver extends Model
         'contract_end',
         'condition',
         'status',
-        'road_education',
-        'road_education_expiration_date',
-        'road_education_municipality',
+        'cartilla_informativa',
+        'cartilla_informativa_expiration_date',
+        'cartilla_informativa_municipality',
         'credential',
         'credential_expiration_date',
         'credential_municipality',
@@ -48,8 +48,8 @@ class Driver extends Model
         'license_revalidation_date' => 'date',
         'contract_start' => 'date',
         'contract_end' => 'date',
-        'road_education' => 'date',
-        'road_education_expiration_date' => 'date',
+        'cartilla_informativa' => 'date',
+        'cartilla_informativa_expiration_date' => 'date',
         'credential' => 'date',
         'credential_expiration_date' => 'date',
     ];
@@ -68,7 +68,7 @@ class Driver extends Model
         $rows = [
             [$this->document_expiration_date,        'DOC', 'documento',       'Documento'],
             [$this->license_revalidation_date,       'LIC', 'licencia',        'Licencia'],
-            [$this->road_education_expiration_date,  'EV',  'educacion-vial',  'Educación Vial'],
+            [$this->cartilla_informativa_expiration_date,  'CI',  'cartilla-informativa',  'Cartilla Informativa'],
             [$this->credential_expiration_date,      'CR',  'credencial',      'Credencial'],
         ];
 

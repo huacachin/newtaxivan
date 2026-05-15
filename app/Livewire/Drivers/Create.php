@@ -30,9 +30,9 @@ class Create extends Component
     public $contract_end;
     public $condition;
     public $score;
-    public $road_education;
-    public $road_education_expiration_date;
-    public $road_education_municipality;
+    public $cartilla_informativa;
+    public $cartilla_informativa_expiration_date;
+    public $cartilla_informativa_municipality;
     public $credential; // fecha
     public $credential_expiration_date;
     public $credential_municipality;
@@ -69,9 +69,9 @@ class Create extends Component
             'contract_end' => 'nullable|date',
             'condition' => 'required|string|max:255',
             'score' => 'nullable|numeric|between:0,100',
-            'road_education' => 'nullable|date',
-            'road_education_expiration_date' => 'nullable|date',
-            'road_education_municipality' => 'nullable|string|max:255',
+            'cartilla_informativa' => 'nullable|date',
+            'cartilla_informativa_expiration_date' => 'nullable|date',
+            'cartilla_informativa_municipality' => 'nullable|string|max:255',
             'credential' => 'nullable|date',
             'credential_expiration_date' => 'nullable|date',
             'credential_municipality' => 'nullable|string|max:255',
@@ -140,9 +140,9 @@ class Create extends Component
         $this->contract_end = optional($driver->contract_end)->format('Y-m-d');
         $this->condition = $driver->condition;
         $this->score = $driver->score;
-        $this->road_education = $driver->road_education;
-        $this->road_education_expiration_date = optional($driver->road_education_expiration_date)->format('Y-m-d');
-        $this->road_education_municipality = $driver->road_education_municipality;
+        $this->cartilla_informativa = $driver->cartilla_informativa;
+        $this->cartilla_informativa_expiration_date = optional($driver->cartilla_informativa_expiration_date)->format('Y-m-d');
+        $this->cartilla_informativa_municipality = $driver->cartilla_informativa_municipality;
         $this->credential = optional($driver->credential)->format('Y-m-d');
         $this->credential_expiration_date = optional($driver->credential_expiration_date)->format('Y-m-d');
         $this->credential_municipality = $driver->credential_municipality;
@@ -174,9 +174,9 @@ class Create extends Component
                 "contract_end" => $this->contract_end,
                 "condition" => $this->condition,
                 "score" => $this->score ?? 0,
-                "road_education" => $this->road_education,
-                "road_education_expiration_date" => $this->road_education_expiration_date,
-                "road_education_municipality" => $this->road_education_municipality,
+                "cartilla_informativa" => $this->cartilla_informativa,
+                "cartilla_informativa_expiration_date" => $this->cartilla_informativa_expiration_date,
+                "cartilla_informativa_municipality" => $this->cartilla_informativa_municipality,
                 "credential" => $this->credential,
                 "credential_expiration_date" => $this->credential_expiration_date,
                 "credential_municipality" => $this->credential_municipality,
@@ -208,7 +208,7 @@ class Create extends Component
 
     public function clean(): void
     {
-        $this->reset(['name','document_number','document_expiration_date','birthdate','address','district','email','phone','license','class','category','license_issue_date','license_revalidation_date','contract_start','contract_end','condition','score','road_education','road_education_expiration_date','road_education_municipality','credential','credential_expiration_date','credential_municipality','details','image_file','reactivateId']);
+        $this->reset(['name','document_number','document_expiration_date','birthdate','address','district','email','phone','license','class','category','license_issue_date','license_revalidation_date','contract_start','contract_end','condition','score','cartilla_informativa','cartilla_informativa_expiration_date','cartilla_informativa_municipality','credential','credential_expiration_date','credential_municipality','details','image_file','reactivateId']);
         $this->mount();
     }
 

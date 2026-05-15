@@ -52,8 +52,8 @@
                 ['#license_revalidation_date',     'license_revalidation_date'],
                 ['#contract_start',                'contract_start'],
                 ['#contract_end',                  'contract_end'],
-                ['#road_education',                'road_education'],
-                ['#road_education_expiration_date','road_education_expiration_date'],
+                ['#cartilla_informativa',                'cartilla_informativa'],
+                ['#cartilla_informativa_expiration_date','cartilla_informativa_expiration_date'],
                 ['#credential',                    'credential'],
                 ['#credential_expiration_date',    'credential_expiration_date'],
             ], wire);

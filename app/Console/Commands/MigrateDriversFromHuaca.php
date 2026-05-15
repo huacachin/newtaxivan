@@ -58,9 +58,9 @@ class MigrateDriversFromHuaca extends Command
             'credential',
             'credential_expiration_date',
             'credential_municipality',
-            'road_education',
-            'road_education_expiration_date',
-            'road_education_municipality',
+            'cartilla_informativa',
+            'cartilla_informativa_expiration_date',
+            'cartilla_informativa_municipality',
             'updated_at',
         ])->filter(fn($c) => $driverCols->has($c))->values()->all();
 
@@ -120,9 +120,9 @@ class MigrateDriversFromHuaca extends Command
                     'credential'                    => $this->trimOrNull($r->credencial1 ?? null),
                     'credential_expiration_date'    => $this->parseDate($r->credencial2 ?? null),
                     'credential_municipality'       => $this->trimOrNull($r->credencial4 ?? null),
-                    'road_education'                => $this->parseDate($r->fechaexpiev ?? null), // asumimos DATE
-                    'road_education_expiration_date'=> $this->parseDate($r->fechavencev ?? null),
-                    'road_education_municipality'   => $this->trimOrNull($r->muniev ?? null),
+                    'cartilla_informativa'                => $this->parseDate($r->fechaexpiev ?? null), // asumimos DATE
+                    'cartilla_informativa_expiration_date'=> $this->parseDate($r->fechavencev ?? null),
+                    'cartilla_informativa_municipality'   => $this->trimOrNull($r->muniev ?? null),
                     'status'                        => 'active',
                     'created_at'                    => $now,
                     'updated_at'                    => $now,

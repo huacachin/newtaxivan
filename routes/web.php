@@ -51,7 +51,7 @@ Route::middleware('auth')->group(function () {
     Route::get('drivers/{id}/expiration/{field}', [DriverController::class,'expiration'])
         ->name('settings.drivers.expiration')
         ->whereNumber('id')
-        ->whereIn('field', ['documento','licencia','educacion-vial','credencial']);
+        ->whereIn('field', ['documento','licencia','cartilla-informativa','credencial']);
 
     // Costo por placa
     Route::get('cost-per-plate', [CostPerPlateController::class,'index'])->name('settings.cost-per-plate.index');

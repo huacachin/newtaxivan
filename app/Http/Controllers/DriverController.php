@@ -28,7 +28,7 @@ class DriverController extends Controller
 
     public function expiration(int $id, string $field)
     {
-        abort_unless(in_array($field, ['documento','licencia','educacion-vial','credencial'], true), 404);
+        abort_unless(in_array($field, ['documento','licencia','cartilla-informativa','credencial'], true), 404);
         return view('drivers.expiration', compact('id','field'));
     }
 
