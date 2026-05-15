@@ -246,7 +246,7 @@
 
     <div class="col-12 col-md-6">
         <label class="form-label">Foto</label>
-        <input type="file" class="form-control form-control-sm" wire:model="image_file" accept="image/*">
+        <input type="file" class="form-control form-control-sm" wire:model="image_file" accept="image/*" capture="environment">
         @error('image_file') <span class="title-modules">{{ $message }}</span> @enderror
 
         {{-- Preview de imagen nueva --}}
