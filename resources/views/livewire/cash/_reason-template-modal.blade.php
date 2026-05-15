@@ -28,30 +28,37 @@
 @pushOnce('styles')
     <link rel="stylesheet" href="{{ asset('assets/vendor/select/select2.min.css') }}">
     <style>
-        /* Select2 visualmente equivalente a form-control-sm */
+        /* Select2 igualado a Bootstrap form-control-sm (height ~27px) */
         .reason-input-wrap .select2-container .select2-selection--single {
-            height: 31px;
+            height: calc(1.5em + .5rem + 2px);   /* exact form-control-sm height */
             border: 1px solid #ced4da;
-            border-radius: 0.25rem;
+            border-radius: 0.2rem;
         }
         .reason-input-wrap .select2-container--default .select2-selection--single .select2-selection__rendered {
-            line-height: 29px;
-            padding-left: 12px;
-            font-size: 14px;
+            line-height: calc(1.5em + .5rem);
+            padding-left: 0.5rem;
+            padding-right: 1.5rem;
+            font-size: 0.875rem;
             color: #212529;
         }
         .reason-input-wrap .select2-container--default .select2-selection--single .select2-selection__arrow {
-            height: 29px;
+            height: calc(1.5em + .5rem);
+        }
+        .reason-input-wrap .select2-container--default .select2-selection--single .select2-selection__clear {
+            font-size: 1rem;
+            line-height: calc(1.5em + .5rem);
         }
         .reason-input-wrap .select2-dropdown .select2-search__field {
-            font-size: 13px;
+            font-size: 0.875rem;
         }
         .reason-input-wrap .select2-results__option {
-            font-size: 13px;
+            font-size: 0.825rem;
             white-space: normal;
-            line-height: 1.3;
+            line-height: 1.35;
+            padding: 6px 10px;
         }
-        .reason-input-wrap .is-invalid + .select2-container .select2-selection--single {
+        .reason-input-wrap .is-invalid + .select2-container .select2-selection--single,
+        .reason-input-wrap .is-invalid + div .select2-container .select2-selection--single {
             border-color: #dc3545;
         }
     </style>
