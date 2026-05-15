@@ -240,6 +240,7 @@
                             </tr>
                             </tfoot>
                         </table>
+                    </div>
 
                         <h5 class="mb-2 title-modules text-center">Conductores Libres: {{ $driversFree->count() }}</h5>
 
@@ -380,7 +381,6 @@
                                 </tfoot>
                             </table>
                         </div>
-                    </div>
                 </div>
             </div>
         </div>
