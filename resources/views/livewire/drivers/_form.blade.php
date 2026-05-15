@@ -247,9 +247,22 @@
     </div>
 
     <div class="col-12 col-md-6">
-        <label class="form-label">Foto</label>
-        <input type="file" class="form-control form-control-sm" wire:model="image_file" accept="image/*" capture="environment" data-compress-image>
-        @error('image_file') <span class="title-modules">{{ $message }}</span> @enderror
+        <label class="form-label d-block">Foto</label>
+
+        {{-- Input file oculto (mantiene capture, compresion JS, wire:model) --}}
+        <input id="image_file" type="file" class="visually-hidden" wire:model="image_file"
+               accept="image/*" capture="environment" data-compress-image>
+
+        {{-- Botón visible que dispara el input --}}
+        @php $hasPhoto = $image_file || (isset($existing_image) && $existing_image); @endphp
+        <label for="image_file"
+               class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-2"
+               style="cursor:pointer">
+            <i class="ti ti-camera" style="font-size:18px"></i>
+            <span>{{ $hasPhoto ? 'Cambiar foto' : 'Tomar foto' }}</span>
+        </label>
+
+        @error('image_file') <span class="title-modules d-block mt-1">{{ $message }}</span> @enderror
 
         {{-- Estado de compresión (JS, antes de Livewire) --}}
         <small data-photo-compress-status class="text-muted align-items-center gap-2 mt-1 d-none">
