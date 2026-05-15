@@ -345,7 +345,61 @@
 
                     @if($showSection === 'all' || $showSection === 'apoyo')
                     <h4 class="my-2 title-modules text-center">VEHÍCULOS DE APOYO</h4>
-                    <div class="table-responsive mb-3">
+
+                    @if(!$groupMode)
+                        {{-- ════════ MOBILE: cards de salidas de apoyo (modo detallado) ════════ --}}
+                        <div class="d-md-none list-cards mb-3">
+                            @if($supportRows->count() > 0)
+                                @foreach($supportRows as $d)
+                                    <article class="list-card list-card--support">
+                                        <header class="list-card__head">
+                                            <div class="list-card__title-wrap">
+                                                <span class="list-card__index">{{ $loop->iteration }}</span>
+                                                <span class="list-card__title list-card__title--plate">{{ $d->plate }}</span>
+                                                <span class="list-card__support-tag">
+                                                    <i class="ti ti-shield-half-filled"></i> Apoyo
+                                                </span>
+                                            </div>
+                                            @if(auth()->user()->hasRole('director') || (auth()->user()->hasAnyRole(['administrador','gerente']) && \Carbon\Carbon::parse($d->date)->isToday()))
+                                                <a href="{{ route('departures.edit', $d->id) }}" class="list-card__edit" aria-label="Editar">
+                                                    <i class="ti ti-edit"></i>
+                                                </a>
+                                            @endif
+                                        </header>
+
+                                        <div class="list-card__chips">
+                                            <span class="list-chip list-chip--info">{{ \Illuminate\Support\Carbon::parse($d->date)->format('d/m/Y') }}</span>
+                                            @if($d->hour)<span class="list-chip">{{ $d->hour }}</span>@endif
+                                            @if($d->headquarter_name)<span class="list-chip list-chip--muted">{{ $d->headquarter_name }}</span>@endif
+                                        </div>
+
+                                        <ul class="list-card__meta">
+                                            <li>
+                                                <span class="list-card__meta-lbl"><i class="ti ti-cash"></i> Salida (S/)</span>
+                                                <span class="list-card__meta-val list-card__meta-val--amount">{{ number_format($d->price ?? 0, 2) }}</span>
+                                            </li>
+                                            <li>
+                                                <span class="list-card__meta-lbl"><i class="ti ti-users"></i> Pasajeros</span>
+                                                <span class="list-card__meta-val">{{ (int)($d->passenger ?? 0) }}</span>
+                                            </li>
+                                            <li>
+                                                <span class="list-card__meta-lbl"><i class="ti ti-ticket"></i> Pasaje (S/)</span>
+                                                <span class="list-card__meta-val">{{ number_format($d->passage ?? 0, 2) }}</span>
+                                            </li>
+                                            <li>
+                                                <span class="list-card__meta-lbl"><i class="ti ti-user"></i> Usuario</span>
+                                                <span class="list-card__meta-val">{{ $d->user_name ?: '—' }}</span>
+                                            </li>
+                                        </ul>
+                                    </article>
+                                @endforeach
+                            @else
+                                <div class="list-cards__empty">Sin salidas de apoyo</div>
+                            @endif
+                        </div>
+                    @endif
+
+                    <div class="table-responsive mb-3 {{ !$groupMode ? 'd-none d-md-block' : '' }}">
                         <table class=" table table-bordered table-striped   p-0 table-hover">
                             <thead class="text-center bg-primary">
                             <tr>

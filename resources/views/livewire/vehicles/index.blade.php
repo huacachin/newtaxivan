@@ -129,22 +129,16 @@
                             @foreach($vehicles as $vehicle)
                                 @php
                                     $cond = strtoupper((string)($vehicle->condition ?? ''));
-                                    $isSupport = str_starts_with($cond, 'EX');
                                     $condCardClass = 'vh-cond ';
-                                    if ($isSupport) { $condCardClass .= 'vh-cond--ex'; }
+                                    if (str_starts_with($cond, 'EX')) { $condCardClass .= 'vh-cond--ex'; }
                                     elseif ($cond === 'GN') { $condCardClass .= 'vh-cond--gn'; }
                                     elseif ($cond === 'DT') { $condCardClass .= 'vh-cond--dt'; }
                                 @endphp
-                                <article class="list-card {{ $isSupport ? 'list-card--support' : '' }}">
+                                <article class="list-card">
                                     <header class="list-card__head">
                                         <div class="list-card__title-wrap">
                                             <span class="list-card__index">{{ $loop->iteration }}</span>
                                             <span class="list-card__title list-card__title--plate">{{ $vehicle->plate }}</span>
-                                            @if($isSupport)
-                                                <span class="list-card__support-tag">
-                                                    <i class="ti ti-shield-half-filled"></i> Apoyo
-                                                </span>
-                                            @endif
                                             @if(!empty($vehicle->badges))
                                                 <span class="list-card__badges">
                                                     @foreach($vehicle->badges as $b)
