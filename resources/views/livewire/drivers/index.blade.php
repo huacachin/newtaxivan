@@ -243,12 +243,12 @@
                     </div>
 
                         <div class="section-banner section-banner--support">
-                            <span class="section-banner__icon"><i class="ti ti-user-question"></i></span>
+                            <span class="section-banner__count">{{ $driversFree->count() }}</span>
                             <div class="section-banner__body">
                                 <span class="section-banner__title">Conductores libres</span>
                                 <span class="section-banner__subtitle">Sin vehículo asignado</span>
                             </div>
-                            <span class="section-banner__count">{{ $driversFree->count() }}</span>
+                            <span class="section-banner__rule"></span>
                         </div>
 
                         {{-- ════════ MOBILE: cards de conductores libres ════════ --}}

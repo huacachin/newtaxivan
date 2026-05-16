@@ -345,12 +345,12 @@
 
                     @if($showSection === 'all' || $showSection === 'apoyo')
                     <div class="section-banner section-banner--support">
-                        <span class="section-banner__icon"><i class="ti ti-shield-half-filled"></i></span>
+                        <span class="section-banner__count">{{ $supportRows->count() ?? 0 }}</span>
                         <div class="section-banner__body">
                             <span class="section-banner__title">Vehículos de apoyo</span>
                             <span class="section-banner__subtitle">Salidas sin vehículo de flota</span>
                         </div>
-                        <span class="section-banner__count">{{ $supportRows->count() ?? 0 }}</span>
+                        <span class="section-banner__rule"></span>
                     </div>
 
                     @if(!$groupMode)

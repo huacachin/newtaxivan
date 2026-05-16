@@ -215,12 +215,12 @@
                         </table>
                     </div>
                     <div class="section-banner section-banner--support">
-                        <span class="section-banner__icon"><i class="ti ti-user-question"></i></span>
+                        <span class="section-banner__count">{{ $ownersFree->count() }}</span>
                         <div class="section-banner__body">
                             <span class="section-banner__title">Propietarios libres</span>
                             <span class="section-banner__subtitle">Sin vehículo asignado</span>
                         </div>
-                        <span class="section-banner__count">{{ $ownersFree->count() }}</span>
+                        <span class="section-banner__rule"></span>
                     </div>
 
                     {{-- ════════ MOBILE: cards de propietarios libres ════════ --}}
