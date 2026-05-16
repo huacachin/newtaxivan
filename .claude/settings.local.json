@@ -68,7 +68,8 @@
       "Bash(awk '{print $NF, $2}')",
       "Bash(awk '{for\\(i=1;i<=NF;i++\\) if\\($i ~ /\\\\./\\) print $i}')",
       "Bash(awk -F\"->name\\\\\\\\\\(\" '{print $2}')",
-      "Bash(awk -F\"\\\\\\\\\\)\" '{print $1}')"
+      "Bash(awk -F\"\\\\\\\\\\)\" '{print $1}')",
+      "Bash(awk 'NR==36,NR==235 {print NR\": \"$0}' /Users/antonyalfredoculquicarranza/projects/laravel_taxivan/resources/views/livewire/owners/index.blade.php)"
     ]
   }
 }
