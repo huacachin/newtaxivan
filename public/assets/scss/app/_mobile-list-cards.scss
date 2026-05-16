@@ -47,6 +47,17 @@
     }
   }
 
+  // Variante "Atención" — borde izquierdo rojo (ej. propietarios libres).
+  &--danger {
+    border-left: 4px solid #dc2626;
+    background: linear-gradient(180deg, rgba(220, 38, 38, 0.05) 0%, #fff 18px);
+
+    .list-card__index {
+      background: rgba(220, 38, 38, 0.14);
+      color: #991b1b;
+    }
+  }
+
   // Pill "APOYO" destacado para el header de las cards de apoyo.
   &__support-tag {
     display: inline-flex;

@@ -236,7 +236,7 @@
                                     elseif ($diff <= 10) { $expBadge = ['cls' => 'bg-warning text-dark', 'txt' => 'Por vencer']; }
                                 }
                             @endphp
-                            <article class="list-card">
+                            <article class="list-card list-card--danger">
                                 <header class="list-card__head">
                                     <div class="list-card__title-wrap">
                                         <span class="list-card__index">{{ $loop->iteration }}</span>
