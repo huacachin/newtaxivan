@@ -146,26 +146,13 @@ input.hasDatepicker {
     grid-column: 1 / -1;
 }
 
-@media (max-width: 767.98px) {
-    .form-two-cols {
-        grid-template-columns: 1fr;       // mobile: una sola columna
-    }
+@media (max-width: 576px) {
     .perm-row {
-        grid-template-columns: 1fr;       // label arriba, control debajo
+        grid-template-columns: 1fr;
         padding: 6px;
     }
     .perm-col-title {
         margin-bottom: 2px;
-        white-space: normal;              // permitir wrap del label
-        overflow: visible;                // sin truncar
-        text-overflow: clip;
-    }
-    .perm-col-controls {
-        min-width: 0;                     // evitar overflow horizontal del control
-    }
-    .perm-col-controls .form-control,
-    .perm-col-controls .form-select {
-        width: 100%;                      // inputs full width en mobile
     }
     .chip-radio, .chip-hq, .chip-check {
         padding: 3px 6px;
