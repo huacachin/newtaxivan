@@ -7,9 +7,12 @@ use Carbon\Carbon;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class Create extends Component
 {
+    use WithFileUploads;
+
     public $name;
     public $document_type = '';
     public $document_number;
@@ -20,6 +23,7 @@ class Create extends Component
     public $district;
     public $email;
     public $phone;
+    public $image_file;
 
     protected $validationAttributes = [
         'document_type'   => 'tipo de documento',
@@ -42,6 +46,7 @@ class Create extends Component
             'district'                 => 'nullable|string|max:255',
             'email'                    => 'nullable|string|email|max:255',
             'phone'                    => 'nullable|string|max:255',
+            'image_file'               => 'nullable|image|max:5120',
         ];
     }
 
@@ -110,6 +115,10 @@ class Create extends Component
                 'phone'                    => $this->phone,
             ];
 
+            if ($this->image_file) {
+                $payload['image_path'] = $this->image_file->storePublicly('owners', 'public');
+            }
+
             if ($this->reactivateId) {
                 $owner = Owner::findOrFail($this->reactivateId);
                 $payload['status'] = 'active';
@@ -132,8 +141,13 @@ class Create extends Component
 
     public function clean(): void
     {
-        $this->reset(['name', 'document_type', 'document_number', 'document_expiration_date', 'birthdate', 'address', 'district', 'email', 'phone', 'reactivateId']);
+        $this->reset(['name', 'document_type', 'document_number', 'document_expiration_date', 'birthdate', 'address', 'district', 'email', 'phone', 'reactivateId', 'image_file']);
         $this->mount();
+    }
+
+    public function removeNewImage(): void
+    {
+        $this->image_file = null;
     }
 
     public function render()

@@ -22,6 +22,7 @@ class Owner extends Model
         'district',
         'phone',
         'email',
+        'image_path',
         'status',
     ];
 

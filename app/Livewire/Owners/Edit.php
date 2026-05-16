@@ -4,11 +4,15 @@ namespace App\Livewire\Owners;
 
 use App\Models\Owner;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\On;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class Edit extends Component
 {
+    use WithFileUploads;
+
     public Owner $owner;
 
     public $name;
@@ -20,6 +24,8 @@ class Edit extends Component
     public $district;
     public $email;
     public $phone;
+    public $image_file;
+    public $existing_image;
 
     public function mount(int $id)
     {
@@ -34,6 +40,7 @@ class Edit extends Component
         $this->district                = $this->owner->district;
         $this->email                   = $this->owner->email;
         $this->phone                   = $this->owner->phone;
+        $this->existing_image          = $this->owner->image_path;
     }
 
     protected $validationAttributes = [
@@ -53,6 +60,7 @@ class Edit extends Component
             'district'                 => 'nullable|string|max:255',
             'email'                    => 'nullable|string|email|max:255',
             'phone'                    => 'nullable|string|max:255',
+            'image_file'               => 'nullable|image|max:5120',
         ];
     }
 
@@ -103,7 +111,7 @@ class Edit extends Component
 
             // 'document_number' se omite intencionalmente: campo bloqueado en
             // edicion para preservar la identidad del propietario.
-            $this->owner->update([
+            $payload = [
                 'name'                     => $this->name,
                 'document_type'            => $this->document_type,
                 'document_expiration_date' => $this->document_expiration_date,
@@ -112,7 +120,16 @@ class Edit extends Component
                 'district'                 => $this->district,
                 'email'                    => $this->email,
                 'phone'                    => $this->phone,
-            ]);
+            ];
+
+            if ($this->image_file) {
+                if ($this->existing_image) {
+                    Storage::disk('public')->delete($this->existing_image);
+                }
+                $payload['image_path'] = $this->image_file->storePublicly('owners', 'public');
+            }
+
+            $this->owner->update($payload);
 
             session()->flash('owner_success', 'Propietario actualizado correctamente.');
             $this->redirectRoute('settings.owners.index');
@@ -122,6 +139,25 @@ class Edit extends Component
             session()->flash('owner_error', 'Error al actualizar: ' . $e->getMessage());
             $this->redirectRoute('settings.owners.index');
         }
+    }
+
+    /** Limpia la imagen recién subida (aún no guardada). */
+    public function removeNewImage(): void
+    {
+        $this->image_file = null;
+    }
+
+    /** Elimina la imagen ya guardada del storage y del DB. */
+    #[On('remove_existing_image')]
+    public function removeExistingImage(): void
+    {
+        if (empty($this->existing_image)) return;
+
+        Storage::disk('public')->delete($this->existing_image);
+        $this->owner->update(['image_path' => null]);
+        $this->existing_image = null;
+
+        $this->dispatch('successAlert', ['message' => 'Foto eliminada correctamente.']);
     }
 
     public function render()

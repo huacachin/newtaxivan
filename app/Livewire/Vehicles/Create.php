@@ -8,14 +8,18 @@ use App\Models\Owner;
 use App\Models\Vehicle;
 use Carbon\Carbon;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class Create extends Component
 {
+    use WithFileUploads;
+
     public $headquarter, $entry_date, $termination_date;
     public $class = '', $brand = '', $year, $model, $bodywork = '';
     public $color, $type, $affiliated_company, $condition;
     public $owner_id, $driver_id, $fuel, $soat_date, $technical_review, $certificate_date;
     public $detail, $plate, $sort_order, $seats = 0,$passengers = 0;
+    public $image_file;
 
     public $listDrivers, $listOwners, $listHeadquarters;
 
@@ -40,6 +44,7 @@ class Create extends Component
         "technical_review" => "nullable|date",
         "certificate_date" => "nullable|date",
         "detail" => "nullable|string",
+        "image_file" => "nullable|image|max:5120",
         "sort_order" => "required|integer",
         "seats" => "nullable|integer",
         "passengers" => "nullable|integer"
@@ -83,7 +88,7 @@ class Create extends Component
 
             $this->validate();
 
-            Vehicle::create([
+            $payload = [
                 "sort_order" => $this->sort_order,
                 "plate" => $this->plate,
                 "headquarters" => $this->headquarter,
@@ -106,8 +111,14 @@ class Create extends Component
                 "technical_review" => $this->technical_review,
                 "detail" => $this->detail,
                 "seats" => $this->seats,
-                "passengers" => $this->passengers
-            ]);
+                "passengers" => $this->passengers,
+            ];
+
+            if ($this->image_file) {
+                $payload['image_path'] = $this->image_file->storePublicly('vehicles', 'public');
+            }
+
+            Vehicle::create($payload);
 
             session()->flash('vehicle_success', 'Vehículo creado correctamente.');
             $this->redirectRoute('settings.vehicles.index');
@@ -124,6 +135,11 @@ class Create extends Component
         $this->reset(['plate','headquarter','entry_date','termination_date','class','brand','year','model','bodywork','color','type','affiliated_company','condition','owner_id','driver_id','fuel','soat_date','technical_review','certificate_date','detail','sort_order','seats','passengers']);
 
         $this->mount();
+    }
+
+    public function removeNewImage(): void
+    {
+        $this->image_file = null;
     }
 
     public function render()

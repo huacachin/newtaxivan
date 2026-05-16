@@ -5,11 +5,14 @@ use App\Models\Driver;
 use App\Models\Headquarter;
 use App\Models\Owner;
 use App\Models\Vehicle;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\On;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class Edit extends Component
 {
+    use WithFileUploads;
 
     public Vehicle $vehicle;
     public $id;
@@ -19,6 +22,8 @@ class Edit extends Component
     public $color, $type, $affiliated_company, $condition;
     public $owner_id, $driver_id, $fuel, $soat_date, $technical_review, $certificate_date;
     public $detail, $plate,$sort_order, $seats = 0,$passengers = 0;
+    public $image_file;
+    public $existing_image;
 
     public $listDrivers, $listOwners, $listHeadquarters;
 
@@ -53,6 +58,7 @@ class Edit extends Component
         $this->detail = $this->vehicle->detail;
         $this->seats = $this->vehicle->seats;
         $this->passengers = $this->vehicle->passengers;
+        $this->existing_image = $this->vehicle->image_path;
     }
 
     public function rules()
@@ -79,6 +85,7 @@ class Edit extends Component
             "technical_review" => "nullable|date",
             "certificate_date" => "nullable|date",
             "detail" => "nullable|string",
+            "image_file" => "nullable|image|max:5120",
             "seats" => "nullable|integer",
             "passengers" => "nullable|integer"
         ];
@@ -148,7 +155,7 @@ class Edit extends Component
 
             // 'plate' se omite intencionalmente: campo bloqueado en edicion
             // para preservar referencias en otras tablas (legacy_plate, etc.).
-            $this->vehicle->update([
+            $payload = [
                 "sort_order" => $this->sort_order,
                 "headquarters" => $this->headquarter,
                 "entry_date" => $this->entry_date,
@@ -170,8 +177,18 @@ class Edit extends Component
                 "technical_review" => $this->technical_review,
                 "detail" => $this->detail,
                 "seats" => $this->seats,
-                "passengers" => $this->passengers
-            ]);
+                "passengers" => $this->passengers,
+            ];
+
+            if ($this->image_file) {
+                // Borrar imagen previa si existe
+                if ($this->existing_image) {
+                    Storage::disk('public')->delete($this->existing_image);
+                }
+                $payload['image_path'] = $this->image_file->storePublicly('vehicles', 'public');
+            }
+
+            $this->vehicle->update($payload);
 
             session()->flash('vehicle_success', 'Vehículo actualizado correctamente.');
             $this->redirectRoute('settings.vehicles.index');
@@ -181,6 +198,25 @@ class Edit extends Component
             session()->flash('vehicle_error', 'Error al actualizar: ' . $e->getMessage());
             $this->redirectRoute('settings.vehicles.index');
         }
+    }
+
+    /** Limpia la imagen recién subida (aún no guardada). */
+    public function removeNewImage(): void
+    {
+        $this->image_file = null;
+    }
+
+    /** Elimina la imagen ya guardada del storage y del DB. */
+    #[On('remove_existing_image')]
+    public function removeExistingImage(): void
+    {
+        if (empty($this->existing_image)) return;
+
+        Storage::disk('public')->delete($this->existing_image);
+        $this->vehicle->update(['image_path' => null]);
+        $this->existing_image = null;
+
+        $this->dispatch('successAlert', ['message' => 'Foto eliminada correctamente.']);
     }
 
     public function render()

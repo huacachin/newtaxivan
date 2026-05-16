@@ -35,6 +35,7 @@ class Vehicle extends Model
         'certificate_date',
         'technical_review',
         'detail',
+        'image_path',
         'validity_status',
         'status',
         'seats',
