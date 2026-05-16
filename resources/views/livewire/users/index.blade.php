@@ -27,10 +27,10 @@
 
                        <div class="row my-2">
                            <div class="col-12">
-                               <div class="d-flex flex-nowrap align-items-end gap-2 overflow-auto py-1">
+                               <div class="d-flex flex-wrap flex-md-nowrap align-items-end gap-2 py-1">
 
-                                   <!-- Input con ancho controlado (no full width) -->
-                                   <div class="flex-shrink-0" style="width: 260px;">
+                                   <!-- Input: full width en mobile, ~260px en desktop -->
+                                   <div class="flex-grow-1 flex-md-grow-0" style="min-width:180px; max-width:260px;">
                                        <input type="search"
                                               class="form-control form-control-sm"
                                               placeholder="Buscar..."
