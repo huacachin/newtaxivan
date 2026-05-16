@@ -98,7 +98,76 @@
                             </div>
                         </div>
                     </div>
-                    <div class="table-responsive">
+                    {{-- ════════ MOBILE: cards de deuda mensual ════════ --}}
+                    <div class="d-md-none list-cards">
+                        @forelse($rows as $r)
+                            @php
+                                $pending = (float)($r['pending'] ?? 0);
+                                $hasPending = $pending > 0;
+                                $cardClass = $hasPending ? 'list-card list-card--danger' : 'list-card';
+                            @endphp
+                            <article class="{{ $cardClass }}" wire:key="card-{{ $r['item'] }}">
+                                <header class="list-card__head">
+                                    <div class="list-card__title-wrap">
+                                        <span class="list-card__index">{{ $loop->iteration }}</span>
+                                        <span class="list-card__title list-card__title--plate">{{ $r['plate'] }}</span>
+                                        @if($r['condition'])
+                                            <span class="list-chip">{{ $r['condition'] }}</span>
+                                        @endif
+                                    </div>
+                                    @hasanyrole('director|gerente|administrador')
+                                        @if(($r['total'] ?? 0) > 0)
+                                            <a href="#" class="list-card__edit" wire:click.prevent="detail({{ $r['id'] }})" aria-label="Editar">
+                                                <i class="ti ti-edit"></i>
+                                            </a>
+                                        @endif
+                                    @endhasanyrole
+                                </header>
+
+                                <div class="list-card__subtitle">
+                                    {{ $r['days_late'] }} día(s) no trabajado(s) en {{ $months[$month] ?? '' }}
+                                </div>
+
+                                <ul class="list-card__meta">
+                                    <li>
+                                        <span class="list-card__meta-lbl"><i class="ti ti-receipt-tax"></i> Total deuda</span>
+                                        <span class="list-card__meta-val">S/ {{ number_format($r['total'], 2) }}</span>
+                                    </li>
+                                    @if((float)($r['exonerated'] ?? 0) > 0)
+                                        <li>
+                                            <span class="list-card__meta-lbl"><i class="ti ti-discount"></i> Exonerado</span>
+                                            <span class="list-card__meta-val">S/ {{ number_format($r['exonerated'], 2) }}</span>
+                                        </li>
+                                    @endif
+                                    @if((float)($r['amortized'] ?? 0) > 0)
+                                        <li>
+                                            <span class="list-card__meta-lbl"><i class="ti ti-arrow-down"></i> Amortizado</span>
+                                            <span class="list-card__meta-val">S/ {{ number_format($r['amortized'], 2) }}</span>
+                                        </li>
+                                    @endif
+                                    <li>
+                                        <span class="list-card__meta-lbl"><i class="ti ti-alert-circle"></i> Pendiente</span>
+                                        <span class="list-card__meta-val {{ $hasPending ? 'text-danger fw-bold' : '' }}">
+                                            S/ {{ number_format($pending, 2) }}
+                                        </span>
+                                    </li>
+                                    @if(!empty($r['images']))
+                                        <li class="d-flex justify-content-end pt-1">
+                                            <button type="button" class="btn btn-sm btn-outline-dark"
+                                                    onclick="openGallery(@js($r['images']))">
+                                                <i class="fa-solid fa-camera"></i> Ver imágenes
+                                            </button>
+                                        </li>
+                                    @endif
+                                </ul>
+                            </article>
+                        @empty
+                            <div class="list-cards__empty">No se encontraron resultados</div>
+                        @endforelse
+                    </div>
+
+                    {{-- ════════ DESKTOP: tabla original ════════ --}}
+                    <div class="table-responsive d-none d-md-block">
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">
                             <tr>
