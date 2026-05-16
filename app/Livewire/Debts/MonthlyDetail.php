@@ -196,18 +196,24 @@ class MonthlyDetail extends Component
         $this->details = $this->debtDay->details
             ->sortByDesc('date')
             ->values()
-            ->map(fn($d) => [
-                'id'         => $d->id,
-                'date'       => $d->date,
-                'detail'     => $d->detail,
-                'exonerated' => number_format((float)$d->exonerated, 2),
-                'amortized'  => number_format((float)$d->amortized, 2),
-                'user'       => $d->user?->username ?? '—',
-                'images'     => $d->images->map(fn($img) => [
-                    'id'   => $img->id,
-                    'url'  => asset('storage/' . $img->image_path),
-                ])->all(),
-            ])->all();
+            ->map(function ($d) {
+                $rawDetail = (string)($d->detail ?? '');
+                // Ocultar marcadores tecnicos tipo "payment:123"
+                $cleanDetail = str_starts_with($rawDetail, 'payment:') ? '' : $rawDetail;
+
+                return [
+                    'id'         => $d->id,
+                    'date'       => $d->date ? \Illuminate\Support\Carbon::parse($d->date)->format('d/m/Y') : '',
+                    'detail'     => $cleanDetail,
+                    'exonerated' => number_format((float)$d->exonerated, 2),
+                    'amortized'  => number_format((float)$d->amortized, 2),
+                    'user'       => $d->user?->username ?? '—',
+                    'images'     => $d->images->map(fn($img) => [
+                        'id'   => $img->id,
+                        'url'  => asset('storage/' . $img->image_path),
+                    ])->all(),
+                ];
+            })->all();
     }
 
     /** Cuenta cuántos días d1..d31 están marcados con 'X' o 'X1'. */
