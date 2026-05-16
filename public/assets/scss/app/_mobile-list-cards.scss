@@ -1,18 +1,17 @@
-// >>-- Vehicles mobile cards css start --<<
+// >>-- Mobile list cards css start --<<
 //
-// Lista de vehículos como tarjetas en mobile (<768px). En desktop se usa
-// la tabla tradicional. Cada card resume: placa + badges de vencimiento,
-// marca/año, chips (condición, fuel, categoría, modalidad) y meta
-// (propietario, conductor, empresa, fecha cese si aplica).
+// Sistema de tarjetas genéricas para listados en mobile (<768px).
+// Usado por: vehicles, owners, drivers, departures, payments.
+// En desktop se siguen mostrando las tablas tradicionales.
 
-.vh-cards {
+.list-cards {
   display: flex;
   flex-direction: column;
   gap: 12px;
   margin-top: 8px;
 }
 
-.vh-cards__empty {
+.list-cards__empty {
   text-align: center;
   padding: 24px 16px;
   color: rgba(var(--secondary), 1);
@@ -22,9 +21,10 @@
   border-radius: 12px;
 }
 
-.vh-card {
+.list-card {
   background: #fff;
   border: 1px solid rgba(15, 23, 42, 0.08);
+  border-left: 4px solid #009BDC; // cyan del navbar para cards normales
   border-radius: 14px;
   padding: 14px 16px 12px;
   box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
@@ -35,6 +35,37 @@
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
   }
 
+  // Variante "Apoyo" — vehículos con condition EX*. Más prominente: borde
+  // izquierdo ámbar, sutil tinte de fondo, header con anillo destacado.
+  &--support {
+    border-left: 4px solid #d97706;
+    background: linear-gradient(180deg, rgba(217, 119, 6, 0.05) 0%, #fff 18px);
+
+    .list-card__index {
+      background: rgba(217, 119, 6, 0.18);
+      color: #92400e;
+    }
+  }
+
+  // Pill "APOYO" destacado para el header de las cards de apoyo.
+  &__support-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: #d97706;
+    color: #fff;
+    line-height: 1;
+    box-shadow: 0 2px 4px rgba(217, 119, 6, 0.35);
+
+    i { font-size: 12px; }
+  }
+
   &__head {
     display: flex;
     justify-content: space-between;
@@ -43,7 +74,25 @@
     margin-bottom: 6px;
   }
 
-  &__plate-wrap {
+  // Pequeño badge numérico (índice de la lista) a la izquierda del título
+  &__index {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 26px;
+    height: 26px;
+    padding: 0 6px;
+    border-radius: 8px;
+    background: rgba(0, 155, 220, 0.12);
+    color: #0369a1;
+    font-size: 11px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+
+  &__title-wrap {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -51,13 +100,19 @@
     min-width: 0;
   }
 
-  &__plate {
-    font-size: 1.15rem;
+  &__title {
+    font-size: 1.05rem;
     font-weight: 700;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.04em;
     color: #0f172a;
     font-variant-numeric: tabular-nums;
-    line-height: 1.1;
+    line-height: 1.15;
+  }
+
+  // Variante para placa (más grande y con tracking)
+  &__title--plate {
+    font-size: 1.15rem;
+    letter-spacing: 0.06em;
   }
 
   &__badges {
@@ -90,7 +145,7 @@
     &:active { background: rgba(0, 155, 220, 0.18); }
   }
 
-  &__title {
+  &__subtitle {
     font-size: 0.92rem;
     color: rgba(15, 23, 42, 0.7);
     font-weight: 500;
@@ -144,10 +199,16 @@
     white-space: nowrap;
     min-width: 0;
   }
+
+  // Variante destacada para montos / pasaje
+  &__meta-val--amount {
+    color: #166534;
+    font-variant-numeric: tabular-nums;
+  }
 }
 
-// Chips genéricos (condición / fuel / class / type)
-.vh-chip {
+// Chip genérico para info secundaria (fuel, categoría, modalidad, tipo, etc.)
+.list-chip {
   display: inline-block;
   font-size: 11px;
   font-weight: 600;
@@ -163,9 +224,14 @@
     border: 1px dashed rgba(15, 23, 42, 0.18);
     color: rgba(15, 23, 42, 0.6);
   }
+
+  &--info    { background: rgba(0, 155, 220, 0.12); color: #0369a1; }
+  &--warn    { background: rgba(217, 119, 6, 0.14); color: #92400e; }
+  &--success { background: rgba(34, 197, 94, 0.14); color: #166534; }
+  &--danger  { background: rgba(220, 38, 38, 0.12); color: #991b1b; }
 }
 
-// Chip de condición coloreado (DT / GN / EX)
+// Chip de condición de vehículo (DT / GN / EX) – específico
 .vh-cond {
   display: inline-block;
   font-size: 11px;
@@ -180,4 +246,4 @@
   &--ex { background: rgba(217, 119, 6, 0.16);   color: #92400e; }
 }
 
-// >>-- Vehicles mobile cards css end --<<
+// >>-- Mobile list cards css end --<<

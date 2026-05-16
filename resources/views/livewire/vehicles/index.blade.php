@@ -124,22 +124,23 @@
                         </div>
 
                     {{-- ════════ MOBILE: lista de cards (oculta en md+) ════════ --}}
-                    <div class="d-md-none vh-cards">
+                    <div class="d-md-none list-cards">
                         @if($vehicles->count())
                             @foreach($vehicles as $vehicle)
                                 @php
                                     $cond = strtoupper((string)($vehicle->condition ?? ''));
                                     $condCardClass = 'vh-cond ';
-                                    if (str_starts_with($cond,'EX')) { $condCardClass .= 'vh-cond--ex'; }
+                                    if (str_starts_with($cond, 'EX')) { $condCardClass .= 'vh-cond--ex'; }
                                     elseif ($cond === 'GN') { $condCardClass .= 'vh-cond--gn'; }
                                     elseif ($cond === 'DT') { $condCardClass .= 'vh-cond--dt'; }
                                 @endphp
-                                <article class="vh-card">
-                                    <header class="vh-card__head">
-                                        <div class="vh-card__plate-wrap">
-                                            <span class="vh-card__plate">{{ $vehicle->plate }}</span>
+                                <article class="list-card">
+                                    <header class="list-card__head">
+                                        <div class="list-card__title-wrap">
+                                            <span class="list-card__index">{{ $loop->iteration }}</span>
+                                            <span class="list-card__title list-card__title--plate">{{ $vehicle->plate }}</span>
                                             @if(!empty($vehicle->badges))
-                                                <span class="vh-card__badges">
+                                                <span class="list-card__badges">
                                                     @foreach($vehicle->badges as $b)
                                                         <span class="badge {{ $b['class'] }} text-white" title="{{ $b['title'] }}">
                                                             {{ $b['abbr'] }}
@@ -149,50 +150,50 @@
                                             @endif
                                         </div>
                                         @hasanyrole('director|gerente|administrador|controlador')
-                                            <a href="{{ route('settings.vehicles.edit', $vehicle->id) }}" class="vh-card__edit" aria-label="Editar">
+                                            <a href="{{ route('settings.vehicles.edit', $vehicle->id) }}" class="list-card__edit" aria-label="Editar">
                                                 <i class="ti ti-edit"></i>
                                             </a>
                                         @endhasanyrole
                                     </header>
 
-                                    <div class="vh-card__title">
+                                    <div class="list-card__subtitle">
                                         {{ $vehicle->brand ?: '—' }}
                                         @if($vehicle->year) · {{ $vehicle->year }} @endif
                                     </div>
 
-                                    <div class="vh-card__chips">
+                                    <div class="list-card__chips">
                                         @if($cond)<span class="{{ $condCardClass }}">{{ $cond }}</span>@endif
-                                        @if($vehicle->fuel)<span class="vh-chip">{{ $vehicle->fuel }}</span>@endif
-                                        @if($vehicle->class)<span class="vh-chip">{{ $vehicle->class }}</span>@endif
-                                        @if($vehicle->type)<span class="vh-chip vh-chip--muted">{{ $vehicle->type }}</span>@endif
+                                        @if($vehicle->fuel)<span class="list-chip">{{ $vehicle->fuel }}</span>@endif
+                                        @if($vehicle->class)<span class="list-chip">{{ $vehicle->class }}</span>@endif
+                                        @if($vehicle->type)<span class="list-chip list-chip--muted">{{ $vehicle->type }}</span>@endif
                                     </div>
 
-                                    <ul class="vh-card__meta">
+                                    <ul class="list-card__meta">
                                         <li>
-                                            <span class="vh-card__meta-lbl"><i class="ti ti-user"></i> Propietario</span>
-                                            <span class="vh-card__meta-val">{{ $vehicle->owner->name ?? '—' }}</span>
+                                            <span class="list-card__meta-lbl"><i class="ti ti-user"></i> Propietario</span>
+                                            <span class="list-card__meta-val">{{ $vehicle->owner->name ?? '—' }}</span>
                                         </li>
                                         <li>
-                                            <span class="vh-card__meta-lbl"><i class="ti ti-steering-wheel"></i> Conductor</span>
-                                            <span class="vh-card__meta-val">{{ $vehicle->driver->name ?? '—' }}</span>
+                                            <span class="list-card__meta-lbl"><i class="ti ti-steering-wheel"></i> Conductor</span>
+                                            <span class="list-card__meta-val">{{ $vehicle->driver->name ?? '—' }}</span>
                                         </li>
                                         @if($vehicle->affiliated_company)
                                             <li>
-                                                <span class="vh-card__meta-lbl"><i class="ti ti-building"></i> Empresa</span>
-                                                <span class="vh-card__meta-val">{{ $vehicle->affiliated_company }}</span>
+                                                <span class="list-card__meta-lbl"><i class="ti ti-building"></i> Empresa</span>
+                                                <span class="list-card__meta-val">{{ $vehicle->affiliated_company }}</span>
                                             </li>
                                         @endif
                                         @if($status === 'inactive' && $vehicle->termination_date)
                                             <li>
-                                                <span class="vh-card__meta-lbl"><i class="ti ti-calendar-off"></i> Fecha cese</span>
-                                                <span class="vh-card__meta-val">{{ $vehicle->termination_date->format('d/m/Y') }}</span>
+                                                <span class="list-card__meta-lbl"><i class="ti ti-calendar-off"></i> Fecha cese</span>
+                                                <span class="list-card__meta-val">{{ $vehicle->termination_date->format('d/m/Y') }}</span>
                                             </li>
                                         @endif
                                     </ul>
                                 </article>
                             @endforeach
                         @else
-                            <div class="vh-cards__empty">Sin resultados</div>
+                            <div class="list-cards__empty">Sin resultados</div>
                         @endif
                     </div>
 

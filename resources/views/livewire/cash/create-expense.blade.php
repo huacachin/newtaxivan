@@ -121,10 +121,23 @@
                                     </select>
                                     @error('headquarter_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 @else
-                                    <input type="text" class="form-control form-control-sm @error('detail') is-invalid @enderror"
-                                           placeholder="Descripcion breve"
-                                           wire:model.defer="detail">
-                                    @error('detail') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    <div class="reason-input-wrap">
+                                        <div wire:ignore wire:key="reason-zone-create-expense">
+                                            <select class="form-select form-select-sm reason-input-select @error('detail') is-invalid @enderror">
+                                                <option value=""></option>
+                                                @if($detail)
+                                                    <option value="{{ $detail }}" selected>{{ $detail }}</option>
+                                                @endif
+                                                @foreach($reasonTemplates as $tpl)
+                                                    @if($tpl !== $detail)
+                                                        <option value="{{ $tpl }}" data-template="1">{{ \Illuminate\Support\Str::limit($tpl, 60) }}</option>
+                                                    @endif
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <input type="hidden" data-reason-sync wire:model="detail">
+                                        @error('detail') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                                    </div>
                                 @endif
                             </div>
                         </div>
@@ -256,4 +269,6 @@
     {{-- Overlay de carga --}}
 
     @include('partials.image-lightbox')
+
+    @include('livewire.cash._reason-template-modal')
 </div>

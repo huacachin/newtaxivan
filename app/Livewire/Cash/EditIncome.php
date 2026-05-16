@@ -30,6 +30,9 @@ class EditIncome extends Component
     public array $amountSuggestions = [];
     public ?float $converted_total = null;
 
+    public array $reasonTemplates = [];
+    public ?string $reasonModalText = null;
+
     public $new_images = [];
     public $image_files = [];
     public array $existing_images = [];
@@ -88,11 +91,40 @@ class EditIncome extends Component
 
         $this->recalcConverted();
         $this->recomputeAmountSuggestions();
+        $this->loadReasonTemplates();
     }
 
     public function updatedReason(): void
     {
         $this->recomputeAmountSuggestions();
+    }
+
+    protected function loadReasonTemplates(): void
+    {
+        $this->reasonTemplates = \DB::table('incomes')
+            ->whereNotNull('detail')
+            ->whereRaw('CHAR_LENGTH(detail) >= ?', [30])
+            ->select('detail', \DB::raw('COUNT(*) as freq'))
+            ->groupBy('detail')
+            ->orderByDesc('freq')
+            ->limit(20)
+            ->pluck('detail')
+            ->all();
+    }
+
+    public function openReasonModal(string $text): void
+    {
+        if (trim($text) === '') return;
+        $this->reasonModalText = $text;
+        $this->dispatch('open-modal', ['name' => 'reasonTemplateModal']);
+    }
+
+    public function acceptReasonModal(): void
+    {
+        $this->detail = (string) $this->reasonModalText;
+        $this->reasonModalText = null;
+        $this->dispatch('modal-close', ['name' => 'reasonTemplateModal']);
+        $this->dispatch('reason-detail-updated', detail: $this->detail);
     }
 
     protected function recomputeAmountSuggestions(): void

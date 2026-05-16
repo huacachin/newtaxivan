@@ -94,7 +94,69 @@
                             </div>
                         </div>
                     </div>
-                    <div class="table-responsive">
+
+                    {{-- ════════ MOBILE: cards de conductores con vehículo ════════ --}}
+                    <div class="d-md-none list-cards">
+                        @if($drivers->count() > 0)
+                            @foreach($drivers as $driver)
+                                @php
+                                    $expBadge = null;
+                                    $expRaw = $driver->document_expiration_date ?? null;
+                                    if ($expRaw && $expRaw !== '0000-00-00') {
+                                        $expDate = \Illuminate\Support\Carbon::parse($expRaw);
+                                        $today   = \Illuminate\Support\Carbon::today();
+                                        $daysDiff = $today->diffInDays($expDate, false);
+                                        if ($daysDiff < 0) { $expBadge = ['cls' => 'bg-danger', 'txt' => 'Vencido']; }
+                                        elseif ($daysDiff <= 10) { $expBadge = ['cls' => 'bg-warning text-dark', 'txt' => 'Por vencer']; }
+                                    }
+                                    $vehiclePlate = $driver->vehicles->first()->plate ?? null;
+                                @endphp
+                                <article class="list-card">
+                                    <header class="list-card__head">
+                                        <div class="list-card__title-wrap">
+                                            <span class="list-card__index">{{ $loop->iteration }}</span>
+                                            <span class="list-card__title">{{ $driver->name }}</span>
+                                        </div>
+                                        @hasanyrole('director|gerente|administrador|controlador')
+                                            <a href="{{ route('settings.drivers.edit', $driver->id) }}" class="list-card__edit" aria-label="Editar">
+                                                <i class="ti ti-edit"></i>
+                                            </a>
+                                        @endhasanyrole
+                                    </header>
+
+                                    <div class="list-card__chips">
+                                        @if($vehiclePlate)<span class="list-chip list-chip--info">{{ $vehiclePlate }}</span>@endif
+                                        @if($driver->condition)<span class="list-chip">{{ $driver->condition }}</span>@endif
+                                        @if($expBadge)<span class="badge {{ $expBadge['cls'] }}">{{ $expBadge['txt'] }}</span>@endif
+                                    </div>
+
+                                    <ul class="list-card__meta">
+                                        <li>
+                                            <span class="list-card__meta-lbl"><i class="ti ti-id"></i> DNI</span>
+                                            <span class="list-card__meta-val">{{ $driver->document_number ?: '—' }}</span>
+                                        </li>
+                                        @if($driver->phone)
+                                            <li>
+                                                <span class="list-card__meta-lbl"><i class="ti ti-phone"></i> Celular</span>
+                                                <span class="list-card__meta-val">{{ $driver->phone }}</span>
+                                            </li>
+                                        @endif
+                                        @if($driver->contract_start && $driver->contract_start !== '0000-00-00')
+                                            <li>
+                                                <span class="list-card__meta-lbl"><i class="ti ti-calendar"></i> Inicio</span>
+                                                <span class="list-card__meta-val">{{ \Illuminate\Support\Carbon::parse($driver->contract_start)->format('d/m/Y') }}</span>
+                                            </li>
+                                        @endif
+                                    </ul>
+                                </article>
+                            @endforeach
+                        @else
+                            <div class="list-cards__empty">Sin conductores</div>
+                        @endif
+                    </div>
+
+                    {{-- ════════ DESKTOP: tabla original ════════ --}}
+                    <div class="table-responsive d-none d-md-block">
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">
                             <tr>
@@ -178,9 +240,65 @@
                             </tr>
                             </tfoot>
                         </table>
+                    </div>
 
                         <h5 class="mb-2 title-modules text-center">Conductores Libres: {{ $driversFree->count() }}</h5>
-                        <div class="table-responsive">
+
+                        {{-- ════════ MOBILE: cards de conductores libres ════════ --}}
+                        <div class="d-md-none list-cards">
+                            @forelse($driversFree as $driver)
+                                @php
+                                    $expBadge = null;
+                                    $expRaw = $driver->document_expiration_date ?? null;
+                                    if ($expRaw && $expRaw !== '0000-00-00') {
+                                        $expDate = \Illuminate\Support\Carbon::parse($expRaw);
+                                        $today   = \Illuminate\Support\Carbon::today();
+                                        $daysDiff = $today->diffInDays($expDate, false);
+                                        if ($daysDiff < 0) { $expBadge = ['cls' => 'bg-danger', 'txt' => 'Vencido']; }
+                                        elseif ($daysDiff <= 10) { $expBadge = ['cls' => 'bg-warning text-dark', 'txt' => 'Por vencer']; }
+                                    }
+                                @endphp
+                                <article class="list-card list-card--support">
+                                    <header class="list-card__head">
+                                        <div class="list-card__title-wrap">
+                                            <span class="list-card__index">{{ $loop->iteration }}</span>
+                                            <span class="list-card__title">{{ $driver->name }}</span>
+                                            <span class="list-card__support-tag">
+                                                <i class="ti ti-user-question"></i> Libre
+                                            </span>
+                                        </div>
+                                        @hasanyrole('director|gerente|administrador|controlador')
+                                            <a href="{{ route('settings.drivers.edit', $driver->id) }}" class="list-card__edit" aria-label="Editar">
+                                                <i class="ti ti-edit"></i>
+                                            </a>
+                                        @endhasanyrole
+                                    </header>
+
+                                    <div class="list-card__chips">
+                                        @if($driver->condition)<span class="list-chip">{{ $driver->condition }}</span>@endif
+                                        @if($expBadge)<span class="badge {{ $expBadge['cls'] }}">{{ $expBadge['txt'] }}</span>@endif
+                                    </div>
+
+                                    <ul class="list-card__meta">
+                                        <li>
+                                            <span class="list-card__meta-lbl"><i class="ti ti-id"></i> DNI</span>
+                                            <span class="list-card__meta-val">{{ $driver->document_number ?: '—' }}</span>
+                                        </li>
+                                        @if($driver->phone)
+                                            <li>
+                                                <span class="list-card__meta-lbl"><i class="ti ti-phone"></i> Celular</span>
+                                                <span class="list-card__meta-val">{{ $driver->phone }}</span>
+                                            </li>
+                                        @endif
+                                    </ul>
+                                </article>
+                            @empty
+                                <div class="list-cards__empty">Sin conductores libres</div>
+                            @endforelse
+                        </div>
+
+                        {{-- ════════ DESKTOP: tabla original ════════ --}}
+                        <div class="table-responsive d-none d-md-block">
                             <table class="table table-bordered table-striped table-hover">
                                 <thead class="bg-primary">
                                 <tr>
@@ -263,7 +381,6 @@
                                 </tfoot>
                             </table>
                         </div>
-                    </div>
                 </div>
             </div>
         </div>

@@ -190,7 +190,62 @@
                             </div>
                         </div>
                     </div>
-                    <div class="table-responsive tableFixHead">
+                    {{-- ════════ MOBILE: cards de pagos ════════ --}}
+                    <div class="d-md-none list-cards">
+                        @forelse($payments as $p)
+                            @php
+                                $typeClass = match($p->type) {
+                                    'PAGO'    => 'list-chip list-chip--success',
+                                    'DEUDA'   => 'list-chip list-chip--danger',
+                                    'RETRASO' => 'list-chip list-chip--warn',
+                                    default   => 'list-chip',
+                                };
+                            @endphp
+                            <article class="list-card">
+                                <header class="list-card__head">
+                                    <div class="list-card__title-wrap">
+                                        <span class="list-card__index">{{ $loop->iteration }}</span>
+                                        <span class="list-card__title list-card__title--plate">{{ $p->legacy_plate ?: '—' }}</span>
+                                    </div>
+                                    @if($p->canBeEditedBy(auth()->user()))
+                                        <a href="{{ route('payments.edit', $p->id) }}" class="list-card__edit" aria-label="Editar">
+                                            <i class="ti ti-edit"></i>
+                                        </a>
+                                    @endif
+                                </header>
+
+                                <div class="list-card__chips">
+                                    @if($p->type)<span class="{{ $typeClass }}">{{ $p->type }}</span>@endif
+                                    @if($p->date_payment)<span class="list-chip list-chip--info">{{ $p->date_payment->format('d/m/Y') }}</span>@endif
+                                    @if($p->headquarter?->name)<span class="list-chip list-chip--muted">{{ $p->headquarter->name }}</span>@endif
+                                </div>
+
+                                <ul class="list-card__meta">
+                                    <li>
+                                        <span class="list-card__meta-lbl"><i class="ti ti-cash"></i> Monto (S/)</span>
+                                        <span class="list-card__meta-val list-card__meta-val--amount">{{ number_format($p->amount, 2) }}</span>
+                                    </li>
+                                    @if($p->serie)
+                                        <li>
+                                            <span class="list-card__meta-lbl"><i class="ti ti-receipt"></i> Serie</span>
+                                            <span class="list-card__meta-val">{{ $p->serie }}</span>
+                                        </li>
+                                    @endif
+                                    @if($p->user?->username)
+                                        <li>
+                                            <span class="list-card__meta-lbl"><i class="ti ti-user"></i> Usuario</span>
+                                            <span class="list-card__meta-val">{{ $p->user->username }}</span>
+                                        </li>
+                                    @endif
+                                </ul>
+                            </article>
+                        @empty
+                            <div class="list-cards__empty">No se encontraron resultados</div>
+                        @endforelse
+                    </div>
+
+                    {{-- ════════ DESKTOP: tabla original ════════ --}}
+                    <div class="table-responsive tableFixHead d-none d-md-block">
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="text-center bg-primary">
                             <tr>
