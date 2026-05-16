@@ -344,7 +344,14 @@
                     @endif
 
                     @if($showSection === 'all' || $showSection === 'apoyo')
-                    <h4 class="my-2 title-modules text-center">VEHÍCULOS DE APOYO</h4>
+                    <div class="section-banner section-banner--support">
+                        <span class="section-banner__icon"><i class="ti ti-shield-half-filled"></i></span>
+                        <div class="section-banner__body">
+                            <span class="section-banner__title">Vehículos de apoyo</span>
+                            <span class="section-banner__subtitle">Salidas sin vehículo de flota</span>
+                        </div>
+                        <span class="section-banner__count">{{ $supportRows->count() ?? 0 }}</span>
+                    </div>
 
                     @if(!$groupMode)
                         {{-- ════════ MOBILE: cards de salidas de apoyo (modo detallado) ════════ --}}

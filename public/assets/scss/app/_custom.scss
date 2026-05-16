@@ -159,6 +159,78 @@ input.hasDatepicker {
     }
 }
 
+// --- Banner de secciones secundarias (apoyo / libres) ---
+// Usado en drivers/index, owners/index, departures/index para distinguir
+// visualmente las sub-secciones (Conductores Libres, Propietarios Libres,
+// Vehículos de Apoyo) del bloque principal.
+.section-banner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    margin: 18px 0 12px;
+    border-radius: 12px;
+
+    &__icon {
+        width: 40px;
+        height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        font-size: 22px;
+        flex-shrink: 0;
+    }
+
+    &__body {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+    }
+
+    &__title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #0f172a;
+        line-height: 1.2;
+    }
+
+    &__subtitle {
+        font-size: 0.72rem;
+        color: rgba(15, 23, 42, 0.6);
+        font-weight: 500;
+        letter-spacing: 0.02em;
+    }
+
+    &__count {
+        background: #d97706;
+        color: #fff;
+        font-weight: 700;
+        font-size: 0.85rem;
+        padding: 5px 11px;
+        border-radius: 999px;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+        flex-shrink: 0;
+        box-shadow: 0 2px 6px rgba(217, 119, 6, 0.3);
+    }
+
+    // Variante apoyo / libres (ámbar)
+    &--support {
+        background: linear-gradient(90deg, rgba(217, 119, 6, 0.10) 0%, rgba(217, 119, 6, 0.02) 70%, transparent 100%);
+        border-left: 4px solid #d97706;
+
+        .section-banner__icon {
+            background: rgba(217, 119, 6, 0.18);
+            color: #92400e;
+        }
+    }
+}
+
 // --- Utilidades inline repetidas ---
 .input-offscreen {
     position: absolute;
