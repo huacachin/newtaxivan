@@ -257,7 +257,71 @@
               </div>
           </div>
 
-            <div class="table-responsive">
+            {{-- ════════ MOBILE: cards de detalles de deuda ════════ --}}
+            <div class="d-md-none list-cards">
+                @forelse($details as $row)
+                    @php
+                        $exonerated = (float)($row['exonerated'] ?? 0);
+                        $amortized  = (float)($row['amortized'] ?? 0);
+                        $hasImages  = !empty($row['images']);
+                    @endphp
+                    <article class="list-card">
+                        <header class="list-card__head">
+                            <div class="list-card__title-wrap">
+                                <span class="list-card__index">{{ $loop->iteration }}</span>
+                                <span class="list-card__title">{{ $row['date'] }}</span>
+                            </div>
+                            <button type="button" class="list-card__edit" style="background:rgba(220,38,38,0.10); color:#991b1b;"
+                                    wire:click="questionDelete({{ $row['id'] }})" aria-label="Eliminar">
+                                <i class="ti ti-trash"></i>
+                            </button>
+                        </header>
+
+                        @if(!empty($row['detail']))
+                            <div class="list-card__subtitle">{{ $row['detail'] }}</div>
+                        @endif
+
+                        <ul class="list-card__meta">
+                            @if($exonerated > 0)
+                                <li>
+                                    <span class="list-card__meta-lbl"><i class="ti ti-discount"></i> Exonerado</span>
+                                    <span class="list-card__meta-val">S/ {{ number_format($exonerated, 2) }}</span>
+                                </li>
+                            @endif
+                            @if($amortized > 0)
+                                <li>
+                                    <span class="list-card__meta-lbl"><i class="ti ti-arrow-down"></i> Amortizado</span>
+                                    <span class="list-card__meta-val">S/ {{ number_format($amortized, 2) }}</span>
+                                </li>
+                            @endif
+                            @if(!empty($row['user']))
+                                <li>
+                                    <span class="list-card__meta-lbl"><i class="ti ti-user"></i> Usuario</span>
+                                    <span class="list-card__meta-val">{{ $row['user'] }}</span>
+                                </li>
+                            @endif
+                            @if($hasImages)
+                                <li class="d-flex justify-content-end pt-1">
+                                    <span x-data="{ urls: {{ json_encode(collect($row['images'])->pluck('url')->values()) }} }"
+                                          x-on:click="$dispatch('open-lightbox', { images: urls, index: 0 })"
+                                          class="btn btn-sm btn-outline-dark" style="cursor:pointer;">
+                                        <i class="fa-solid fa-camera"></i>
+                                        Ver imágenes
+                                        @if(count($row['images']) > 1)
+                                            <span class="badge bg-primary ms-1">{{ count($row['images']) }}</span>
+                                        @endif
+                                    </span>
+                                </li>
+                            @endif
+                        </ul>
+                    </article>
+                @empty
+                    <div class="list-cards__empty">Sin detalles aún</div>
+                @endforelse
+            </div>
+
+            {{-- ════════ DESKTOP: tabla original ════════ --}}
+            <div class="table-responsive d-none d-md-block">
                 <table class="table table-bordered table-striped table-hover">
                     <thead class="bg-primary">
                     <tr>
