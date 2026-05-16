@@ -124,6 +124,16 @@
                                     <div class="list-card__chips">
                                         @if($owner->plate)<span class="list-chip list-chip--info">{{ $owner->plate }}</span>@endif
                                         @if($expBadge)<span class="badge {{ $expBadge['cls'] }}">{{ $expBadge['txt'] }}</span>@endif
+                                        @php $ownerImgUrls = $ownersImages[$owner->id] ?? []; @endphp
+                                        @if(!empty($ownerImgUrls))
+                                            <button type="button"
+                                                    class="list-chip list-chip--photos"
+                                                    x-data
+                                                    x-on:click="$dispatch('open-lightbox', { images: {{ json_encode($ownerImgUrls) }}, index: 0 })"
+                                                    title="Ver fotos">
+                                                <i class="ti ti-photo"></i> Ver fotos ({{ count($ownerImgUrls) }})
+                                            </button>
+                                        @endif
                                     </div>
 
                                     <ul class="list-card__meta">
@@ -252,6 +262,16 @@
                                 <div class="list-card__chips">
                                     <span class="list-chip list-chip--muted">Sin vehículo</span>
                                     @if($expBadge)<span class="badge {{ $expBadge['cls'] }}">{{ $expBadge['txt'] }}</span>@endif
+                                    @php $ownerImgUrls = $ownersImages[$owner->id] ?? []; @endphp
+                                    @if(!empty($ownerImgUrls))
+                                        <button type="button"
+                                                class="list-chip list-chip--photos"
+                                                x-data
+                                                x-on:click="$dispatch('open-lightbox', { images: {{ json_encode($ownerImgUrls) }}, index: 0 })"
+                                                title="Ver fotos">
+                                            <i class="ti ti-photo"></i> Ver fotos ({{ count($ownerImgUrls) }})
+                                        </button>
+                                    @endif
                                 </div>
 
                                 <ul class="list-card__meta">
@@ -343,4 +363,25 @@
         </div>
 
     </div>
+
+    @include('partials.image-lightbox')
 </div>
+
+@once
+    @push('styles')
+    <style>
+        .list-chip--photos {
+            background: #e3f2fd;
+            color: #0d47a1;
+            border: 1px solid rgba(13,71,161,.2);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            transition: background .15s, border-color .15s;
+        }
+        .list-chip--photos:hover { background: #bbdefb; border-color: rgba(13,71,161,.4); }
+        .list-chip--photos i { font-size: 14px; }
+    </style>
+    @endpush
+@endonce

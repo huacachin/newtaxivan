@@ -125,6 +125,29 @@
                     $sel.on('select2:clear', function () {
                         syncHidden($sel, '');
                     });
+
+                    // Fallback: si el usuario tipea texto y cierra el dropdown sin
+                    // seleccionar (click fuera / Tab), persistimos ese texto como
+                    // tag nuevo automaticamente para no perderlo.
+                    $sel.on('select2:closing', function () {
+                        var $field = $('.select2-container--open .select2-search__field');
+                        var typed = $.trim(($field.val() || ''));
+                        if (!typed) return;
+
+                        var existing = $sel.find('option').filter(function () {
+                            return this.value === typed;
+                        });
+                        if (existing.length) {
+                            // Ya existe la opcion; solo asegura que quede seleccionada
+                            $sel.val(typed).trigger('change.select2');
+                            syncHidden($sel, typed);
+                            return;
+                        }
+
+                        // Crear y seleccionar el tag nuevo
+                        $sel.append(new Option(typed, typed, true, true)).trigger('change.select2');
+                        syncHidden($sel, typed);
+                    });
                 });
             }
 

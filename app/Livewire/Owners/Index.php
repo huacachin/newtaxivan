@@ -3,6 +3,7 @@
 namespace App\Livewire\Owners;
 
 use App\Models\Owner;
+use App\Models\OwnerImage;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
@@ -10,6 +11,7 @@ class Index extends Component
 {
     public $owners;
     public $ownersFree;
+    public array $ownersImages = []; // owner_id => [url, ...]
     public $search;
     public $filter = "plate";
 
@@ -94,6 +96,17 @@ class Index extends Component
             )
             ->orderBy('o.name')
             ->get();
+
+        $ownerIds = $this->owners->pluck('id')
+            ->merge($this->ownersFree->pluck('id'))
+            ->unique()
+            ->all();
+
+        $this->ownersImages = OwnerImage::whereIn('owner_id', $ownerIds)
+            ->get(['owner_id', 'image_path'])
+            ->groupBy('owner_id')
+            ->map(fn ($rows) => $rows->map(fn ($r) => asset('storage/' . $r->image_path))->values()->all())
+            ->all();
     }
 
     public function updatedFilter()

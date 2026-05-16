@@ -127,11 +127,12 @@ class Index extends Component
                 $q->whereRaw("LOWER(TRIM(status)) = 'active'")
             )
 
-            // eager load de vehículos activos
+            // eager load de vehículos activos + imágenes
             ->with([
                 'vehicles' => fn ($q) => $q->whereRaw("LOWER(TRIM(status)) = 'active'")
                     ->select('id', 'driver_id', 'plate', 'status', 'sort_order')
                     ->orderBy('sort_order', 'asc'),
+                'images:id,driver_id,image_path',
             ])
 
             // filtros
@@ -158,7 +159,9 @@ class Index extends Component
         $this->driversFree = Driver::whereRaw("LOWER(TRIM(status)) = 'active'")
             ->whereDoesntHave('vehicles', function ($q) {
                 $q->whereRaw("LOWER(TRIM(status)) = 'active'");
-            })->get();
+            })
+            ->with(['images:id,driver_id,image_path'])
+            ->get();
 
     }
 

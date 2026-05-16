@@ -128,6 +128,16 @@
                                         @if($vehiclePlate)<span class="list-chip list-chip--info">{{ $vehiclePlate }}</span>@endif
                                         @if($driver->condition)<span class="list-chip">{{ $driver->condition }}</span>@endif
                                         @if($expBadge)<span class="badge {{ $expBadge['cls'] }}">{{ $expBadge['txt'] }}</span>@endif
+                                        @if($driver->images && $driver->images->count())
+                                            @php $drvImgUrls = $driver->images->map(fn($i) => asset('storage/'.$i->image_path))->values()->all(); @endphp
+                                            <button type="button"
+                                                    class="list-chip list-chip--photos"
+                                                    x-data
+                                                    x-on:click="$dispatch('open-lightbox', { images: {{ json_encode($drvImgUrls) }}, index: 0 })"
+                                                    title="Ver fotos">
+                                                <i class="ti ti-photo"></i> Ver fotos ({{ count($drvImgUrls) }})
+                                            </button>
+                                        @endif
                                     </div>
 
                                     <ul class="list-card__meta">
@@ -284,6 +294,16 @@
                                     <div class="list-card__chips">
                                         @if($driver->condition)<span class="list-chip">{{ $driver->condition }}</span>@endif
                                         @if($expBadge)<span class="badge {{ $expBadge['cls'] }}">{{ $expBadge['txt'] }}</span>@endif
+                                        @if($driver->images && $driver->images->count())
+                                            @php $drvImgUrls = $driver->images->map(fn($i) => asset('storage/'.$i->image_path))->values()->all(); @endphp
+                                            <button type="button"
+                                                    class="list-chip list-chip--photos"
+                                                    x-data
+                                                    x-on:click="$dispatch('open-lightbox', { images: {{ json_encode($drvImgUrls) }}, index: 0 })"
+                                                    title="Ver fotos">
+                                                <i class="ti ti-photo"></i> Ver fotos ({{ count($drvImgUrls) }})
+                                            </button>
+                                        @endif
                                     </div>
 
                                     <ul class="list-card__meta">
@@ -393,4 +413,25 @@
         </div>
 
     </div>
+
+    @include('partials.image-lightbox')
 </div>
+
+@once
+    @push('styles')
+    <style>
+        .list-chip--photos {
+            background: #e3f2fd;
+            color: #0d47a1;
+            border: 1px solid rgba(13,71,161,.2);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            transition: background .15s, border-color .15s;
+        }
+        .list-chip--photos:hover { background: #bbdefb; border-color: rgba(13,71,161,.4); }
+        .list-chip--photos i { font-size: 14px; }
+    </style>
+    @endpush
+@endonce

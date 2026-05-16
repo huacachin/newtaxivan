@@ -166,6 +166,16 @@
                                         @if($vehicle->fuel)<span class="list-chip">{{ $vehicle->fuel }}</span>@endif
                                         @if($vehicle->class)<span class="list-chip">{{ $vehicle->class }}</span>@endif
                                         @if($vehicle->type)<span class="list-chip list-chip--muted">{{ $vehicle->type }}</span>@endif
+                                        @if($vehicle->images && $vehicle->images->count())
+                                            @php $imgUrls = $vehicle->images->map(fn($i) => asset('storage/'.$i->image_path))->values()->all(); @endphp
+                                            <button type="button"
+                                                    class="list-chip list-chip--photos"
+                                                    x-data
+                                                    x-on:click="$dispatch('open-lightbox', { images: {{ json_encode($imgUrls) }}, index: 0 })"
+                                                    title="Ver fotos">
+                                                <i class="ti ti-photo"></i> Ver fotos ({{ count($imgUrls) }})
+                                            </button>
+                                        @endif
                                     </div>
 
                                     <ul class="list-card__meta">
@@ -301,4 +311,25 @@
         </div>
         <!-- /Tabla -->
     </div>
+
+    @include('partials.image-lightbox')
 </div>
+
+@once
+    @push('styles')
+    <style>
+        .list-chip--photos {
+            background: #e3f2fd;
+            color: #0d47a1;
+            border: 1px solid rgba(13,71,161,.2);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            transition: background .15s, border-color .15s;
+        }
+        .list-chip--photos:hover { background: #bbdefb; border-color: rgba(13,71,161,.4); }
+        .list-chip--photos i { font-size: 14px; }
+    </style>
+    @endpush
+@endonce
