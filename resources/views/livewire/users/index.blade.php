@@ -59,7 +59,76 @@
                            </div>
                        </div>
 
-                    <div class="table-responsive tableFixHead">
+                    {{-- ════════ MOBILE: cards de usuarios ════════ --}}
+                    <div class="d-md-none list-cards">
+                        @if($users->count() > 0)
+                            @foreach($users as $user)
+                                @php
+                                    $roleSlug = optional($user->roles->first())->name;
+                                    $roleLabel = $roleSlug ? __('roles.' . $roleSlug, [], 'es') : '—';
+                                    $isAdminRole = in_array($roleSlug, ['director','gerente']);
+                                    $hqText = $isAdminRole
+                                        ? '—'
+                                        : ($user->headquarters->pluck('name')->implode(', ') ?: '—');
+                                @endphp
+                                <article class="list-card">
+                                    <header class="list-card__head">
+                                        <div class="list-card__title-wrap">
+                                            <span class="list-card__index">{{ $loop->iteration }}</span>
+                                            <span class="list-card__title">{{ $user->name }}</span>
+                                        </div>
+                                        @if(auth()->user()->canManageUser($user))
+                                            <a href="{{ route('settings.users.edit', $user->id) }}" class="list-card__edit" aria-label="Editar">
+                                                <i class="ti ti-edit"></i>
+                                            </a>
+                                        @endif
+                                    </header>
+
+                                    <div class="list-card__chips">
+                                        <span class="list-chip list-chip--info">{{ $user->username }}</span>
+                                        @if($roleLabel !== '—')
+                                            <span class="list-chip">{{ $roleLabel }}</span>
+                                        @endif
+                                        <span class="list-chip list-chip--muted">{{ $user->permissions->count() }} permisos</span>
+                                    </div>
+
+                                    <ul class="list-card__meta">
+                                        @if($user->phone)
+                                            <li>
+                                                <span class="list-card__meta-lbl"><i class="ti ti-phone"></i> Teléfono</span>
+                                                <span class="list-card__meta-val">{{ $user->phone }}</span>
+                                            </li>
+                                        @endif
+                                        <li>
+                                            <span class="list-card__meta-lbl"><i class="ti ti-building"></i> Sede</span>
+                                            <span class="list-card__meta-val">{{ $hqText }}</span>
+                                        </li>
+                                        @if(auth()->user()->canManageUser($user))
+                                            <li class="d-flex justify-content-end gap-2 pt-1">
+                                                <a class="btn btn-sm btn-outline-dark"
+                                                   href="{{ route('settings.users.perms', $user->id) }}" target="_blank"
+                                                   title="Permisos">
+                                                    <i class="ti ti-shield-lock"></i> Permisos
+                                                </a>
+                                                @if(!$user->hasRole('director'))
+                                                    <button class="btn btn-sm btn-outline-danger"
+                                                            wire:click="questionDelete({{ $user->id }}, '{{ $roleLabel }}', '{{ $user->name }}')"
+                                                            title="Desactivar usuario">
+                                                        <i class="ti ti-trash"></i>
+                                                    </button>
+                                                @endif
+                                            </li>
+                                        @endif
+                                    </ul>
+                                </article>
+                            @endforeach
+                        @else
+                            <div class="list-cards__empty">Sin usuarios</div>
+                        @endif
+                    </div>
+
+                    {{-- ════════ DESKTOP: tabla original ════════ --}}
+                    <div class="table-responsive tableFixHead d-none d-md-block">
                         <table class="table table-bordered table-striped table-hover">
                             <thead class="bg-primary">
                             <tr>
