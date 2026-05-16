@@ -207,7 +207,8 @@ class MonthlyDebt extends Component
             $plateStr = $veh ? $veh->plate : ($row->legacy_plate ?? '');
             $cond     = $row->condition ?: ($veh->condition ?? '');
 
-            $daysText   = $this->buildDaysLabel($row, $from);
+            $daysText      = $this->buildDaysLabel($row, $from);
+            $daysBreakdown = $this->buildDaysBreakdown($row, $from);
 
             $daysLate   = (int) $row->days_late;    // DÍAS
             $total      = (float) $row->total;      // S/
@@ -225,19 +226,20 @@ class MonthlyDebt extends Component
             }
 
             $out[] = [
-                'id'          => $row->id,
-                'item'        => $item,
-                'cod'         => $cod,
-                'plate'       => $plateStr,
-                'condition'   => $cond,
-                'days_text'   => $daysText,
-                'days_late'   => $daysLate,
-                'total'       => $total,
-                'exonerated'  => $exonerated,
-                'to_pay'      => $toPay,
-                'amortized'   => $amort,
-                'pending'     => $pending,
-                'images'      => $images,
+                'id'             => $row->id,
+                'item'           => $item,
+                'cod'            => $cod,
+                'plate'          => $plateStr,
+                'condition'      => $cond,
+                'days_text'      => $daysText,
+                'days_breakdown' => $daysBreakdown,
+                'days_late'      => $daysLate,
+                'total'          => $total,
+                'exonerated'     => $exonerated,
+                'to_pay'         => $toPay,
+                'amortized'      => $amort,
+                'pending'        => $pending,
+                'images'         => $images,
             ];
 
             // Acumuladores
@@ -276,6 +278,26 @@ class MonthlyDebt extends Component
             }
         }
         return implode('', $parts);
+    }
+
+    /**
+     * Devuelve un array estructurado de los días no trabajados,
+     * pensado para renderizar chips en la vista mobile.
+     *   [['day' => 5, 'kind' => 'X'], ['day' => 12, 'kind' => 'X1'], ...]
+     */
+    private function buildDaysBreakdown(DebtDay $row, string $fromDate): array
+    {
+        $monthStart  = Carbon::parse($fromDate)->startOfMonth();
+        $daysInMonth = $monthStart->daysInMonth;
+
+        $out = [];
+        for ($d = 1; $d <= $daysInMonth; $d++) {
+            $val = (string) ($row->{'d'.$d} ?? '');
+            if ($val === 'X' || $val === 'X1') {
+                $out[] = ['day' => $d, 'kind' => $val];
+            }
+        }
+        return $out;
     }
 
     public function detail($id): void

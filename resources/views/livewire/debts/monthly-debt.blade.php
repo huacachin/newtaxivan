@@ -128,6 +128,17 @@
                                     {{ $r['days_late'] }} día(s) no trabajado(s) en {{ $months[$month] ?? '' }}
                                 </div>
 
+                                @if(!empty($r['days_breakdown']))
+                                    <div class="list-card__chips">
+                                        @foreach($r['days_breakdown'] as $d)
+                                            <span class="list-chip {{ $d['kind'] === 'X1' ? 'list-chip--info' : '' }}"
+                                                  title="{{ $d['kind'] === 'X1' ? 'Día especial' : 'Día no trabajado' }}">
+                                                {{ $d['day'] }}
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                @endif
+
                                 <ul class="list-card__meta">
                                     <li>
                                         <span class="list-card__meta-lbl"><i class="ti ti-receipt-tax"></i> Total deuda</span>
