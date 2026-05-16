@@ -35,7 +35,6 @@ class Vehicle extends Model
         'certificate_date',
         'technical_review',
         'detail',
-        'image_path',
         'validity_status',
         'status',
         'seats',
@@ -74,6 +73,11 @@ class Vehicle extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
+    }
+
+    public function images(): HasMany
+    {
+        return $this->hasMany(VehicleImage::class);
     }
 
     /* ---------- Scopes / Helpers ---------- */

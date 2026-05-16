@@ -3,7 +3,9 @@
 namespace App\Livewire\Owners;
 
 use App\Models\Owner;
+use App\Models\OwnerImage;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -23,7 +25,8 @@ class Create extends Component
     public $district;
     public $email;
     public $phone;
-    public $image_file;
+    public $new_images = [];
+    public $image_files = [];
 
     protected $validationAttributes = [
         'document_type'   => 'tipo de documento',
@@ -46,7 +49,8 @@ class Create extends Component
             'district'                 => 'nullable|string|max:255',
             'email'                    => 'nullable|string|email|max:255',
             'phone'                    => 'nullable|string|max:255',
-            'image_file'               => 'nullable|image|max:5120',
+            'new_images'               => 'nullable|array|max:10',
+            'new_images.*'             => 'image|max:5120',
         ];
     }
 
@@ -115,20 +119,28 @@ class Create extends Component
                 'phone'                    => $this->phone,
             ];
 
-            if ($this->image_file) {
-                $payload['image_path'] = $this->image_file->storePublicly('owners', 'public');
-            }
+            DB::transaction(function () use ($payload) {
+                if ($this->reactivateId) {
+                    $owner = Owner::findOrFail($this->reactivateId);
+                    $payload['status'] = 'active';
+                    $owner->update($payload);
+                } else {
+                    $payload['status'] = 'active';
+                    $owner = Owner::create($payload);
+                }
 
-            if ($this->reactivateId) {
-                $owner = Owner::findOrFail($this->reactivateId);
-                $payload['status'] = 'active';
-                $owner->update($payload);
-                session()->flash('owner_success', 'Propietario reactivado correctamente.');
-            } else {
-                $payload['status'] = 'active';
-                Owner::create($payload);
-                session()->flash('owner_success', 'Propietario creado correctamente.');
-            }
+                foreach ($this->image_files as $file) {
+                    $path = $file->storePublicly('owners', 'public');
+                    OwnerImage::create([
+                        'owner_id'   => $owner->id,
+                        'image_path' => $path,
+                    ]);
+                }
+            });
+
+            session()->flash('owner_success', $this->reactivateId
+                ? 'Propietario reactivado correctamente.'
+                : 'Propietario creado correctamente.');
 
             $this->redirectRoute('settings.owners.index');
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -141,13 +153,21 @@ class Create extends Component
 
     public function clean(): void
     {
-        $this->reset(['name', 'document_type', 'document_number', 'document_expiration_date', 'birthdate', 'address', 'district', 'email', 'phone', 'reactivateId', 'image_file']);
+        $this->reset(['name', 'document_type', 'document_number', 'document_expiration_date', 'birthdate', 'address', 'district', 'email', 'phone', 'reactivateId', 'new_images', 'image_files']);
         $this->mount();
     }
 
-    public function removeNewImage(): void
+    public function updatedNewImages(): void
     {
-        $this->image_file = null;
+        foreach ($this->new_images as $file) {
+            $this->image_files[] = $file;
+        }
+        $this->new_images = [];
+    }
+
+    public function removeNewImage(int $index): void
+    {
+        array_splice($this->image_files, $index, 1);
     }
 
     public function render()

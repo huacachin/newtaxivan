@@ -5,6 +5,8 @@ use App\Models\Driver;
 use App\Models\Headquarter;
 use App\Models\Owner;
 use App\Models\Vehicle;
+use App\Models\VehicleImage;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -22,14 +24,16 @@ class Edit extends Component
     public $color, $type, $affiliated_company, $condition;
     public $owner_id, $driver_id, $fuel, $soat_date, $technical_review, $certificate_date;
     public $detail, $plate,$sort_order, $seats = 0,$passengers = 0;
-    public $image_file;
-    public $existing_image;
+    public $new_images = [];
+    public $image_files = [];
+    public array $existing_images = [];
+    public array $deleted_image_ids = [];
 
     public $listDrivers, $listOwners, $listHeadquarters;
 
     public function mount(int $id)
     {
-        $this->vehicle = Vehicle::find($id);
+        $this->vehicle = Vehicle::with('images')->find($id);
 
         $this->listOwners = Owner::all();
         $this->listDrivers = Driver::all();
@@ -58,7 +62,10 @@ class Edit extends Component
         $this->detail = $this->vehicle->detail;
         $this->seats = $this->vehicle->seats;
         $this->passengers = $this->vehicle->passengers;
-        $this->existing_image = $this->vehicle->image_path;
+        $this->existing_images = $this->vehicle->images->map(fn($img) => [
+            'id'  => (int)$img->id,
+            'url' => asset('storage/' . $img->image_path),
+        ])->all();
     }
 
     public function rules()
@@ -85,7 +92,8 @@ class Edit extends Component
             "technical_review" => "nullable|date",
             "certificate_date" => "nullable|date",
             "detail" => "nullable|string",
-            "image_file" => "nullable|image|max:5120",
+            "new_images" => "nullable|array|max:10",
+            "new_images.*" => "image|max:5120",
             "seats" => "nullable|integer",
             "passengers" => "nullable|integer"
         ];
@@ -180,15 +188,29 @@ class Edit extends Component
                 "passengers" => $this->passengers,
             ];
 
-            if ($this->image_file) {
-                // Borrar imagen previa si existe
-                if ($this->existing_image) {
-                    Storage::disk('public')->delete($this->existing_image);
-                }
-                $payload['image_path'] = $this->image_file->storePublicly('vehicles', 'public');
-            }
+            DB::transaction(function () use ($payload) {
+                $this->vehicle->update($payload);
 
-            $this->vehicle->update($payload);
+                if (!empty($this->deleted_image_ids)) {
+                    $imagesToDelete = VehicleImage::where('vehicle_id', $this->vehicle->id)
+                        ->whereIn('id', $this->deleted_image_ids)
+                        ->get();
+                    foreach ($imagesToDelete as $img) {
+                        if ($img->image_path && Storage::disk('public')->exists($img->image_path)) {
+                            Storage::disk('public')->delete($img->image_path);
+                        }
+                        $img->delete();
+                    }
+                }
+
+                foreach ($this->image_files as $file) {
+                    $path = $file->storePublicly('vehicles', 'public');
+                    VehicleImage::create([
+                        'vehicle_id' => $this->vehicle->id,
+                        'image_path' => $path,
+                    ]);
+                }
+            });
 
             session()->flash('vehicle_success', 'Vehículo actualizado correctamente.');
             $this->redirectRoute('settings.vehicles.index');
@@ -200,23 +222,32 @@ class Edit extends Component
         }
     }
 
-    /** Limpia la imagen recién subida (aún no guardada). */
-    public function removeNewImage(): void
+    public function updatedNewImages(): void
     {
-        $this->image_file = null;
+        foreach ($this->new_images as $file) {
+            $this->image_files[] = $file;
+        }
+        $this->new_images = [];
     }
 
-    /** Elimina la imagen ya guardada del storage y del DB. */
-    #[On('remove_existing_image')]
-    public function removeExistingImage(): void
+    public function removeNewImage(int $index): void
     {
-        if (empty($this->existing_image)) return;
+        array_splice($this->image_files, $index, 1);
+    }
 
-        Storage::disk('public')->delete($this->existing_image);
-        $this->vehicle->update(['image_path' => null]);
-        $this->existing_image = null;
+    public function removeExistingImage(int $imageId): void
+    {
+        if (!in_array($imageId, $this->deleted_image_ids, true)) {
+            $this->deleted_image_ids[] = $imageId;
+        }
+    }
 
-        $this->dispatch('successAlert', ['message' => 'Foto eliminada correctamente.']);
+    public function restoreExistingImage(int $imageId): void
+    {
+        $this->deleted_image_ids = array_values(array_filter(
+            $this->deleted_image_ids,
+            fn($id) => $id !== $imageId
+        ));
     }
 
     public function render()

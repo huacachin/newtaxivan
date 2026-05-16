@@ -196,14 +196,25 @@ function attachImageCompression(input) {
             return;
         }
 
-        var file = input.files && input.files[0];
-        if (!file || !/^image\//.test(file.type)) return;
+        var files = input.files;
+        if (!files || files.length === 0) return;
 
-        // Detener listeners en burbuja (Livewire) hasta tener el blob comprimido.
+        // Solo intervenir si hay al menos una imagen
+        var anyImage = false;
+        for (var i = 0; i < files.length; i++) {
+            if (/^image\//.test(files[i].type)) { anyImage = true; break; }
+        }
+        if (!anyImage) return;
+
+        // Detener listeners en burbuja (Livewire) hasta tener los blobs comprimidos.
         event.stopImmediatePropagation();
 
-        // Mostrar status de compresión si existe un hermano con data-photo-compress-status
+        // Buscar el indicador de compresion: hermano del input o en el padre cercano
         var statusEl = input.parentNode && input.parentNode.querySelector('[data-photo-compress-status]');
+        if (!statusEl && input.closest) {
+            var wrap = input.closest('.multi-photos, .mb-3, .col-12');
+            if (wrap) statusEl = wrap.querySelector('[data-photo-compress-status]');
+        }
         if (statusEl) {
             statusEl.classList.remove('d-none');
             statusEl.classList.add('d-flex');
@@ -216,19 +227,33 @@ function attachImageCompression(input) {
             }
         };
 
-        _compressImageFile(file, maxSide, quality).then(function (blob) {
-            var compressed = new File([blob], _renameToJpeg(file.name), {
-                type: 'image/jpeg',
-                lastModified: Date.now()
-            });
+        var tasks = [];
+        for (var j = 0; j < files.length; j++) {
+            (function (file) {
+                if (!/^image\//.test(file.type)) {
+                    tasks.push(Promise.resolve(file));
+                    return;
+                }
+                tasks.push(
+                    _compressImageFile(file, maxSide, quality)
+                        .then(function (blob) {
+                            return new File([blob], _renameToJpeg(file.name), {
+                                type: 'image/jpeg',
+                                lastModified: Date.now()
+                            });
+                        })
+                        .catch(function (err) {
+                            console.warn('Compresión falló, mantengo original:', err);
+                            return file;
+                        })
+                );
+            })(files[j]);
+        }
+
+        Promise.all(tasks).then(function (outFiles) {
             var dt = new DataTransfer();
-            dt.items.add(compressed);
+            outFiles.forEach(function (f) { dt.items.add(f); });
             input.files = dt.files;
-            input.dataset._compressed = '1';
-            done();
-            input.dispatchEvent(new Event('change', { bubbles: true }));
-        }).catch(function (err) {
-            console.warn('Compresión falló, subiendo archivo original:', err);
             input.dataset._compressed = '1';
             done();
             input.dispatchEvent(new Event('change', { bubbles: true }));

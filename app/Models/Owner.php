@@ -22,7 +22,6 @@ class Owner extends Model
         'district',
         'phone',
         'email',
-        'image_path',
         'status',
     ];
 
@@ -34,6 +33,11 @@ class Owner extends Model
     public function vehicles(): HasMany
     {
         return $this->hasMany(Vehicle::class); // FK: vehicles.owner_id
+    }
+
+    public function images(): HasMany
+    {
+        return $this->hasMany(OwnerImage::class);
     }
 
     public function expiringAlerts(): array

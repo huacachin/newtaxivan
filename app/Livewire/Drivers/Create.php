@@ -3,7 +3,9 @@
 namespace App\Livewire\Drivers;
 
 use App\Models\Driver;
+use App\Models\DriverImage;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -37,7 +39,8 @@ class Create extends Component
     public $credential_expiration_date;
     public $credential_municipality;
     public $details;
-    public $image_file;
+    public $new_images = [];
+    public $image_files = [];
 
     public $age;
 
@@ -76,7 +79,8 @@ class Create extends Component
             'credential_expiration_date' => 'nullable|date',
             'credential_municipality' => 'nullable|string|max:255',
             'details' => 'nullable|string|max:1000',
-            'image_file' => 'nullable|image|max:5120',
+            'new_images'   => ['nullable', 'array', 'max:10'],
+            'new_images.*' => ['image', 'max:5120'],
         ];
     }
 
@@ -183,19 +187,27 @@ class Create extends Component
                 "details" => $this->details,
             ];
 
-            if ($this->image_file) {
-                $payload['image_path'] = $this->image_file->storePublicly('drivers', 'public');
-            }
+            DB::transaction(function () use ($payload) {
+                if ($this->reactivateId) {
+                    $driver = Driver::findOrFail($this->reactivateId);
+                    $payload['status'] = 'active';
+                    $driver->update($payload);
+                } else {
+                    $driver = Driver::create($payload);
+                }
 
-            if ($this->reactivateId) {
-                $driver = Driver::findOrFail($this->reactivateId);
-                $payload['status'] = 'active';
-                $driver->update($payload);
-                session()->flash('driver_success', 'Conductor reactivado correctamente.');
-            } else {
-                Driver::create($payload);
-                session()->flash('driver_success', 'Conductor creado correctamente.');
-            }
+                foreach ($this->image_files as $file) {
+                    $path = $file->storePublicly('drivers', 'public');
+                    DriverImage::create([
+                        'driver_id'  => $driver->id,
+                        'image_path' => $path,
+                    ]);
+                }
+            });
+
+            session()->flash('driver_success', $this->reactivateId
+                ? 'Conductor reactivado correctamente.'
+                : 'Conductor creado correctamente.');
 
             $this->redirectRoute('settings.drivers.index');
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -208,14 +220,21 @@ class Create extends Component
 
     public function clean(): void
     {
-        $this->reset(['name','document_number','document_expiration_date','birthdate','address','district','email','phone','license','class','category','license_issue_date','license_revalidation_date','contract_start','contract_end','condition','score','cartilla_informativa','cartilla_informativa_expiration_date','cartilla_informativa_municipality','credential','credential_expiration_date','credential_municipality','details','image_file','reactivateId']);
+        $this->reset(['name','document_number','document_expiration_date','birthdate','address','district','email','phone','license','class','category','license_issue_date','license_revalidation_date','contract_start','contract_end','condition','score','cartilla_informativa','cartilla_informativa_expiration_date','cartilla_informativa_municipality','credential','credential_expiration_date','credential_municipality','details','new_images','image_files','reactivateId']);
         $this->mount();
     }
 
-    /** Limpia la imagen recién subida (aún no guardada). */
-    public function removeNewImage(): void
+    public function updatedNewImages(): void
     {
-        $this->image_file = null;
+        foreach ($this->new_images as $file) {
+            $this->image_files[] = $file;
+        }
+        $this->new_images = [];
+    }
+
+    public function removeNewImage(int $index): void
+    {
+        array_splice($this->image_files, $index, 1);
     }
 
     protected function calculateAge(?string $date): ?int

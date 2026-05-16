@@ -38,7 +38,6 @@ class Driver extends Model
         'credential_municipality',
         'score',
         'details',
-        'image_path',
     ];
 
     protected $casts = [
@@ -57,6 +56,11 @@ class Driver extends Model
     public function vehicles(): HasMany
     {
         return $this->hasMany(Vehicle::class);
+    }
+
+    public function images(): HasMany
+    {
+        return $this->hasMany(DriverImage::class);
     }
 
     public function expiringAlerts(): array

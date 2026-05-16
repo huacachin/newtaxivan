@@ -3,7 +3,9 @@
 namespace App\Livewire\Drivers;
 
 use App\Models\Driver;
+use App\Models\DriverImage;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\On;
@@ -40,14 +42,16 @@ class Edit extends Component
     public $credential_expiration_date;
     public $credential_municipality;
     public $details;
-    public $image_file;
-    public $existing_image;
+    public $new_images = [];
+    public $image_files = [];
+    public array $existing_images = [];
+    public array $deleted_image_ids = [];
 
     public $age;
 
     public function mount(int $id)
     {
-        $this->driver = Driver::find($id);
+        $this->driver = Driver::with('images')->find($id);
 
         $this->name                         = $this->driver->name;
         $this->document_number              = $this->driver->document_number;
@@ -74,7 +78,10 @@ class Edit extends Component
         $this->credential_expiration_date   = optional($this->driver->credential_expiration_date)?->format('Y-m-d');
         $this->credential_municipality      = $this->driver->credential_municipality;
         $this->details                      = $this->driver->details;
-        $this->existing_image               = $this->driver->image_path;
+        $this->existing_images = $this->driver->images->map(fn($img) => [
+            'id'  => (int)$img->id,
+            'url' => asset('storage/' . $img->image_path),
+        ])->all();
     }
 
     protected $validationAttributes = [
@@ -108,7 +115,8 @@ class Edit extends Component
             'credential_expiration_date'       => 'nullable|date',
             'credential_municipality'          => 'nullable|string|max:255',
             'details'                          => 'nullable|string|max:1000',
-            'image_file'                       => 'nullable|image|max:5120',
+            'new_images'                       => ['nullable', 'array', 'max:10'],
+            'new_images.*'                     => ['image', 'max:5120'],
         ];
     }
 
@@ -174,23 +182,32 @@ class Edit extends Component
 
     // ---------------------------------------------------------
 
-    /** Limpia la imagen recién subida (aún no guardada). */
-    public function removeNewImage(): void
+    public function updatedNewImages(): void
     {
-        $this->image_file = null;
+        foreach ($this->new_images as $file) {
+            $this->image_files[] = $file;
+        }
+        $this->new_images = [];
     }
 
-    /** Elimina la imagen ya guardada del storage y del DB. */
-    #[On('remove_existing_image')]
-    public function removeExistingImage(): void
+    public function removeNewImage(int $index): void
     {
-        if (empty($this->existing_image)) return;
+        array_splice($this->image_files, $index, 1);
+    }
 
-        Storage::disk('public')->delete($this->existing_image);
-        $this->driver->update(['image_path' => null]);
-        $this->existing_image = null;
+    public function removeExistingImage(int $imageId): void
+    {
+        if (!in_array($imageId, $this->deleted_image_ids, true)) {
+            $this->deleted_image_ids[] = $imageId;
+        }
+    }
 
-        $this->dispatch('successAlert', ['message' => 'Foto eliminada correctamente.']);
+    public function restoreExistingImage(int $imageId): void
+    {
+        $this->deleted_image_ids = array_values(array_filter(
+            $this->deleted_image_ids,
+            fn($id) => $id !== $imageId
+        ));
     }
 
     public function questionDelete(int $id): void
@@ -242,11 +259,29 @@ class Edit extends Component
                 "details"                        => $this->details,
             ];
 
-            if ($this->image_file) {
-                $payload['image_path'] = $this->image_file->storePublicly('drivers', 'public');
-            }
+            DB::transaction(function () use ($payload) {
+                $this->driver->update($payload);
 
-            $this->driver->update($payload);
+                if (!empty($this->deleted_image_ids)) {
+                    $imagesToDelete = DriverImage::where('driver_id', $this->driver->id)
+                        ->whereIn('id', $this->deleted_image_ids)
+                        ->get();
+                    foreach ($imagesToDelete as $img) {
+                        if ($img->image_path && Storage::disk('public')->exists($img->image_path)) {
+                            Storage::disk('public')->delete($img->image_path);
+                        }
+                        $img->delete();
+                    }
+                }
+
+                foreach ($this->image_files as $file) {
+                    $path = $file->storePublicly('drivers', 'public');
+                    DriverImage::create([
+                        'driver_id'  => $this->driver->id,
+                        'image_path' => $path,
+                    ]);
+                }
+            });
 
             session()->flash('driver_success', 'Conductor actualizado correctamente.');
             $this->redirectRoute('settings.drivers.index');

@@ -6,7 +6,9 @@ use App\Models\Driver;
 use App\Models\Headquarter;
 use App\Models\Owner;
 use App\Models\Vehicle;
+use App\Models\VehicleImage;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -19,7 +21,8 @@ class Create extends Component
     public $color, $type, $affiliated_company, $condition;
     public $owner_id, $driver_id, $fuel, $soat_date, $technical_review, $certificate_date;
     public $detail, $plate, $sort_order, $seats = 0,$passengers = 0;
-    public $image_file;
+    public $new_images = [];
+    public $image_files = [];
 
     public $listDrivers, $listOwners, $listHeadquarters;
 
@@ -44,7 +47,8 @@ class Create extends Component
         "technical_review" => "nullable|date",
         "certificate_date" => "nullable|date",
         "detail" => "nullable|string",
-        "image_file" => "nullable|image|max:5120",
+        "new_images" => "nullable|array|max:10",
+        "new_images.*" => "image|max:5120",
         "sort_order" => "required|integer",
         "seats" => "nullable|integer",
         "passengers" => "nullable|integer"
@@ -114,11 +118,17 @@ class Create extends Component
                 "passengers" => $this->passengers,
             ];
 
-            if ($this->image_file) {
-                $payload['image_path'] = $this->image_file->storePublicly('vehicles', 'public');
-            }
+            DB::transaction(function () use ($payload) {
+                $vehicle = Vehicle::create($payload);
 
-            Vehicle::create($payload);
+                foreach ($this->image_files as $file) {
+                    $path = $file->storePublicly('vehicles', 'public');
+                    VehicleImage::create([
+                        'vehicle_id' => $vehicle->id,
+                        'image_path' => $path,
+                    ]);
+                }
+            });
 
             session()->flash('vehicle_success', 'Vehículo creado correctamente.');
             $this->redirectRoute('settings.vehicles.index');
@@ -132,14 +142,22 @@ class Create extends Component
 
     public function clean(){
 
-        $this->reset(['plate','headquarter','entry_date','termination_date','class','brand','year','model','bodywork','color','type','affiliated_company','condition','owner_id','driver_id','fuel','soat_date','technical_review','certificate_date','detail','sort_order','seats','passengers']);
+        $this->reset(['plate','headquarter','entry_date','termination_date','class','brand','year','model','bodywork','color','type','affiliated_company','condition','owner_id','driver_id','fuel','soat_date','technical_review','certificate_date','detail','sort_order','seats','passengers','new_images','image_files']);
 
         $this->mount();
     }
 
-    public function removeNewImage(): void
+    public function updatedNewImages(): void
     {
-        $this->image_file = null;
+        foreach ($this->new_images as $file) {
+            $this->image_files[] = $file;
+        }
+        $this->new_images = [];
+    }
+
+    public function removeNewImage(int $index): void
+    {
+        array_splice($this->image_files, $index, 1);
     }
 
     public function render()
