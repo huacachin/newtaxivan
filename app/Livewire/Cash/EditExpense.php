@@ -111,7 +111,7 @@ class EditExpense extends Component
         $this->reasonTemplates = DB::table('expenses')
             ->whereNotNull('detail')
             ->whereRaw('CHAR_LENGTH(detail) >= ?', [30])
-            ->where('created_at', '>=', now()->subYear())
+            ->where('date', '>=', now()->subYear()->toDateString())
             ->select('detail', DB::raw('COUNT(*) as freq'))
             ->groupBy('detail')
             ->orderByDesc('freq')

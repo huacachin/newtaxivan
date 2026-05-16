@@ -167,6 +167,7 @@
                                             <button type="button" class="btn btn-sm btn-outline-dark"
                                                     onclick="openGallery(@js($r['images']))">
                                                 <i class="fa-solid fa-camera"></i> Ver imágenes
+                                                <span class="badge bg-primary ms-1">{{ count($r['images']) }}</span>
                                             </button>
                                         </li>
                                     @endif
@@ -224,8 +225,12 @@
                                     <td>{{ number_format($r['pending'], 2) }}</td>
                                     <td class="text-center">
                                         @if(!empty($r['images']))
-                                            <i class="fa-solid fa-camera f-s-18 text-dark" style="cursor:pointer;"
-                                               onclick="openGallery(@js($r['images']))"></i>
+                                            <span style="cursor:pointer;position:relative;display:inline-block;"
+                                                  onclick="openGallery(@js($r['images']))">
+                                                <i class="fa-solid fa-camera f-s-18 text-dark"></i>
+                                                <span class="badge bg-primary"
+                                                      style="position:absolute;top:-8px;right:-12px;font-size:9px;">{{ count($r['images']) }}</span>
+                                            </span>
                                         @else
                                             <span class="text-muted">—</span>
                                         @endif
