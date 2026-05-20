@@ -1,3 +1,8 @@
+@push('datepicker_css')
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.14.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script src="https://code.jquery.com/ui/1.14.1/jquery-ui.js"></script>
+@endpush
 <div class="container-fluid">
     <!-- Header -->
     <div class="row">
@@ -44,10 +49,10 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <input type="date" class="form-control form-control-sm" wire:model="dateFrom">
+                    <input type="text" wire:ignore id="audit_date_from" class="form-control form-control-sm" wire:model="dateFrom" autocomplete="off" placeholder="Desde">
                 </div>
                 <div class="col-md-2">
-                    <input type="date" class="form-control form-control-sm" wire:model="dateTo">
+                    <input type="text" wire:ignore id="audit_date_to" class="form-control form-control-sm" wire:model="dateTo" autocomplete="off" placeholder="Hasta">
                 </div>
                 <div class="col-md-1">
                     <button class="btn btn-sm btn-primary w-100" wire:click="search">Buscar</button>
@@ -221,3 +226,15 @@
     </div>
     @endif
 </div>
+
+@push('datepicker_js')
+    <script>
+        $(function () {
+            var wire = @this;
+            initLivewireDatepicker([
+                ['#audit_date_from', 'dateFrom'],
+                ['#audit_date_to',   'dateTo'],
+            ], wire);
+        });
+    </script>
+@endpush

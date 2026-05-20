@@ -15,7 +15,8 @@
     'settings.vehicles.expiration',
     'settings.owners.expiration',
     'settings.drivers.expiration',
-    'departures.edit'
+    'departures.edit',
+    'audit.logs.index'
 ]))
     <script src="{{ asset('assets/js/jquery-3.6.3.min.js') }}"></script>
 @endif
