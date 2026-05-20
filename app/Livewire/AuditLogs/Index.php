@@ -44,9 +44,24 @@ class Index extends Component
     ];
 
     /**
+     * Mapeo de mismatches columna DB → propiedad Livewire para resaltar
+     * correctamente los campos en la vista Edit cuando llegamos desde auditoria.
+     * Solo declarar entradas donde el nombre de la columna difiere del
+     * nombre de la propiedad publica del componente Livewire. Por defecto se
+     * asume 1:1 (no hace falta declararlo).
+     */
+    protected const FIELD_PROP_MAP = [
+        'Vehículos' => ['headquarters' => 'headquarter'],
+        'Pagos'     => ['type'         => 'type_form'],
+        'Egresos'   => ['kind'         => 'expenseKind'],
+    ];
+
+    /**
      * Devuelve la URL destino para un log de auditoria:
      * - Si la acción es 'deleted' o el módulo no tiene ruta edit → ruta index.
      * - En cualquier otro caso, ruta edit con el record_id.
+     * - Cuando action='updated' y hay changed_fields, anexa ?highlight=...
+     *   traduciendo columna DB → prop Livewire via FIELD_PROP_MAP.
      * - null si el módulo no está mapeado (no muestra el boton).
      */
     public function targetUrlFor(ActivityLog $log): ?string
@@ -58,7 +73,18 @@ class Index extends Component
 
         if (!$isDeleted && isset($routes['edit']) && $log->record_id) {
             try {
-                return route($routes['edit'], $log->record_id);
+                $url = route($routes['edit'], $log->record_id);
+
+                if ($log->action === 'updated' && !empty($log->changed_fields)) {
+                    $map = self::FIELD_PROP_MAP[$log->module] ?? [];
+                    $props = array_map(
+                        fn($col) => $map[$col] ?? $col,
+                        $log->changed_fields
+                    );
+                    $url .= '?' . http_build_query(['highlight' => implode(',', $props)]);
+                }
+
+                return $url;
             } catch (\Throwable $e) {
                 // fall through al index
             }

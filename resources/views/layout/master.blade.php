@@ -26,6 +26,7 @@
 
         <!-- Main Section start -->
         <main>
+            @include('partials._audit-highlight-banner')
             {{-- main body content --}}
             @yield('main-content')
         </main>

@@ -275,6 +275,67 @@ document.addEventListener('livewire:init', function () {
     });
 });
 
+// =========================================================
+// Highlight de campos editados (vista Edit con ?highlight=...).
+// Disparado desde /audit-logs al hacer click en el boton verde:
+// se anexa ?highlight=prop1,prop2,... con los nombres de propiedades
+// Livewire (no de columna DB). Aplica .field-audit-highlight al input
+// y .field-audit-highlight-label al <label for=id> asociado.
+// =========================================================
+function _applyAuditHighlight() {
+    var params = new URLSearchParams(window.location.search);
+    var raw = params.get('highlight') || '';
+    if (!raw) return [];
+
+    var fields = raw.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+    if (!fields.length) return [];
+
+    fields.forEach(function (name) {
+        // Escapado simple del nombre para CSS selectors
+        var esc = (window.CSS && CSS.escape) ? CSS.escape(name) : name.replace(/"/g, '\\"');
+        // wire:model y sus modificadores .defer / .lazy / .live
+        var selectors = [
+            '[wire\\:model="' + esc + '"]',
+            '[wire\\:model\\.defer="' + esc + '"]',
+            '[wire\\:model\\.lazy="' + esc + '"]',
+            '[wire\\:model\\.live="' + esc + '"]',
+            '[wire\\:model\\.live\\.debounce="' + esc + '"]'
+        ];
+        document.querySelectorAll(selectors.join(',')).forEach(function (el) {
+            el.classList.add('field-audit-highlight');
+            if (el.id) {
+                var lab = document.querySelector('label[for="' + esc + '"]');
+                // tambien probemos por el id real del input (puede que el "for" use otro)
+                if (!lab) lab = document.querySelector('label[for="' + el.id + '"]');
+                if (lab) lab.classList.add('field-audit-highlight-label');
+            }
+        });
+    });
+
+    return fields;
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    _applyAuditHighlight();
+});
+// Re-aplicar tras morfs de Livewire (los inputs pueden re-renderizarse).
+document.addEventListener('livewire:init', function () {
+    if (window.Livewire && Livewire.hook) {
+        Livewire.hook('morph.added', function () { _applyAuditHighlight(); });
+    }
+});
+
+// Permite quitar el highlight desde el banner (limpia query y clases).
+window.clearAuditHighlight = function () {
+    document.querySelectorAll('.field-audit-highlight')
+        .forEach(function (el) { el.classList.remove('field-audit-highlight'); });
+    document.querySelectorAll('.field-audit-highlight-label')
+        .forEach(function (el) { el.classList.remove('field-audit-highlight-label'); });
+    if (window.history && history.replaceState) {
+        history.replaceState(null, '', window.location.pathname);
+    }
+};
+
 function questionDelete(id, role, name) {
     var msg = (role && name)
         ? '¿Está seguro de eliminar al ' + role + ' <span style="color:red;font-weight:bold">' + name + '</span>?'

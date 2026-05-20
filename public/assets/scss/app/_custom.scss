@@ -307,3 +307,43 @@ input.hasDatepicker {
     border-color: #D0CECE !important;
     color: #000 !important;
 }
+
+// ============================================================
+// Highlight de campos editados (al venir desde /audit-logs).
+// Se aplica via JS leyendo ?highlight=prop1,prop2,...
+// ============================================================
+.field-audit-highlight {
+    background-color: #fff9c4 !important;
+    border-color: #f9a825 !important;
+    box-shadow: 0 0 0 0.15rem rgba(249, 168, 37, .25) !important;
+    transition: background-color .25s, border-color .25s, box-shadow .25s;
+}
+.field-audit-highlight-label {
+    color: #e65100 !important;
+    font-weight: 600;
+}
+.audit-highlight-banner {
+    background: linear-gradient(90deg, #fff8e1, #fffde7);
+    border: 1px solid #f9a825;
+    border-radius: 6px;
+    padding: 8px 14px;
+    margin: 0 0 12px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    color: #6d4c00;
+    font-size: 13px;
+}
+.audit-highlight-banner__icon { color: #f9a825; font-size: 18px; }
+.audit-highlight-banner__btn {
+    background: transparent;
+    border: 1px solid #f9a825;
+    color: #b46e00;
+    padding: 2px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background .15s;
+}
+.audit-highlight-banner__btn:hover { background: rgba(249, 168, 37, .15); }
