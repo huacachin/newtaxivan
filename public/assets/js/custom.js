@@ -275,37 +275,6 @@ document.addEventListener('livewire:init', function () {
     });
 });
 
-// =========================================================
-// Lightbox: abre el modal #imagePreviewModal con la imagen ampliada.
-// Uso desde Blade: <img ... onclick="openImagePreview(this.src)">
-// =========================================================
-window.openImagePreview = function (src) {
-    var img = document.getElementById('imagePreviewModalImg');
-    var modalEl = document.getElementById('imagePreviewModal');
-    if (!img || !modalEl || typeof bootstrap === 'undefined') return;
-    img.src = src;
-    bootstrap.Modal.getOrCreateInstance(modalEl).show();
-};
-
-// Confirma con SweetAlert antes de eliminar una imagen ya guardada.
-// El componente Livewire debe tener un listener #[On('remove_existing_image')].
-window.confirmRemoveExistingImage = function () {
-    Swal.fire({
-        title: '¿Eliminar foto?',
-        html: 'La foto será eliminada del servidor.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#dc3545',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar'
-    }).then(function (result) {
-        if (result.isConfirmed && window.Livewire) {
-            Livewire.dispatch('remove_existing_image');
-        }
-    });
-};
-
 function questionDelete(id, role, name) {
     var msg = (role && name)
         ? '¿Está seguro de eliminar al ' + role + ' <span style="color:red;font-weight:bold">' + name + '</span>?'
