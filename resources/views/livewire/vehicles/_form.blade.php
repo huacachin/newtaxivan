@@ -1,5 +1,9 @@
 {{-- resources/views/livewire/vehicles/_form.blade.php --}}
-@php $isEdit = isset($vehicle) && ($vehicle?->exists ?? false); @endphp
+@php
+    $isEdit = isset($vehicle) && ($vehicle?->exists ?? false);
+    // En Edit, los controladores no pueden tocar Fecha cese, Orden y Condicion.
+    $lockForController = $isEdit && auth()->user()?->hasRole('controlador');
+@endphp
 <div class="row g-3">
     {{-- Placa --}}
     <div class="col-6 col-md-2">
@@ -51,8 +55,8 @@
 
     {{-- Fecha Cese --}}
     <div class="col-6 col-md-2">
-        <label for="termination_date" class="form-label">Fecha Cese</label>
-        <input id="termination_date" type="text" class="form-control form-control-sm" wire:model="termination_date" placeholder="0000-00-00">
+        <label for="termination_date" class="form-label {{ $lockForController ? 'text-muted' : '' }}">Fecha Cese</label>
+        <input id="termination_date" type="text" class="form-control form-control-sm" wire:model="termination_date" placeholder="0000-00-00" @if($lockForController) disabled @endif>
         @error('termination_date') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
@@ -151,8 +155,8 @@
 
     {{-- Condición --}}
     <div class="col-6 col-md-2">
-        <label for="condition" class="form-label">Condición</label>
-        <select id="condition" class="form-select form-select-sm" wire:model="condition">
+        <label for="condition" class="form-label {{ $lockForController ? 'text-muted' : '' }}">Condición</label>
+        <select id="condition" class="form-select form-select-sm" wire:model="condition" @if($lockForController) disabled @endif>
             <option value="">Seleccione</option>
             <option value="DT">DT</option>
             <option value="GN">GN</option>
@@ -249,8 +253,8 @@
 
     {{-- Sort Order --}}
     <div class="col-6 col-md-1">
-        <label for="sort_order" class="form-label">Orden</label>
-        <input id="sort_order" type="number" inputmode="numeric" class="form-control form-control-sm"  wire:model="sort_order" min="1" step="1">
+        <label for="sort_order" class="form-label {{ $lockForController ? 'text-muted' : '' }}">Orden</label>
+        <input id="sort_order" type="number" inputmode="numeric" class="form-control form-control-sm"  wire:model="sort_order" min="1" step="1" @if($lockForController) disabled @endif>
         @error('sort_order') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 

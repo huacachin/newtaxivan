@@ -188,6 +188,12 @@ class Edit extends Component
                 "passengers" => $this->passengers,
             ];
 
+            // Controlador no puede tocar Fecha cese, Orden ni Condicion
+            // aunque el HTML sea bypasseado.
+            if (auth()->user()?->hasRole('controlador')) {
+                unset($payload['termination_date'], $payload['sort_order'], $payload['condition']);
+            }
+
             DB::transaction(function () use ($payload) {
                 $this->vehicle->update($payload);
 
