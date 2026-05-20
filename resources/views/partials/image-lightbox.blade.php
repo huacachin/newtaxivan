@@ -37,7 +37,12 @@
                     pinchToClose: true,
                     closeOnVerticalDrag: true,
                     wheelToZoom: true,
+                    imageClickAction: 'zoom',
+                    tapAction: 'zoom',
                     doubleTapAction: 'zoom',
+                    initialZoomLevel: 'fit',
+                    secondaryZoomLevel: 3,
+                    maxZoomLevel: 6,
                     indexIndicatorSep: ' / ',
                 });
 
