@@ -17,7 +17,10 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     protected $auditModule = 'Usuarios';
-    protected $auditExclude = ['password', 'remember_token'];
+    protected $auditExclude = ['remember_token'];
+    // password se registra en changed_fields pero su valor se enmascara como
+    // '***' para no persistir el hash en activity_logs.
+    protected $auditMask = ['password'];
 
     const ROLE_HIERARCHY = [
         'controlador'   => 1,

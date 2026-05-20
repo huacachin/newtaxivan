@@ -63,14 +63,29 @@ trait Auditable
     protected function getAuditAttributes(): array
     {
         $excluded = $this->getAuditExclude();
-        return array_diff_key($this->attributesToArray(), array_flip($excluded));
+        $masked = $this->getAuditMask();
+        $attrs = array_diff_key($this->attributesToArray(), array_flip($excluded));
+        // Forzamos los campos enmascarados (puede ser que esten en $hidden y por
+        // eso attributesToArray los omite). El valor real nunca se persiste.
+        foreach ($masked as $field) {
+            if (array_key_exists($field, $this->getAttributes())) {
+                $attrs[$field] = '***';
+            }
+        }
+        return $attrs;
     }
 
     protected function getOriginalAuditAttributes(): array
     {
         $excluded = $this->getAuditExclude();
-        $original = $this->getOriginal();
-        return array_diff_key($original, array_flip($excluded));
+        $masked = $this->getAuditMask();
+        $original = array_diff_key($this->getOriginal(), array_flip($excluded));
+        foreach ($masked as $field) {
+            if (array_key_exists($field, $this->getOriginal())) {
+                $original[$field] = '***';
+            }
+        }
+        return $original;
     }
 
     protected function getAuditModule(): string
@@ -81,5 +96,10 @@ trait Auditable
     protected function getAuditExclude(): array
     {
         return $this->auditExclude ?? [];
+    }
+
+    protected function getAuditMask(): array
+    {
+        return $this->auditMask ?? [];
     }
 }
