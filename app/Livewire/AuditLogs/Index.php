@@ -54,6 +54,7 @@ class Index extends Component
         'Vehículos' => ['headquarters' => 'headquarter'],
         'Pagos'     => ['type'         => 'type_form'],
         'Egresos'   => ['kind'         => 'expenseKind'],
+        'Usuarios'  => ['password'     => 'pwd'],
     ];
 
     /**
