@@ -17,6 +17,28 @@
         <script type="module">
             import PhotoSwipe from "{{ asset('assets/js/photoswipe/photoswipe.esm.js') }}";
 
+            // Pre-carga cada URL para detectar el tamano natural real de la
+            // imagen. Sin esto PhotoSwipe usa el width/height declarados y
+            // puede estirar fotos pequenas hacia arriba.
+            function _loadDimensions(urls) {
+                return Promise.all(urls.map(function (url) {
+                    return new Promise(function (resolve) {
+                        var img = new Image();
+                        img.onload = function () {
+                            resolve({
+                                src: url,
+                                width: img.naturalWidth || 1600,
+                                height: img.naturalHeight || 1200,
+                            });
+                        };
+                        img.onerror = function () {
+                            resolve({ src: url, width: 1600, height: 1200 });
+                        };
+                        img.src = url;
+                    });
+                }));
+            }
+
             window.addEventListener('open-lightbox', function (e) {
                 var detail = (e && e.detail) || {};
                 var images = Array.isArray(detail.images) ? detail.images : [];
@@ -24,29 +46,30 @@
 
                 var index = Number.isInteger(detail.index) ? detail.index : 0;
 
-                // PhotoSwipe necesita width/height; usamos un placeholder 1600x1200
-                // (no afecta el zoom, solo la animacion de apertura).
-                var items = images.map(function (u) {
-                    return { src: u, width: 1600, height: 1200 };
-                });
+                _loadDimensions(images).then(function (items) {
+                    var pswp = new PhotoSwipe({
+                        dataSource: items,
+                        index: index,
+                        bgOpacity: 0.92,
+                        pinchToClose: true,
+                        closeOnVerticalDrag: true,
+                        wheelToZoom: true,
+                        imageClickAction: 'zoom',
+                        tapAction: 'zoom',
+                        doubleTapAction: 'zoom',
+                        // Muestra al tamano natural (1:1) salvo que la imagen
+                        // sea mas grande que el viewport: ahi la reduce con 'fit'.
+                        // Nunca hace upscale.
+                        initialZoomLevel: function (zl) {
+                            return Math.min(1, zl.fit);
+                        },
+                        secondaryZoomLevel: 3,
+                        maxZoomLevel: 6,
+                        indexIndicatorSep: ' / ',
+                    });
 
-                var pswp = new PhotoSwipe({
-                    dataSource: items,
-                    index: index,
-                    bgOpacity: 0.92,
-                    pinchToClose: true,
-                    closeOnVerticalDrag: true,
-                    wheelToZoom: true,
-                    imageClickAction: 'zoom',
-                    tapAction: 'zoom',
-                    doubleTapAction: 'zoom',
-                    initialZoomLevel: 'fit',
-                    secondaryZoomLevel: 3,
-                    maxZoomLevel: 6,
-                    indexIndicatorSep: ' / ',
+                    pswp.init();
                 });
-
-                pswp.init();
             });
         </script>
     @endpush
