@@ -91,9 +91,11 @@ class Index extends Component
             }
         }
 
-        // Deleted: si el modulo tiene ruta edit, mostramos snapshot informativo
-        // con los datos del registro al momento previo a la eliminacion.
-        if ($isDeleted && isset($routes['edit'])) {
+        // Deleted: SIEMPRE mostramos snapshot informativo (aunque el modulo no
+        // tenga ruta edit, como Detalle Deuda o Costo por Placa). La vista
+        // snapshot decide segun el modulo si usa form replicado o fallback
+        // key/value.
+        if ($isDeleted) {
             try {
                 return route('audit.snapshot', $log->id);
             } catch (\Throwable $e) {

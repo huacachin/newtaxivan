@@ -711,8 +711,86 @@
             </div>
             @break
 
+        @case('Detalle Deuda')
+            <div class="row">
+                <div class="col-sm-6">
+                    <h4 class="main-title title-modules">DETALLE DEUDA: REGISTRO ELIMINADO</h4>
+                </div>
+                <div class="col-sm-6 mt-sm-2">
+                    <ul class="breadcrumb breadcrumb-start float-sm-end">
+                        <li class="d-flex">
+                            <i class="ti ti-receipt f-s-16"></i>
+                            <a href="{{ route('debts.monthly') }}" class="f-s-14 d-flex gap-2">
+                                <span class="d-none d-md-block">Deuda mensual</span>
+                            </a>
+                        </li>
+                        <li class="d-flex active">
+                            <span class="f-s-14">Eliminado #{{ $log->record_id }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row table-section">
+                <div class="col-xl-12">
+                    <div class="card">
+                        <div class="card-body">
+                            @include('partials._audit-snapshot-bar', ['log' => $log])
+                            <fieldset disabled class="audit-snapshot-readonly">
+                                <div class="d-flex flex-wrap align-items-end gap-2 py-1">
+                                    <div class="flex-item flex-item-sm">
+                                        <label class="form-label mb-1">Fecha</label>
+                                        <input type="text" class="form-control form-control-sm"
+                                               value="{{ $this->valueFor('date', $data['date'] ?? null) }}">
+                                    </div>
+                                    <div class="flex-item flex-item-md">
+                                        <label class="form-label mb-1">Exonerado (S/)</label>
+                                        <input type="text" class="form-control form-control-sm text-end"
+                                               style="background-color: yellow;"
+                                               value="{{ isset($data['exonerated']) ? number_format((float)$data['exonerated'], 2) : '' }}">
+                                    </div>
+                                    <div class="flex-item flex-item-md">
+                                        <label class="form-label mb-1">Amortización (S/)</label>
+                                        <input type="text" class="form-control form-control-sm text-end"
+                                               value="{{ isset($data['amortized']) ? number_format((float)$data['amortized'], 2) : '' }}">
+                                    </div>
+                                    <div class="flex-item flex-item-lg" style="min-width: 280px;">
+                                        <label class="form-label mb-1">Detalle exoneración</label>
+                                        <input type="text" class="form-control form-control-sm"
+                                               style="background-color: yellow;"
+                                               value="{{ $data['detail'] ?? '' }}">
+                                    </div>
+                                    <div class="flex-item flex-item-md">
+                                        <label class="form-label mb-1">Usuario</label>
+                                        <input type="text" class="form-control form-control-sm"
+                                               value="{{ $this->valueFor('user_id', $data['user_id'] ?? null) }}">
+                                    </div>
+                                    <div class="flex-item flex-item-md">
+                                        <label class="form-label mb-1">Deuda Diaria (ID)</label>
+                                        <input type="text" class="form-control form-control-sm"
+                                               value="#{{ $data['debt_days_id'] ?? '—' }}">
+                                    </div>
+                                    <div class="w-100"></div>
+                                    <div class="flex-item" style="min-width: 100%;">
+                                        <label class="form-label mb-1">Imágenes</label>
+                                        <div class="audit-snapshot-photos-notice">
+                                            📷 Comprobantes eliminados en cascada (no disponibles)
+                                        </div>
+                                    </div>
+                                </div>
+                            </fieldset>
+                            <div class="d-flex gap-2 mt-3">
+                                <a href="{{ route('audit.logs.index') }}" class="btn btn-sm btn-secondary">
+                                    <i class="ti ti-arrow-back-up"></i> Regresar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @break
+
         @default
-            {{-- Fallback final por si aparece algun modulo nuevo no listado. --}}
+            {{-- Fallback final para modulos no replicados (Deuda por Dias, Costo por Placa, etc.). --}}
             <div class="row">
                 <div class="col-sm-6">
                     <h4 class="main-title title-modules">
