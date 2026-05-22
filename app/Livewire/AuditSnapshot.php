@@ -94,7 +94,7 @@ class AuditSnapshot extends Component
     {
         $this->log = ActivityLog::findOrFail($id);
 
-        if ($this->log->action !== 'deleted') {
+        if ($this->log->action !== 'deleted' && !$this->log->isSoftDelete()) {
             abort(404);
         }
 

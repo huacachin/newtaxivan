@@ -50,4 +50,40 @@ class ActivityLog extends Model
             ->when($from, fn($q) => $q->where('created_at', '>=', $from . ' 00:00:00'))
             ->when($to, fn($q) => $q->where('created_at', '<=', $to . ' 23:59:59'));
     }
+
+    /**
+     * Modulos cuyos registros NO se eliminan fisicamente — solo cambian
+     * status active → inactive. El audit log queda como 'updated' pero
+     * funcionalmente es una eliminacion.
+     */
+    public const SOFT_DELETE_MODULES = ['Conductores', 'Propietarios'];
+
+    /**
+     * Detecta si este log es realmente una eliminacion soft (cambio de
+     * status active → inactive en modulos que no se borran fisicamente).
+     */
+    public function isSoftDelete(): bool
+    {
+        if (!in_array($this->module, self::SOFT_DELETE_MODULES, true)) return false;
+        if ($this->action !== 'updated') return false;
+        if (!is_array($this->changed_fields) || !in_array('status', $this->changed_fields, true)) return false;
+
+        return ($this->old_data['status'] ?? null) === 'active'
+            && ($this->new_data['status'] ?? null) === 'inactive';
+    }
+
+    /**
+     * Scope que aplica las condiciones SQL del soft-delete sobre el query
+     * actual (sin grouping). Pensado para usar dentro de un where() closure
+     * cuando se necesita combinar con OR/NOT.
+     */
+    public function scopeSoftDeleteCriteria($query)
+    {
+        return $query
+            ->where('action', 'updated')
+            ->whereIn('module', self::SOFT_DELETE_MODULES)
+            ->whereJsonContains('changed_fields', 'status')
+            ->where('old_data->status', 'active')
+            ->where('new_data->status', 'inactive');
+    }
 }
