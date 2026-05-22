@@ -72,7 +72,7 @@ class Index extends Component
 
         // Tratamos el soft-delete (status active→inactive en Conductores/
         // Propietarios) como una eliminacion regular: badge rojo, tooltip
-        // y redirect al index del modulo.
+        // y redirect al snapshot informativo.
         $isDeleted = $log->action === 'deleted' || $log->isSoftDelete();
 
         if (!$isDeleted && isset($routes['edit']) && $log->record_id) {
@@ -89,6 +89,18 @@ class Index extends Component
                 }
 
                 return $url;
+            } catch (\Throwable $e) {
+                // fall through al index
+            }
+        }
+
+        // Deleted: SIEMPRE mostramos snapshot informativo (aunque el modulo no
+        // tenga ruta edit, como Detalle Deuda o Costo por Placa). La vista
+        // snapshot decide segun el modulo si usa form replicado o fallback
+        // key/value.
+        if ($isDeleted) {
+            try {
+                return route('audit.snapshot', $log->id);
             } catch (\Throwable $e) {
                 // fall through al index
             }

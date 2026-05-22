@@ -104,7 +104,7 @@
                                         </button>
                                         @if($targetUrl)
                                             <a href="{{ $targetUrl }}" target="_blank" class="btn btn-sm btn-outline-success"
-                                               title="{{ ($log->action === 'deleted' || $isSoftDelete) ? 'Ir al listado' : 'Ir al registro' }}">
+                                               title="{{ ($log->action === 'deleted' || $isSoftDelete) ? 'Ver snapshot del registro eliminado' : 'Ir al registro' }}">
                                                 <i class="ti ti-external-link"></i>
                                             </a>
                                         @endif

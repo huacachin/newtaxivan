@@ -115,6 +115,10 @@ Route::middleware('auth')->group(function () {
 
     // Auditoría (solo Director)
     Route::get('audit-logs', fn() => view('audit-logs.index'))->name('audit.logs.index')->middleware('role:director');
+    Route::get('audit-snapshot/{id}', fn($id) => view('audit-snapshot', ['id' => (int) $id]))
+        ->whereNumber('id')
+        ->name('audit.snapshot')
+        ->middleware('role:director');
 
     //Exportar a excel
     Route::get('/exports/vehicles', [VehicleController::class, 'export'])

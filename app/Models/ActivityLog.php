@@ -73,8 +73,9 @@ class ActivityLog extends Model
     }
 
     /**
-     * Scope con las condiciones SQL del soft-delete. Pensado para combinar
-     * con OR/whereNot dentro de un where() closure.
+     * Scope que aplica las condiciones SQL del soft-delete sobre el query
+     * actual (sin grouping). Pensado para usar dentro de un where() closure
+     * cuando se necesita combinar con OR/NOT.
      */
     public function scopeSoftDeleteCriteria($query)
     {
