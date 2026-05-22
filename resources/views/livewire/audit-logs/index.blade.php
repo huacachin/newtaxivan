@@ -85,12 +85,13 @@
                                 <td>{{ $log->user_name ?? '—' }}</td>
                                 <td>{{ $log->user_role ? __('roles.' . $log->user_role) : '—' }}</td>
                                 <td>
-                                    @if($log->action === 'created')
+                                    @php $isSoftDelete = $log->isSoftDelete(); @endphp
+                                    @if($log->action === 'deleted' || $isSoftDelete)
+                                        <span class="badge bg-danger">Eliminación</span>
+                                    @elseif($log->action === 'created')
                                         <span class="badge bg-success">Creación</span>
                                     @elseif($log->action === 'updated')
                                         <span class="badge bg-warning text-dark">Edición</span>
-                                    @elseif($log->action === 'deleted')
-                                        <span class="badge bg-danger">Eliminación</span>
                                     @endif
                                 </td>
                                 <td>{{ $log->module }}</td>
@@ -103,7 +104,7 @@
                                         </button>
                                         @if($targetUrl)
                                             <a href="{{ $targetUrl }}" target="_blank" class="btn btn-sm btn-outline-success"
-                                               title="{{ $log->action === 'deleted' ? 'Ir al listado' : 'Ir al registro' }}">
+                                               title="{{ ($log->action === 'deleted' || $isSoftDelete) ? 'Ir al listado' : 'Ir al registro' }}">
                                                 <i class="ti ti-external-link"></i>
                                             </a>
                                         @endif

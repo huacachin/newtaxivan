@@ -70,7 +70,10 @@ class Index extends Component
         $routes = self::MODULE_ROUTES[$log->module] ?? null;
         if (!$routes) return null;
 
-        $isDeleted = $log->action === 'deleted';
+        // Tratamos el soft-delete (status active→inactive en Conductores/
+        // Propietarios) como una eliminacion regular: badge rojo, tooltip
+        // y redirect al index del modulo.
+        $isDeleted = $log->action === 'deleted' || $log->isSoftDelete();
 
         if (!$isDeleted && isset($routes['edit']) && $log->record_id) {
             try {
@@ -159,13 +162,29 @@ class Index extends Component
 
     public function render()
     {
-        $logs = ActivityLog::query()
+        $query = ActivityLog::query()
             ->when($this->module, fn($q) => $q->byModule($this->module))
-            ->when($this->action, fn($q) => $q->byAction($this->action))
             ->when($this->userId, fn($q) => $q->byUser((int) $this->userId))
-            ->when($this->dateFrom || $this->dateTo, fn($q) => $q->byDateRange($this->dateFrom ?: null, $this->dateTo ?: null))
-            ->orderByDesc('created_at')
-            ->paginate(20);
+            ->when($this->dateFrom || $this->dateTo, fn($q) => $q->byDateRange($this->dateFrom ?: null, $this->dateTo ?: null));
+
+        // Filtro de accion con manejo especial de soft-delete:
+        // - 'deleted' incluye los soft-deletes (action='updated' que en realidad
+        //   son eliminaciones por cambio de status active→inactive).
+        // - 'updated' excluye los soft-deletes para no mezclarlos con edits
+        //   reales bajo la categoria "Edicion".
+        if ($this->action === 'deleted') {
+            $query->where(function ($q) {
+                $q->where('action', 'deleted')
+                  ->orWhere(fn($w) => $w->softDeleteCriteria());
+            });
+        } elseif ($this->action === 'updated') {
+            $query->where('action', 'updated')
+                  ->whereNot(fn($q) => $q->softDeleteCriteria());
+        } elseif ($this->action !== '') {
+            $query->byAction($this->action);
+        }
+
+        $logs = $query->orderByDesc('created_at')->paginate(20);
 
         $modules = ActivityLog::query()->select('module')->distinct()->orderBy('module')->pluck('module');
         $users = User::query()->where('status', 'active')->orderBy('name')->get(['id', 'name']);
