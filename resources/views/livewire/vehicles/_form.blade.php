@@ -48,8 +48,8 @@
 
     {{-- F. Ingreso --}}
     <div class="col-6 col-md-2">
-        <label for="entry_date" class="form-label">F. Ingreso</label>
-        <input id="entry_date" type="text" class="form-control form-control-sm" wire:model="entry_date">
+        <label for="entry_date" class="form-label {{ $lockForController ? 'text-muted' : '' }}">F. Ingreso</label>
+        <input id="entry_date" type="text" class="form-control form-control-sm" wire:model="entry_date" @if($lockForController) disabled @endif>
         @error('entry_date') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
