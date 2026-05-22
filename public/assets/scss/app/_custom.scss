@@ -347,3 +347,87 @@ input.hasDatepicker {
     transition: background .15s;
 }
 .audit-highlight-banner__btn:hover { background: rgba(249, 168, 37, .15); }
+
+// ============================================================
+// Snapshot de registro eliminado (/audit-snapshot/{id}).
+// Vista informativa, todos los inputs en read-only.
+// ============================================================
+.audit-snapshot-banner {
+    background: linear-gradient(90deg, #fdecea, #fff5f4);
+    border: 1px solid #dc3545;
+    border-radius: 6px;
+    padding: 10px 16px;
+    margin: 8px 0 16px 0;
+    color: #6b1c24;
+    font-size: 13px;
+}
+.audit-snapshot-banner__icon {
+    color: #dc3545;
+    font-size: 20px;
+    margin-right: 4px;
+}
+.audit-snapshot-card { border-left: 4px solid #dc3545; }
+.audit-snapshot-readonly .form-control[disabled],
+.audit-snapshot-readonly .form-select[disabled] {
+    background-color: #fafafa;
+    color: #333;
+    opacity: 1;
+    cursor: not-allowed;
+}
+.audit-snapshot-readonly textarea[disabled] {
+    background-color: #fafafa;
+    color: #333;
+    opacity: 1;
+    cursor: not-allowed;
+    resize: none;
+}
+.audit-snapshot-masked {
+    font-family: monospace;
+    color: #6c757d !important;
+    background-color: #f1f3f5 !important;
+}
+
+// ============================================================
+// Snapshot read-only: ajustes para que <fieldset disabled> luzca
+// bien y reemplazar el bloque multi-photos por un aviso.
+// ============================================================
+fieldset.audit-snapshot-readonly {
+    border: 0; padding: 0; margin: 0;
+}
+fieldset.audit-snapshot-readonly .form-control:disabled,
+fieldset.audit-snapshot-readonly .form-select:disabled,
+fieldset.audit-snapshot-readonly textarea:disabled {
+    background-color: #fafafa !important;
+    color: #333 !important;
+    opacity: 1 !important;
+    cursor: not-allowed;
+}
+fieldset.audit-snapshot-readonly .multi-photos > * { display: none !important; }
+fieldset.audit-snapshot-readonly .multi-photos::after {
+    content: "📷 Fotos eliminadas en cascada (no disponibles)";
+    display: block;
+    padding: 12px 14px;
+    background: #fff3cd;
+    border: 1px dashed #f59e0b;
+    border-radius: 6px;
+    color: #92400e;
+    text-align: center;
+    font-size: 13px;
+    margin-top: 8px;
+}
+// Oculta botones interactivos que estan dentro del fieldset (save / questionDelete / etc.)
+fieldset.audit-snapshot-readonly button[wire\:click] { display: none !important; }
+// Tambien oculta dividers de secciones de FOTO en los forms drivers/owners
+// (la seccion de multi-photos contiene el divider FOTOS adentro tambien)
+
+// Notice pequenño para Ingresos/Egresos snapshot cuando las imagenes
+// fueron eliminadas en cascada.
+.audit-snapshot-photos-notice {
+    padding: 12px 14px;
+    background: #fff3cd;
+    border: 1px dashed #f59e0b;
+    border-radius: 6px;
+    color: #92400e;
+    text-align: center;
+    font-size: 13px;
+}

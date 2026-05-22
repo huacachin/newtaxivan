@@ -16,7 +16,8 @@
     'settings.owners.expiration',
     'settings.drivers.expiration',
     'departures.edit',
-    'audit.logs.index'
+    'audit.logs.index',
+    'audit.snapshot'
 ]))
     <script src="{{ asset('assets/js/jquery-3.6.3.min.js') }}"></script>
 @endif

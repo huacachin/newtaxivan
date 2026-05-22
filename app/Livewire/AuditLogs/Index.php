@@ -91,6 +91,16 @@ class Index extends Component
             }
         }
 
+        // Deleted: si el modulo tiene ruta edit, mostramos snapshot informativo
+        // con los datos del registro al momento previo a la eliminacion.
+        if ($isDeleted && isset($routes['edit'])) {
+            try {
+                return route('audit.snapshot', $log->id);
+            } catch (\Throwable $e) {
+                // fall through al index
+            }
+        }
+
         if (isset($routes['index'])) {
             try {
                 return route($routes['index']);
