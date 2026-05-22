@@ -69,7 +69,12 @@
                     <input id="expiration_value" type="text" class="form-control form-control-sm" style="background-color: yellow;" wire:model="value" autocomplete="off" placeholder="aaaa-mm-dd">
                     @error('value') <span class="title-modules">{{ $message }}</span> @enderror
                 </div>
+
+                {{-- Fotos a agregar (no muestra las existentes) --}}
+                @include('livewire.partials._multi-photos', ['entityLabel' => 'vehículo'])
             </div>
+
+            @include('partials.image-lightbox')
 
             <div class="mt-3 d-flex gap-2 justify-content-end">
                 <button type="button" class="btn btn-sm btn-primary" wire:click="save" wire:loading.attr="disabled">

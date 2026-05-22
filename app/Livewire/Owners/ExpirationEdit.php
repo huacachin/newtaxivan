@@ -3,16 +3,24 @@
 namespace App\Livewire\Owners;
 
 use App\Models\Owner;
+use App\Models\OwnerImage;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class ExpirationEdit extends Component
 {
+    use WithFileUploads;
+
     public Owner $owner;
     public int $id;
     public string $field;
     public ?string $value = null;
+
+    public $new_images = [];
+    public $image_files = [];
 
     protected const FIELDS = [
         'documento' => ['column' => 'document_expiration_date', 'abbr' => 'DOC', 'label' => 'Documento'],
@@ -33,17 +41,69 @@ class ExpirationEdit extends Component
 
     public function rules(): array
     {
-        return ['value' => 'required|date'];
+        $column  = self::FIELDS[$this->field]['column'];
+        $current = $this->owner->{$column};
+
+        $valueRule = ['required', 'date'];
+        if ($current) {
+            $valueRule[] = 'after:' . Carbon::parse($current)->format('Y-m-d');
+        }
+
+        return [
+            'value'        => $valueRule,
+            'new_images'   => 'nullable|array|max:10',
+            'new_images.*' => 'image|max:5120',
+        ];
     }
 
     protected $validationAttributes = ['value' => 'fecha'];
+
+    public function messages(): array
+    {
+        $column  = self::FIELDS[$this->field]['column'];
+        $current = $this->owner->{$column};
+
+        $afterMsg = $current
+            ? 'La nueva fecha debe ser posterior a ' . Carbon::parse($current)->format('d/m/Y') . ' (la actual). No puede ser igual.'
+            : 'La fecha es obligatoria.';
+
+        return [
+            'value.required' => 'La fecha es obligatoria.',
+            'value.date'     => 'La fecha no es válida.',
+            'value.after'    => $afterMsg,
+        ];
+    }
+
+    public function updatedNewImages(): void
+    {
+        foreach ($this->new_images as $file) {
+            $this->image_files[] = $file;
+        }
+        $this->new_images = [];
+    }
+
+    public function removeNewImage(int $index): void
+    {
+        array_splice($this->image_files, $index, 1);
+    }
 
     public function save(): void
     {
         $this->validate();
 
         $column = self::FIELDS[$this->field]['column'];
-        $this->owner->update([$column => $this->value]);
+
+        DB::transaction(function () use ($column) {
+            $this->owner->update([$column => $this->value]);
+
+            foreach ($this->image_files as $file) {
+                $path = $file->storePublicly('owners', 'public');
+                OwnerImage::create([
+                    'owner_id'   => $this->owner->id,
+                    'image_path' => $path,
+                ]);
+            }
+        });
 
         Cache::forget('header_expiring_alerts');
 
