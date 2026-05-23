@@ -68,6 +68,12 @@
 
                 {{-- Fotos a agregar (no muestra las existentes) --}}
                 @include('livewire.partials._multi-photos', ['entityLabel' => 'propietario'])
+
+                @error('image_files')
+                    <div class="col-12">
+                        <span class="title-modules d-block">{{ $message }}</span>
+                    </div>
+                @enderror
             </div>
 
             @include('partials.image-lightbox')

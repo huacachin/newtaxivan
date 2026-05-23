@@ -51,6 +51,8 @@ class ExpirationEdit extends Component
 
         return [
             'value'        => $valueRule,
+            'image_files'  => 'required|array|min:1|max:10',
+            'image_files.*'=> 'image|max:5120',
             'new_images'   => 'nullable|array|max:10',
             'new_images.*' => 'image|max:5120',
         ];
@@ -68,9 +70,14 @@ class ExpirationEdit extends Component
             : 'La fecha es obligatoria.';
 
         return [
-            'value.required' => 'La fecha es obligatoria.',
-            'value.date'     => 'La fecha no es válida.',
-            'value.after'    => $afterMsg,
+            'value.required'        => 'La fecha es obligatoria.',
+            'value.date'            => 'La fecha no es válida.',
+            'value.after'           => $afterMsg,
+            'image_files.required'  => 'Debe adjuntar al menos una foto.',
+            'image_files.min'       => 'Debe adjuntar al menos una foto.',
+            'image_files.max'       => 'Máximo 10 fotos.',
+            'image_files.*.image'   => 'Cada archivo debe ser una imagen válida.',
+            'image_files.*.max'     => 'Cada imagen no debe superar 5 MB.',
         ];
     }
 
