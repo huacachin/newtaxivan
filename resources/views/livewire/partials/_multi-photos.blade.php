@@ -41,7 +41,7 @@
     $deletedIds        = $deleted_image_ids ?? [];
 @endphp
 
-<div class="col-12 multi-photos">
+<div class="col-12 multi-photos" data-audit-field="image_path">
     <div class="mb-3" x-data="{ dragging: false }">
         <label class="form-label">
             Fotos

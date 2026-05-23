@@ -431,3 +431,14 @@ fieldset.audit-snapshot-readonly button[wire\:click] { display: none !important;
     text-align: center;
     font-size: 13px;
 }
+
+// Cuando el bloque multi-photos completo recibe la clase de highlight
+// (por audit log con image_path en changed_fields), evitamos el fondo
+// amarillo intenso del estilo base — solo borde y wash sutil.
+.multi-photos.field-audit-highlight {
+    background-color: transparent !important;
+    border: 2px solid #f9a825 !important;
+    border-radius: 6px;
+    padding: 8px;
+    box-shadow: 0 0 0 .15rem rgba(249, 168, 37, .15);
+}

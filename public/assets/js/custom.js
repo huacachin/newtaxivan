@@ -293,13 +293,16 @@ function _applyAuditHighlight() {
     fields.forEach(function (name) {
         // Escapado simple del nombre para CSS selectors
         var esc = (window.CSS && CSS.escape) ? CSS.escape(name) : name.replace(/"/g, '\\"');
-        // wire:model y sus modificadores .defer / .lazy / .live
+        // wire:model + modificadores, mas data-audit-field para campos
+        // "virtuales" sin input directo (ej: image_path se mapea al
+        // bloque multi-photos via data-audit-field="image_path").
         var selectors = [
             '[wire\\:model="' + esc + '"]',
             '[wire\\:model\\.defer="' + esc + '"]',
             '[wire\\:model\\.lazy="' + esc + '"]',
             '[wire\\:model\\.live="' + esc + '"]',
-            '[wire\\:model\\.live\\.debounce="' + esc + '"]'
+            '[wire\\:model\\.live\\.debounce="' + esc + '"]',
+            '[data-audit-field="' + esc + '"]'
         ];
         document.querySelectorAll(selectors.join(',')).forEach(function (el) {
             el.classList.add('field-audit-highlight');
