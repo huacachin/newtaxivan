@@ -789,8 +789,117 @@
             </div>
             @break
 
+        @case('Deuda por Días')
+            @php
+                $diasNoTrabajados = [];
+                for ($i = 1; $i <= 31; $i++) {
+                    if (!empty($data['d'.$i])) $diasNoTrabajados[] = $i;
+                }
+            @endphp
+            <div class="row">
+                <div class="col-sm-6">
+                    <h4 class="main-title title-modules">DEUDA POR DÍAS: REGISTRO ELIMINADO</h4>
+                </div>
+                <div class="col-sm-6 mt-sm-2">
+                    <ul class="breadcrumb breadcrumb-start float-sm-end">
+                        <li class="d-flex">
+                            <i class="ti ti-calendar-stats f-s-16"></i>
+                            <a href="{{ route('debts.debt-per-days') }}" class="f-s-14 d-flex gap-2">
+                                <span class="d-none d-md-block">Deuda por días</span>
+                            </a>
+                        </li>
+                        <li class="d-flex active">
+                            <span class="f-s-14">Eliminado #{{ $log->record_id }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row table-section">
+                <div class="col-xl-12">
+                    <div class="card">
+                        <div class="card-body">
+                            @include('partials._audit-snapshot-bar', ['log' => $log])
+                            <fieldset disabled class="audit-snapshot-readonly">
+                                <div class="d-flex flex-wrap align-items-end gap-2 py-1">
+                                    <div class="flex-item flex-item-md">
+                                        <label class="form-label mb-1">Placa</label>
+                                        <input type="text" class="form-control form-control-sm"
+                                               value="{{ $data['legacy_plate'] ?? '' }}">
+                                    </div>
+                                    <div class="flex-item flex-item-sm">
+                                        <label class="form-label mb-1">Fecha</label>
+                                        <input type="text" class="form-control form-control-sm"
+                                               value="{{ $this->valueFor('date', $data['date'] ?? null) }}">
+                                    </div>
+                                    <div class="flex-item flex-item-sm">
+                                        <label class="form-label mb-1">Condición</label>
+                                        <input type="text" class="form-control form-control-sm"
+                                               value="{{ $data['condition'] ?? '' }}">
+                                    </div>
+                                    <div class="flex-item flex-item-sm">
+                                        <label class="form-label mb-1">T.D.N.T</label>
+                                        <input type="text" class="form-control form-control-sm text-end"
+                                               value="{{ $data['days_late'] ?? '' }}">
+                                    </div>
+                                    <div class="flex-item flex-item-md">
+                                        <label class="form-label mb-1">Deuda Total (S/)</label>
+                                        <input type="text" class="form-control form-control-sm text-end"
+                                               style="color:red;font-weight:bold;"
+                                               value="{{ isset($data['total']) ? number_format((float)$data['total'], 2) : '' }}">
+                                    </div>
+                                    <div class="flex-item flex-item-md">
+                                        <label class="form-label mb-1">Exonerado (S/)</label>
+                                        <input type="text" class="form-control form-control-sm text-end"
+                                               value="{{ isset($data['exonerated']) ? number_format((float)$data['exonerated'], 2) : '' }}">
+                                    </div>
+                                    <div class="flex-item flex-item-md">
+                                        <label class="form-label mb-1">Amortización (S/)</label>
+                                        <input type="text" class="form-control form-control-sm text-end"
+                                               value="{{ isset($data['amortized']) ? number_format((float)$data['amortized'], 2) : '' }}">
+                                    </div>
+                                    <div class="flex-item flex-item-lg" style="min-width: 280px;">
+                                        <label class="form-label mb-1">Detalle exoneración</label>
+                                        <input type="text" class="form-control form-control-sm"
+                                               value="{{ $data['detail_exonerated'] ?? '' }}">
+                                    </div>
+                                    <div class="flex-item flex-item-sm">
+                                        <label class="form-label mb-1">¿Es apoyo?</label>
+                                        <input type="text" class="form-control form-control-sm"
+                                               value="{{ !empty($data['is_support']) ? 'Sí' : 'No' }}">
+                                    </div>
+                                    <div class="flex-item flex-item-md">
+                                        <label class="form-label mb-1">Vehículo</label>
+                                        <input type="text" class="form-control form-control-sm"
+                                               value="{{ $this->valueFor('vehicle_id', $data['vehicle_id'] ?? null) }}">
+                                    </div>
+                                    <div class="w-100"></div>
+                                    <div class="flex-item" style="min-width: 100%;">
+                                        <label class="form-label mb-1">Días no trabajados del mes</label>
+                                        @if(empty($diasNoTrabajados))
+                                            <input type="text" class="form-control form-control-sm" value="Ninguno">
+                                        @else
+                                            <div class="d-flex flex-wrap gap-1">
+                                                @foreach($diasNoTrabajados as $dia)
+                                                    <span class="badge bg-danger" style="font-size: 12px;">{{ $dia }}</span>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </fieldset>
+                            <div class="d-flex gap-2 mt-3">
+                                <a href="{{ route('audit.logs.index') }}" class="btn btn-sm btn-secondary">
+                                    <i class="ti ti-arrow-back-up"></i> Regresar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @break
+
         @default
-            {{-- Fallback final para modulos no replicados (Deuda por Dias, Costo por Placa, etc.). --}}
+            {{-- Fallback final para modulos no replicados (Costo por Placa, Costo por Placa Día). --}}
             <div class="row">
                 <div class="col-sm-6">
                     <h4 class="main-title title-modules">

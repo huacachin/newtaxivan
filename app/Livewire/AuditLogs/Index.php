@@ -38,7 +38,7 @@ class Index extends Component
         'Usuarios'            => ['edit' => 'settings.users.edit',        'index' => 'settings.users.index'],
         'Conceptos'           => ['edit' => 'settings.concepts.edit',     'index' => 'settings.concepts.index'],
         'Detalle Deuda'       => [                                         'index' => 'debts.monthly'],
-        'Deuda por Días'      => [                                         'index' => 'debts.debt-per-days'],
+        'Deuda por Días'      => ['edit' => 'debts.monthly.detail',         'index' => 'debts.debt-per-days'],
         'Costo por Placa'     => [                                         'index' => 'settings.cost-per-plate.index'],
         'Costo por Placa Día' => [                                         'index' => 'settings.cost-per-plate.index'],
     ];
@@ -51,10 +51,15 @@ class Index extends Component
      * asume 1:1 (no hace falta declararlo).
      */
     protected const FIELD_PROP_MAP = [
-        'Vehículos' => ['headquarters' => 'headquarter'],
-        'Pagos'     => ['type'         => 'type_form'],
-        'Egresos'   => ['kind'         => 'expenseKind'],
-        'Usuarios'  => ['password'     => 'pwd'],
+        'Vehículos'      => ['headquarters' => 'headquarter'],
+        'Pagos'          => ['type'         => 'type_form'],
+        'Egresos'        => ['kind'         => 'expenseKind'],
+        'Usuarios'       => ['password'     => 'pwd'],
+        'Deuda por Días' => [
+            'exonerated'        => 'exonerateInput',
+            'amortized'         => 'amortizeInput',
+            'detail_exonerated' => 'detailInput',
+        ],
     ];
 
     /**
