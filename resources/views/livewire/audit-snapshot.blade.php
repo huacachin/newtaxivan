@@ -308,7 +308,7 @@
                                     <div class="col-md-2 col-12">
                                         <div class="mb-3">
                                             <label class="form-label">Placa</label>
-                                            <input type="text" class="form-control form-control-sm" value="{{ $data['legacy_plate'] ?? '' }}">
+                                            <input type="text" class="form-control form-control-sm" value="{{ $this->resolvePlate() }}">
                                         </div>
                                     </div>
                                     <div class="col-md-2 col-12">
@@ -389,7 +389,7 @@
                                     <div class="col-md-auto col-sm-12">
                                         <div class="mb-3">
                                             <label class="form-label">Placa (*)</label>
-                                            <input type="text" class="form-control form-control-sm input-uppercase" value="{{ $data['legacy_plate'] ?? '' }}">
+                                            <input type="text" class="form-control form-control-sm input-uppercase" value="{{ $this->resolvePlate() }}">
                                         </div>
                                     </div>
                                     <div class="col-md-auto">
@@ -824,7 +824,7 @@
                                     <div class="flex-item flex-item-md">
                                         <label class="form-label mb-1">Placa</label>
                                         <input type="text" class="form-control form-control-sm"
-                                               value="{{ $data['legacy_plate'] ?? '' }}">
+                                               value="{{ $this->resolvePlate() }}">
                                     </div>
                                     <div class="flex-item flex-item-sm">
                                         <label class="form-label mb-1">Fecha</label>

@@ -242,6 +242,24 @@ class AuditSnapshot extends Component
         }
     }
 
+    /**
+     * Resuelve la placa del registro para modulos que la guardan por FK:
+     *  1) legacy_plate si vino populado (caso vehiculo eliminado).
+     *  2) Vehicle::find(vehicle_id)->plate si el vehiculo aun existe.
+     *  3) "(no existe) #ID" como fallback.
+     */
+    public function resolvePlate(): string
+    {
+        $legacy = $this->data['legacy_plate'] ?? null;
+        if (!empty($legacy)) return (string) $legacy;
+
+        $vid = $this->data['vehicle_id'] ?? null;
+        if (!$vid) return '';
+
+        $plate = Vehicle::where('id', $vid)->value('plate');
+        return $plate ?: "(no existe) #{$vid}";
+    }
+
     // ============================================================
     // Helpers de display para el fallback key/value
     // ============================================================
