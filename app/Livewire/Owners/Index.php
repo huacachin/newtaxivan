@@ -5,6 +5,8 @@ namespace App\Livewire\Owners;
 use App\Models\Owner;
 use App\Models\OwnerImage;
 use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\On;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
 class Index extends Component
@@ -14,6 +16,8 @@ class Index extends Component
     public array $ownersImages = []; // owner_id => [url, ...]
     public $search;
     public $filter = "plate";
+
+    #[Url(except: 'active')] public $status = 'active';
 
     public $ownerId;
     public $name;
@@ -51,6 +55,42 @@ class Index extends Component
         $like = $search === ''
             ? null
             : '%' . str_replace(['%', '_'], ['\%', '\_'], $search) . '%';
+
+        $status = strtolower(trim((string) $this->status));
+        if (!in_array($status, ['active', 'inactive'], true)) {
+            $status = $this->status = 'active';
+        }
+
+        if ($status === 'inactive') {
+            $this->owners = DB::table('owners as o')
+                ->whereRaw("LOWER(TRIM(o.status)) = 'inactive'")
+                ->when($like !== null, function ($q) use ($like) {
+                    $q->where('o.name', 'like', $like);
+                })
+                ->select(
+                    'o.id',
+                    DB::raw('NULL as sort_order'),
+                    'o.name',
+                    'o.document_number',
+                    'o.document_expiration_date',
+                    'o.phone',
+                    DB::raw('NULL as plate')
+                )
+                ->orderBy('o.name')
+                ->get();
+
+            $this->ownersFree = collect();
+
+            $ownerIds = $this->owners->pluck('id')->unique()->all();
+
+            $this->ownersImages = OwnerImage::whereIn('owner_id', $ownerIds)
+                ->get(['owner_id', 'image_path'])
+                ->groupBy('owner_id')
+                ->map(fn ($rows) => $rows->map(fn ($r) => asset('storage/' . $r->image_path))->values()->all())
+                ->all();
+
+            return;
+        }
 
         $this->owners = DB::table('owners as o')
             // Trae solo placas ACTIVAS al join (si no tiene activa, v.* será NULL)
@@ -117,6 +157,35 @@ class Index extends Component
     public function updatedSearch()
     {
         $this->mount();
+    }
+
+    public function updatedStatus()
+    {
+        $this->mount();
+    }
+
+    public function questionActivate(int $id): void
+    {
+        $owner = Owner::find($id);
+        if (!$owner) {
+            return;
+        }
+        $this->dispatch('questionActivate', [
+            'id'   => $id,
+            'role' => 'propietario',
+            'name' => $owner->name,
+        ]);
+    }
+
+    #[On('register_activate')]
+    public function activate(int $id): void
+    {
+        if (!auth()->user()?->hasAnyRole('director', 'gerente', 'administrador')) {
+            abort(403);
+        }
+        Owner::findOrFail($id)->update(['status' => 'active']);
+        $this->mount();
+        $this->dispatch('successAlert', ['message' => 'Propietario activado correctamente.']);
     }
 
     public function save(){
@@ -189,7 +258,11 @@ class Index extends Component
     }
 
     public function export(){
-        $route = route('exports.owners',["search" => $this->search, "filter" => $this->filter]);
+        $route = route('exports.owners',[
+            "search" => $this->search,
+            "filter" => $this->filter,
+            "status" => $this->status,
+        ]);
         $this->dispatch('url-open',["url" => $route]);
     }
 }

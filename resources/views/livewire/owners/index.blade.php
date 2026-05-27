@@ -41,13 +41,27 @@
 
                         <h5 class="mb-1">Total de propietarios: <span class="title-modules">{{ $owners->count() + $ownersFree->count() }}</span></h5>
                         <p class="mb-0">
-                            <strong>Propietarios:</strong> <strong style="color:red">{{ $owners->count() }}</strong> ·
-                            <strong>Libres:</strong> <strong style="color:red">{{ $ownersFree->count() }}</strong>
+                            @if($status === 'inactive')
+                                <strong>Propietarios cesados:</strong> <strong style="color:red">{{ $owners->count() }}</strong>
+                            @else
+                                <strong>Propietarios:</strong> <strong style="color:red">{{ $owners->count() }}</strong> ·
+                                <strong>Libres:</strong> <strong style="color:red">{{ $ownersFree->count() }}</strong>
+                            @endif
                         </p>
 
                     <div class="row my-2">
                         <div class="col-12">
                             <div class="d-flex flex-wrap align-items-end gap-2 overflow-auto py-1">
+                                <!-- Estado -->
+                                <div class="flex-shrink-0" style="min-width: 160px;">
+                                    <select class="form-select form-select-sm"
+                                            aria-label="Estado del propietario"
+                                            wire:model.live="status">
+                                        <option value="active">Activo</option>
+                                        <option value="inactive">Cesado</option>
+                                    </select>
+                                </div>
+
                                 <!-- Filtro -->
                                 <div class="flex-shrink-0" style="min-width: 160px;">
                                     <select class="form-select form-select-sm"
@@ -114,11 +128,24 @@
                                             <span class="list-card__index">{{ $loop->iteration }}</span>
                                             <span class="list-card__title">{{ $owner->name }}</span>
                                         </div>
-                                        @hasanyrole('director|gerente|administrador|controlador')
-                                            <a href="{{ route('settings.owners.edit', $owner->id) }}" class="list-card__edit" aria-label="Editar">
-                                                <i class="ti ti-edit"></i>
-                                            </a>
-                                        @endhasanyrole
+                                        <div class="d-flex align-items-center gap-2">
+                                            @hasanyrole('director|gerente|administrador|controlador')
+                                                <a href="{{ route('settings.owners.edit', $owner->id) }}" class="list-card__edit" aria-label="Editar">
+                                                    <i class="ti ti-edit"></i>
+                                                </a>
+                                            @endhasanyrole
+                                            @if($status === 'inactive')
+                                                @hasanyrole('director|gerente|administrador')
+                                                    <button type="button"
+                                                            class="list-card__edit"
+                                                            wire:click="questionActivate({{ $owner->id }})"
+                                                            aria-label="Activar"
+                                                            title="Activar">
+                                                        <i class="ti ti-rotate-clockwise-2 text-primary"></i>
+                                                    </button>
+                                                @endhasanyrole
+                                            @endif
+                                        </div>
                                     </header>
 
                                     <div class="list-card__chips">
@@ -174,10 +201,20 @@
                                 @foreach ($owners as $owner)
                                     <tr>
                                         @hasanyrole('director|gerente|administrador|controlador')
-                                        <td>
-                                            <a href="{{ route('settings.owners.edit', $owner->id) }}">
+                                        <td class="text-nowrap">
+                                            <a href="{{ route('settings.owners.edit', $owner->id) }}" title="Editar">
                                                 <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"></i>
                                             </a>
+                                            @if($status === 'inactive')
+                                                @hasanyrole('director|gerente|administrador')
+                                                <button type="button"
+                                                        class="btn btn-link p-0 ms-1 align-baseline"
+                                                        wire:click="questionActivate({{ $owner->id }})"
+                                                        title="Activar">
+                                                    <i class="ti ti-rotate-clockwise-2 f-s-18 text-primary"></i>
+                                                </button>
+                                                @endhasanyrole
+                                            @endif
                                         </td>
                                         @endhasanyrole
                                         <td>{{ $loop->iteration }}</td>
@@ -224,6 +261,7 @@
                             </tfoot>
                         </table>
                     </div>
+                    @if($status === 'active')
                     <div class="section-banner section-banner--support">
                         <span class="section-banner__count">{{ $ownersFree->count() }}</span>
                         <div class="section-banner__body">
@@ -358,6 +396,7 @@
                             </tfoot>
                         </table>
                     </div>
+                    @endif
                 </div>
             </div>
         </div>

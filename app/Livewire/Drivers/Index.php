@@ -6,6 +6,8 @@ use App\Models\Driver;
 use App\Models\Vehicle;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Livewire\Attributes\On;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
 class Index extends Component
@@ -16,6 +18,8 @@ class Index extends Component
 
     public $search;
     public $filter = "plate";
+
+    #[Url(except: 'active')] public $status = 'active';
 
     //Formulario
     public $driverId;
@@ -105,6 +109,31 @@ class Index extends Component
 
         $filter = $this->filter;
         $search = $this->search;
+        $status = strtolower(trim((string) $this->status));
+        if (!in_array($status, ['active', 'inactive'], true)) {
+            $status = $this->status = 'active';
+        }
+
+        if ($status === 'inactive') {
+            $this->drivers = Driver::query()
+                ->whereRaw("LOWER(TRIM(drivers.status)) = 'inactive'")
+                ->select('id', 'name', 'document_number', 'phone', 'contract_start', 'contract_end', 'condition', 'document_expiration_date')
+                ->with(['images:id,driver_id,image_path'])
+                ->when($filter && $search, function ($query) use ($filter, $search) {
+                    $search = trim($search);
+                    if ($filter === 'name') {
+                        $query->where('name', 'like', "%{$search}%");
+                    } elseif ($filter === 'plate' || $filter === 'code') {
+                        // Inactivos no tienen vehiculo activo asociado; buscamos por nombre como fallback.
+                        $query->where('name', 'like', "%{$search}%");
+                    }
+                })
+                ->orderBy('name', 'asc')
+                ->get();
+
+            $this->driversFree = collect();
+            return;
+        }
 
         $this->drivers = Driver::query()
             // solo drivers activos
@@ -175,6 +204,35 @@ class Index extends Component
         $this->mount();
     }
 
+    public function updatedStatus()
+    {
+        $this->mount();
+    }
+
+    public function questionActivate(int $id): void
+    {
+        $driver = Driver::find($id);
+        if (!$driver) {
+            return;
+        }
+        $this->dispatch('questionActivate', [
+            'id'   => $id,
+            'role' => 'conductor',
+            'name' => $driver->name,
+        ]);
+    }
+
+    #[On('register_activate')]
+    public function activate(int $id): void
+    {
+        if (!auth()->user()?->hasAnyRole('director', 'gerente', 'administrador')) {
+            abort(403);
+        }
+        Driver::findOrFail($id)->update(['status' => 'active']);
+        $this->mount();
+        $this->dispatch('successAlert', ['message' => 'Conductor activado correctamente.']);
+    }
+
     public function openAddWindow(): void
     {
         $route = route('settings.drivers.create');;
@@ -195,7 +253,11 @@ class Index extends Component
     }
 
     public function export(){
-        $route = route('exports.drivers',["search" => $this->search, "filter" => $this->filter]);
+        $route = route('exports.drivers',[
+            "search" => $this->search,
+            "filter" => $this->filter,
+            "status" => $this->status,
+        ]);
         $this->dispatch('url-open',["url" => $route]);
     }
 }

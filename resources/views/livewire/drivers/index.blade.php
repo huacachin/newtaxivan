@@ -41,13 +41,27 @@
 
                         <h5 class="mb-1">Total de conductores: <span class="title-modules">{{ $drivers->count() + $driversFree->count() }}</span></h5>
                         <p class="mb-0">
-                            <strong>Conductores:</strong> <strong style="color:red">{{ $drivers->count() }}</strong> ·
-                            <strong>Libres:</strong> <strong style="color:red">{{ $driversFree->count() }}</strong>
+                            @if($status === 'inactive')
+                                <strong>Conductores cesados:</strong> <strong style="color:red">{{ $drivers->count() }}</strong>
+                            @else
+                                <strong>Conductores:</strong> <strong style="color:red">{{ $drivers->count() }}</strong> ·
+                                <strong>Libres:</strong> <strong style="color:red">{{ $driversFree->count() }}</strong>
+                            @endif
                         </p>
 
                     <div class="row my-2">
                         <div class="col-12">
                             <div class="d-flex flex-wrap align-items-end gap-2 overflow-auto py-1">
+
+                                <!-- Estado -->
+                                <div class="flex-shrink-0" style="min-width: 160px;">
+                                    <select class="form-select form-select-sm"
+                                            aria-label="Estado del conductor"
+                                            wire:model.live="status">
+                                        <option value="active">Activo</option>
+                                        <option value="inactive">Cesado</option>
+                                    </select>
+                                </div>
 
                                 <!-- Filtro -->
                                 <div class="flex-shrink-0" style="min-width: 160px;">
@@ -109,7 +123,7 @@
                                         if ($daysDiff < 0) { $expBadge = ['cls' => 'bg-danger', 'txt' => 'Vencido']; }
                                         elseif ($daysDiff <= 10) { $expBadge = ['cls' => 'bg-warning text-dark', 'txt' => 'Por vencer']; }
                                     }
-                                    $vehiclePlate = $driver->vehicles->first()->plate ?? null;
+                                    $vehiclePlate = optional($driver->vehicles->first())->plate;
                                 @endphp
                                 <article class="list-card">
                                     <header class="list-card__head">
@@ -117,11 +131,24 @@
                                             <span class="list-card__index">{{ $loop->iteration }}</span>
                                             <span class="list-card__title">{{ $driver->name }}</span>
                                         </div>
-                                        @hasanyrole('director|gerente|administrador|controlador')
-                                            <a href="{{ route('settings.drivers.edit', $driver->id) }}" class="list-card__edit" aria-label="Editar">
-                                                <i class="ti ti-edit"></i>
-                                            </a>
-                                        @endhasanyrole
+                                        <div class="d-flex align-items-center gap-2">
+                                            @hasanyrole('director|gerente|administrador|controlador')
+                                                <a href="{{ route('settings.drivers.edit', $driver->id) }}" class="list-card__edit" aria-label="Editar">
+                                                    <i class="ti ti-edit"></i>
+                                                </a>
+                                            @endhasanyrole
+                                            @if($status === 'inactive')
+                                                @hasanyrole('director|gerente|administrador')
+                                                    <button type="button"
+                                                            class="list-card__edit"
+                                                            wire:click="questionActivate({{ $driver->id }})"
+                                                            aria-label="Activar"
+                                                            title="Activar">
+                                                        <i class="ti ti-rotate-clockwise-2 text-primary"></i>
+                                                    </button>
+                                                @endhasanyrole
+                                            @endif
+                                        </div>
                                     </header>
 
                                     <div class="list-card__chips">
@@ -187,15 +214,25 @@
                                 @foreach($drivers as $driver)
                                     <tr>
                                         @hasanyrole('director|gerente|administrador|controlador')
-                                        <td width="50">
-                                            <a href="{{ route('settings.drivers.edit', $driver->id) }}">
+                                        <td width="80" class="text-nowrap">
+                                            <a href="{{ route('settings.drivers.edit', $driver->id) }}" title="Editar">
                                                 <i class="ti ti-edit f-s-18 text-success" style="cursor:pointer"></i>
                                             </a>
+                                            @if($status === 'inactive')
+                                                @hasanyrole('director|gerente|administrador')
+                                                <button type="button"
+                                                        class="btn btn-link p-0 ms-1 align-baseline"
+                                                        wire:click="questionActivate({{ $driver->id }})"
+                                                        title="Activar">
+                                                    <i class="ti ti-rotate-clockwise-2 f-s-18 text-primary"></i>
+                                                </button>
+                                                @endhasanyrole
+                                            @endif
                                         </td>
                                         @endhasanyrole
                                         <td>{{ $loop->iteration }}</td>
-                                        <td>{{$driver->vehicles->first()->sort_order}}</td>
-                                        <td>{{ $driver->vehicles->first()->plate ?? '—' }}</td>
+                                        <td>{{ optional($driver->vehicles->first())->sort_order ?? '—' }}</td>
+                                        <td>{{ optional($driver->vehicles->first())->plate ?? '—' }}</td>
                                         <td>
                                             {{ $driver->name }}
 
@@ -252,6 +289,7 @@
                         </table>
                     </div>
 
+                        @if($status === 'active')
                         <div class="section-banner section-banner--support">
                             <span class="section-banner__count">{{ $driversFree->count() }}</span>
                             <div class="section-banner__body">
@@ -408,6 +446,7 @@
                                 </tfoot>
                             </table>
                         </div>
+                        @endif
                 </div>
             </div>
         </div>

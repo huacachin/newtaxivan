@@ -358,6 +358,25 @@ function questionDelete(id, role, name) {
     });
 }
 
+function questionActivate(id, role, name) {
+    var msg = (role && name)
+        ? '¿Está seguro de activar al ' + role + ' <span style="color:green;font-weight:bold">' + name + '</span>?'
+        : "¿Está seguro que desea activar el registro?";
+    Swal.fire({
+        title: "Se va a activar el registro",
+        html: msg,
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#198754",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Activar"
+    }).then(function (result) {
+        if (result.isConfirmed) {
+            Livewire.dispatch('register_activate', {id: id});
+        }
+    });
+}
+
 function questionGenerate() {
     Swal.fire({
         title: "Generar costo por placa",
@@ -413,6 +432,11 @@ window.addEventListener('successAlert', function (event) {
 window.addEventListener('questionDelete', function (event) {
     var data = event.detail[0];
     questionDelete(data['id'], data['role'] || '', data['name'] || '');
+});
+
+window.addEventListener('questionActivate', function (event) {
+    var data = event.detail[0];
+    questionActivate(data['id'], data['role'] || '', data['name'] || '');
 });
 
 window.addEventListener('questionGenerate', function (event) {
