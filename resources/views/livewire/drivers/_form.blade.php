@@ -40,9 +40,10 @@
 @php $isEdit = isset($driver) && ($driver?->exists ?? false); @endphp
 
 <div class="row g-3">
+    @php $docLocked = $isEdit && !auth()->user()?->hasRole('director'); @endphp
     <div class="col-auto">
-        <label class="form-label {{ $isEdit ? 'text-muted' : '' }}">N° Documento</label>
-        <input type="text" class="form-control form-control-sm" placeholder="DNI" wire:model="document_number" @if(!($highlightExpiration ?? false) && !$isEdit) wire:change="checkDocumentNumber" @endif autocomplete="off" @if($isEdit) disabled @endif>
+        <label class="form-label {{ $docLocked ? 'text-muted' : '' }}">N° Documento</label>
+        <input type="text" class="form-control form-control-sm" placeholder="DNI" wire:model="document_number" @if(!($highlightExpiration ?? false) && !$isEdit) wire:change="checkDocumentNumber" @endif autocomplete="off" @if($docLocked) disabled @endif>
         @error('document_number') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 

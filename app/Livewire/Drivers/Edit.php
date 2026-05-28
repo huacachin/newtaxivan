@@ -231,8 +231,8 @@ class Edit extends Component
         try {
             $this->validate();
 
-            // 'document_number' se omite intencionalmente: campo bloqueado en
-            // edicion para preservar la identidad del conductor.
+            // 'document_number' solo persiste si el usuario tiene rol director;
+            // para el resto se omite y se preserva la identidad del conductor.
             $payload = [
                 "name"                           => $this->name,
                 "document_expiration_date"       => $this->document_expiration_date,
@@ -258,6 +258,10 @@ class Edit extends Component
                 "credential_municipality"        => $this->credential_municipality,
                 "details"                        => $this->details,
             ];
+
+            if (auth()->user()?->hasRole('director')) {
+                $payload['document_number'] = $this->document_number;
+            }
 
             DB::transaction(function () use ($payload) {
                 $this->driver->update($payload);

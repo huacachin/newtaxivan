@@ -17,9 +17,10 @@
         @error('document_type') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
+    @php $docLocked = $isEdit && !auth()->user()?->hasRole('director'); @endphp
     <div class="col-auto">
-        <label for="document_number" class="form-label {{ $isEdit ? 'text-muted' : '' }}">Número de documento</label>
-        <input id="document_number" type="text" class="form-control form-control-sm" placeholder="Documento" wire:model="document_number" @if(!($highlightExpiration ?? false) && !$isEdit) wire:change="checkDocumentNumber" @endif autocomplete="off" @if($isEdit) disabled @endif>
+        <label for="document_number" class="form-label {{ $docLocked ? 'text-muted' : '' }}">Número de documento</label>
+        <input id="document_number" type="text" class="form-control form-control-sm" placeholder="Documento" wire:model="document_number" @if(!($highlightExpiration ?? false) && !$isEdit) wire:change="checkDocumentNumber" @endif autocomplete="off" @if($docLocked) disabled @endif>
         @error('document_number') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 

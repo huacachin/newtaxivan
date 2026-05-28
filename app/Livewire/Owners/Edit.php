@@ -117,8 +117,8 @@ class Edit extends Component
         try {
             $this->validate();
 
-            // 'document_number' se omite intencionalmente: campo bloqueado en
-            // edicion para preservar la identidad del propietario.
+            // 'document_number' solo persiste si el usuario tiene rol director;
+            // para el resto se omite y se preserva la identidad del propietario.
             $payload = [
                 'name'                     => $this->name,
                 'document_type'            => $this->document_type,
@@ -129,6 +129,10 @@ class Edit extends Component
                 'email'                    => $this->email,
                 'phone'                    => $this->phone,
             ];
+
+            if (auth()->user()?->hasRole('director')) {
+                $payload['document_number'] = $this->document_number;
+            }
 
             DB::transaction(function () use ($payload) {
                 $this->owner->update($payload);
