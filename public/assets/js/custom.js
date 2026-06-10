@@ -50,7 +50,7 @@ function _applyDatepickers(pairs, wire) {
         $el.datepicker({
             changeMonth: true,
             changeYear: true,
-            yearRange: '2015:2036',
+            yearRange: '1950:2036',
             dateFormat: 'yy-mm-dd',
             onSelect: function (dateText) {
                 wire.set(pair[1], dateText);
