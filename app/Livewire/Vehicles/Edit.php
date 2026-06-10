@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Livewire\Vehicles;
 
 use App\Models\Driver;
@@ -6,6 +7,7 @@ use App\Models\Headquarter;
 use App\Models\Owner;
 use App\Models\Vehicle;
 use App\Models\VehicleImage;
+use App\Services\SupportRecordRelinker;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\On;
@@ -17,19 +19,68 @@ class Edit extends Component
     use WithFileUploads;
 
     public Vehicle $vehicle;
+
     public $id;
 
-    public $headquarter, $entry_date, $termination_date;
-    public $class = '', $brand = '', $year, $model, $bodywork = '';
-    public $color, $type, $affiliated_company, $condition;
-    public $owner_id, $driver_id, $fuel, $soat_date, $technical_review, $certificate_date;
-    public $detail, $plate,$sort_order, $seats = 0,$passengers = 0;
+    public $headquarter;
+
+    public $entry_date;
+
+    public $termination_date;
+
+    public $class = '';
+
+    public $brand = '';
+
+    public $year;
+
+    public $model;
+
+    public $bodywork = '';
+
+    public $color;
+
+    public $type;
+
+    public $affiliated_company;
+
+    public $condition;
+
+    public $owner_id;
+
+    public $driver_id;
+
+    public $fuel;
+
+    public $soat_date;
+
+    public $technical_review;
+
+    public $certificate_date;
+
+    public $detail;
+
+    public $plate;
+
+    public $sort_order;
+
+    public $seats = 0;
+
+    public $passengers = 0;
+
     public $new_images = [];
+
     public $image_files = [];
+
     public array $existing_images = [];
+
     public array $deleted_image_ids = [];
 
-    public $listDrivers, $listOwners, $listHeadquarters;
+    public $listDrivers;
+
+    public $listOwners;
+
+    public $listHeadquarters;
 
     public function mount(int $id)
     {
@@ -62,40 +113,40 @@ class Edit extends Component
         $this->detail = $this->vehicle->detail;
         $this->seats = $this->vehicle->seats;
         $this->passengers = $this->vehicle->passengers;
-        $this->existing_images = $this->vehicle->images->map(fn($img) => [
-            'id'  => (int)$img->id,
-            'url' => asset('storage/' . $img->image_path),
+        $this->existing_images = $this->vehicle->images->map(fn ($img) => [
+            'id' => (int) $img->id,
+            'url' => asset('storage/'.$img->image_path),
         ])->all();
     }
 
     public function rules()
     {
         return [
-            "sort_order" => "required|integer",
-            "plate" => "required|string|min:6|max:20|unique:vehicles,plate," . $this->vehicle->id,
-            "entry_date" => "nullable|date",
-            "termination_date" => "nullable|date",
-            "headquarter" => "nullable|string|max:255",
-            "class" => "nullable|string|max:255",
-            "brand" => "nullable|string|max:255",
-            "year" => "nullable|integer",
-            "model" => "nullable|string|max:255",
-            "bodywork" => "nullable|string|max:255",
-            "color" => "nullable|string|max:255",
-            "type"=>"nullable|string|max:255",
-            "affiliated_company" => "nullable|string|max:255",
-            "condition" => "required|string|min:1|max:255",
-            "owner_id" => "nullable|exists:owners,id",
-            "driver_id" => "nullable|exists:drivers,id",
-            "fuel" => "nullable|string|max:255",
-            "soat_date" => "nullable|date",
-            "technical_review" => "nullable|date",
-            "certificate_date" => "nullable|date",
-            "detail" => "nullable|string",
-            "new_images" => "nullable|array|max:10",
-            "new_images.*" => "image|max:5120",
-            "seats" => "nullable|integer",
-            "passengers" => "nullable|integer"
+            'sort_order' => 'required|integer',
+            'plate' => 'required|string|min:6|max:20|unique:vehicles,plate,'.$this->vehicle->id,
+            'entry_date' => 'nullable|date',
+            'termination_date' => 'nullable|date',
+            'headquarter' => 'nullable|string|max:255',
+            'class' => 'nullable|string|max:255',
+            'brand' => 'nullable|string|max:255',
+            'year' => 'nullable|integer',
+            'model' => 'nullable|string|max:255',
+            'bodywork' => 'nullable|string|max:255',
+            'color' => 'nullable|string|max:255',
+            'type' => 'nullable|string|max:255',
+            'affiliated_company' => 'nullable|string|max:255',
+            'condition' => 'required|string|min:1|max:255',
+            'owner_id' => 'nullable|exists:owners,id',
+            'driver_id' => 'nullable|exists:drivers,id',
+            'fuel' => 'nullable|string|max:255',
+            'soat_date' => 'nullable|date',
+            'technical_review' => 'nullable|date',
+            'certificate_date' => 'nullable|date',
+            'detail' => 'nullable|string',
+            'new_images' => 'nullable|array|max:10',
+            'new_images.*' => 'image|max:5120',
+            'seats' => 'nullable|integer',
+            'passengers' => 'nullable|integer',
         ];
     }
 
@@ -117,13 +168,13 @@ class Edit extends Component
 
     public function questionDelete($id): void
     {
-        $this->dispatch('questionDelete',["id" => $id]);
+        $this->dispatch('questionDelete', ['id' => $id]);
     }
 
     #[On('register_destroy')]
     public function delete(int $id): void
     {
-        if (!auth()->user()?->hasAnyRole('director','gerente','administrador')) {
+        if (! auth()->user()?->hasAnyRole('director', 'gerente', 'administrador')) {
             abort(403);
         }
 
@@ -132,18 +183,25 @@ class Edit extends Component
         // Verificar relaciones antes de borrar (cost_per_plates se borra en cascada)
         $relations = [];
         $departures = \DB::table('departures')->where('vehicle_id', $id)->count();
-        $payments   = \DB::table('payments')->where('vehicle_id', $id)->count();
-        $debtDays   = \DB::table('debt_days')->where('vehicle_id', $id)->count();
+        $payments = \DB::table('payments')->where('vehicle_id', $id)->count();
+        $debtDays = \DB::table('debt_days')->where('vehicle_id', $id)->count();
 
-        if ($departures > 0) $relations[] = "{$departures} salida(s)";
-        if ($payments > 0)   $relations[] = "{$payments} pago(s)";
+        if ($departures > 0) {
+            $relations[] = "{$departures} salida(s)";
+        }
+        if ($payments > 0) {
+            $relations[] = "{$payments} pago(s)";
+        }
 
         $cond = strtoupper(trim($vehicle->condition ?? ''));
-        if ($debtDays > 0 && $cond !== 'EX') $relations[] = "{$debtDays} deuda(s)";
+        if ($debtDays > 0 && $cond !== 'EX') {
+            $relations[] = "{$debtDays} deuda(s)";
+        }
 
-        if (!empty($relations)) {
-            session()->flash('vehicle_error', "No se puede eliminar {$vehicle->plate} porque tiene: " . implode(', ', $relations));
+        if (! empty($relations)) {
+            session()->flash('vehicle_error', "No se puede eliminar {$vehicle->plate} porque tiene: ".implode(', ', $relations));
             $this->redirectRoute('settings.vehicles.index');
+
             return;
         }
 
@@ -164,28 +222,28 @@ class Edit extends Component
             // 'plate' se omite intencionalmente: campo bloqueado en edicion
             // para preservar referencias en otras tablas (legacy_plate, etc.).
             $payload = [
-                "sort_order" => $this->sort_order,
-                "headquarters" => $this->headquarter,
-                "entry_date" => $this->entry_date,
-                "termination_date" => $this->termination_date,
-                "class" => $this->class,
-                "brand" => $this->brand,
-                "year" => $this->year,
-                "model" => $this->model,
-                "bodywork" => $this->bodywork,
-                "color" => $this->color,
-                "type" => $this->type,
-                "affiliated_company" => $this->affiliated_company,
-                "condition" => $this->condition,
-                "owner_id" => $this->owner_id,
-                "driver_id" => $this->driver_id,
-                "fuel" => $this->fuel,
-                "soat_date" => $this->soat_date,
-                "certificate_date" => $this->certificate_date,
-                "technical_review" => $this->technical_review,
-                "detail" => $this->detail,
-                "seats" => $this->seats,
-                "passengers" => $this->passengers,
+                'sort_order' => $this->sort_order,
+                'headquarters' => $this->headquarter,
+                'entry_date' => $this->entry_date,
+                'termination_date' => $this->termination_date,
+                'class' => $this->class,
+                'brand' => $this->brand,
+                'year' => $this->year,
+                'model' => $this->model,
+                'bodywork' => $this->bodywork,
+                'color' => $this->color,
+                'type' => $this->type,
+                'affiliated_company' => $this->affiliated_company,
+                'condition' => $this->condition,
+                'owner_id' => $this->owner_id,
+                'driver_id' => $this->driver_id,
+                'fuel' => $this->fuel,
+                'soat_date' => $this->soat_date,
+                'certificate_date' => $this->certificate_date,
+                'technical_review' => $this->technical_review,
+                'detail' => $this->detail,
+                'seats' => $this->seats,
+                'passengers' => $this->passengers,
             ];
 
             // Controlador no puede tocar F. Ingreso, Fecha cese, Orden ni
@@ -199,10 +257,17 @@ class Edit extends Component
                 );
             }
 
-            DB::transaction(function () use ($payload) {
+            $relinker = app(SupportRecordRelinker::class);
+            $relinked = null;
+
+            DB::transaction(function () use ($payload, $relinker, &$relinked) {
                 $this->vehicle->update($payload);
 
-                if (!empty($this->deleted_image_ids)) {
+                // Si el vehículo quedó activo y sin cese vigente (p. ej. reactivación),
+                // recupera registros que se fueron a apoyo mientras estuvo cesado.
+                $relinked = $relinker->relink($this->vehicle->refresh());
+
+                if (! empty($this->deleted_image_ids)) {
                     $imagesToDelete = VehicleImage::where('vehicle_id', $this->vehicle->id)
                         ->whereIn('id', $this->deleted_image_ids)
                         ->get();
@@ -223,12 +288,17 @@ class Edit extends Component
                 }
             });
 
-            session()->flash('vehicle_success', 'Vehículo actualizado correctamente.');
+            $message = 'Vehículo actualizado correctamente.';
+            if ($relinked && ($summary = $relinker->summaryMessage($relinked))) {
+                $message .= ' '.$summary;
+            }
+
+            session()->flash('vehicle_success', $message);
             $this->redirectRoute('settings.vehicles.index');
         } catch (\Illuminate\Validation\ValidationException $e) {
             throw $e;
         } catch (\Throwable $e) {
-            session()->flash('vehicle_error', 'Error al actualizar: ' . $e->getMessage());
+            session()->flash('vehicle_error', 'Error al actualizar: '.$e->getMessage());
             $this->redirectRoute('settings.vehicles.index');
         }
     }
@@ -248,7 +318,7 @@ class Edit extends Component
 
     public function removeExistingImage(int $imageId): void
     {
-        if (!in_array($imageId, $this->deleted_image_ids, true)) {
+        if (! in_array($imageId, $this->deleted_image_ids, true)) {
             $this->deleted_image_ids[] = $imageId;
         }
     }
@@ -257,7 +327,7 @@ class Edit extends Component
     {
         $this->deleted_image_ids = array_values(array_filter(
             $this->deleted_image_ids,
-            fn($id) => $id !== $imageId
+            fn ($id) => $id !== $imageId
         ));
     }
 
