@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Vehicle;
+use App\Services\CostPerPlateGenerator;
 use App\Services\SupportRecordRelinker;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -13,9 +14,9 @@ class RelinkSupportRecords extends Command
                             {plate? : Placa del vehículo a procesar}
                             {--all : Procesa todos los vehículos activos}';
 
-    protected $description = 'Re-vincula salidas, pagos y deudas registrados como apoyo cuya placa ya existe como vehículo activo';
+    protected $description = 'Re-vincula salidas, pagos y deudas registrados como apoyo cuya placa ya existe como vehículo activo, y completa sus costos por placa del mes en curso';
 
-    public function handle(SupportRecordRelinker $relinker): int
+    public function handle(SupportRecordRelinker $relinker, CostPerPlateGenerator $costGenerator): int
     {
         $plate = $this->argument('plate');
 
@@ -42,33 +43,39 @@ class RelinkSupportRecords extends Command
             $vehicles = Vehicle::active()->orderBy('plate')->get();
         }
 
-        $totals = ['departures' => 0, 'payments' => 0, 'debt_days' => 0, 'debt_days_skipped' => 0];
+        $totals = ['departures' => 0, 'payments' => 0, 'debt_days' => 0, 'debt_days_skipped' => 0, 'cost_days' => 0];
 
         foreach ($vehicles as $vehicle) {
-            $result = DB::transaction(fn () => $relinker->relink($vehicle));
+            [$result, $costs] = DB::transaction(fn () => [
+                $relinker->relink($vehicle),
+                $costGenerator->generateForVehicle($vehicle),
+            ]);
 
-            foreach ($totals as $key => $_) {
-                $totals[$key] += $result[$key];
+            foreach ($result as $key => $value) {
+                $totals[$key] += $value;
             }
+            $totals['cost_days'] += $costs['daily'];
 
-            if (array_sum($result) > 0) {
+            if (array_sum($result) > 0 || $costs['monthly'] > 0 || $costs['daily'] > 0) {
                 $this->line(sprintf(
-                    '%s: %d salida(s), %d pago(s), %d deuda(s) re-vinculadas%s',
+                    '%s: %d salida(s), %d pago(s), %d deuda(s) re-vinculadas, %d día(s) de costo generados%s',
                     $vehicle->plate,
                     $result['departures'],
                     $result['payments'],
                     $result['debt_days'],
+                    $costs['daily'],
                     $result['debt_days_skipped'] > 0 ? " ({$result['debt_days_skipped']} deuda(s) saltadas por mes duplicado)" : ''
                 ));
             }
         }
 
         $this->info(sprintf(
-            'Total: %d salida(s), %d pago(s), %d deuda(s) re-vinculadas, %d deuda(s) saltadas.',
+            'Total: %d salida(s), %d pago(s), %d deuda(s) re-vinculadas, %d deuda(s) saltadas, %d día(s) de costo generados.',
             $totals['departures'],
             $totals['payments'],
             $totals['debt_days'],
-            $totals['debt_days_skipped']
+            $totals['debt_days_skipped'],
+            $totals['cost_days']
         ));
 
         return self::SUCCESS;

@@ -7,6 +7,7 @@ use App\Models\Headquarter;
 use App\Models\Owner;
 use App\Models\Vehicle;
 use App\Models\VehicleImage;
+use App\Services\CostPerPlateGenerator;
 use App\Services\SupportRecordRelinker;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -258,14 +259,19 @@ class Edit extends Component
             }
 
             $relinker = app(SupportRecordRelinker::class);
+            $costGenerator = app(CostPerPlateGenerator::class);
             $relinked = null;
+            $costs = null;
 
-            DB::transaction(function () use ($payload, $relinker, &$relinked) {
+            DB::transaction(function () use ($payload, $relinker, $costGenerator, &$relinked, &$costs) {
                 $this->vehicle->update($payload);
 
                 // Si el vehículo quedó activo y sin cese vigente (p. ej. reactivación),
-                // recupera registros que se fueron a apoyo mientras estuvo cesado.
-                $relinked = $relinker->relink($this->vehicle->refresh());
+                // recupera registros que se fueron a apoyo mientras estuvo cesado
+                // y completa sus costos por placa del mes en curso.
+                $vehicle = $this->vehicle->refresh();
+                $relinked = $relinker->relink($vehicle);
+                $costs = $costGenerator->generateForVehicle($vehicle);
 
                 if (! empty($this->deleted_image_ids)) {
                     $imagesToDelete = VehicleImage::where('vehicle_id', $this->vehicle->id)
@@ -291,6 +297,9 @@ class Edit extends Component
             $message = 'Vehículo actualizado correctamente.';
             if ($relinked && ($summary = $relinker->summaryMessage($relinked))) {
                 $message .= ' '.$summary;
+            }
+            if ($costs && ($costs['monthly'] > 0 || $costs['daily'] > 0)) {
+                $message .= ' Se generaron sus costos por placa del mes actual.';
             }
 
             session()->flash('vehicle_success', $message);

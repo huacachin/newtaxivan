@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\CostPerPlate;
 use App\Models\CostPerPlateDay;
+use App\Models\Vehicle;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -20,13 +21,13 @@ class CostPerPlateGenerator
     public function generateForMonth(Carbon $date): array
     {
         $dest = $date->copy()->startOfMonth();
-        $src  = $dest->copy()->subMonth();
+        $src = $dest->copy()->subMonth();
 
-        $destYear  = (int) $dest->year;
+        $destYear = (int) $dest->year;
         $destMonth = (int) $dest->month;
 
-        $srcYear   = (int) $src->year;
-        $srcMonth  = (int) $src->month;
+        $srcYear = (int) $src->year;
+        $srcMonth = (int) $src->month;
 
         // Todos los vehículos activos
         $vehicles = DB::table('vehicles')
@@ -62,7 +63,7 @@ class CostPerPlateGenerator
         $now = now();
 
         $monthlyPayload = [];
-        $dailyPayload   = [];
+        $dailyPayload = [];
 
         foreach ($vehicles as $v) {
             $vid = (int) $v->id;
@@ -76,10 +77,10 @@ class CostPerPlateGenerator
 
             $monthlyPayload[] = [
                 'vehicle_id' => $vid,
-                'year'       => $destYear,
-                'month'      => $destMonth,
-                'amount'     => $amount,
-                'order'      => $order,
+                'year' => $destYear,
+                'month' => $destMonth,
+                'amount' => $amount,
+                'order' => $order,
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
@@ -89,10 +90,10 @@ class CostPerPlateGenerator
                 $dateObj = Carbon::create($destYear, $destMonth, $day);
                 $dailyPayload[] = [
                     'vehicle_id' => $vid,
-                    'year'       => $destYear,
-                    'month'      => $destMonth,
-                    'date'       => $dateObj->toDateString(),
-                    'amount'     => $amount,
+                    'year' => $destYear,
+                    'month' => $destMonth,
+                    'date' => $dateObj->toDateString(),
+                    'amount' => $amount,
                     'created_at' => $now,
                     'updated_at' => $now,
                 ];
@@ -112,5 +113,102 @@ class CostPerPlateGenerator
         });
 
         return ['monthly' => count($monthlyPayload), 'daily' => count($dailyPayload), 'skipped' => false];
+    }
+
+    /**
+     * Genera los costos del mes en curso para UN solo vehículo (registrado o
+     * reactivado a mitad de mes, cuando la generación mensual ya corrió).
+     *
+     * Idempotente y no destructivo: solo inserta la fila mensual y los días
+     * que falten; nunca modifica montos existentes (preserva ediciones manuales).
+     * Solo aplica a vehículos activos y sin cese vencido.
+     *
+     * Monto con la misma regla del lote: fila mensual existente del mes, o
+     * último día NO domingo del mes anterior, o fallback 15.00.
+     *
+     * @return array{monthly:int,daily:int}
+     */
+    public function generateForVehicle(Vehicle $vehicle): array
+    {
+        $result = ['monthly' => 0, 'daily' => 0];
+
+        $tz = config('app.timezone', 'America/Lima');
+        $today = now($tz)->startOfDay();
+
+        $ceased = $vehicle->termination_date && $vehicle->termination_date < $today;
+        if ($vehicle->status !== 'active' || $ceased) {
+            return $result;
+        }
+
+        $dest = now($tz)->startOfMonth();
+        $src = $dest->copy()->subMonth();
+
+        $monthlyAmount = CostPerPlate::where('vehicle_id', $vehicle->id)
+            ->where('year', $dest->year)
+            ->where('month', $dest->month)
+            ->value('amount');
+
+        if ($monthlyAmount !== null) {
+            $amount = (float) $monthlyAmount;
+        } else {
+            $lastDaily = DB::table('cost_per_plate_days')
+                ->where('vehicle_id', $vehicle->id)
+                ->whereYear('date', $src->year)
+                ->whereMonth('date', $src->month)
+                ->whereRaw('DAYOFWEEK(date) <> 1')
+                ->orderByDesc('date')
+                ->value('amount');
+
+            $amount = $lastDaily !== null ? (float) $lastDaily : 15.00;
+        }
+
+        $now = now();
+
+        if ($monthlyAmount === null) {
+            CostPerPlate::insert([
+                'vehicle_id' => $vehicle->id,
+                'year' => $dest->year,
+                'month' => $dest->month,
+                'amount' => $amount,
+                'order' => (int) ($vehicle->sort_order ?? 0),
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+            $result['monthly'] = 1;
+        }
+
+        $existingDays = CostPerPlateDay::where('vehicle_id', $vehicle->id)
+            ->where('year', $dest->year)
+            ->where('month', $dest->month)
+            ->pluck('date')
+            ->map(fn ($d) => $d->toDateString())
+            ->all();
+
+        $dailyPayload = [];
+        $daysInMonth = $dest->copy()->endOfMonth()->day;
+
+        for ($day = 1; $day <= $daysInMonth; $day++) {
+            $date = Carbon::create($dest->year, $dest->month, $day)->toDateString();
+            if (in_array($date, $existingDays, true)) {
+                continue;
+            }
+
+            $dailyPayload[] = [
+                'vehicle_id' => $vehicle->id,
+                'year' => $dest->year,
+                'month' => $dest->month,
+                'date' => $date,
+                'amount' => $amount,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        if (! empty($dailyPayload)) {
+            CostPerPlateDay::insert($dailyPayload);
+            $result['daily'] = count($dailyPayload);
+        }
+
+        return $result;
     }
 }

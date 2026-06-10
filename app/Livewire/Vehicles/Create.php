@@ -7,6 +7,7 @@ use App\Models\Headquarter;
 use App\Models\Owner;
 use App\Models\Vehicle;
 use App\Models\VehicleImage;
+use App\Services\CostPerPlateGenerator;
 use App\Services\SupportRecordRelinker;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -166,9 +167,11 @@ class Create extends Component
             ];
 
             $relinker = app(SupportRecordRelinker::class);
+            $costGenerator = app(CostPerPlateGenerator::class);
             $relinked = null;
+            $costs = null;
 
-            DB::transaction(function () use ($payload, $relinker, &$relinked) {
+            DB::transaction(function () use ($payload, $relinker, $costGenerator, &$relinked, &$costs) {
                 $vehicle = Vehicle::create($payload);
 
                 foreach ($this->image_files as $file) {
@@ -181,11 +184,17 @@ class Create extends Component
 
                 // Registros que entraron como apoyo antes de existir el vehículo
                 $relinked = $relinker->relink($vehicle);
+
+                // Costos del mes en curso (la generación mensual ya corrió sin él)
+                $costs = $costGenerator->generateForVehicle($vehicle);
             });
 
             $message = 'Vehículo creado correctamente.';
             if ($relinked && ($summary = $relinker->summaryMessage($relinked))) {
                 $message .= ' '.$summary;
+            }
+            if ($costs && ($costs['monthly'] > 0 || $costs['daily'] > 0)) {
+                $message .= ' Se generaron sus costos por placa del mes actual.';
             }
 
             session()->flash('vehicle_success', $message);
