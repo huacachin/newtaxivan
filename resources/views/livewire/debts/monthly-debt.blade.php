@@ -117,7 +117,7 @@
                                     </div>
                                     @hasanyrole('director|gerente|administrador')
                                         @if(($r['total'] ?? 0) > 0)
-                                            <a href="#" class="list-card__edit" wire:click.prevent="detail({{ $r['id'] }})" aria-label="Editar">
+                                            <a href="{{ route('debts.monthly.detail', ['id' => $r['id']]) }}" target="_blank" rel="noopener" class="list-card__edit" aria-label="Editar">
                                                 <i class="ti ti-edit"></i>
                                             </a>
                                         @endif
@@ -207,7 +207,7 @@
                                     <td>
                                         @hasanyrole('director|gerente|administrador')
                                         @if(($r['total'] ?? 0) > 0)
-                                            <a href="#" title="Editar" wire:click.prevent="detail({{ $r['id'] }})">
+                                            <a href="{{ route('debts.monthly.detail', ['id' => $r['id']]) }}" target="_blank" rel="noopener" title="Editar">
                                                 <i class="ti ti-edit f-s-12 text-success"></i>
                                             </a>
                                         @endif
