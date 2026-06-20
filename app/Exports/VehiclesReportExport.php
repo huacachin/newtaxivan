@@ -32,11 +32,26 @@ class VehiclesReportExport implements
         $status = strtolower(trim((string) $this->status));
         $search = trim((string) $this->search);
         $filter = (string) $this->filter;
+        $today  = now()->toDateString();
 
         return Vehicle::query()
-            ->when(in_array($status, ['active','inactive'], true),
-                fn ($q) => $q->whereRaw('LOWER(TRIM(status)) = ?', [$status])
-            )
+            ->when($status === 'active', function ($q) use ($today) {
+                $q->where('status', 'active')
+                  ->where(function ($w) use ($today) {
+                      $w->whereNull('termination_date')
+                        ->orWhere('termination_date', '>', $today);
+                  });
+            })
+            ->when($status === 'inactive', function ($q) use ($today) {
+                $q->where(function ($w) use ($today) {
+                    $w->where('status', 'inactive')
+                      ->orWhere(function ($sub) use ($today) {
+                          $sub->where('status', 'active')
+                              ->whereNotNull('termination_date')
+                              ->where('termination_date', '<=', $today);
+                      });
+                });
+            })
             ->when($search !== '' && $filter !== '', function ($q) use ($filter, $search) {
                 return match ($filter) {
                     'brand'     => $q->where('brand', 'like', "%{$search}%"),
@@ -60,7 +75,7 @@ class VehiclesReportExport implements
             ->orderBy('id','asc')
             ->select([
                 'id','sort_order','plate','brand','year','class','type','fuel',
-                'condition','affiliated_company','owner_id','driver_id'
+                'condition','affiliated_company','owner_id','driver_id','termination_date'
             ]);
     }
 
@@ -98,27 +113,30 @@ class VehiclesReportExport implements
         $title = 'LISTADO GENERAL DE VEHÍCULOS';
         $stats = $s;
 
+        $showTermination = strtolower(trim((string) $this->status)) === 'inactive';
+
         $rows = [];
         $i = 0;
         foreach ($this->query()->get() as $v) {
             $i++;
             $rows[] = [
-                'item'      => $i,
-                'cod'       => $v->sort_order ?? $v->id,
-                'plate'     => $v->plate,
-                'brand'     => $v->brand,
-                'year'      => $v->year,
-                'class'     => $v->class,
-                'owner'     => optional($v->owner)->name ?? '—',
-                'driver'    => optional($v->driver)->name ?? '—',
-                'type'      => $v->type,
-                'fuel'      => $v->fuel,
-                'condition' => $v->condition,
-                'company'   => $v->affiliated_company,
+                'item'        => $i,
+                'cod'         => $v->sort_order ?? $v->id,
+                'plate'       => $v->plate,
+                'brand'       => $v->brand,
+                'year'        => $v->year,
+                'class'       => $v->class,
+                'owner'       => optional($v->owner)->name ?? '—',
+                'driver'      => optional($v->driver)->name ?? '—',
+                'type'        => $v->type,
+                'fuel'        => $v->fuel,
+                'condition'   => $v->condition,
+                'company'     => $v->affiliated_company,
+                'termination' => optional($v->termination_date)->format('d/m/Y') ?? '—',
             ];
         }
 
-        return compact('title', 'stats', 'rows');
+        return compact('title', 'stats', 'rows', 'showTermination');
     }
 
     public function styles(Worksheet $sheet)

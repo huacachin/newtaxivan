@@ -122,23 +122,13 @@
 
                         {{-- Motivo --}}
                         <div class="col-md-3">
-                            <div class="mb-3 reason-input-wrap">
+                            <div class="mb-3">
                                 <label class="form-label">Motivo (*)</label>
-                                <div wire:ignore wire:key="reason-zone-edit-income">
-                                    <select class="form-select form-select-sm reason-input-select @error('detail') is-invalid @enderror">
-                                        <option value=""></option>
-                                        @if($detail)
-                                            <option value="{{ $detail }}" selected>{{ $detail }}</option>
-                                        @endif
-                                        @foreach($reasonTemplates as $tpl)
-                                            @if($tpl !== $detail)
-                                                <option value="{{ $tpl }}" data-template="1">{{ \Illuminate\Support\Str::limit($tpl, 60) }}</option>
-                                            @endif
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <input type="hidden" data-reason-sync wire:model="detail">
-                                @error('detail') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                                <input type="text" name="detail" autocomplete="on"
+                                       class="form-control form-control-sm @error('detail') is-invalid @enderror"
+                                       placeholder="Motivo"
+                                       wire:model.defer="detail">
+                                @error('detail') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                         </div>
 
@@ -257,5 +247,4 @@
 
     @include('partials.image-lightbox')
 
-    @include('livewire.cash._reason-template-modal')
 </div>

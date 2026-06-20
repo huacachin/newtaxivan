@@ -25,8 +25,6 @@ class EditExpense extends Component
     public array  $controladores = [];
     public string $reason_text = '';
     public array  $amountSuggestions = [];
-    public array  $reasonTemplates = [];
-    public ?string $reasonModalText = null;
 
     public ?string $date          = null;
     public string  $detail        = '';
@@ -103,36 +101,6 @@ class EditExpense extends Component
         }
 
         $this->recomputeAmountSuggestions();
-        $this->loadReasonTemplates();
-    }
-
-    protected function loadReasonTemplates(): void
-    {
-        $this->reasonTemplates = DB::table('expenses')
-            ->whereNotNull('detail')
-            ->whereRaw('CHAR_LENGTH(detail) >= ?', [30])
-            ->where('date', '>=', now()->subYear()->toDateString())
-            ->select('detail', DB::raw('COUNT(*) as freq'))
-            ->groupBy('detail')
-            ->orderByDesc('freq')
-            ->limit(20)
-            ->pluck('detail')
-            ->all();
-    }
-
-    public function openReasonModal(string $text): void
-    {
-        if (trim($text) === '') return;
-        $this->reasonModalText = $text;
-        $this->dispatch('open-modal', ['name' => 'reasonTemplateModal']);
-    }
-
-    public function acceptReasonModal(): void
-    {
-        $this->detail = (string) $this->reasonModalText;
-        $this->reasonModalText = null;
-        $this->dispatch('modal-close', ['name' => 'reasonTemplateModal']);
-        $this->dispatch('reason-detail-updated', detail: $this->detail);
     }
 
     private function loadControladores(): void
