@@ -111,7 +111,7 @@
                         </div>
 
                         {{-- Motivo / Detalle --}}
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <div class="mb-3">
                                 <label class="form-label">Motivo / Detalle (*)</label>
                                 <input type="text" name="detail" autocomplete="on"
@@ -134,6 +134,7 @@
                                     <input type="text" inputmode="decimal"
                                            x-ref="input"
                                            name="expense_amount" autocomplete="on"
+                                           style="max-width: 110px"
                                            class="form-control form-control-sm @error('total') is-invalid @enderror"
                                            wire:model.defer="total">
                                     <div class="num-chips" x-show="suggestions.length" x-cloak>

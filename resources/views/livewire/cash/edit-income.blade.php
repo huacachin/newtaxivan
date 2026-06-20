@@ -91,6 +91,7 @@
                                     <input type="text" inputmode="decimal"
                                            x-ref="input"
                                            name="income_amount" autocomplete="on"
+                                           style="max-width: 110px"
                                            class="form-control form-control-sm @error('amount_input') is-invalid @enderror"
                                            placeholder="0.00"
                                            wire:model.live="amount_input">
@@ -121,7 +122,7 @@
                         </div>
 
                         {{-- Motivo --}}
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <div class="mb-3">
                                 <label class="form-label">Motivo (*)</label>
                                 <input type="text" name="detail" autocomplete="on"
