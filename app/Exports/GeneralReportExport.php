@@ -52,6 +52,7 @@ class GeneralReportExport implements FromArray, WithEvents, WithColumnFormatting
 
     /** Marcas de estilo */
     protected array $dailyFooterRows = [];
+    protected array $dailyFooterData = [];
     protected int $lastRow = 1;
     protected ?int $totalRow = null;
     protected ?int $utilidadRow = null;
@@ -133,13 +134,17 @@ class GeneralReportExport implements FromArray, WithEvents, WithColumnFormatting
                 $runningAccum += $dayBalance;
 
                 $rows[] = [
-                    '', '',                                   // ITEM, FECHA
-                    'SALDO FINAL–INICIAL',                    // C (etiqueta)
-                    'Saldo acumulado: ' . number_format($runningAccum, 2), // D (valor)
+                    'SALDO FINAL-INICIAL  Saldo del día: ' . number_format($dayBalance, 2)
+                        . '  Saldo acumulado: ' . number_format($runningAccum, 2), // A (ancla del merge A:D)
+                    '', '', '',                               // B, C, D (combinadas con A)
                     (float)$sumI,                             // E
                     (float)$sumE,                             // F
                 ];
                 $this->dailyFooterRows[] = count($rows);
+                $this->dailyFooterData[count($rows)] = [
+                    'dia'  => $dayBalance,
+                    'acum' => $runningAccum,
+                ];
             }
 
             $totalIncomes  += $sumI;
@@ -266,26 +271,44 @@ class GeneralReportExport implements FromArray, WithEvents, WithColumnFormatting
                     $sheet->getStyle("F3:F{$this->lastRow}")->getFont()->getColor()->setARGB('FFFF0000');
                 }
 
-                // ===== Footers diarios — celeste; C=RichText rojo/negro, D=azul =====
+                // ===== Footers diarios — celeste; A:D combinada con RichText =====
+                $blueTxt = 'FF0000FF';
                 foreach ($this->dailyFooterRows as $r) {
+                    // Combinar A:D en una sola celda con todo el bloque de saldo
+                    $sheet->mergeCells("A{$r}:D{$r}");
+
                     $sheet->getStyle("A{$r}:F{$r}")->applyFromArray([
                         'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $foot]],
                         'font'      => ['bold' => true, 'size' => 10],
                         'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]]],
                         'alignment' => ['vertical' => Alignment::VERTICAL_CENTER],
                     ]);
-                    // A y B quedan negros (están vacíos de todas formas)
-                    $sheet->getStyle("A{$r}:B{$r}")->getFont()->getColor()->setARGB($black);
-                    // D (saldo acumulado) en azul
-                    $sheet->getStyle("D{$r}")->getFont()->getColor()->setARGB('FF0000FF');
-                    // C: RichText — "SALDO " negro + "FINAL–INICIAL" rojo
+                    // La celda combinada se alinea a la izquierda y sin wrap
+                    $sheet->getStyle("A{$r}")->getAlignment()
+                        ->setHorizontal(Alignment::HORIZONTAL_LEFT)
+                        ->setWrapText(false);
+
+                    $dia  = $this->dailyFooterData[$r]['dia']  ?? 0.0;
+                    $acum = $this->dailyFooterData[$r]['acum'] ?? 0.0;
+
+                    // RichText: "SALDO " negro + "FINAL-INICIAL" rojo + saldos en azul
                     $rt = new \PhpOffice\PhpSpreadsheet\RichText\RichText();
                     $runSaldo = $rt->createTextRun('SALDO ');
-                    $runSaldo->getFont()->getColor()->setARGB($black);
-                    $runFinal = $rt->createTextRun('FINAL–INICIAL');
-                    $runFinal->getFont()->getColor()->setARGB('FFFF0000');
-                    $runFinal->getFont()->setBold(true);
-                    $sheet->getCell("C{$r}")->setValue($rt);
+                    $runSaldo->getFont()->setBold(true)->getColor()->setARGB($black);
+                    $runFinal = $rt->createTextRun('FINAL-INICIAL');
+                    $runFinal->getFont()->setBold(true)->getColor()->setARGB('FFFF0000');
+
+                    $runDiaLbl = $rt->createTextRun('   Saldo del día: ');
+                    $runDiaLbl->getFont()->setBold(true)->getColor()->setARGB($black);
+                    $runDiaVal = $rt->createTextRun(number_format($dia, 2));
+                    $runDiaVal->getFont()->setBold(true)->getColor()->setARGB($blueTxt);
+
+                    $runAcumLbl = $rt->createTextRun('   Saldo acumulado: ');
+                    $runAcumLbl->getFont()->setBold(true)->getColor()->setARGB($black);
+                    $runAcumVal = $rt->createTextRun(number_format($acum, 2));
+                    $runAcumVal->getFont()->setBold(true)->getColor()->setARGB($blueTxt);
+
+                    $sheet->getCell("A{$r}")->setValue($rt);
                 }
 
                 // ===== Total General + Utilidad =====
@@ -303,6 +326,13 @@ class GeneralReportExport implements FromArray, WithEvents, WithColumnFormatting
                 if ($this->lastRow >= 3) {
                     $sheet->getStyle("A3:F{$this->lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                     $sheet->getStyle("C3:D{$this->lastRow}")->getAlignment()->setWrapText(true);
+                }
+
+                // Re-alinear footers diarios a la izquierda (se sobreescribió arriba)
+                foreach ($this->dailyFooterRows as $r) {
+                    $sheet->getStyle("A{$r}")->getAlignment()
+                        ->setHorizontal(Alignment::HORIZONTAL_LEFT)
+                        ->setWrapText(false);
                 }
 
                 // ===== Anchos =====
