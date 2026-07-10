@@ -127,27 +127,41 @@ class Vehicle extends Model
         return $this->hasMany(\App\Models\DebtDay::class);
     }
 
+    /**
+     * Badge "No trabaja" a partir de la fecha de marcado (reutilizable desde
+     * vistas que traen la columna via join, sin hidratar el modelo).
+     */
+    public static function notWorkingBadge($since): ?array
+    {
+        if (! $since) {
+            return null;
+        }
+
+        $days = (int) Carbon::parse($since)->startOfDay()->diffInDays(Carbon::today());
+        $left = 60 - $days;
+
+        return [
+            'abbr' => "NT {$days}d",
+            'title' => $left > 0
+                ? "No trabaja hace {$days} día(s). Faltan {$left} día(s) para sugerir la baja."
+                : "No trabaja hace {$days} día(s). Ya cumplió los 60 días: evaluar darle de baja.",
+            // Tooltip Bootstrap con HTML (data-bs-html en la vista)
+            'html' => $left > 0
+                ? "<div class='text-start'><strong>&#128663; No trabaja</strong><br>Hace <b>{$days}</b> día(s)<br>Faltan <b>{$left}</b> día(s) para sugerir la baja</div>"
+                : "<div class='text-start'><strong>&#128663; No trabaja</strong><br>Hace <b>{$days}</b> día(s)<br><b>Cumplió los 60 días:</b> evaluar darle de baja</div>",
+            'class' => $days >= 60 ? 'bg-danger' : 'bg-warning',
+            'text' => $days >= 60 ? 'text-white' : 'text-dark',
+        ];
+    }
+
     public function getBadgesAttribute(): array
     {
         $badges = [];
 
         // Recordatorio "No trabaja": cuenta los dias desde que se marcó;
         // a los 60 se sugiere la baja definitiva.
-        if ($this->not_working_since) {
-            $days = (int) $this->not_working_since->startOfDay()->diffInDays(Carbon::today());
-            $left = 60 - $days;
-            $badges[] = [
-                'abbr' => "NT {$days}d",
-                'title' => $left > 0
-                    ? "No trabaja hace {$days} día(s). Faltan {$left} día(s) para sugerir la baja."
-                    : "No trabaja hace {$days} día(s). Ya cumplió los 60 días: evaluar darle de baja.",
-                // Tooltip Bootstrap con HTML (data-bs-html en la vista)
-                'html' => $left > 0
-                    ? "<div class='text-start'><strong>&#128663; No trabaja</strong><br>Hace <b>{$days}</b> día(s)<br>Faltan <b>{$left}</b> día(s) para sugerir la baja</div>"
-                    : "<div class='text-start'><strong>&#128663; No trabaja</strong><br>Hace <b>{$days}</b> día(s)<br><b>Cumplió los 60 días:</b> evaluar darle de baja</div>",
-                'class' => $days >= 60 ? 'bg-danger' : 'bg-warning',
-                'text' => $days >= 60 ? 'text-white' : 'text-dark',
-            ];
+        if ($nt = self::notWorkingBadge($this->not_working_since)) {
+            $badges[] = $nt;
         }
 
         $add = function ($date, string $abbrType, string $label) use (&$badges) {

@@ -1,4 +1,12 @@
 <div class="container-fluid">
+    <style>
+        /* Fila de placa marcada "No trabaja": fondo naranja y texto negro */
+        .table tr.row-no-trabaja > td {
+            background-color: #ffa94d !important;
+            box-shadow: none !important;
+            color: #000 !important;
+        }
+    </style>
     <!-- Header -->
     <div class="row">
         <div class="col-sm-6">
@@ -122,11 +130,12 @@
                                         elseif ($diff <= 10) { $expBadge = ['cls' => 'bg-warning text-dark', 'txt' => 'Por vencer']; }
                                     }
                                 @endphp
-                                <article class="list-card">
+                                @php $ntBadge = \App\Models\Vehicle::notWorkingBadge($owner->not_working_since ?? null); @endphp
+                                <article class="list-card" @if($ntBadge) style="background-color:#ffa94d; color:#000;" @endif>
                                     <header class="list-card__head">
                                         <div class="list-card__title-wrap">
                                             <span class="list-card__index">{{ $loop->iteration }}</span>
-                                            <span class="list-card__title">{{ $owner->name }}</span>
+                                            <span class="list-card__title" @if($ntBadge) style="color:#000;" @endif>{{ $owner->name }}</span>
                                         </div>
                                         <div class="d-flex align-items-center gap-2">
                                             @hasanyrole('director|gerente|administrador|controlador')
@@ -150,6 +159,9 @@
 
                                     <div class="list-card__chips">
                                         @if($owner->plate)<span class="list-chip list-chip--info">{{ $owner->plate }}</span>@endif
+                                        @if($ntBadge)
+                                            <span class="badge {{ $ntBadge['class'] }} {{ $ntBadge['text'] }}" data-bs-toggle="tooltip" data-bs-html="true" data-bs-title="{{ $ntBadge['html'] }}">{{ $ntBadge['abbr'] }}</span>
+                                        @endif
                                         @if($expBadge)<span class="badge {{ $expBadge['cls'] }}">{{ $expBadge['txt'] }}</span>@endif
                                         @php $ownerImgUrls = $ownersImages[$owner->id] ?? []; @endphp
                                         @if(!empty($ownerImgUrls))
@@ -199,7 +211,8 @@
                             <tbody>
                             @if($owners->count() > 0)
                                 @foreach ($owners as $owner)
-                                    <tr>
+                                    @php $ntBadge = \App\Models\Vehicle::notWorkingBadge($owner->not_working_since ?? null); @endphp
+                                    <tr class="{{ $ntBadge ? 'row-no-trabaja' : '' }}">
                                         @hasanyrole('director|gerente|administrador|controlador')
                                         <td class="text-nowrap">
                                             <a href="{{ route('settings.owners.edit', $owner->id) }}" title="Editar">
@@ -219,7 +232,12 @@
                                         @endhasanyrole
                                         <td>{{ $loop->iteration }}</td>
                                         <td>{{$owner->sort_order}}</td>
-                                        <td>{{ $owner->plate }}</td>
+                                        <td>
+                                            {{ $owner->plate }}
+                                            @if($ntBadge)
+                                                <span class="badge {{ $ntBadge['class'] }} {{ $ntBadge['text'] }}" data-bs-toggle="tooltip" data-bs-html="true" data-bs-title="{{ $ntBadge['html'] }}">{{ $ntBadge['abbr'] }}</span>
+                                            @endif
+                                        </td>
                                         <td>{{ $owner->name }}</td>
                                         <td>
                                             {{ $owner->document_number }}
