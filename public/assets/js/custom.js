@@ -677,3 +677,54 @@ document.addEventListener('alpine:init', function () {
         };
     });
 });
+
+// ===== Historial de busqueda propio (datalist + localStorage) =====
+// Chrome clasifica los buscadores como "search box" y no guarda su historial
+// de autofill, asi que lo manejamos nosotros. Uso: agregar al input
+// data-search-history="clave" y un <datalist> referenciado por list="...".
+(function () {
+    function readHistory(key) {
+        try { return JSON.parse(localStorage.getItem(key)) || []; } catch (e) { return []; }
+    }
+
+    function initSearchHistory() {
+        document.querySelectorAll('input[data-search-history]').forEach(function (input) {
+            if (input.dataset.searchHistoryInit) return;
+            input.dataset.searchHistoryInit = '1';
+
+            var key = 'searchHist:' + input.dataset.searchHistory;
+            var datalist = input.getAttribute('list') ? document.getElementById(input.getAttribute('list')) : null;
+            if (!datalist) return;
+
+            var render = function () {
+                datalist.innerHTML = '';
+                readHistory(key).forEach(function (v) {
+                    var opt = document.createElement('option');
+                    opt.value = v;
+                    datalist.appendChild(opt);
+                });
+            };
+
+            var record = function () {
+                var v = (input.value || '').trim();
+                if (v.length < 2) return;
+                var items = readHistory(key).filter(function (x) {
+                    return x.toLowerCase() !== v.toLowerCase();
+                });
+                items.unshift(v);
+                localStorage.setItem(key, JSON.stringify(items.slice(0, 10)));
+                render();
+            };
+
+            // Submit nativo (Enter) y perdida de foco con valor (p. ej. antes de
+            // hacer click en "Buscar") registran el termino.
+            if (input.form) input.form.addEventListener('submit', record);
+            input.addEventListener('change', record);
+
+            render();
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', initSearchHistory);
+    document.addEventListener('livewire:navigated', initSearchHistory);
+})();

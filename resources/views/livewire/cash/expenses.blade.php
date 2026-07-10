@@ -99,7 +99,8 @@
                                         </div>
                                     </div>
                                 </div>
-                                {{-- GET nativo: recarga la página para que Chrome guarde el término buscado --}}
+                                {{-- GET nativo + historial propio (datalist/localStorage via data-search-history en custom.js):
+                                     Chrome clasifica estos campos como caja de busqueda y no guarda su historial de autofill. --}}
                                 <form method="GET" action="{{ route('cash.expenses') }}" autocomplete="on">
                                     <input type="hidden" name="filterType" value="{{ $filterType }}">
                                     <input type="hidden" name="date_start" value="{{ $ui_date_start }}">
@@ -108,11 +109,14 @@
                                         type="search"
                                         name="expense_search"
                                         autocomplete="on"
+                                        list="expense_search_hist"
+                                        data-search-history="expense_search"
                                         class="form-control form-control-sm"
                                         placeholder="Buscar..."
                                         aria-label="Buscar"
                                         value="{{ $search }}"
                                         wire:model="search">
+                                    <datalist id="expense_search_hist" wire:ignore></datalist>
                                 </form>
                             </div>
 
