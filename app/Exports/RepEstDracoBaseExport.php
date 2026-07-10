@@ -6,26 +6,29 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Maatwebsite\Excel\Concerns\FromArray;
-use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, WithStyles, WithTitle
+class RepEstDracoBaseExport implements FromArray, WithEvents, WithHeadings, WithStyles, WithTitle
 {
     public function __construct(protected int $year) {}
 
     // ======= Ajusta si tu campo de fecha es distinto =======
-    protected string $dateColumn      = 'date'; // 'date_register' si aplica
-    protected string $userModelClass  = \App\Models\User::class;
+    protected string $dateColumn = 'date'; // 'date_register' si aplica
 
-    private int $mainRowCount   = 0;  // filas del bloque principal (tabla grande)
+    protected string $userModelClass = \App\Models\User::class;
+
+    private int $mainRowCount = 0;  // filas del bloque principal (tabla grande)
+
     private int $summaryHeadRow = 0;  // fila (en dataset) del encabezado de mini tabla
+
     private int $summaryLastRow = 0;  // última fila total (dataset)
 
     private array $months = [
@@ -47,7 +50,7 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
     {
         // ===== Mapas de nombres frescos =====
         $userMap = [];
-        $hqMap   = [];
+        $hqMap = [];
 
         if (Schema::hasTable('users')) {
             DB::table('users')
@@ -55,7 +58,7 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
                 ->orderBy('username')
                 ->chunk(1000, function ($rows) use (&$userMap) {
                     foreach ($rows as $r) {
-                        $userMap[(int)$r->id] = (string)$r->username;
+                        $userMap[(int) $r->id] = (string) $r->username;
                     }
                 });
         }
@@ -66,7 +69,7 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
                 ->orderBy('name')
                 ->chunk(1000, function ($rows) use (&$hqMap) {
                     foreach ($rows as $r) {
-                        $hqMap[(int)$r->id] = (string)$r->name;
+                        $hqMap[(int) $r->id] = (string) $r->name;
                     }
                 });
         }
@@ -76,34 +79,34 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
 
         // ===== BASE por mes =====
         $baseMonthly = array_fill(1, 12, 0.0);
-        $grandBase   = 0.0;
+        $grandBase = 0.0;
 
         if (Schema::hasTable('expenses')) {
             $base = DB::table('expenses')
                 ->whereYear($this->dateColumn, $this->year)
                 ->where('reason', 'like', '%BASE%')
-                ->selectRaw('MONTH(' . $this->dateColumn . ') m, SUM(total) s')
+                ->selectRaw('MONTH('.$this->dateColumn.') m, SUM(total) s')
                 ->groupBy('m')
                 ->pluck('s', 'm');
 
             foreach ($base as $m => $s) {
-                $i = (int)$m;
+                $i = (int) $m;
                 if ($i >= 1 && $i <= 12) {
-                    $baseMonthly[$i] = (float)$s;
-                    $grandBase      += (float)$s;
+                    $baseMonthly[$i] = (float) $s;
+                    $grandBase += (float) $s;
                 }
             }
         }
 
         // ===== DRACO (solo controllers) =====
-        $groups     = []; // uid => ['user'=>..., 'hq_rows'=>[ hid => ['hq'=>..., 'm'=>[1..12], 'total'=>...] ] ]
+        $groups = []; // uid => ['user'=>..., 'hq_rows'=>[ hid => ['hq'=>..., 'm'=>[1..12], 'total'=>...] ] ]
         $totByMonth = array_fill(1, 12, 0.0);
         $grandDraco = 0.0;
-        $mkMonths   = fn () => array_fill(1, 12, 0.0);
+        $mkMonths = fn () => array_fill(1, 12, 0.0);
 
         // Pre-seed controllers con sus sedes asignadas (como la vista)
         $assignedHqs = [];
-        if (!empty($controllerIds)) {
+        if (! empty($controllerIds)) {
             $assignedHqs = DB::table('headquarter_user')
                 ->whereIn('user_id', $controllerIds)
                 ->get()
@@ -112,56 +115,65 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
 
         foreach ($controllerIds as $uid) {
             $groups[$uid] = [
-                'user'    => $userMap[$uid] ?? ('User#' . $uid),
+                'user' => $userMap[$uid] ?? ('User#'.$uid),
                 'hq_rows' => [],
             ];
             $userHqs = $assignedHqs->get($uid, collect());
             foreach ($userHqs as $pivot) {
                 $hid = (int) $pivot->headquarter_id;
                 $groups[$uid]['hq_rows'][$hid] = [
-                    'hq'    => $hqMap[$hid] ?? ($hid ? ('HQ#' . $hid) : '-'),
-                    'm'     => $mkMonths(),
+                    'hq' => $hqMap[$hid] ?? ($hid ? ('HQ#'.$hid) : '-'),
+                    'm' => $mkMonths(),
                     'total' => 0.0,
                 ];
             }
             if (empty($groups[$uid]['hq_rows'])) {
                 $groups[$uid]['hq_rows'][0] = [
-                    'hq'    => '–',
-                    'm'     => $mkMonths(),
+                    'hq' => '–',
+                    'm' => $mkMonths(),
                     'total' => 0.0,
                 ];
             }
         }
 
-        if (Schema::hasTable('expenses') && !empty($controllerIds)) {
+        if (Schema::hasTable('expenses') && ! empty($controllerIds)) {
             $rows = DB::table('expenses as e')
-                ->whereYear('e.' . $this->dateColumn, $this->year)
+                ->whereYear('e.'.$this->dateColumn, $this->year)
                 ->where('e.reason', 'like', '%DRACO%')
                 ->whereIn('e.user_id', $controllerIds)
-                ->selectRaw('e.user_id, e.headquarter_id, MONTH(e.' . $this->dateColumn . ') m, SUM(e.total) s')
+                ->selectRaw('e.user_id, e.headquarter_id, MONTH(e.'.$this->dateColumn.') m, SUM(e.total) s')
                 ->groupBy('e.user_id', 'e.headquarter_id', 'm')
                 ->get();
 
             foreach ($rows as $r) {
-                $uid = (int)($r->user_id ?? 0);
-                $hid = (int)($r->headquarter_id ?? 0);
-                $mi  = max(1, min(12, (int)$r->m));
-                $val = (float)$r->s;
+                $uid = (int) ($r->user_id ?? 0);
+                $hid = (int) ($r->headquarter_id ?? 0);
+                $mi = max(1, min(12, (int) $r->m));
+                $val = (float) $r->s;
 
                 $groups[$uid]['hq_rows'][$hid] ??= [
-                    'hq'    => $hid > 0 ? ($hqMap[$hid] ?? ('HQ#' . $hid)) : '–',
-                    'm'     => $mkMonths(),
+                    'hq' => $hid > 0 ? ($hqMap[$hid] ?? ('HQ#'.$hid)) : '–',
+                    'm' => $mkMonths(),
                     'total' => 0.0,
                 ];
 
                 $groups[$uid]['hq_rows'][$hid]['m'][$mi] += $val;
-                $groups[$uid]['hq_rows'][$hid]['total']  += $val;
+                $groups[$uid]['hq_rows'][$hid]['total'] += $val;
 
                 $totByMonth[$mi] += $val;
-                $grandDraco      += $val;
+                $grandDraco += $val;
             }
         }
 
+        // Si el controlador tiene data, solo se muestran sus sedes con montos;
+        // las sedes asignadas sin movimientos solo aparecen cuando no tiene data en ninguna.
+        foreach ($groups as &$g) {
+            $conData = array_filter($g['hq_rows'], fn ($r) => ($r['total'] ?? 0) != 0);
+            if (! empty($conData)) {
+                $g['hq_rows'] = $conData;
+            }
+        }
+        unset($g);
 
         // Ordenar usuarios y HQs por nombre
         uasort($groups, fn ($a, $b) => strcmp($a['user'], $b['user']));
@@ -172,11 +184,11 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
 
         // ===== Combinado DRACO + BASE =====
         $combByMonth = [];
-        $grandComb   = 0.0;
+        $grandComb = 0.0;
 
         for ($i = 1; $i <= 12; $i++) {
             $combByMonth[$i] = ($totByMonth[$i] ?? 0) + ($baseMonthly[$i] ?? 0);
-            $grandComb      += $combByMonth[$i];
+            $grandComb += $combByMonth[$i];
         }
 
         // ===== Armado dataset principal (igual a la vista) =====
@@ -184,29 +196,29 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
 
         // 1) Fila OFICINA / BASE
         $rowBase = ['OFICINA', 'BASE'];
-        $tBase   = 0.0;
+        $tBase = 0.0;
 
         for ($m = 1; $m <= 12; $m++) {
-            $v        = (float)($baseMonthly[$m] ?? 0);
-            $tBase   += $v;
+            $v = (float) ($baseMonthly[$m] ?? 0);
+            $tBase += $v;
             $rowBase[] = $v;
         }
         $rowBase[] = $tBase;
-        $data[]    = $rowBase;
+        $data[] = $rowBase;
 
         // 2) Filas por controller / HQ (ya agruparemos con merge en AfterSheet)
-        if (!empty($groups)) {
+        if (! empty($groups)) {
             foreach ($groups as $g) {
                 $userName = mb_strtoupper($g['user'], 'UTF-8');
 
                 foreach ($g['hq_rows'] as $row) {
-                    $line   = [$userName, $row['hq']];
+                    $line = [$userName, $row['hq']];
                     $tTotal = 0.0;
 
                     foreach (range(1, 12) as $m) {
-                        $v       = (float)($row['m'][$m] ?? 0);
+                        $v = (float) ($row['m'][$m] ?? 0);
                         $tTotal += $v;
-                        $line[]  = $v;
+                        $line[] = $v;
                     }
 
                     $line[] = $tTotal; // total por HQ
@@ -221,10 +233,10 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
         // 3) Fila TOTAL GENERAL (DRACO + BASE)
         $footer = ['TOTAL GENERAL (DRACO + BASE)', ''];
         for ($m = 1; $m <= 12; $m++) {
-            $footer[] = (float)$combByMonth[$m];
+            $footer[] = (float) $combByMonth[$m];
         }
-        $footer[] = (float)$grandComb;
-        $data[]   = $footer;
+        $footer[] = (float) $grandComb;
+        $data[] = $footer;
 
         // mainRowCount = BASE + DRACO + TOTAL GENERAL
         $this->mainRowCount = count($data);
@@ -241,10 +253,10 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
 
         $sumHQ = 0.0;
 
-        if (Schema::hasTable('expenses') && !empty($controllerIds)) {
+        if (Schema::hasTable('expenses') && ! empty($controllerIds)) {
             $byHQ = DB::table('expenses as e')
                 ->leftJoin('headquarters as h', 'h.id', '=', 'e.headquarter_id')
-                ->whereYear('e.' . $this->dateColumn, $this->year)
+                ->whereYear('e.'.$this->dateColumn, $this->year)
                 ->where('e.reason', 'like', '%DRACO%')
                 ->whereIn('e.user_id', $controllerIds)
                 ->selectRaw('COALESCE(h.name,"–") as hq_name, SUM(e.total) s')
@@ -253,30 +265,30 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
                 ->get();
 
             foreach ($byHQ as $h) {
-                $sumHQ  += (float)$h->s;
-                $data[]  = [(string)$h->hq_name, (float)$h->s, '', '', '', '', '', '', '', '', '', '', '', '', ''];
+                $sumHQ += (float) $h->s;
+                $data[] = [(string) $h->hq_name, (float) $h->s, '', '', '', '', '', '', '', '', '', '', '', '', ''];
             }
         }
 
         // DRACO de admins sin HQ
         $adminVacuumTotal = 0.0;
 
-        if (!empty($adminIds)) {
-            $adminVacuumTotal = (float)DB::table('expenses as e')
-                ->whereYear('e.' . $this->dateColumn, $this->year)
+        if (! empty($adminIds)) {
+            $adminVacuumTotal = (float) DB::table('expenses as e')
+                ->whereYear('e.'.$this->dateColumn, $this->year)
                 ->where('e.reason', 'like', '%DRACO%')
                 ->whereIn('e.user_id', $adminIds)
                 ->sum('e.total');
 
             if ($adminVacuumTotal > 0) {
-                $data[] = ['Sucursal vacía', (float)$adminVacuumTotal, '', '', '', '', '', '', '', '', '', '', '', '', ''];
+                $data[] = ['Sucursal vacía', (float) $adminVacuumTotal, '', '', '', '', '', '', '', '', '', '', '', '', ''];
                 $sumHQ += $adminVacuumTotal;
             }
         }
 
         // BASE y TOTAL del resumen
-        $data[] = ['BASE', (float)$grandBase, '', '', '', '', '', '', '', '', '', '', '', '', ''];
-        $data[] = ['__RSTOTAL__', (float)($sumHQ + $grandBase), '', '', '', '', '', '', '', '', '', '', '', '', ''];
+        $data[] = ['BASE', (float) $grandBase, '', '', '', '', '', '', '', '', '', '', '', '', ''];
+        $data[] = ['__RSTOTAL__', (float) ($sumHQ + $grandBase), '', '', '', '', '', '', '', '', '', '', '', '', ''];
 
         $this->summaryLastRow = count($data);
 
@@ -314,11 +326,11 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
             AfterSheet::class => function (AfterSheet $e) {
                 $ws = $e->sheet->getDelegate();
 
-                $BLUE  = 'FF2874A6';
-                $FOOT  = 'FFCEE7FF';
+                $BLUE = 'FF2874A6';
+                $FOOT = 'FFCEE7FF';
                 $WHITE = 'FFFFFFFF';
                 $black = 'FF000000';
-                $gray  = 'FF808080';
+                $gray = 'FF808080';
 
                 // Fuente base y alto compacto
                 $ws->getParent()->getDefaultStyle()->getFont()->setSize(10);
@@ -329,29 +341,29 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
 
                 // Insertar 1 fila para título
                 $ws->insertNewRowBefore(1, 1);
-                $headerRow    = 2;
+                $headerRow = 2;
                 $dataStartRow = 3;
-                $lastRow      = $dataStartRow + $this->summaryLastRow - 1;
-                $lastCol      = 'O'; // A..O (15 columnas)
+                $lastRow = $dataStartRow + $this->summaryLastRow - 1;
+                $lastCol = 'O'; // A..O (15 columnas)
 
                 // ===== Título =====
                 $ws->setCellValue('A1', "REPORTE ESTADÍSTICO DRACO {$this->year}");
                 $ws->mergeCells("A1:{$lastCol}1");
                 $ws->getRowDimension(1)->setRowHeight(20);
                 $ws->getStyle("A1:{$lastCol}1")->applyFromArray([
-                    'font'      => ['bold' => true, 'size' => 11, 'color' => ['argb' => 'FFF80000']],
+                    'font' => ['bold' => true, 'size' => 11, 'color' => ['argb' => 'FFF80000']],
                     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
-                    'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]]],
+                    'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]]],
                 ]);
 
                 // ===== Encabezado azul con bordes blancos + outline negro =====
                 $ws->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->applyFromArray([
-                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['argb' => $WHITE]],
+                    'font' => ['bold' => true, 'size' => 10, 'color' => ['argb' => $WHITE]],
                     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
-                    'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $BLUE]],
-                    'borders'   => [
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $BLUE]],
+                    'borders' => [
                         'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $WHITE]],
-                        'outline'    => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]],
+                        'outline' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]],
                     ],
                 ]);
                 $ws->getRowDimension($headerRow)->setRowHeight(17);
@@ -387,9 +399,9 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
                     $ws->getStyle("C{$dataStartRow}:O{$mainLastRow}")->applyFromArray([
                         'borders' => [
                             'allBorders' => ['borderStyle' => Border::BORDER_DOTTED, 'color' => ['argb' => $gray]],
-                            'vertical'   => ['borderStyle' => Border::BORDER_THIN,   'color' => ['argb' => $black]],
-                            'left'       => ['borderStyle' => Border::BORDER_THIN,   'color' => ['argb' => $black]],
-                            'right'      => ['borderStyle' => Border::BORDER_THIN,   'color' => ['argb' => $black]],
+                            'vertical' => ['borderStyle' => Border::BORDER_THIN,   'color' => ['argb' => $black]],
+                            'left' => ['borderStyle' => Border::BORDER_THIN,   'color' => ['argb' => $black]],
+                            'right' => ['borderStyle' => Border::BORDER_THIN,   'color' => ['argb' => $black]],
                         ],
                     ]);
                 }
@@ -409,7 +421,7 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
                 $mainLastRow = $dataStartRow + $this->mainRowCount - 1;
 
                 for ($r = $dataStartRow; $r <= $mainLastRow; $r++) {
-                    $a = (string)$ws->getCell("A{$r}")->getValue();
+                    $a = (string) $ws->getCell("A{$r}")->getValue();
 
                     if ($a === '__EMPTY__') {
                         continue;
@@ -417,7 +429,7 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
 
                     for ($col = 'C'; $col <= 'O'; $col++) {
                         $cell = $ws->getCell("{$col}{$r}");
-                        $val  = $cell->getValue();
+                        $val = $cell->getValue();
 
                         if ($val === '' || $val === null) {
                             $cell->setValue(0);
@@ -427,52 +439,52 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
 
                 // ===== Fila OFICINA / BASE con fondo azul (como thead)
                 $ws->getStyle("A{$dataStartRow}:B{$dataStartRow}")->applyFromArray([
-                    'font'      => ['bold' => true, 'color' => ['argb' => $WHITE]],
-                    'fill'      => [
-                        'fillType'   => Fill::FILL_SOLID,
+                    'font' => ['bold' => true, 'color' => ['argb' => $WHITE]],
+                    'fill' => [
+                        'fillType' => Fill::FILL_SOLID,
                         'startColor' => ['argb' => $BLUE],
                     ],
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
-                        'vertical'   => Alignment::VERTICAL_CENTER,
+                        'vertical' => Alignment::VERTICAL_CENTER,
                     ],
                 ]);
 
                 // ===== Agrupar CONTROLADOR (A) y PARADERO (B) como en el Blade =====
                 $firstControllerRow = $dataStartRow + 1;       // primera fila de controllers
-                $scanEndRow         = $mainLastRow - 1;        // hasta antes del TOTAL GENERAL
+                $scanEndRow = $mainLastRow - 1;        // hasta antes del TOTAL GENERAL
 
                 if ($scanEndRow >= $firstControllerRow) {
-                    $firstVal = (string)$ws->getCell("A{$firstControllerRow}")->getValue();
+                    $firstVal = (string) $ws->getCell("A{$firstControllerRow}")->getValue();
 
                     // Si no hay DRACO (fila '__EMPTY__'), no agrupamos
                     if ($firstVal !== '__EMPTY__') {
 
                         // --- Merge de CONTROLADOR (columna A) ---
-                        $blockStart  = $firstControllerRow;
+                        $blockStart = $firstControllerRow;
                         $currentUser = $firstVal;
 
                         for ($row = $firstControllerRow + 1; $row <= $scanEndRow; $row++) {
-                            $val = (string)$ws->getCell("A{$row}")->getValue();
+                            $val = (string) $ws->getCell("A{$row}")->getValue();
 
                             if ($val !== $currentUser) {
                                 if ($blockStart < $row - 1) {
-                                    $ws->mergeCells("A{$blockStart}:A" . ($row - 1));
+                                    $ws->mergeCells("A{$blockStart}:A".($row - 1));
                                 }
 
-                                $ws->getStyle("A{$blockStart}:A" . ($row - 1))->applyFromArray([
-                                    'font'      => ['bold' => true, 'color' => ['argb' => $WHITE]],
-                                    'fill'      => [
-                                        'fillType'   => Fill::FILL_SOLID,
+                                $ws->getStyle("A{$blockStart}:A".($row - 1))->applyFromArray([
+                                    'font' => ['bold' => true, 'color' => ['argb' => $WHITE]],
+                                    'fill' => [
+                                        'fillType' => Fill::FILL_SOLID,
                                         'startColor' => ['argb' => $BLUE],
                                     ],
                                     'alignment' => [
                                         'horizontal' => Alignment::HORIZONTAL_CENTER,
-                                        'vertical'   => Alignment::VERTICAL_CENTER,
+                                        'vertical' => Alignment::VERTICAL_CENTER,
                                     ],
                                 ]);
 
-                                $blockStart  = $row;
+                                $blockStart = $row;
                                 $currentUser = $val;
                             }
                         }
@@ -484,47 +496,47 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
                             }
 
                             $ws->getStyle("A{$blockStart}:A{$scanEndRow}")->applyFromArray([
-                                'font'      => ['bold' => true, 'color' => ['argb' => $WHITE]],
-                                'fill'      => [
-                                    'fillType'   => Fill::FILL_SOLID,
+                                'font' => ['bold' => true, 'color' => ['argb' => $WHITE]],
+                                'fill' => [
+                                    'fillType' => Fill::FILL_SOLID,
                                     'startColor' => ['argb' => $BLUE],
                                 ],
                                 'alignment' => [
                                     'horizontal' => Alignment::HORIZONTAL_CENTER,
-                                    'vertical'   => Alignment::VERTICAL_CENTER,
+                                    'vertical' => Alignment::VERTICAL_CENTER,
                                 ],
                             ]);
                         }
 
                         // --- Merge de PARADERO (columna B) por controller + HQ ---
                         $blockStart = $firstControllerRow;
-                        $prevUser   = (string)$ws->getCell("A{$firstControllerRow}")->getValue();
-                        $prevHq     = (string)$ws->getCell("B{$firstControllerRow}")->getValue();
+                        $prevUser = (string) $ws->getCell("A{$firstControllerRow}")->getValue();
+                        $prevHq = (string) $ws->getCell("B{$firstControllerRow}")->getValue();
 
                         for ($row = $firstControllerRow + 1; $row <= $scanEndRow; $row++) {
-                            $user = (string)$ws->getCell("A{$row}")->getValue();
-                            $hq   = (string)$ws->getCell("B{$row}")->getValue();
+                            $user = (string) $ws->getCell("A{$row}")->getValue();
+                            $hq = (string) $ws->getCell("B{$row}")->getValue();
 
                             if ($user !== $prevUser || $hq !== $prevHq) {
                                 if ($blockStart < $row - 1) {
-                                    $ws->mergeCells("B{$blockStart}:B" . ($row - 1));
+                                    $ws->mergeCells("B{$blockStart}:B".($row - 1));
                                 }
 
-                                $ws->getStyle("B{$blockStart}:B" . ($row - 1))->applyFromArray([
-                                    'font'      => ['bold' => true, 'color' => ['argb' => $WHITE]],
-                                    'fill'      => [
-                                        'fillType'   => Fill::FILL_SOLID,
+                                $ws->getStyle("B{$blockStart}:B".($row - 1))->applyFromArray([
+                                    'font' => ['bold' => true, 'color' => ['argb' => $WHITE]],
+                                    'fill' => [
+                                        'fillType' => Fill::FILL_SOLID,
                                         'startColor' => ['argb' => $BLUE],
                                     ],
                                     'alignment' => [
                                         'horizontal' => Alignment::HORIZONTAL_CENTER,
-                                        'vertical'   => Alignment::VERTICAL_CENTER,
+                                        'vertical' => Alignment::VERTICAL_CENTER,
                                     ],
                                 ]);
 
                                 $blockStart = $row;
-                                $prevUser   = $user;
-                                $prevHq     = $hq;
+                                $prevUser = $user;
+                                $prevHq = $hq;
                             }
                         }
 
@@ -535,14 +547,14 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
                             }
 
                             $ws->getStyle("B{$blockStart}:B{$scanEndRow}")->applyFromArray([
-                                'font'      => ['bold' => true, 'color' => ['argb' => $WHITE]],
-                                'fill'      => [
-                                    'fillType'   => Fill::FILL_SOLID,
+                                'font' => ['bold' => true, 'color' => ['argb' => $WHITE]],
+                                'fill' => [
+                                    'fillType' => Fill::FILL_SOLID,
                                     'startColor' => ['argb' => $BLUE],
                                 ],
                                 'alignment' => [
                                     'horizontal' => Alignment::HORIZONTAL_CENTER,
-                                    'vertical'   => Alignment::VERTICAL_CENTER,
+                                    'vertical' => Alignment::VERTICAL_CENTER,
                                 ],
                             ]);
                         }
@@ -551,7 +563,7 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
 
                 // ===== Estilos especiales: vacío, total general, mini tabla =====
                 for ($r = $dataStartRow; $r <= $lastRow; $r++) {
-                    $a = (string)$ws->getCell("A{$r}")->getValue();
+                    $a = (string) $ws->getCell("A{$r}")->getValue();
 
                     // Mensaje vacío
                     if ($a === '__EMPTY__') {
@@ -564,14 +576,15 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
                             ->getFont()
                             ->getColor()
                             ->setARGB('FF6B7280');
+
                         continue;
                     }
 
                     // Pie TOTAL GENERAL (DRACO + BASE)
                     if ($a === 'TOTAL GENERAL (DRACO + BASE)') {
                         $ws->getStyle("A{$r}:{$lastCol}{$r}")->applyFromArray([
-                            'font'    => ['bold' => true, 'size' => 10, 'color' => ['argb' => $black]],
-                            'fill'    => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $FOOT]],
+                            'font' => ['bold' => true, 'size' => 10, 'color' => ['argb' => $black]],
+                            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $FOOT]],
                             'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]]],
                         ]);
 
@@ -586,6 +599,7 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
                                 $cell->setValue(0);
                             }
                         }
+
                         continue;
                     }
 
@@ -594,8 +608,8 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
                         $ws->setCellValue("A{$r}", 'TOTAL');
 
                         $ws->getStyle("A{$r}:B{$r}")->applyFromArray([
-                            'font'    => ['bold' => true, 'size' => 10, 'color' => ['argb' => $black]],
-                            'fill'    => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $FOOT]],
+                            'font' => ['bold' => true, 'size' => 10, 'color' => ['argb' => $black]],
+                            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $FOOT]],
                             'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]]],
                         ]);
 
@@ -610,6 +624,7 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
                         if ($ws->getCell("B{$r}")->getValue() === '' || $ws->getCell("B{$r}")->getValue() === null) {
                             $ws->getCell("B{$r}")->setValue(0);
                         }
+
                         continue;
                     }
                 }
@@ -626,14 +641,14 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
 
                 if ($miniHead >= $dataStartRow && $miniHead <= $lastRow) {
                     $ws->getStyle("A{$miniHead}:B{$miniHead}")->applyFromArray([
-                        'font'      => ['bold' => true, 'color' => ['argb' => $WHITE]],
-                        'fill'      => [
-                            'fillType'   => Fill::FILL_SOLID,
+                        'font' => ['bold' => true, 'color' => ['argb' => $WHITE]],
+                        'fill' => [
+                            'fillType' => Fill::FILL_SOLID,
                             'startColor' => ['argb' => $BLUE],
                         ],
                         'alignment' => [
                             'horizontal' => Alignment::HORIZONTAL_CENTER,
-                            'vertical'   => Alignment::VERTICAL_CENTER,
+                            'vertical' => Alignment::VERTICAL_CENTER,
                         ],
                     ]);
                 }
@@ -673,14 +688,14 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
     private function loadUserIdsByRole(int $year): array
     {
         if (
-            !Schema::hasTable('roles') ||
-            !Schema::hasTable('model_has_roles') ||
-            !Schema::hasTable('users')
+            ! Schema::hasTable('roles') ||
+            ! Schema::hasTable('model_has_roles') ||
+            ! Schema::hasTable('users')
         ) {
             return [[], []];
         }
 
-        $onlyActive = ($year === (int)Carbon::now()->year);
+        $onlyActive = ($year === (int) Carbon::now()->year);
 
         $fetch = function (array $roleNames) use ($onlyActive) {
             $q = DB::table('model_has_roles as mr')
@@ -694,14 +709,14 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
             }
 
             return $q->pluck('u.id')
-                ->map(fn ($v) => (int)$v)
+                ->map(fn ($v) => (int) $v)
                 ->unique()
                 ->values()
                 ->all();
         };
 
         $controllers = $fetch(['controller', 'controlador']);
-        $admins      = $fetch(['admin', 'administrator', 'administrador']);
+        $admins = $fetch(['admin', 'administrator', 'administrador']);
 
         return [$controllers, $admins];
     }

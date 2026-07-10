@@ -190,6 +190,16 @@ class RepEstDracoBase extends Component
             }
         }
 
+        // Si el controlador tiene data, solo se muestran sus sedes con montos;
+        // las sedes asignadas sin movimientos solo aparecen cuando no tiene data en ninguna.
+        foreach ($this->groups as &$g) {
+            $conData = array_filter($g['hq_rows'], fn ($r) => ($r['total'] ?? 0) != 0);
+            if (! empty($conData)) {
+                $g['hq_rows'] = $conData;
+            }
+        }
+        unset($g);
+
         // Orden: usuarios y HQs por nombre
         uasort($this->groups, fn ($a, $b) => strcmp($a['user'], $b['user']));
         foreach ($this->groups as &$g) {
