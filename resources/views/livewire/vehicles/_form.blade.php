@@ -203,7 +203,7 @@
     <div class="col-6 col-md-2 d-flex align-items-end">
         <div class="form-check mb-1">
             <input id="not_working" type="checkbox" class="form-check-input" wire:model.live="not_working">
-            <label for="not_working" class="form-check-label" title="Marca el vehículo como fuera de operación; libera al conductor y muestra un recordatorio con los días transcurridos (a los 60 se sugiere la baja).">
+            <label for="not_working" class="form-check-label ms-2" title="Marca el vehículo como fuera de operación; libera al conductor y muestra un recordatorio con los días transcurridos (a los 60 se sugiere la baja).">
                 No trabaja
             </label>
         </div>

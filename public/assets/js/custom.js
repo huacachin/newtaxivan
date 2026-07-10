@@ -503,14 +503,20 @@ window.addEventListener('go-back', function (e) {
     else location.href = fb;
 });
 
-// Bootstrap Tooltips
-document.addEventListener('DOMContentLoaded', function () {
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (el) { return new bootstrap.Tooltip(el); });
-});
-document.addEventListener('livewire:navigated', function () {
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (el) { return new bootstrap.Tooltip(el); });
+// Bootstrap Tooltips (getOrCreateInstance evita duplicados al re-inicializar)
+function initBsTooltips() {
+    if (!window.bootstrap || !bootstrap.Tooltip) return;
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
+        bootstrap.Tooltip.getOrCreateInstance(el);
+    });
+}
+document.addEventListener('DOMContentLoaded', initBsTooltips);
+document.addEventListener('livewire:navigated', initBsTooltips);
+// Re-inicializar tras cada actualizacion de Livewire (busquedas, filtros)
+document.addEventListener('livewire:init', function () {
+    Livewire.hook('commit', function (_ref) {
+        _ref.succeed(function () { setTimeout(initBsTooltips, 0); });
+    });
 });
 
 // =========================================================

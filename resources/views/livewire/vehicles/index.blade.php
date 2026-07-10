@@ -142,9 +142,15 @@
                                             @if(!empty($vehicle->badges))
                                                 <span class="list-card__badges">
                                                     @foreach($vehicle->badges as $b)
-                                                        <span class="badge {{ $b['class'] }} text-white" title="{{ $b['title'] }}">
-                                                            {{ $b['abbr'] }}
-                                                        </span>
+                                                        @if(!empty($b['html']))
+                                                            <span class="badge {{ $b['class'] }} {{ $b['text'] ?? 'text-white' }}" data-bs-toggle="tooltip" data-bs-html="true" data-bs-title="{{ $b['html'] }}">
+                                                                {{ $b['abbr'] }}
+                                                            </span>
+                                                        @else
+                                                            <span class="badge {{ $b['class'] }} {{ $b['text'] ?? 'text-white' }}" title="{{ $b['title'] }}">
+                                                                {{ $b['abbr'] }}
+                                                            </span>
+                                                        @endif
                                                     @endforeach
                                                 </span>
                                             @endif
@@ -260,9 +266,15 @@
                                             @if(!empty($vehicle->badges))
                                                 <span class="ms-2 d-inline-flex gap-1 align-items-center">
                                                     @foreach($vehicle->badges as $b)
-                                                        <span class="badge {{ $b['class'] }} text-white" title="{{ $b['title'] }}">
-                                                            {{ $b['abbr'] }}
-                                                        </span>
+                                                        @if(!empty($b['html']))
+                                                            <span class="badge {{ $b['class'] }} {{ $b['text'] ?? 'text-white' }}" data-bs-toggle="tooltip" data-bs-html="true" data-bs-title="{{ $b['html'] }}">
+                                                                {{ $b['abbr'] }}
+                                                            </span>
+                                                        @else
+                                                            <span class="badge {{ $b['class'] }} {{ $b['text'] ?? 'text-white' }}" title="{{ $b['title'] }}">
+                                                                {{ $b['abbr'] }}
+                                                            </span>
+                                                        @endif
                                                     @endforeach
                                                 </span>
                                             @endhasanyrole

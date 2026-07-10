@@ -135,12 +135,18 @@ class Vehicle extends Model
         // a los 60 se sugiere la baja definitiva.
         if ($this->not_working_since) {
             $days = (int) $this->not_working_since->startOfDay()->diffInDays(Carbon::today());
+            $left = 60 - $days;
             $badges[] = [
                 'abbr' => "NT {$days}d",
-                'title' => $days >= 60
-                    ? "No trabaja hace {$days} día(s). Ya cumplió los 60 días: evaluar darle de baja."
-                    : "No trabaja hace {$days} día(s). A los 60 días se sugiere darle de baja.",
+                'title' => $left > 0
+                    ? "No trabaja hace {$days} día(s). Faltan {$left} día(s) para sugerir la baja."
+                    : "No trabaja hace {$days} día(s). Ya cumplió los 60 días: evaluar darle de baja.",
+                // Tooltip Bootstrap con HTML (data-bs-html en la vista)
+                'html' => $left > 0
+                    ? "<div class='text-start'><strong>&#128663; No trabaja</strong><br>Hace <b>{$days}</b> día(s)<br>Faltan <b>{$left}</b> día(s) para sugerir la baja</div>"
+                    : "<div class='text-start'><strong>&#128663; No trabaja</strong><br>Hace <b>{$days}</b> día(s)<br><b>Cumplió los 60 días:</b> evaluar darle de baja</div>",
                 'class' => $days >= 60 ? 'bg-danger' : 'bg-warning',
+                'text' => $days >= 60 ? 'text-white' : 'text-dark',
             ];
         }
 
