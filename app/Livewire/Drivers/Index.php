@@ -4,45 +4,68 @@ namespace App\Livewire\Drivers;
 
 use App\Models\Driver;
 use App\Models\Vehicle;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
 class Index extends Component
 {
-
     public $drivers;
+
     public $driversFree;
 
-    public $search;
-    public $filter = "plate";
+    public $vehiclesNoDriver;
 
-    #[Url(except: 'active')] public $status = 'active';
+    public $search;
+
+    public $filter = 'plate';
+
+    #[Url(except: 'active')]
+    public $status = 'active';
 
     //Formulario
     public $driverId;
+
     public $name;
+
     public $document_number;
+
     public $document_expiration_date;
+
     public $document_expiration_date_dos;
+
     public $birthdate;
+
     public $address;
+
     public $district;
+
     public $email;
+
     public $phone;
+
     public $license;
+
     public $class;
+
     public $category;
+
     public $license_issue_date;
+
     public $license_revalidation_date;
+
     public $contract_start;
+
     public $contract_end;
+
     public $condition;
+
     public $score;
+
     public $credential;
+
     public $credential_expiration_date;
+
     public $credential_municipality;
 
     protected $validationAttributes = [
@@ -72,35 +95,36 @@ class Index extends Component
         'credential_municipality' => 'nullable|string|max:255',
     ];
 
-    public function save(){
+    public function save()
+    {
         $this->validate();
         $driver = Driver::create([
-            "name" => $this->name,
-            "document_number" => $this->document_number,
-            "document_expiration_date" => $this->document_expiration_date,
-            "birthdate" => $this->birthdate,
-            "address" => $this->address,
-            "district" => $this->district,
-            "email" => $this->email,
-            "phone" => $this->phone,
-            "license"=>$this->license,
-            "class"=>$this->class,
-            "category"=>$this->category,
-            "license_issue_date"=>$this->license_issue_date,
-            "license_revalidation_date"=>$this->license_revalidation_date,
-            "contract_start"=>$this->contract_start,
-            "contract_end"=>$this->contract_end,
-            "condition"=>$this->condition,
-            "score"=>$this->score ?? "0",
-            "credential"=>$this->credential,
-            "credential_expiration_date"=>$this->credential_expiration_date,
-            "credential_municipality"=>$this->credential_municipality
+            'name' => $this->name,
+            'document_number' => $this->document_number,
+            'document_expiration_date' => $this->document_expiration_date,
+            'birthdate' => $this->birthdate,
+            'address' => $this->address,
+            'district' => $this->district,
+            'email' => $this->email,
+            'phone' => $this->phone,
+            'license' => $this->license,
+            'class' => $this->class,
+            'category' => $this->category,
+            'license_issue_date' => $this->license_issue_date,
+            'license_revalidation_date' => $this->license_revalidation_date,
+            'contract_start' => $this->contract_start,
+            'contract_end' => $this->contract_end,
+            'condition' => $this->condition,
+            'score' => $this->score ?? '0',
+            'credential' => $this->credential,
+            'credential_expiration_date' => $this->credential_expiration_date,
+            'credential_municipality' => $this->credential_municipality,
         ]);
 
         $this->reset();
         $this->mount();
-        $this->dispatch('modal-close',["name" => "modalAddDriver"]);
-        $this->dispatch('successAlert',["message" => "Conductor creado correctamente."]);
+        $this->dispatch('modal-close', ['name' => 'modalAddDriver']);
+        $this->dispatch('successAlert', ['message' => 'Conductor creado correctamente.']);
 
     }
 
@@ -110,7 +134,7 @@ class Index extends Component
         $filter = $this->filter;
         $search = $this->search;
         $status = strtolower(trim((string) $this->status));
-        if (!in_array($status, ['active', 'inactive'], true)) {
+        if (! in_array($status, ['active', 'inactive'], true)) {
             $status = $this->status = 'active';
         }
 
@@ -132,6 +156,8 @@ class Index extends Component
                 ->get();
 
             $this->driversFree = collect();
+            $this->vehiclesNoDriver = collect();
+
             return;
         }
 
@@ -152,8 +178,7 @@ class Index extends Component
             ])
 
             // solo drivers con vehículos activos
-            ->whereHas('vehicles', fn ($q) =>
-                $q->whereRaw("LOWER(TRIM(status)) = 'active'")
+            ->whereHas('vehicles', fn ($q) => $q->whereRaw("LOWER(TRIM(status)) = 'active'")
             )
 
             // eager load de vehículos activos + imágenes
@@ -169,14 +194,12 @@ class Index extends Component
                 $search = trim($search);
 
                 if ($filter === 'plate') {
-                    $query->whereHas('vehicles', fn ($q) =>
-                    $q->where('plate', 'like', "%{$search}%")
+                    $query->whereHas('vehicles', fn ($q) => $q->where('plate', 'like', "%{$search}%")
                     );
                 } elseif ($filter === 'name') {
                     $query->where('name', 'like', "%{$search}%");
                 } elseif ($filter === 'code') {
-                    $query->whereHas('vehicles', fn ($q) =>
-                    $q->where('sort_order', $search)
+                    $query->whereHas('vehicles', fn ($q) => $q->where('sort_order', $search)
                     );
                 }
             })
@@ -191,6 +214,25 @@ class Index extends Component
             })
             ->with(['images:id,driver_id,image_path'])
             ->get();
+
+        // Vehículos activos sin conductor activo: llenan los huecos de la
+        // columna "cod" con una fila resaltada (sin datos de conductor).
+        $this->vehiclesNoDriver = Vehicle::query()
+            ->whereRaw("LOWER(TRIM(status)) = 'active'")
+            ->whereDoesntHave('driver', fn ($q) => $q->whereRaw("LOWER(TRIM(status)) = 'active'"))
+            ->when($filter && $search, function ($query) use ($filter, $search) {
+                $search = trim($search);
+                if ($filter === 'plate') {
+                    $query->where('plate', 'like', "%{$search}%");
+                } elseif ($filter === 'code') {
+                    $query->where('sort_order', $search);
+                } elseif ($filter === 'name') {
+                    // Búsqueda por nombre de conductor: estas filas no tienen conductor
+                    $query->whereRaw('1 = 0');
+                }
+            })
+            ->orderBy('sort_order')
+            ->get(['id', 'plate', 'sort_order', 'condition', 'not_working_since']);
 
     }
 
@@ -212,11 +254,11 @@ class Index extends Component
     public function questionActivate(int $id): void
     {
         $driver = Driver::find($id);
-        if (!$driver) {
+        if (! $driver) {
             return;
         }
         $this->dispatch('questionActivate', [
-            'id'   => $id,
+            'id' => $id,
             'role' => 'conductor',
             'name' => $driver->name,
         ]);
@@ -225,7 +267,7 @@ class Index extends Component
     #[On('register_activate')]
     public function activate(int $id): void
     {
-        if (!auth()->user()?->hasAnyRole('director', 'gerente', 'administrador')) {
+        if (! auth()->user()?->hasAnyRole('director', 'gerente', 'administrador')) {
             abort(403);
         }
         Driver::findOrFail($id)->update(['status' => 'active']);
@@ -235,29 +277,29 @@ class Index extends Component
 
     public function openAddWindow(): void
     {
-        $route = route('settings.drivers.create');;
+        $route = route('settings.drivers.create');
 
-        $this->dispatch('url-open',["url" => $route]);
+        $this->dispatch('url-open', ['url' => $route]);
     }
 
     public function openEditWindow(int $id): void
     {
-        $route = route('settings.drivers.edit',["id" => $id]);
-        $this->dispatch('url-open',["url" => $route]);
+        $route = route('settings.drivers.edit', ['id' => $id]);
+        $this->dispatch('url-open', ['url' => $route]);
     }
-
 
     public function render()
     {
         return view('livewire.drivers.index');
     }
 
-    public function export(){
-        $route = route('exports.drivers',[
-            "search" => $this->search,
-            "filter" => $this->filter,
-            "status" => $this->status,
+    public function export()
+    {
+        $route = route('exports.drivers', [
+            'search' => $this->search,
+            'filter' => $this->filter,
+            'status' => $this->status,
         ]);
-        $this->dispatch('url-open',["url" => $route]);
+        $this->dispatch('url-open', ['url' => $route]);
     }
 }

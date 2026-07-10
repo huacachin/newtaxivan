@@ -1,4 +1,12 @@
 <div class="container-fluid">
+    <style>
+        /* Fila de vehículo sin conductor: fondo naranja y texto negro */
+        .table tr.row-sin-conductor > td {
+            background-color: #ffa94d !important;
+            box-shadow: none !important;
+            color: #000 !important;
+        }
+    </style>
     <!-- Header -->
     <div class="row">
         <div class="col-sm-6">
@@ -109,10 +117,47 @@
                         </div>
                     </div>
 
+                    @php
+                        // Conductores + vehículos sin conductor, intercalados por cod (sort_order)
+                        $rowItems = $drivers->map(fn ($d) => [
+                            'kind'  => 'driver',
+                            'sort'  => optional($d->vehicles->first())->sort_order,
+                            'model' => $d,
+                        ])->concat(
+                            ($vehiclesNoDriver ?? collect())->map(fn ($v) => [
+                                'kind'  => 'vehicle',
+                                'sort'  => $v->sort_order,
+                                'model' => $v,
+                            ])
+                        )->sortBy(fn ($r) => $r['sort'] ?? PHP_INT_MAX)->values();
+                    @endphp
+
                     {{-- ════════ MOBILE: cards de conductores con vehículo ════════ --}}
                     <div class="d-md-none list-cards">
-                        @if($drivers->count() > 0)
-                            @foreach($drivers as $driver)
+                        @if($rowItems->count() > 0)
+                            @foreach($rowItems as $row)
+                                @if($row['kind'] === 'vehicle')
+                                    @php $veh = $row['model']; @endphp
+                                    <article class="list-card" style="background-color:#ffa94d; color:#000;">
+                                        <header class="list-card__head">
+                                            <div class="list-card__title-wrap">
+                                                <span class="list-card__index">{{ $loop->iteration }}</span>
+                                                <span class="list-card__title" style="color:#000;">{{ $veh->plate }} — Cod {{ $veh->sort_order }}</span>
+                                            </div>
+                                            @hasanyrole('director|gerente|administrador|controlador')
+                                                <a href="{{ route('settings.vehicles.edit', $veh->id) }}" class="list-card__edit" aria-label="Asignar conductor" style="color:#000;">
+                                                    <i class="ti ti-edit"></i>
+                                                </a>
+                                            @endhasanyrole
+                                        </header>
+                                        <div class="list-card__chips">
+                                            <span class="list-chip" style="color:#000;">Sin conductor</span>
+                                            @if($veh->condition)<span class="list-chip" style="color:#000;">{{ $veh->condition }}</span>@endif
+                                        </div>
+                                    </article>
+                                    @continue
+                                @endif
+                                @php $driver = $row['model']; @endphp
                                 @php
                                     $expBadge = null;
                                     $expRaw = $driver->document_expiration_date ?? null;
@@ -210,8 +255,40 @@
                             </tr>
                             </thead>
                             <tbody>
-                            @if($drivers->count() > 0)
-                                @foreach($drivers as $driver)
+                            @if($rowItems->count() > 0)
+                                @foreach($rowItems as $row)
+                                    @if($row['kind'] === 'vehicle')
+                                        @php $veh = $row['model']; @endphp
+                                        <tr class="row-sin-conductor">
+                                            @hasanyrole('director|gerente|administrador|controlador')
+                                            <td width="80" class="text-nowrap">
+                                                <a href="{{ route('settings.vehicles.edit', $veh->id) }}" title="Asignar conductor" style="color:#000;">
+                                                    <i class="ti ti-edit f-s-18" style="cursor:pointer"></i>
+                                                </a>
+                                            </td>
+                                            @endhasanyrole
+                                            <td>{{ $loop->iteration }}</td>
+                                            <td>{{ $veh->sort_order }}</td>
+                                            <td>
+                                                {{ $veh->plate }}
+                                                @foreach($veh->badges as $b)
+                                                    @if(!empty($b['html']))
+                                                        <span class="badge {{ $b['class'] }} {{ $b['text'] ?? 'text-white' }}" data-bs-toggle="tooltip" data-bs-html="true" data-bs-title="{{ $b['html'] }}">{{ $b['abbr'] }}</span>
+                                                    @else
+                                                        <span class="badge {{ $b['class'] }} {{ $b['text'] ?? 'text-white' }}" title="{{ $b['title'] }}">{{ $b['abbr'] }}</span>
+                                                    @endif
+                                                @endforeach
+                                            </td>
+                                            <td class="f-w-600">SIN CONDUCTOR</td>
+                                            <td>—</td>
+                                            <td>—</td>
+                                            <td>—</td>
+                                            <td>—</td>
+                                            <td>{{ $veh->condition }}</td>
+                                        </tr>
+                                        @continue
+                                    @endif
+                                    @php $driver = $row['model']; @endphp
                                     <tr>
                                         @hasanyrole('director|gerente|administrador|controlador')
                                         <td width="80" class="text-nowrap">
@@ -283,7 +360,7 @@
                             </tbody>
                             <tfoot class="bg-primary">
                             <tr>
-                                <td colspan="{{ auth()->user()->hasAnyRole('director','gerente','administrador','controlador') ? 10 : 9 }}" class="text-end f-w-600">TOTAL: {{ $drivers->count() }}</td>
+                                <td colspan="{{ auth()->user()->hasAnyRole('director','gerente','administrador','controlador') ? 10 : 9 }}" class="text-end f-w-600">TOTAL: {{ $rowItems->count() }}</td>
                             </tr>
                             </tfoot>
                         </table>

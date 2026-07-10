@@ -1,5 +1,13 @@
 {{-- resources/views/livewire/vehicles/index.blade.php --}}
 <div class="container-fluid">
+    <style>
+        /* Fila de vehículo marcado "No trabaja": fondo naranja y texto negro */
+        .table tr.row-no-trabaja > td {
+            background-color: #ffa94d !important;
+            box-shadow: none !important;
+            color: #000 !important;
+        }
+    </style>
     <!-- Header -->
     <div class="row">
         <div class="col-sm-6">
@@ -134,11 +142,11 @@
                                     elseif ($cond === 'GN') { $condCardClass .= 'vh-cond--gn'; }
                                     elseif ($cond === 'DT') { $condCardClass .= 'vh-cond--dt'; }
                                 @endphp
-                                <article class="list-card">
+                                <article class="list-card" @if($vehicle->not_working_since) style="background-color:#ffa94d; color:#000;" @endif>
                                     <header class="list-card__head">
                                         <div class="list-card__title-wrap">
                                             <span class="list-card__index">{{ $loop->iteration }}</span>
-                                            <span class="list-card__title list-card__title--plate">{{ $vehicle->plate }}</span>
+                                            <span class="list-card__title list-card__title--plate" @if($vehicle->not_working_since) style="color:#000;" @endif>{{ $vehicle->plate }}</span>
                                             @if(!empty($vehicle->badges))
                                                 <span class="list-card__badges">
                                                     @foreach($vehicle->badges as $b)
@@ -249,7 +257,7 @@
                                         elseif ($cond === 'GN') { $condClass .= 'cond-GN'; }
                                         elseif ($cond === 'DT') { $condClass .= 'cond-DT'; }
                                     @endphp
-                                    <tr>
+                                    <tr class="{{ $vehicle->not_working_since ? 'row-no-trabaja' : '' }}">
                                         @hasanyrole('director|gerente|administrador|controlador')
                                         <td>
                                             <a href="{{ route('settings.vehicles.edit', $vehicle->id) }}">
