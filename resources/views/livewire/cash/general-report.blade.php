@@ -113,12 +113,11 @@
                             @endforeach
 
                             @if($hayMov)
-                                {{-- FOOT del día: SALDO FINAL–INICIAL + Saldos en la misma fila --}}
+                                {{-- FOOT del día: Saldos en la misma fila --}}
                                 <tr class="bg-white">
 
                                     {{-- Columna "DATOS CLIENTE" --}}
                                     <td colspan="4">
-                                        <strong class="text-dark f-w-bold">SALDO </strong><strong class="title-modules">FINAL-INICIAL</strong>
                                         <strong class="f-w-bold title-modules f-w-bold">
                     Saldo del día:
                     <span class="text-primary">{{ number_format($saldoD, 2) }}</span>

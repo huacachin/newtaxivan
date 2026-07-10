@@ -134,7 +134,7 @@ class GeneralReportExport implements FromArray, WithEvents, WithColumnFormatting
                 $runningAccum += $dayBalance;
 
                 $rows[] = [
-                    'SALDO FINAL-INICIAL  Saldo del día: ' . number_format($dayBalance, 2)
+                    'Saldo del día: ' . number_format($dayBalance, 2)
                         . '  Saldo acumulado: ' . number_format($runningAccum, 2), // A (ancla del merge A:D)
                     '', '', '',                               // B, C, D (combinadas con A)
                     (float)$sumI,                             // E
@@ -291,14 +291,10 @@ class GeneralReportExport implements FromArray, WithEvents, WithColumnFormatting
                     $dia  = $this->dailyFooterData[$r]['dia']  ?? 0.0;
                     $acum = $this->dailyFooterData[$r]['acum'] ?? 0.0;
 
-                    // RichText: "SALDO " negro + "FINAL-INICIAL" rojo + saldos en azul
+                    // RichText: etiquetas en negro + saldos en azul
                     $rt = new \PhpOffice\PhpSpreadsheet\RichText\RichText();
-                    $runSaldo = $rt->createTextRun('SALDO ');
-                    $runSaldo->getFont()->setBold(true)->getColor()->setARGB($black);
-                    $runFinal = $rt->createTextRun('FINAL-INICIAL');
-                    $runFinal->getFont()->setBold(true)->getColor()->setARGB('FFFF0000');
 
-                    $runDiaLbl = $rt->createTextRun('   Saldo del día: ');
+                    $runDiaLbl = $rt->createTextRun('Saldo del día: ');
                     $runDiaLbl->getFont()->setBold(true)->getColor()->setARGB($black);
                     $runDiaVal = $rt->createTextRun(number_format($dia, 2));
                     $runDiaVal->getFont()->setBold(true)->getColor()->setARGB($blueTxt);
