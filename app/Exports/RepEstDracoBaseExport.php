@@ -365,8 +365,10 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
                 }
                 $ws->getColumnDimension('A')->setWidth(18.0);
                 $ws->getColumnDimension('B')->setWidth(18.0);
-                foreach (range('C', 'N') as $c) {
-                    $ws->getColumnDimension($c)->setWidth(8.2);
+                // Ancho por mes segun el largo del nombre (SEPTIEMBRE, NOVIEMBRE, etc.)
+                foreach (range('C', 'N') as $i => $c) {
+                    $name = $this->months[$i + 1];
+                    $ws->getColumnDimension($c)->setWidth(max(9.0, mb_strlen($name) * 1.3 + 1));
                 }
                 $ws->getColumnDimension('O')->setWidth(10.5);
 
@@ -614,6 +616,13 @@ class RepEstDracoBaseExport implements FromArray, WithHeadings, WithEvents, With
 
                 // Mini tabla: encabezado azul
                 $miniHead = $dataStartRow + ($this->summaryHeadRow - 1);
+
+                // Bordes de toda la mini tabla (encabezado + datos + total)
+                if ($miniHead >= $dataStartRow && $miniHead <= $lastRow) {
+                    $ws->getStyle("A{$miniHead}:B{$lastRow}")->applyFromArray([
+                        'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]]],
+                    ]);
+                }
 
                 if ($miniHead >= $dataStartRow && $miniHead <= $lastRow) {
                     $ws->getStyle("A{$miniHead}:B{$miniHead}")->applyFromArray([

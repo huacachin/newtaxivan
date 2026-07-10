@@ -81,7 +81,7 @@
                             <tbody>
                             {{-- Oficina / Base (queda como una fila normal) --}}
                             <tr>
-                                <td class="bg-primary text-white align-middle"<strong>OFICINA</strong></td>
+                                <td class="bg-primary text-white align-middle"><strong>OFICINA</strong></td>
                                 <td class="bg-primary text-white align-middle"><strong>BASE</strong></td>
                                 @php $tBase = 0; @endphp
                                 @foreach($baseMonthly as $m => $val)
