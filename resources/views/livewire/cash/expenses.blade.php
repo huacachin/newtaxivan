@@ -157,6 +157,16 @@
                         </div>
                     </div>
                 </div>
+                @if(!empty($scopeLabels))
+                    <div class="d-flex align-items-center gap-2 py-1">
+                        <span class="badge bg-info">
+                            Filtrado desde reporte — {{ implode(' · ', $scopeLabels) }}
+                        </span>
+                        <button type="button" class="btn btn-sm btn-light py-0" wire:click="clearScopeFilters">
+                            Quitar filtro <i class="ti ti-x f-s-12"></i>
+                        </button>
+                    </div>
+                @endif
                 <div class="table-responsive">
 
                     <table class="table table-bordered table-striped table-hover">

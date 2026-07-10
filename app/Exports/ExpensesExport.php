@@ -6,23 +6,23 @@ use App\Models\Expense;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth; // <-- agregado
+use Illuminate\Support\Facades\Schema;
 use Maatwebsite\Excel\Concerns\FromQuery;
+use Maatwebsite\Excel\Concerns\WithColumnFormatting;
+use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use Maatwebsite\Excel\Concerns\WithStyles;
-use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
+use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 
-class ExpensesExport implements
-    FromQuery, WithHeadings, WithMapping,
-    WithColumnFormatting, WithStyles, WithEvents, WithTitle
+class ExpensesExport implements FromQuery, WithColumnFormatting, WithEvents, WithHeadings, WithMapping, WithStyles, WithTitle
 {
     use \App\Traits\CompactColumnWidths;
+
     /** contador de item (1..n) */
     private int $i = 0;
 
@@ -30,7 +30,9 @@ class ExpensesExport implements
         protected ?string $search = '',
         protected int $filterType = 1,   // 1=reason, 2=detail, 3=user.name, 4=in_charge
         protected ?string $date_start = null,
-        protected ?string $date_end = null
+        protected ?string $date_end = null,
+        protected ?int $user_id = null,
+        protected ?int $headquarter_id = null
     ) {}
 
     /* ========================= QUERY ========================= */
@@ -56,20 +58,32 @@ class ExpensesExport implements
             $q->where('date', '<=', $this->date_end);
         }
 
-        $s = trim((string)$this->search);
+        $s = trim((string) $this->search);
         if ($s !== '') {
-            switch ((int)$this->filterType) {
-                case 1: $q->where('reason', 'like', "%{$s}%"); break;
-                case 2: $q->where('detail', 'like', "%{$s}%"); break;
-                case 3: $q->whereHas('user', fn($qq) => $qq->where('name', 'like', "%{$s}%")); break;
-                case 4: $q->where('in_charge', 'like', "%{$s}%"); break;
+            switch ((int) $this->filterType) {
+                case 1: $q->where('reason', 'like', "%{$s}%");
+                    break;
+                case 2: $q->where('detail', 'like', "%{$s}%");
+                    break;
+                case 3: $q->whereHas('user', fn ($qq) => $qq->where('name', 'like', "%{$s}%"));
+                    break;
+                case 4: $q->where('in_charge', 'like', "%{$s}%");
+                    break;
                 default: $q->where('reason', 'like', "%{$s}%");
             }
         }
 
+        // Drill-down desde reportes (mismos filtros que el listado en pantalla)
+        if ($this->user_id) {
+            $q->where('user_id', $this->user_id);
+        }
+        if ($this->headquarter_id && Schema::hasColumn('expenses', 'headquarter_id')) {
+            $q->where('headquarter_id', $this->headquarter_id);
+        }
+
         return $q->select([
-            'id','date','reason','detail','total',
-            'document_type','user_id','in_charge'
+            'id', 'date', 'reason', 'detail', 'total',
+            'document_type', 'user_id', 'in_charge',
         ]);
     }
 
@@ -100,7 +114,7 @@ class ExpensesExport implements
             optional($row->user)->username,
             $row->reason,
             $row->detail,
-            is_null($row->total) ? null : (float)$row->total,
+            is_null($row->total) ? null : (float) $row->total,
             $row->document_type,
             $row->in_charge,
         ];
@@ -113,16 +127,17 @@ class ExpensesExport implements
         foreach ($this->query()->get() as $row) {
             $i++;
             $rows[] = [
-                'item'          => $i,
-                'date'          => $row->date ? \Carbon\Carbon::parse($row->date)->format('d/m/Y') : '',
-                'user'          => optional($row->user)->username,
-                'reason'        => $row->reason,
-                'detail'        => $row->detail,
-                'total'         => $row->total,
+                'item' => $i,
+                'date' => $row->date ? \Carbon\Carbon::parse($row->date)->format('d/m/Y') : '',
+                'user' => optional($row->user)->username,
+                'reason' => $row->reason,
+                'detail' => $row->detail,
+                'total' => $row->total,
                 'document_type' => $row->document_type,
-                'in_charge'     => $row->in_charge,
+                'in_charge' => $row->in_charge,
             ];
         }
+
         return $rows;
     }
 
@@ -137,6 +152,7 @@ class ExpensesExport implements
     public function styles(Worksheet $sheet)
     {
         $sheet->getParent()->getDefaultStyle()->getFont()->setSize(10);
+
         return [1 => ['font' => ['bold' => true]]];
     }
 
@@ -152,8 +168,8 @@ class ExpensesExport implements
             AfterSheet::class => function (AfterSheet $e) {
                 $ws = $e->sheet->getDelegate();
 
-                $BLUE   = 'FF2874A6';
-                $FOOT   = 'CEE7FF';
+                $BLUE = 'FF2874A6';
+                $FOOT = 'CEE7FF';
                 $BORDER = '000000';
 
                 // Ocultar cuadrícula fuera de la tabla
@@ -168,28 +184,28 @@ class ExpensesExport implements
                 $ws->mergeCells('A1:H1');
                 $ws->getRowDimension(1)->setRowHeight(16);
                 $ws->getStyle('A1')->applyFromArray([
-                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['rgb' => 'F80000']],
+                    'font' => ['bold' => true, 'size' => 10, 'color' => ['rgb' => 'F80000']],
                     'alignment' => [
                         'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
-                        'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                        'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
                     ],
-                    'fill'      => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFFFFF']],
-                    'borders'   => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN, 'color' => ['rgb' => '000000']]],
+                    'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFFFFF']],
+                    'borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN, 'color' => ['rgb' => '000000']]],
                 ]);
 
-                $headerRow    = 2;
+                $headerRow = 2;
                 $dataStartRow = 3;
-                $last         = (int)$ws->getHighestRow();
+                $last = (int) $ws->getHighestRow();
 
                 // THEAD
                 $ws->getStyle("A{$headerRow}:H{$headerRow}")->applyFromArray([
-                    'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+                    'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
                     'alignment' => [
                         'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
-                        'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                        'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
                     ],
-                    'fill'      => [
-                        'fillType'   => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'fill' => [
+                        'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
                         'startColor' => ['rgb' => '2874A6'],
                     ],
                 ]);
@@ -214,7 +230,7 @@ class ExpensesExport implements
                         ->getNumberFormat()->setFormatCode('"S/ " #,##0');
                 }
 
-                $ws->getStyle("A{$headerRow}:G" . max($headerRow, $last))
+                $ws->getStyle("A{$headerRow}:G".max($headerRow, $last))
                     ->getBorders()->getAllBorders()
                     ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN)
                     ->getColor()->setARGB($BORDER);
@@ -235,13 +251,13 @@ class ExpensesExport implements
                 );
 
                 $ws->getStyle("A{$totalRow}:H{$totalRow}")->applyFromArray([
-                    'font'      => ['bold' => true, 'color' => ['rgb' => '000000']],
+                    'font' => ['bold' => true, 'color' => ['rgb' => '000000']],
                     'alignment' => [
                         'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
-                        'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                        'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
                     ],
-                    'fill'      => [
-                        'fillType'   => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'fill' => [
+                        'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
                         'startColor' => ['rgb' => $FOOT],
                     ],
                 ]);

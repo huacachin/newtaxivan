@@ -2,42 +2,50 @@
 
 namespace App\Livewire\Cash;
 
-use Livewire\Component;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Livewire\Component;
 
 class RepEstDracoBase extends Component
 {
-    public int   $year = 0;
+    public int $year = 0;
+
     public array $months = [];
 
     // BASE (Oficina)
     public array $baseMonthly = [];
-    public float $grandTotalBase  = 0.0;
+
+    public float $grandTotalBase = 0.0;
 
     // DRACO (Solo controllers activos)
     public array $groups = [];           // user -> [hq_rows]
+
     public array $totalsByMonth = [];    // solo DRACO (controllers)
+
     public float $grandTotalDraco = 0.0;
 
     // COMBINADO (DRACO controllers + BASE)
     public array $totalsCombinedByMonth = [];
-    public float $grandTotalCombined    = 0.0;
+
+    public float $grandTotalCombined = 0.0;
 
     // Resumen HQ (controllers) + Sucursal Vacía (admins)
     public array $byHeadquarter = [];
 
     protected array $userMap = []; // id => name
-    protected array $hqMap   = []; // id => name
+
+    protected array $hqMap = []; // id => name
 
     /** Roles & filtros */
     protected array $controllerIds = [];
+
     protected array $adminIds = [];
+
     protected string $userModelClass = \App\Models\User::class;
 
     public function mount(): void
     {
-        $this->year   = (int) now()->year;
+        $this->year = (int) now()->year;
         $this->months = $this->monthNames();
         $this->buildMaps();
         $this->recalc();
@@ -45,17 +53,30 @@ class RepEstDracoBase extends Component
 
     }
 
-    public function updatedYear(): void {
+    public function updatedYear(): void
+    {
         $this->loadActiveUsersByRole($this->year);
-        $this->recalc(); }
-    public function prevYear(): void    { $this->year--;
-        $this->loadActiveUsersByRole($this->year);
-        $this->recalc(); }
-    public function nextYear(): void    { $this->year++;
-        $this->loadActiveUsersByRole($this->year);
-        $this->recalc(); }
+        $this->recalc();
+    }
 
-    public function render() { return view('livewire.cash.rep-est-draco-base'); }
+    public function prevYear(): void
+    {
+        $this->year--;
+        $this->loadActiveUsersByRole($this->year);
+        $this->recalc();
+    }
+
+    public function nextYear(): void
+    {
+        $this->year++;
+        $this->loadActiveUsersByRole($this->year);
+        $this->recalc();
+    }
+
+    public function render()
+    {
+        return view('livewire.cash.rep-est-draco-base');
+    }
 
     /* ================== Cálculo ================== */
     protected function recalc(): void
@@ -68,18 +89,20 @@ class RepEstDracoBase extends Component
             $this->loadActiveUsersByRole($this->year);
         }
 
-        $this->baseMonthly           = array_fill(1, 12, 0.0);
-        $this->totalsByMonth         = array_fill(1, 12, 0.0);
+        $this->baseMonthly = array_fill(1, 12, 0.0);
+        $this->totalsByMonth = array_fill(1, 12, 0.0);
         $this->totalsCombinedByMonth = array_fill(1, 12, 0.0);
 
-        $this->grandTotalBase     = 0.0;
-        $this->grandTotalDraco    = 0.0;
+        $this->grandTotalBase = 0.0;
+        $this->grandTotalDraco = 0.0;
         $this->grandTotalCombined = 0.0;
 
-        $this->groups        = [];
+        $this->groups = [];
         $this->byHeadquarter = [];
 
-        if (!Schema::hasTable('expenses')) return;
+        if (! Schema::hasTable('expenses')) {
+            return;
+        }
 
         // --- BASE (Oficina) ---
         $base = DB::table('expenses')
@@ -90,18 +113,18 @@ class RepEstDracoBase extends Component
             ->pluck('s', 'm');
 
         foreach ($base as $m => $s) {
-            $mi = (int)$m;
+            $mi = (int) $m;
             if ($mi >= 1 && $mi <= 12) {
-                $val = (float)$s;
+                $val = (float) $s;
                 $this->baseMonthly[$mi] = $val;
-                $this->grandTotalBase  += $val;
+                $this->grandTotalBase += $val;
             }
         }
 
-        $initMonths = fn() => array_fill(1, 12, 0.0);
+        $initMonths = fn () => array_fill(1, 12, 0.0);
 
         // Pre-seed: todos los controllers activos con TODAS sus sedes asignadas
-        if (!empty($this->controllerIds)) {
+        if (! empty($this->controllerIds)) {
             $assignedHqs = DB::table('headquarter_user')
                 ->whereIn('user_id', $this->controllerIds)
                 ->get()
@@ -109,23 +132,23 @@ class RepEstDracoBase extends Component
 
             foreach ($this->controllerIds as $uid) {
                 $this->groups[$uid] = [
-                    'user'    => $this->userMap[$uid] ?? ('User#'.$uid),
+                    'user' => $this->userMap[$uid] ?? ('User#'.$uid),
                     'hq_rows' => [],
                 ];
                 $userHqs = $assignedHqs->get($uid, collect());
                 foreach ($userHqs as $pivot) {
                     $hid = (int) $pivot->headquarter_id;
                     $this->groups[$uid]['hq_rows'][$hid] = [
-                        'hq'    => $this->hqMap[$hid] ?? ($hid ? ('HQ#'.$hid) : '-'),
-                        'm'     => $initMonths(),
+                        'hq' => $this->hqMap[$hid] ?? ($hid ? ('HQ#'.$hid) : '-'),
+                        'm' => $initMonths(),
                         'total' => 0.0,
                     ];
                 }
                 // Si no tiene sedes asignadas, fila vacía
                 if (empty($this->groups[$uid]['hq_rows'])) {
                     $this->groups[$uid]['hq_rows'][0] = [
-                        'hq'    => '–',
-                        'm'     => $initMonths(),
+                        'hq' => '–',
+                        'm' => $initMonths(),
                         'total' => 0.0,
                     ];
                 }
@@ -133,7 +156,7 @@ class RepEstDracoBase extends Component
         }
 
         // --- DRACO por usuario x HQ x mes (SOLO controllers activos) ---
-        if (!empty($this->controllerIds)) {
+        if (! empty($this->controllerIds)) {
             $draco = DB::table('expenses as e')
                 ->whereYear('e.date', $this->year)
                 ->where('e.reason', 'like', '%DRACO%')
@@ -143,40 +166,40 @@ class RepEstDracoBase extends Component
                 ->get();
 
             foreach ($draco as $r) {
-                $uid = (int)($r->user_id ?? 0);
-                $hid = (int)($r->headquarter_id ?? 0);
-                $mi  = max(1, min(12, (int)$r->m));
-                $val = (float)$r->s;
+                $uid = (int) ($r->user_id ?? 0);
+                $hid = (int) ($r->headquarter_id ?? 0);
+                $mi = max(1, min(12, (int) $r->m));
+                $val = (float) $r->s;
 
-                if (!isset($this->groups[$uid])) {
+                if (! isset($this->groups[$uid])) {
                     $this->groups[$uid] = ['user' => $this->userMap[$uid] ?? '-', 'hq_rows' => []];
                 }
-                if (!isset($this->groups[$uid]['hq_rows'][$hid])) {
+                if (! isset($this->groups[$uid]['hq_rows'][$hid])) {
                     $this->groups[$uid]['hq_rows'][$hid] = [
-                        'hq'    => $this->hqMap[$hid] ?? ($hid ? ('HQ#'.$hid) : '-'),
-                        'm'     => $initMonths(),
+                        'hq' => $this->hqMap[$hid] ?? ($hid ? ('HQ#'.$hid) : '-'),
+                        'm' => $initMonths(),
                         'total' => 0.0,
                     ];
                 }
 
                 $this->groups[$uid]['hq_rows'][$hid]['m'][$mi] += $val;
-                $this->groups[$uid]['hq_rows'][$hid]['total']  += $val;
+                $this->groups[$uid]['hq_rows'][$hid]['total'] += $val;
 
                 $this->totalsByMonth[$mi] += $val;
-                $this->grandTotalDraco    += $val;
+                $this->grandTotalDraco += $val;
             }
         }
 
         // Orden: usuarios y HQs por nombre
-        uasort($this->groups, fn($a,$b)=>strcmp($a['user'],$b['user']));
+        uasort($this->groups, fn ($a, $b) => strcmp($a['user'], $b['user']));
         foreach ($this->groups as &$g) {
-            uasort($g['hq_rows'], fn($a,$b)=>strcmp($a['hq'],$b['hq']));
+            uasort($g['hq_rows'], fn ($a, $b) => strcmp($a['hq'], $b['hq']));
         }
         unset($g);
 
         // --- Resumen por HQ (controllers activos) ---
         $controllersByHQ = [];
-        if (!empty($this->controllerIds)) {
+        if (! empty($this->controllerIds)) {
             $byHQ = DB::table('expenses as e')
                 ->whereYear('e.date', $this->year)
                 ->where('e.reason', 'like', '%DRACO%')
@@ -186,15 +209,15 @@ class RepEstDracoBase extends Component
                 ->get();
 
             foreach ($byHQ as $h) {
-                $hid  = (int)($h->headquarter_id ?? 0);
+                $hid = (int) ($h->headquarter_id ?? 0);
                 $name = $this->hqMap[$hid] ?? ($hid ? ('HQ#'.$hid) : '–');
-                $controllersByHQ[] = ['hq' => $name, 'total' => (float)$h->s];
+                $controllersByHQ[] = ['hq' => $name, 'hid' => $hid, 'total' => (float) $h->s];
             }
         }
 
         // --- Total DRACO de usuarios admin activos como "Sucursal Vacía" ---
         $adminVacuumTotal = 0.0;
-        if (!empty($this->adminIds)) {
+        if (! empty($this->adminIds)) {
             $adminVacuumTotal = (float) DB::table('expenses as e')
                 ->whereYear('e.date', $this->year)
                 ->where('e.reason', 'like', '%DRACO%')
@@ -205,11 +228,11 @@ class RepEstDracoBase extends Component
         // Construye resumen final (controllers por HQ + fila "Sucursal vacía")
         $this->byHeadquarter = $controllersByHQ;
         if ($adminVacuumTotal > 0) {
-            $this->byHeadquarter[] = ['hq' => '-', 'total' => $adminVacuumTotal];
+            $this->byHeadquarter[] = ['hq' => '-', 'hid' => 0, 'total' => $adminVacuumTotal];
         }
 
         // --- COMBINADO (DRACO controllers + BASE) ---
-        for ($i=1; $i<=12; $i++) {
+        for ($i = 1; $i <= 12; $i++) {
             $this->totalsCombinedByMonth[$i] =
                 ($this->totalsByMonth[$i] ?? 0) + ($this->baseMonthly[$i] ?? 0);
         }
@@ -220,13 +243,17 @@ class RepEstDracoBase extends Component
     protected function buildMaps(): void
     {
         if (Schema::hasTable('users')) {
-            DB::table('users')->select('id','username')->orderBy('username')->chunk(1000, function($rows) {
-                foreach ($rows as $r) $this->userMap[(int)$r->id] = (string)$r->username;
+            DB::table('users')->select('id', 'username')->orderBy('username')->chunk(1000, function ($rows) {
+                foreach ($rows as $r) {
+                    $this->userMap[(int) $r->id] = (string) $r->username;
+                }
             });
         }
         if (Schema::hasTable('headquarters')) {
-            DB::table('headquarters')->select('id','name')->orderBy('name')->chunk(1000, function($rows) {
-                foreach ($rows as $r) $this->hqMap[(int)$r->id] = (string)$r->name;
+            DB::table('headquarters')->select('id', 'name')->orderBy('name')->chunk(1000, function ($rows) {
+                foreach ($rows as $r) {
+                    $this->hqMap[(int) $r->id] = (string) $r->name;
+                }
             });
         }
     }
@@ -234,14 +261,15 @@ class RepEstDracoBase extends Component
     /** Carga IDs de usuarios activos por rol usando Spatie */
     protected function loadActiveUsersByRole(int $year): void
     {
-        if (!Schema::hasTable('roles') || !Schema::hasTable('model_has_roles') || !Schema::hasTable('users')) {
+        if (! Schema::hasTable('roles') || ! Schema::hasTable('model_has_roles') || ! Schema::hasTable('users')) {
             $this->controllerIds = $this->adminIds = [];
+
             return;
         }
 
         $onlyActive = ($year === (int) now()->year);
 
-        $getIds = function (string $roleName) use ($onlyActive) : array {
+        $getIds = function (string $roleName) use ($onlyActive): array {
             $q = DB::table('model_has_roles as mr')
                 ->join('roles as r', 'r.id', '=', 'mr.role_id')
                 ->join('users as u', 'u.id', '=', 'mr.model_id')
@@ -252,11 +280,11 @@ class RepEstDracoBase extends Component
                 $q->where('u.status', 'active');
             }
 
-            return $q->pluck('u.id')->map(fn($v)=>(int)$v)->unique()->values()->all();
+            return $q->pluck('u.id')->map(fn ($v) => (int) $v)->unique()->values()->all();
         };
 
         $this->controllerIds = $getIds('controlador');
-        $this->adminIds      = $getIds('administrador');
+        $this->adminIds = $getIds('administrador');
     }
 
     protected function monthNames(): array
@@ -268,7 +296,8 @@ class RepEstDracoBase extends Component
         ];
     }
 
-    public function export(): void {
+    public function export(): void
+    {
         $url = route('exports.cash-draco-report', ['year' => $this->year]);
         $this->dispatch('url-open', ['url' => $url]);
     }

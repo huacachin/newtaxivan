@@ -61,17 +61,48 @@
                             </tr>
                             </thead>
 
+                            @php
+                                // Links de drill-down: cada monto abre /cash/expenses con los
+                                // filtros que reproducen exactamente esa celda.
+                                $monthStart = fn ($m) => sprintf('%04d-%02d-01', $year, $m);
+                                $monthEnd   = fn ($m) => \Carbon\Carbon::create($year, $m, 1)->endOfMonth()->toDateString();
+                                $expensesLink = function (string $reason, string $from, string $to, ?int $uid = null, ?int $hid = null) {
+                                    return route('cash.expenses', array_filter([
+                                        'expense_search' => $reason,
+                                        'filterType'     => 1,
+                                        'date_start'     => $from,
+                                        'date_end'       => $to,
+                                        'user_id'        => $uid,
+                                        'headquarter_id' => $hid,
+                                    ], fn ($v) => $v !== null));
+                                };
+                            @endphp
+
                             <tbody>
                             {{-- Oficina / Base (queda como una fila normal) --}}
                             <tr>
                                 <td class="bg-primary text-white align-middle"<strong>OFICINA</strong></td>
                                 <td class="bg-primary text-white align-middle"><strong>BASE</strong></td>
                                 @php $tBase = 0; @endphp
-                                @foreach($baseMonthly as $val)
+                                @foreach($baseMonthly as $m => $val)
                                     @php $tBase += $val; @endphp
-                                    <td>{{ number_format($val, 2) }}</td>
+                                    <td>
+                                        @if($val != 0)
+                                            <a href="{{ $expensesLink('BASE', $monthStart($m), $monthEnd($m)) }}" target="_blank">{{ number_format($val, 2) }}</a>
+                                        @else
+                                            {{ number_format($val, 2) }}
+                                        @endif
+                                    </td>
                                 @endforeach
-                                <td><strong>{{ number_format($tBase, 2) }}</strong></td>
+                                <td>
+                                    <strong>
+                                        @if($tBase != 0)
+                                            <a href="{{ $expensesLink('BASE', $year.'-01-01', $year.'-12-31') }}" target="_blank">{{ number_format($tBase, 2) }}</a>
+                                        @else
+                                            {{ number_format($tBase, 2) }}
+                                        @endif
+                                    </strong>
+                                </td>
                             </tr>
 
                             @php
@@ -81,9 +112,11 @@
                                 // cada fila tiene: user (controller), hq (sucursal/paradero), m (meses), total
                                 $allRows = collect();
 
-                                foreach ($groups as $g) {
-                                    foreach ($g['hq_rows'] as $row) {
+                                foreach ($groups as $uid => $g) {
+                                    foreach ($g['hq_rows'] as $hid => $row) {
                                         $allRows->push([
+                                            'uid'   => (int) $uid,
+                                            'hid'   => (int) $hid,
                                             'user'  => $g['user'],
                                             'hq'    => $row['hq'],
                                             'm'     => $row['m'],      // array de montos por mes
@@ -145,12 +178,26 @@
                                         @endif
 
                                         {{-- Meses --}}
-                                        @foreach($r['m'] as $val)
-                                            <td>{{ number_format($val, 2) }}</td>
+                                        @foreach($r['m'] as $m => $val)
+                                            <td>
+                                                @if($val != 0)
+                                                    <a href="{{ $expensesLink('DRACO', $monthStart($m), $monthEnd($m), $r['uid'], $r['hid'] ?: null) }}" target="_blank">{{ number_format($val, 2) }}</a>
+                                                @else
+                                                    {{ number_format($val, 2) }}
+                                                @endif
+                                            </td>
                                         @endforeach
 
                                         {{-- Total por HQ --}}
-                                        <td><strong>{{ number_format($r['total'], 2) }}</strong></td>
+                                        <td>
+                                            <strong>
+                                                @if($r['total'] != 0)
+                                                    <a href="{{ $expensesLink('DRACO', $year.'-01-01', $year.'-12-31', $r['uid'], $r['hid'] ?: null) }}" target="_blank">{{ number_format($r['total'], 2) }}</a>
+                                                @else
+                                                    {{ number_format($r['total'], 2) }}
+                                                @endif
+                                            </strong>
+                                        </td>
                                     </tr>
                                 @endforeach
                             @endif
@@ -191,12 +238,24 @@
                                     @php $sumHQ += $h['total']; @endphp
                                     <tr>
                                         <td>{{ $h['hq'] }}</td>
-                                        <td class="text-end">{{ number_format($h['total'], 2) }}</td>
+                                        <td class="text-end">
+                                            @if($h['total'] != 0)
+                                                <a href="{{ $expensesLink('DRACO', $year.'-01-01', $year.'-12-31', null, ($h['hid'] ?? 0) ?: null) }}" target="_blank">{{ number_format($h['total'], 2) }}</a>
+                                            @else
+                                                {{ number_format($h['total'], 2) }}
+                                            @endif
+                                        </td>
                                     </tr>
                                 @endforeach
                                 <tr>
                                     <td>BASE</td>
-                                    <td class="text-end">{{ number_format($grandTotalBase, 2) }}</td>
+                                    <td class="text-end">
+                                        @if($grandTotalBase != 0)
+                                            <a href="{{ $expensesLink('BASE', $year.'-01-01', $year.'-12-31') }}" target="_blank">{{ number_format($grandTotalBase, 2) }}</a>
+                                        @else
+                                            {{ number_format($grandTotalBase, 2) }}
+                                        @endif
+                                    </td>
                                 </tr>
                                 </tbody>
                                 <tfoot class="table-primary">
