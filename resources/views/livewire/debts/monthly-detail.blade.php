@@ -123,7 +123,7 @@
                                      name="debt_exonerate" autocomplete="on"
                                      class="form-control form-control-sm text-end @error('exonerateInput') is-invalid @enderror"
                                      style="background-color: yellow;"
-                                     wire:model.live.debounce.400ms="exonerateInput">
+                                     wire:model="exonerateInput">
                               @error('exonerateInput')
                               <div class="invalid-feedback d-block">{{ $message }}</div>
                               @enderror
@@ -135,7 +135,7 @@
                               <input type="text" inputmode="decimal"
                                      name="debt_amortize" autocomplete="on"
                                      class="form-control form-control-sm text-end @error('amortizeInput') is-invalid @enderror"
-                                     wire:model.live.debounce.400ms="amortizeInput">
+                                     wire:model="amortizeInput">
                               @error('amortizeInput')
                               <div class="invalid-feedback d-block">{{ $message }}</div>
                               @enderror
