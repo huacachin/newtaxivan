@@ -45,6 +45,11 @@ class Perms extends Component
         $this->buildAclGroups();
     }
 
+    /** Etiquetas que se muestran en vez de la guardada en BD, sin renombrar el permiso. */
+    private const LABEL_OVERRIDES = [
+        'cash.incomes' => 'Ingreso Otros',
+    ];
+
     private function buildAclGroups(): void
     {
         $perms = Permission::query()
@@ -55,11 +60,12 @@ class Perms extends Component
         $groups = [];
         foreach ($perms as $p) {
             $name = $p->name;
-            $label = $p->label ?: ($p->module_label ?: $this->humanize($name));
+            $override = self::LABEL_OVERRIDES[$name] ?? null;
+            $label = $override ?: ($p->label ?: ($p->module_label ?: $this->humanize($name)));
             if (str_contains($name, '.')) {
                 [$parent, $rest] = explode('.', $name, 2);
                 $groups[$parent] ??= ['type'=>'group','title'=>$this->humanize($parent),'items'=>[]];
-                $groups[$parent]['items'][] = ['key'=>$name,'label'=>$p->label ?: ($p->module_label ?: $this->humanize($rest))];
+                $groups[$parent]['items'][] = ['key'=>$name,'label'=>$override ?: ($p->label ?: ($p->module_label ?: $this->humanize($rest)))];
             } else {
                 $groups[$name] ??= ['type'=>'single','title'=>$label,'items'=>[]];
                 $groups[$name]['items'][] = ['key'=>$name,'label'=>$label];

@@ -48,7 +48,7 @@ class PermissionCatalogSeeder extends Seeder
             ['name' => 'debts.monthly', 'label' => 'Deuda Mensual', 'module' => 'debts', 'module_label' => 'Deudas', 'description' => 'Acceso a Deuda Mensual'],
 
             // Caja (hijos)
-            ['name' => 'cash.incomes',  'label' => 'Ingreso',  'module' => 'cash', 'module_label' => 'Caja', 'description' => 'Acceso a Ingresos'],
+            ['name' => 'cash.incomes',  'label' => 'Ingreso Otros',  'module' => 'cash', 'module_label' => 'Caja', 'description' => 'Acceso a Ingreso Otros'],
             ['name' => 'cash.expenses', 'label' => 'Egreso',   'module' => 'cash', 'module_label' => 'Caja', 'description' => 'Acceso a Egresos'],
             ['name' => 'cash.report-general',       'label' => 'Reporte General',       'module' => 'cash', 'module_label' => 'Caja', 'description' => 'Acceso a Reporte General'],
             ['name' => 'cash.report-draco',         'label' => 'Rep Est Draco Base',    'module' => 'cash', 'module_label' => 'Caja', 'description' => 'Acceso a Rep Est Draco Base'],

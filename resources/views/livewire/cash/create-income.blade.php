@@ -21,14 +21,14 @@
     {{-- Header --}}
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title title-modules">INGRESOS : NUEVO</h4>
+            <h4 class="main-title title-modules">INGRESO OTROS : NUEVO</h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
                 <li class="d-flex">
                     <i class="ti ti-cash f-s-16"></i>
                     <a href="{{ route('cash.incomes') }}" class="f-s-14 d-flex gap-2">
-                        <span class="d-none d-md-block">Ingresos</span>
+                        <span class="d-none d-md-block">Ingreso Otros</span>
                     </a>
                 </li>
                 <li class="d-flex active">

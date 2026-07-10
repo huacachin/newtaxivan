@@ -8,7 +8,7 @@
     {{-- ===== Header & Breadcrumb ===== --}}
     <div class="row">
         <div class="col-sm-6">
-            <h4 class="main-title title-modules">LISTA GENERAL DE INGRESO</h4>
+            <h4 class="main-title title-modules">LISTA GENERAL DE INGRESO OTROS</h4>
         </div>
         <div class="col-sm-6 mt-sm-2">
             <ul class="breadcrumb breadcrumb-start float-sm-end">
@@ -19,7 +19,7 @@
                     </a>
                 </li>
                 <li class="d-flex active">
-                    <a href="#" class="f-s-14">Ingresos</a>
+                    <a href="#" class="f-s-14">Ingreso Otros</a>
                 </li>
             </ul>
         </div>
@@ -224,13 +224,13 @@
 
     </div>
 
-    {{-- ===== Modal: Nuevo Ingreso ===== --}}
+    {{-- ===== Modal: Nuevo Ingreso Otros ===== --}}
     <div class="modal fade" id="modalAddIncome" aria-hidden="true" tabindex="-1" data-bs-backdrop="static"
          wire:ignore.self>
         <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Nuevo ingreso</h5>
+                    <h5 class="modal-title">Nuevo ingreso otros</h5>
                     <button type="button" class="btn-close btn-close-white m-0 fs-5" data-bs-dismiss="modal"
                             aria-label="Close" wire:click="closeModal('modalAddIncome')"></button>
                 </div>

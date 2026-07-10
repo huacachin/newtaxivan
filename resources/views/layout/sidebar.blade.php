@@ -66,7 +66,7 @@
             'icon'     => 'ti ti-home-dollar',
             'canAny'   => ['cash.incomes','cash.expenses','cash.report-general','cash.report-draco','cash.report-sal-pag-cont','cash.report-caja-ma'],
             'children' => [
-                ['title' => 'Ingreso',               'route' => 'cash.incomes',                'can' => 'cash.incomes'],
+                ['title' => 'Ingreso Otros',         'route' => 'cash.incomes',                'can' => 'cash.incomes'],
                 ['title' => 'Egreso',                'route' => 'cash.expenses',               'can' => 'cash.expenses'],
                 ['title' => 'Reporte General',       'route' => 'cash.report.general',         'can' => 'cash.report-general'],
                 ['title' => 'Rep Est Draco Base',    'route' => 'cash.report.est-draco-base',  'can' => 'cash.report-draco'],
