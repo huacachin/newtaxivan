@@ -46,6 +46,8 @@ class Create extends Component
 
     public $driver_id;
 
+    public bool $not_working = false;
+
     public $fuel;
 
     public $soat_date;
@@ -91,6 +93,7 @@ class Create extends Component
             'affiliated_company' => 'nullable|string|max:255',
             'condition' => 'required|string|min:1|max:255',
             'owner_id' => 'nullable|exists:owners,id',
+            'not_working' => 'boolean',
             'driver_id' => [
                 'nullable',
                 'exists:drivers,id',
@@ -123,6 +126,14 @@ class Create extends Component
             ->whereRaw("LOWER(TRIM(status)) = 'active'")
             ->orderBy('sort_order')
             ->first();
+    }
+
+    public function updatedNotWorking()
+    {
+        if ($this->not_working) {
+            $this->driver_id = null;
+            $this->resetErrorBag('driver_id');
+        }
     }
 
     public function updatedDriverId()
@@ -191,7 +202,9 @@ class Create extends Component
                 'affiliated_company' => $this->affiliated_company,
                 'condition' => $this->condition,
                 'owner_id' => $this->owner_id,
-                'driver_id' => $this->driver_id,
+                // "No trabaja" libera al conductor y estampa hoy para contar los dias
+                'not_working_since' => $this->not_working ? Carbon::today()->toDateString() : null,
+                'driver_id' => $this->not_working ? null : $this->driver_id,
                 'fuel' => $this->fuel,
                 'soat_date' => $this->soat_date,
                 'certificate_date' => $this->certificate_date,
@@ -245,7 +258,7 @@ class Create extends Component
     public function clean()
     {
 
-        $this->reset(['plate', 'headquarter', 'entry_date', 'termination_date', 'class', 'brand', 'year', 'model', 'bodywork', 'color', 'type', 'affiliated_company', 'condition', 'owner_id', 'driver_id', 'fuel', 'soat_date', 'technical_review', 'certificate_date', 'detail', 'sort_order', 'seats', 'passengers', 'new_images', 'image_files']);
+        $this->reset(['plate', 'headquarter', 'entry_date', 'termination_date', 'class', 'brand', 'year', 'model', 'bodywork', 'color', 'type', 'affiliated_company', 'condition', 'owner_id', 'driver_id', 'not_working', 'fuel', 'soat_date', 'technical_review', 'certificate_date', 'detail', 'sort_order', 'seats', 'passengers', 'new_images', 'image_files']);
 
         $this->mount();
     }

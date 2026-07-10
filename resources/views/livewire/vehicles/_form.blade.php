@@ -190,13 +190,23 @@
     {{-- Conductor --}}
     <div class="col-6 col-md-3">
         <label for="driver_id" class="form-label">Conductor</label>
-        <select id="driver_id" class="form-select form-select-sm" wire:model.live="driver_id">
+        <select id="driver_id" class="form-select form-select-sm" wire:model.live="driver_id" @if($not_working) disabled @endif>
             <option value="">Seleccionar</option>
             @foreach($listDrivers as $driver)
                 <option value="{{ $driver->id }}">{{$loop->iteration}}.- {{ $driver->name }}</option>
             @endforeach
         </select>
         @error('driver_id') <span class="title-modules">{{ $message }}</span> @enderror
+    </div>
+
+    {{-- No trabaja --}}
+    <div class="col-6 col-md-2 d-flex align-items-end">
+        <div class="form-check mb-1">
+            <input id="not_working" type="checkbox" class="form-check-input" wire:model.live="not_working">
+            <label for="not_working" class="form-check-label" title="Marca el vehículo como fuera de operación; libera al conductor y muestra un recordatorio con los días transcurridos (a los 60 se sugiere la baja).">
+                No trabaja
+            </label>
+        </div>
     </div>
 
     {{-- Combustible --}}

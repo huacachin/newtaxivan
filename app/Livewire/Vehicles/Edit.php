@@ -9,6 +9,7 @@ use App\Models\Vehicle;
 use App\Models\VehicleImage;
 use App\Services\CostPerPlateGenerator;
 use App\Services\SupportRecordRelinker;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\On;
@@ -50,6 +51,8 @@ class Edit extends Component
     public $owner_id;
 
     public $driver_id;
+
+    public bool $not_working = false;
 
     public $fuel;
 
@@ -107,6 +110,7 @@ class Edit extends Component
         $this->condition = $this->vehicle->condition;
         $this->owner_id = $this->vehicle->owner_id;
         $this->driver_id = $this->vehicle->driver_id;
+        $this->not_working = (bool) $this->vehicle->not_working_since;
         $this->fuel = $this->vehicle->fuel;
         $this->soat_date = optional($this->vehicle->soat_date)->format('Y-m-d');
         $this->certificate_date = optional($this->vehicle->certificate_date)->format('Y-m-d');
@@ -138,6 +142,7 @@ class Edit extends Component
             'affiliated_company' => 'nullable|string|max:255',
             'condition' => 'required|string|min:1|max:255',
             'owner_id' => 'nullable|exists:owners,id',
+            'not_working' => 'boolean',
             'driver_id' => [
                 'nullable',
                 'exists:drivers,id',
@@ -186,6 +191,14 @@ class Edit extends Component
             ->whereRaw("LOWER(TRIM(status)) = 'active'")
             ->orderBy('sort_order')
             ->first();
+    }
+
+    public function updatedNotWorking()
+    {
+        if ($this->not_working) {
+            $this->driver_id = null;
+            $this->resetErrorBag('driver_id');
+        }
     }
 
     public function updatedDriverId()
@@ -270,7 +283,12 @@ class Edit extends Component
                 'affiliated_company' => $this->affiliated_company,
                 'condition' => $this->condition,
                 'owner_id' => $this->owner_id,
-                'driver_id' => $this->driver_id,
+                // "No trabaja" libera al conductor; si ya estaba marcado se
+                // conserva la fecha original para no reiniciar el conteo de dias
+                'not_working_since' => $this->not_working
+                    ? ($this->vehicle->not_working_since?->toDateString() ?? Carbon::today()->toDateString())
+                    : null,
+                'driver_id' => $this->not_working ? null : $this->driver_id,
                 'fuel' => $this->fuel,
                 'soat_date' => $this->soat_date,
                 'certificate_date' => $this->certificate_date,

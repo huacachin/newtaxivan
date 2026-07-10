@@ -1,34 +1,47 @@
 <?php
+
 // app/Livewire/Vehicles/Index.php
+
 namespace App\Livewire\Vehicles;
 
 use App\Models\Driver;
 use App\Models\Headquarter;
 use App\Models\Owner;
 use App\Models\Vehicle;
-use Livewire\Component;
 use Livewire\Attributes\Url;
+use Livewire\Component;
 
 class Index extends Component
 {
     public $vehicles;
+
     public $owners;
+
     public $drivers;
+
     public $listDrivers;
+
     public $listOwners;
+
     public $listHeadquarters;
 
-    #[Url(except: '')]       public $search = '';
-    #[Url(except: 'plate')]  public $filter = 'plate';
-    #[Url(except: 'active')] public $status = 'active';
+    #[Url(except: '')]
+    public $search = '';
 
-    public function export(){
-        $route = route('exports.vehicles',[
-            "search" => $this->search,
-            "filter" => $this->filter,
-            "status" => $this->status
+    #[Url(except: 'plate')]
+    public $filter = 'plate';
+
+    #[Url(except: 'active')]
+    public $status = 'active';
+
+    public function export()
+    {
+        $route = route('exports.vehicles', [
+            'search' => $this->search,
+            'filter' => $this->filter,
+            'status' => $this->status,
         ]);
-        $this->dispatch('url-open',["url" => $route]);
+        $this->dispatch('url-open', ['url' => $route]);
     }
 
     public function mount()
@@ -41,10 +54,10 @@ class Index extends Component
         $this->listDrivers = Driver::all();
         $this->listHeadquarters = Headquarter::all();
 
-        if (!in_array($filter, ['plate','brand','year','owner','driver','condition','company','category','code'], true)) {
+        if (! in_array($filter, ['plate', 'brand', 'year', 'owner', 'driver', 'condition', 'company', 'category', 'code'], true)) {
             $filter = $this->filter = 'plate';
         }
-        if (!in_array($status, ['active','inactive'], true)) {
+        if (! in_array($status, ['active', 'inactive'], true)) {
             $status = $this->status = 'active';
         }
 
@@ -53,19 +66,19 @@ class Index extends Component
         $query = Vehicle::query()
             ->when($status === 'active', function ($q) use ($today) {
                 $q->where('status', 'active')
-                  ->where(function ($w) use ($today) {
-                      $w->whereNull('termination_date')
-                        ->orWhere('termination_date', '>', $today);
-                  });
+                    ->where(function ($w) use ($today) {
+                        $w->whereNull('termination_date')
+                            ->orWhere('termination_date', '>', $today);
+                    });
             })
             ->when($status === 'inactive', function ($q) use ($today) {
                 $q->where(function ($w) use ($today) {
                     $w->where('status', 'inactive')
-                      ->orWhere(function ($sub) use ($today) {
-                          $sub->where('status', 'active')
-                              ->whereNotNull('termination_date')
-                              ->where('termination_date', '<=', $today);
-                      });
+                        ->orWhere(function ($sub) use ($today) {
+                            $sub->where('status', 'active')
+                                ->whereNotNull('termination_date')
+                                ->where('termination_date', '<=', $today);
+                        });
                 });
             })
             ->when($search !== '' && $filter !== '', function ($q) use ($filter, $search) {
@@ -74,10 +87,10 @@ class Index extends Component
                     'brand' => $q->where('brand', 'like', "%{$search}%"),
                     'category' => $q->where('class', 'like', "%{$search}%"),
                     'year' => ctype_digit($search)
-                        ? $q->where('year', (int)$search)
+                        ? $q->where('year', (int) $search)
                         : $q->where('year', 'like', "%{$search}%"),
-                    'owner' => $q->whereHas('owner', fn($r) => $r->where('name', 'like', "%{$search}%")),
-                    'driver' => $q->whereHas('driver', fn($r) => $r->where('name', 'like', "%{$search}%")),
+                    'owner' => $q->whereHas('owner', fn ($r) => $r->where('name', 'like', "%{$search}%")),
+                    'driver' => $q->whereHas('driver', fn ($r) => $r->where('name', 'like', "%{$search}%")),
                     'condition' => $q->where('condition', 'like', "%{$search}%"),
                     'company' => $q->where('affiliated_company', 'like', "%{$search}%"),
                     'code' => $q->where('id', $search),
@@ -85,12 +98,12 @@ class Index extends Component
                 };
             })
             ->orderBy('sort_order')
-            ->with(['owner:id,name','driver:id,name','images:id,vehicle_id,image_path']);
+            ->with(['owner:id,name', 'driver:id,name', 'images:id,vehicle_id,image_path']);
 
         $this->vehicles = $query->get([
-            'sort_order','id','owner_id','driver_id','plate','status','year','condition',
-            'affiliated_company','termination_date','brand','class','type','fuel',
-            'soat_date','certificate_date','technical_review','detail'
+            'sort_order', 'id', 'owner_id', 'driver_id', 'plate', 'status', 'year', 'condition',
+            'affiliated_company', 'termination_date', 'brand', 'class', 'type', 'fuel',
+            'soat_date', 'certificate_date', 'technical_review', 'detail', 'not_working_since',
         ]);
 
         $this->totals();
@@ -98,20 +111,31 @@ class Index extends Component
 
     public function openAddWindow(): void
     {
-        $route = route('settings.vehicles.create');;
+        $route = route('settings.vehicles.create');
 
-        $this->dispatch('url-open',["url" => $route]);
+        $this->dispatch('url-open', ['url' => $route]);
     }
 
     public function openEditWindow(int $id): void
     {
-        $route = route('settings.vehicles.edit',["id" => $id]);
-        $this->dispatch('url-open',["url" => $route]);
+        $route = route('settings.vehicles.edit', ['id' => $id]);
+        $this->dispatch('url-open', ['url' => $route]);
     }
 
-    public function updatedSearch() { $this->mount(); }
-    public function updatedFilter() { $this->mount(); }
-    public function updatedStatus() { $this->mount(); }
+    public function updatedSearch()
+    {
+        $this->mount();
+    }
+
+    public function updatedFilter()
+    {
+        $this->mount();
+    }
+
+    public function updatedStatus()
+    {
+        $this->mount();
+    }
 
     public function totals(): void
     {

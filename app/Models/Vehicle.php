@@ -2,15 +2,16 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Traits\Auditable;
 
 class Vehicle extends Model
 {
     use Auditable;
+
     protected $auditModule = 'Vehículos';
 
     protected $fillable = [
@@ -28,6 +29,7 @@ class Vehicle extends Model
         'type',
         'affiliated_company',
         'condition',
+        'not_working_since',
         'owner_id',
         'driver_id',
         'fuel',
@@ -38,17 +40,18 @@ class Vehicle extends Model
         'validity_status',
         'status',
         'seats',
-        'passengers'
+        'passengers',
     ];
 
     protected $casts = [
-        'order'              => 'integer',
-        'year'               => 'integer',
-        'entry_date'         => 'date',
-        'termination_date'   => 'date',
-        'soat_date'          => 'date',
-        'certificate_date'   => 'date',
-        'technical_review'   => 'date',
+        'order' => 'integer',
+        'year' => 'integer',
+        'entry_date' => 'date',
+        'termination_date' => 'date',
+        'soat_date' => 'date',
+        'certificate_date' => 'date',
+        'technical_review' => 'date',
+        'not_working_since' => 'date',
     ];
 
     protected $appends = ['badges'];
@@ -64,12 +67,16 @@ class Vehicle extends Model
         return $this->belongsTo(Driver::class)->withDefault();
     }
 
-    public function costs() { return $this->hasMany(CostPerPlate::class); }
+    public function costs()
+    {
+        return $this->hasMany(CostPerPlate::class);
+    }
 
     public function departures(): HasMany
     {
         return $this->hasMany(Departure::class);
     }
+
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
@@ -89,7 +96,10 @@ class Vehicle extends Model
 
     public function scopeByCondition($q, ?string $cond)
     {
-        if ($cond === null || $cond === '') return $q;
+        if ($cond === null || $cond === '') {
+            return $q;
+        }
+
         return $q->where('condition', $cond);
     }
 
@@ -100,7 +110,7 @@ class Vehicle extends Model
 
     public function setPlateAttribute($value): void
     {
-        $s = strtoupper(trim((string)$value));
+        $s = strtoupper(trim((string) $value));
         // Limpia raros, mantiene guiones/espacios si los usas:
         $s = preg_replace('/[^A-Z0-9\- ]/', '', $s);
         $this->attributes['plate'] = $s;
@@ -109,7 +119,7 @@ class Vehicle extends Model
     /** Clave de comparación de placa (sin espacios/guiones) */
     public function plateKey(): string
     {
-        return preg_replace('/[^A-Z0-9]/', '', strtoupper((string)$this->plate));
+        return preg_replace('/[^A-Z0-9]/', '', strtoupper((string) $this->plate));
     }
 
     public function debtDays()
@@ -121,11 +131,28 @@ class Vehicle extends Model
     {
         $badges = [];
 
+        // Recordatorio "No trabaja": cuenta los dias desde que se marcó;
+        // a los 60 se sugiere la baja definitiva.
+        if ($this->not_working_since) {
+            $days = (int) $this->not_working_since->startOfDay()->diffInDays(Carbon::today());
+            $badges[] = [
+                'abbr' => "NT {$days}d",
+                'title' => $days >= 60
+                    ? "No trabaja hace {$days} día(s). Ya cumplió los 60 días: evaluar darle de baja."
+                    : "No trabaja hace {$days} día(s). A los 60 días se sugiere darle de baja.",
+                'class' => $days >= 60 ? 'bg-danger' : 'bg-warning',
+            ];
+        }
+
         $add = function ($date, string $abbrType, string $label) use (&$badges) {
-            if (!$date) return;
+            if (! $date) {
+                return;
+            }
 
             $days = $this->dayDelta($date);
-            if ($days === null) return;
+            if ($days === null) {
+                return;
+            }
 
             $due = $date instanceof \Carbon\Carbon
                 ? $date->toDateString()
@@ -133,32 +160,34 @@ class Vehicle extends Model
 
             if ($days < 0) {
                 $badges[] = [
-                    'abbr'  => $abbrType, // ST | RT | CD
-                    'title' => "{$label} venció hace " . abs($days) . " día(s) ({$due})",
+                    'abbr' => $abbrType, // ST | RT | CD
+                    'title' => "{$label} venció hace ".abs($days)." día(s) ({$due})",
                     'class' => 'bg-danger',
                 ];
+
                 return;
             }
 
             if ($days === 0) {
                 $badges[] = [
-                    'abbr'  => $abbrType,
+                    'abbr' => $abbrType,
                     'title' => "{$label} vence hoy ({$due})",
                     'class' => 'bg-danger',
                 ];
+
                 return;
             }
 
             if ($days <= 10) {
                 $badges[] = [
-                    'abbr'  => $abbrType,
+                    'abbr' => $abbrType,
                     'title' => "{$label} vence en {$days} día(s) ({$due})",
                     'class' => $days <= 5 ? 'bg-danger' : 'bg-warning',
                 ];
             }
         };
 
-        $add($this->soat_date,        'ST', 'SOAT');
+        $add($this->soat_date, 'ST', 'SOAT');
         $add($this->technical_review, 'RT', 'Revisión Técnica');
         $add($this->certificate_date, 'CD', 'Certificado');
 
@@ -172,68 +201,71 @@ class Vehicle extends Model
         $plate = $this->plate;
 
         $add = function ($date, string $abbrType, string $label, string $fieldSlug) use (&$alerts, $id, $plate) {
-            if (!$date) return;
+            if (! $date) {
+                return;
+            }
 
             $days = $this->dayDelta($date);
-            if ($days === null) return;
+            if ($days === null) {
+                return;
+            }
 
             $due = $date instanceof \Carbon\Carbon
                 ? $date->toDateString()
                 : \Carbon\Carbon::parse($date)->toDateString();
 
             $base = [
-                'id'         => $id,
-                'kind'       => 'vehicle',
+                'id' => $id,
+                'kind' => 'vehicle',
                 'kind_label' => 'Vehículo',
-                'subject'    => $plate,
-                'plate'      => $plate,        // mantener compat
-                'abbr'       => $abbrType,     // ST | RT | CD
-                'field'      => $fieldSlug,    // soat | tecnica | certificado
-                'label'      => $label,
+                'subject' => $plate,
+                'plate' => $plate,        // mantener compat
+                'abbr' => $abbrType,     // ST | RT | CD
+                'field' => $fieldSlug,    // soat | tecnica | certificado
+                'label' => $label,
             ];
 
             if ($days < 0) {
                 $alerts[] = $base + [
-                    'days'     => abs($days),
+                    'days' => abs($days),
                     'due_date' => $due,
-                    'color'    => 'danger',
-                    'status'   => 'expired',
-                    'message'  => "{$label} venció hace " . abs($days) . " día(s)",
+                    'color' => 'danger',
+                    'status' => 'expired',
+                    'message' => "{$label} venció hace ".abs($days).' día(s)',
                 ];
+
                 return;
             }
 
             if ($days === 0) {
                 $alerts[] = $base + [
-                    'days'     => 0,
+                    'days' => 0,
                     'due_date' => $due,
-                    'color'    => 'danger',
-                    'status'   => 'today',
-                    'message'  => "{$label} vence hoy",
+                    'color' => 'danger',
+                    'status' => 'today',
+                    'message' => "{$label} vence hoy",
                 ];
+
                 return;
             }
 
             if ($days <= 10) {
                 $alerts[] = $base + [
-                    'days'     => $days,
+                    'days' => $days,
                     'due_date' => $due,
-                    'color'    => $days <= 5 ? 'danger' : 'warning',
-                    'status'   => 'upcoming',
-                    'message'  => "{$label} vence en {$days} día(s)",
+                    'color' => $days <= 5 ? 'danger' : 'warning',
+                    'status' => 'upcoming',
+                    'message' => "{$label} vence en {$days} día(s)",
                 ];
             }
         };
 
-        $add($this->soat_date,        'ST', 'SOAT',             'soat');
+        $add($this->soat_date, 'ST', 'SOAT', 'soat');
         $add($this->technical_review, 'RT', 'Revisión Técnica', 'tecnica');
-        $add($this->certificate_date, 'CD', 'Certificado',      'certificado');
+        $add($this->certificate_date, 'CD', 'Certificado', 'certificado');
 
         return $alerts;
     }
-
-
-
 
     /**
      * Diferencia firmada en días entre HOY y $date.
@@ -241,7 +273,9 @@ class Vehicle extends Model
      */
     protected function dayDelta($date): ?int
     {
-        if (!$date) return null;
+        if (! $date) {
+            return null;
+        }
 
         $tz = config('app.timezone', 'UTC');
 
@@ -265,7 +299,4 @@ class Vehicle extends Model
         // Futuro: días positivos
         return $today->diffInDays($d);
     }
-
-
-
 }
