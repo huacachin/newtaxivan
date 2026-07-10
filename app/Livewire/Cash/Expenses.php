@@ -33,7 +33,9 @@ class Expenses extends Component
     public int $page = 1;
 
     protected $queryString = [
-        'search'     => ['except' => ''],
+        // 'as' evita que el input se llame "search": Chrome comparte el historial de
+        // autocompletado entre campos con el mismo name y mezclaba sugerencias ajenas.
+        'search'     => ['except' => '', 'as' => 'expense_search'],
         'filterType' => ['except' => 1],
         'date_start' => ['except' => null],
         'date_end'   => ['except' => null],

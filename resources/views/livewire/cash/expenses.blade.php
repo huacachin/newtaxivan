@@ -63,7 +63,7 @@
                                                        name="rbFilter"
                                                        id="rbA"
                                                        value="1"
-                                                       wire:model="filterType">  {{-- sin .live ni wire:click --}}
+                                                       wire:model.live="filterType">
                                                 <label class="form-check-label" for="rbA">A</label>
                                             </div>
 
@@ -73,7 +73,7 @@
                                                        name="rbFilter"
                                                        id="rbMotive"
                                                        value="2"
-                                                       wire:model="filterType">
+                                                       wire:model.live="filterType">
                                                 <label class="form-check-label" for="rbMotive">Motivo</label>
                                             </div>
 
@@ -83,7 +83,7 @@
                                                        name="rbFilter"
                                                        id="rbUser"
                                                        value="3"
-                                                       wire:model="filterType">
+                                                       wire:model.live="filterType">
                                                 <label class="form-check-label" for="rbUser">Usuario</label>
                                             </div>
 
@@ -93,18 +93,27 @@
                                                        name="rbFilter"
                                                        id="rbRespons"
                                                        value="4"
-                                                       wire:model="filterType">
+                                                       wire:model.live="filterType">
                                                 <label class="form-check-label" for="rbRespons">Respons.</label>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <input
-                                    type="search"
-                                    class="form-control form-control-sm"
-                                    placeholder="Buscar..."
-                                    aria-label="Buscar"
-                                    wire:model="search">
+                                {{-- GET nativo: recarga la página para que Chrome guarde el término buscado --}}
+                                <form method="GET" action="{{ route('cash.expenses') }}" autocomplete="on">
+                                    <input type="hidden" name="filterType" value="{{ $filterType }}">
+                                    <input type="hidden" name="date_start" value="{{ $ui_date_start }}">
+                                    <input type="hidden" name="date_end" value="{{ $ui_date_end }}">
+                                    <input
+                                        type="search"
+                                        name="expense_search"
+                                        autocomplete="on"
+                                        class="form-control form-control-sm"
+                                        placeholder="Buscar..."
+                                        aria-label="Buscar"
+                                        value="{{ $search }}"
+                                        wire:model="search">
+                                </form>
                             </div>
 
                             <!-- Fecha Inicio -->
