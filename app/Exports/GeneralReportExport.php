@@ -283,9 +283,9 @@ class GeneralReportExport implements FromArray, WithEvents, WithColumnFormatting
                         'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]]],
                         'alignment' => ['vertical' => Alignment::VERTICAL_CENTER],
                     ]);
-                    // La celda combinada se alinea a la izquierda y sin wrap
+                    // La celda combinada se alinea al centro y sin wrap
                     $sheet->getStyle("A{$r}")->getAlignment()
-                        ->setHorizontal(Alignment::HORIZONTAL_LEFT)
+                        ->setHorizontal(Alignment::HORIZONTAL_CENTER)
                         ->setWrapText(false);
 
                     $dia  = $this->dailyFooterData[$r]['dia']  ?? 0.0;
@@ -324,10 +324,10 @@ class GeneralReportExport implements FromArray, WithEvents, WithColumnFormatting
                     $sheet->getStyle("C3:D{$this->lastRow}")->getAlignment()->setWrapText(true);
                 }
 
-                // Re-alinear footers diarios a la izquierda (se sobreescribió arriba)
+                // Footers diarios: centrados y sin wrap (el bloque de arriba activó wrap en C:D)
                 foreach ($this->dailyFooterRows as $r) {
                     $sheet->getStyle("A{$r}")->getAlignment()
-                        ->setHorizontal(Alignment::HORIZONTAL_LEFT)
+                        ->setHorizontal(Alignment::HORIZONTAL_CENTER)
                         ->setWrapText(false);
                 }
 
