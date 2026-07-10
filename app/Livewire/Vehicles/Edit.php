@@ -138,7 +138,15 @@ class Edit extends Component
             'affiliated_company' => 'nullable|string|max:255',
             'condition' => 'required|string|min:1|max:255',
             'owner_id' => 'nullable|exists:owners,id',
-            'driver_id' => 'nullable|exists:drivers,id',
+            'driver_id' => [
+                'nullable',
+                'exists:drivers,id',
+                function ($attribute, $value, $fail) {
+                    if ($conflict = $this->driverConflict()) {
+                        $fail("Este conductor ya está asignado al vehículo {$conflict->plate}.");
+                    }
+                },
+            ],
             'fuel' => 'nullable|string|max:255',
             'soat_date' => 'nullable|date',
             'technical_review' => 'nullable|date',
@@ -166,6 +174,31 @@ class Edit extends Component
         'fuel' => 'combustible',
         'detail' => 'detalles',
     ];
+
+    private function driverConflict(): ?Vehicle
+    {
+        if (! $this->driver_id) {
+            return null;
+        }
+
+        return Vehicle::where('driver_id', $this->driver_id)
+            ->where('id', '!=', $this->vehicle->id)
+            ->whereRaw("LOWER(TRIM(status)) = 'active'")
+            ->orderBy('sort_order')
+            ->first();
+    }
+
+    public function updatedDriverId()
+    {
+        if ($conflict = $this->driverConflict()) {
+            $driver = $this->listDrivers->firstWhere('id', (int) $this->driver_id);
+            $name = $driver->name ?? 'El conductor seleccionado';
+            $this->addError('driver_id', "Este conductor ya está asignado al vehículo {$conflict->plate}.");
+            $this->dispatch('errorAlert', ['message' => "{$name} ya está asignado al vehículo {$conflict->plate} (cod {$conflict->sort_order}). Cambia el conductor para poder guardar."]);
+        } else {
+            $this->resetErrorBag('driver_id');
+        }
+    }
 
     public function questionDelete($id): void
     {

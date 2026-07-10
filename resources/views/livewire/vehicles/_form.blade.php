@@ -190,7 +190,7 @@
     {{-- Conductor --}}
     <div class="col-6 col-md-3">
         <label for="driver_id" class="form-label">Conductor</label>
-        <select id="driver_id" class="form-select form-select-sm" wire:model="driver_id">
+        <select id="driver_id" class="form-select form-select-sm" wire:model.live="driver_id">
             <option value="">Seleccionar</option>
             @foreach($listDrivers as $driver)
                 <option value="{{ $driver->id }}">{{$loop->iteration}}.- {{ $driver->name }}</option>
