@@ -28,6 +28,26 @@ class Create extends Component
     public ?int $defaultHeadquarter = null;
     public ?int $selectedRoleId = null;
 
+    /** Copia del estado anterior de sucursales para detectar cuál se acaba de marcar */
+    public array $prevSelectedHeadquarters = [];
+
+    public function updatedSelectedHeadquarters(): void
+    {
+        $selected = array_values(array_map('intval', (array) $this->selectedHeadquarters));
+        $added = array_values(array_diff($selected, array_map('intval', $this->prevSelectedHeadquarters)));
+        $this->prevSelectedHeadquarters = $selected;
+
+        // Se desmarcó la sucursal primaria: queda pendiente hasta el próximo check
+        if ($this->defaultHeadquarter && !in_array((int)$this->defaultHeadquarter, $selected, true)) {
+            $this->defaultHeadquarter = null;
+        }
+
+        // Sin primaria y se acaba de marcar una sucursal: esa nueva es la primaria
+        if (!$this->defaultHeadquarter && $added) {
+            $this->defaultHeadquarter = (int) end($added);
+        }
+    }
+
     protected function rules()
     {
         return [
@@ -108,7 +128,7 @@ class Create extends Component
 
     public function clean(): void
     {
-        $this->reset(['name', 'username', 'pwd', 'email', 'document_type', 'document_number', 'phone', 'sort_order', 'selectedHeadquarters', 'defaultHeadquarter', 'selectedRoleId']);
+        $this->reset(['name', 'username', 'pwd', 'email', 'document_type', 'document_number', 'phone', 'sort_order', 'selectedHeadquarters', 'prevSelectedHeadquarters', 'defaultHeadquarter', 'selectedRoleId']);
     }
 
     public function render()

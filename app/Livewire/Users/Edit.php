@@ -57,10 +57,31 @@ class Edit extends Component
         $this->sort_order = $this->user->sort_order ?? 0;
 
         $this->selectedHeadquarters = $this->user->headquarters->pluck('id')->map(fn($v)=>(int)$v)->toArray();
+        $this->prevSelectedHeadquarters = $this->selectedHeadquarters;
         $this->defaultHeadquarter   = optional($this->user->headquarters->firstWhere('pivot.is_default', true))->id
             ?? $this->user->headquarter_id;
 
         $this->selectedRoleId = $this->user->roles()->value('id');
+    }
+
+    /** Copia del estado anterior de sucursales para detectar cuál se acaba de marcar */
+    public array $prevSelectedHeadquarters = [];
+
+    public function updatedSelectedHeadquarters(): void
+    {
+        $selected = array_values(array_map('intval', (array) $this->selectedHeadquarters));
+        $added = array_values(array_diff($selected, array_map('intval', $this->prevSelectedHeadquarters)));
+        $this->prevSelectedHeadquarters = $selected;
+
+        // Se desmarcó la sucursal primaria: queda pendiente hasta el próximo check
+        if ($this->defaultHeadquarter && !in_array((int)$this->defaultHeadquarter, $selected, true)) {
+            $this->defaultHeadquarter = null;
+        }
+
+        // Sin primaria y se acaba de marcar una sucursal: esa nueva es la primaria
+        if (!$this->defaultHeadquarter && $added) {
+            $this->defaultHeadquarter = (int) end($added);
+        }
     }
 
     protected function rules()

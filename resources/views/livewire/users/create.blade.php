@@ -161,12 +161,12 @@
                                     @endphp
                                     <label class="chip-hq {{ $isSelected ? 'is-selected' : '' }} {{ $isDefault ? 'is-default' : '' }}">
                                         <input class="form-check-input" type="checkbox"
-                                               value="{{ $h->id }}" wire:model="selectedHeadquarters">
+                                               value="{{ $h->id }}" wire:model.live="selectedHeadquarters">
                                         <span>{{ $h->name }}</span>
                                         <span class="hq-primary" title="Marcar como sede primaria">
                                             <input class="form-check-input" type="radio"
                                                    name="default_hq_add"
-                                                   value="{{ $h->id }}" wire:model="defaultHeadquarter">
+                                                   value="{{ $h->id }}" wire:model.live="defaultHeadquarter">
                                             <small>Primaria</small>
                                         </span>
                                     </label>
