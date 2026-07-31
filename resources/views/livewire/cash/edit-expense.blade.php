@@ -164,12 +164,16 @@
                         <div class="col-md-auto">
                             <div class="mb-3">
                                 <label class="form-label">Responsable</label>
-                                <select class="form-select form-select-sm" wire:model.defer="in_charge">
-                                    <option value="">-- Seleccionar --</option>
-                                    @foreach($users as $u)
-                                        <option value="{{ $u }}">{{ $u }}</option>
+                                <input type="text" class="form-control form-control-sm @error('in_charge') is-invalid @enderror"
+                                       list="in-charge-suggestions"
+                                       autocomplete="off"
+                                       placeholder="Nombre del responsable"
+                                       wire:model.defer="in_charge">
+                                <datalist id="in-charge-suggestions">
+                                    @foreach($inChargeSuggestions as $name)
+                                        <option value="{{ $name }}"></option>
                                     @endforeach
-                                </select>
+                                </datalist>
                                 @error('in_charge') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                         </div>

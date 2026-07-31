@@ -30,7 +30,7 @@ class CreateExpense extends Component
     public ?float  $total         = null;
     public string  $document_type = '';
     public string  $in_charge     = '';
-    public $users;
+    public array   $inChargeSuggestions = [];
 
     public $new_images = [];
     public $image_files = [];
@@ -51,12 +51,26 @@ class CreateExpense extends Component
     public function mount(): void
     {
         $this->date  = now()->toDateString();
-        $this->users = DB::table('users')->where('status', 'active')->pluck('username', 'id');
         $this->in_charge = auth()->user()?->username ?? '';
+        $this->loadInChargeSuggestions();
         $this->refreshConcepts();
         $this->loadControladores();
         $this->loadHeadquarters();
         $this->recomputeAmountSuggestions();
+    }
+
+    private function loadInChargeSuggestions(): void
+    {
+        $this->inChargeSuggestions = DB::table('expenses')
+            ->whereNotNull('in_charge')
+            ->where('in_charge', '!=', '')
+            ->select('in_charge', DB::raw('MAX(date) as last_used'), DB::raw('COUNT(*) as uses'))
+            ->groupBy('in_charge')
+            ->orderByDesc('last_used')
+            ->orderByDesc('uses')
+            ->limit(50)
+            ->pluck('in_charge')
+            ->all();
     }
 
     private function loadControladores(): void
