@@ -4,6 +4,7 @@ namespace App\Livewire\Cash;
 
 use App\Models\Expense;
 use App\Models\ExpenseImage;
+use App\Traits\LoadsExpenseSuggestions;
 use App\Traits\NormalizesDecimals;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -13,7 +14,7 @@ use Livewire\WithFileUploads;
 
 class CreateExpense extends Component
 {
-    use WithFileUploads, NormalizesDecimals;
+    use WithFileUploads, NormalizesDecimals, LoadsExpenseSuggestions;
 
     public string $expenseKind = 'Otros';
     public ?int   $concept_id  = null;
@@ -30,7 +31,6 @@ class CreateExpense extends Component
     public ?float  $total         = null;
     public string  $document_type = '';
     public string  $in_charge     = '';
-    public array   $inChargeSuggestions = [];
 
     public $new_images = [];
     public $image_files = [];
@@ -52,25 +52,11 @@ class CreateExpense extends Component
     {
         $this->date  = now()->toDateString();
         $this->in_charge = auth()->user()?->username ?? '';
-        $this->loadInChargeSuggestions();
+        $this->loadExpenseSuggestions();
         $this->refreshConcepts();
         $this->loadControladores();
         $this->loadHeadquarters();
         $this->recomputeAmountSuggestions();
-    }
-
-    private function loadInChargeSuggestions(): void
-    {
-        $this->inChargeSuggestions = DB::table('expenses')
-            ->whereNotNull('in_charge')
-            ->where('in_charge', '!=', '')
-            ->select('in_charge', DB::raw('MAX(date) as last_used'), DB::raw('COUNT(*) as uses'))
-            ->groupBy('in_charge')
-            ->orderByDesc('last_used')
-            ->orderByDesc('uses')
-            ->limit(50)
-            ->pluck('in_charge')
-            ->all();
     }
 
     private function loadControladores(): void

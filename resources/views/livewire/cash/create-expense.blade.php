@@ -101,8 +101,15 @@
                                     @error('reason_text') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 @else
                                     <input type="text" class="form-control form-control-sm @error('reason_text') is-invalid @enderror"
+                                           list="reason-suggestions"
+                                           autocomplete="off"
                                            placeholder="Ej: Combustible, Servicio, etc."
                                            wire:model.defer="reason_text">
+                                    <datalist id="reason-suggestions">
+                                        @foreach($reasonSuggestions as $name)
+                                            <option value="{{ $name }}"></option>
+                                        @endforeach
+                                    </datalist>
                                     @error('reason_text') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 @endif
                             </div>
@@ -121,10 +128,16 @@
                                     </select>
                                     @error('headquarter_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 @else
-                                    <input type="text" name="detail" autocomplete="on"
-                                           class="form-control form-control-sm @error('detail') is-invalid @enderror"
+                                    <input type="text" class="form-control form-control-sm @error('detail') is-invalid @enderror"
+                                           list="detail-suggestions"
+                                           autocomplete="off"
                                            placeholder="Motivo / Detalle"
                                            wire:model.defer="detail">
+                                    <datalist id="detail-suggestions">
+                                        @foreach($detailSuggestions as $name)
+                                            <option value="{{ $name }}"></option>
+                                        @endforeach
+                                    </datalist>
                                     @error('detail') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 @endif
                             </div>
@@ -162,8 +175,15 @@
                             <div class="mb-3">
                                 <label class="form-label">T. Comprobante</label>
                                 <input type="text" class="form-control form-control-sm @error('document_type') is-invalid @enderror"
+                                       list="document-type-suggestions"
+                                       autocomplete="off"
                                        placeholder="Factura, Boleta, etc."
                                        wire:model.defer="document_type">
+                                <datalist id="document-type-suggestions">
+                                    @foreach($documentTypeSuggestions as $name)
+                                        <option value="{{ $name }}"></option>
+                                    @endforeach
+                                </datalist>
                                 @error('document_type') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                         </div>
