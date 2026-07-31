@@ -52,7 +52,7 @@ class AddPayment extends Component
     {
         $rules = [
             'plate' => ['required','string','min:6','max:20'],
-            'serie'               => ['nullable','string','max:50'],
+            'serie'               => ['required','string','max:50'],
             'date_register'       => ['required','date'],
             'date_payment'        => ['nullable','date'],
             'type_form'           => ['required','in:PAGO,DEUDA,RETRASO'],
@@ -94,6 +94,7 @@ class AddPayment extends Component
     {
         return [
             'plate.required'               => 'La placa es obligatoria.',
+            'serie.required'               => 'La serie es obligatoria.',
             'date_register.required'       => 'La fecha de registro es obligatoria.',
             'type_form.required'           => 'El tipo es obligatorio.',
             'type_form.in'                 => 'Tipo inválido.',
@@ -472,6 +473,7 @@ class AddPayment extends Component
         }
 
         // Calcular auxiliares + validar
+        $this->serie = trim((string) $this->serie) ?: null;
         $this->recalcPendingDebt();
         $this->prefillAmountFromCost();
         $this->normalizeDecimalProps(['amount']);
