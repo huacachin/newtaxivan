@@ -11,9 +11,11 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class RepEstDracoBaseExport implements FromArray, WithEvents, WithHeadings, WithStyles, WithTitle
@@ -26,6 +28,10 @@ class RepEstDracoBaseExport implements FromArray, WithEvents, WithHeadings, With
     protected string $userModelClass = \App\Models\User::class;
 
     private int $mainRowCount = 0;  // filas del bloque principal (tabla grande)
+
+    private ?int $resolvedLastMonth = null; // último mes con información (memoizado)
+
+    private ?array $roleIdsCache = null;
 
     private int $summaryHeadRow = 0;  // fila (en dataset) del encabezado de mini tabla
 
@@ -76,6 +82,11 @@ class RepEstDracoBaseExport implements FromArray, WithEvents, WithHeadings, With
 
         // ===== Roles / usuarios =====
         [$controllerIds, $adminIds] = $this->loadUserIdsByRole($this->year);
+
+        // ===== Meses solo hasta el último con información =====
+        $lastMonth = $this->lastMonthWithData();
+        $colCount = $lastMonth + 3; // CONTROLADOR + PARADERO + meses + TOTAL
+        $pad = fn (array $row) => array_pad($row, $colCount, '');
 
         // ===== BASE por mes =====
         $baseMonthly = array_fill(1, 12, 0.0);
@@ -186,7 +197,7 @@ class RepEstDracoBaseExport implements FromArray, WithEvents, WithHeadings, With
         $combByMonth = [];
         $grandComb = 0.0;
 
-        for ($i = 1; $i <= 12; $i++) {
+        for ($i = 1; $i <= $lastMonth; $i++) {
             $combByMonth[$i] = ($totByMonth[$i] ?? 0) + ($baseMonthly[$i] ?? 0);
             $grandComb += $combByMonth[$i];
         }
@@ -198,7 +209,7 @@ class RepEstDracoBaseExport implements FromArray, WithEvents, WithHeadings, With
         $rowBase = ['OFICINA', 'BASE'];
         $tBase = 0.0;
 
-        for ($m = 1; $m <= 12; $m++) {
+        for ($m = 1; $m <= $lastMonth; $m++) {
             $v = (float) ($baseMonthly[$m] ?? 0);
             $tBase += $v;
             $rowBase[] = $v;
@@ -215,7 +226,7 @@ class RepEstDracoBaseExport implements FromArray, WithEvents, WithHeadings, With
                     $line = [$userName, $row['hq']];
                     $tTotal = 0.0;
 
-                    foreach (range(1, 12) as $m) {
+                    foreach (range(1, $lastMonth) as $m) {
                         $v = (float) ($row['m'][$m] ?? 0);
                         $tTotal += $v;
                         $line[] = $v;
@@ -227,12 +238,12 @@ class RepEstDracoBaseExport implements FromArray, WithEvents, WithHeadings, With
             }
         } else {
             // Caso sin data DRACO
-            $data[] = ['__EMPTY__', '', '', '', '', '', '', '', '', '', '', '', '', '', ''];
+            $data[] = $pad(['__EMPTY__']);
         }
 
         // 3) Fila TOTAL GENERAL (DRACO + BASE)
         $footer = ['TOTAL GENERAL (DRACO + BASE)', ''];
-        for ($m = 1; $m <= 12; $m++) {
+        for ($m = 1; $m <= $lastMonth; $m++) {
             $footer[] = (float) $combByMonth[$m];
         }
         $footer[] = (float) $grandComb;
@@ -243,13 +254,13 @@ class RepEstDracoBaseExport implements FromArray, WithEvents, WithHeadings, With
 
         // ===== Mini tabla: Resumen por Sucursal =====
         // fila separador
-        $data[] = ['', '', '', '', '', '', '', '', '', '', '', '', '', '', ''];
+        $data[] = $pad([]);
 
         // índice (1-based en dataset) donde arranca el encabezado de mini tabla
         $this->summaryHeadRow = count($data) + 1;
 
         // encabezado mini tabla
-        $data[] = ['SUCURSAL', 'TOTAL', '', '', '', '', '', '', '', '', '', '', '', '', ''];
+        $data[] = $pad(['SUCURSAL', 'TOTAL']);
 
         $sumHQ = 0.0;
 
@@ -266,7 +277,7 @@ class RepEstDracoBaseExport implements FromArray, WithEvents, WithHeadings, With
 
             foreach ($byHQ as $h) {
                 $sumHQ += (float) $h->s;
-                $data[] = [(string) $h->hq_name, (float) $h->s, '', '', '', '', '', '', '', '', '', '', '', '', ''];
+                $data[] = $pad([(string) $h->hq_name, (float) $h->s]);
             }
         }
 
@@ -281,14 +292,14 @@ class RepEstDracoBaseExport implements FromArray, WithEvents, WithHeadings, With
                 ->sum('e.total');
 
             if ($adminVacuumTotal > 0) {
-                $data[] = ['Sucursal vacía', (float) $adminVacuumTotal, '', '', '', '', '', '', '', '', '', '', '', '', ''];
+                $data[] = $pad(['Sucursal vacía', (float) $adminVacuumTotal]);
                 $sumHQ += $adminVacuumTotal;
             }
         }
 
         // BASE y TOTAL del resumen
-        $data[] = ['BASE', (float) $grandBase, '', '', '', '', '', '', '', '', '', '', '', '', ''];
-        $data[] = ['__RSTOTAL__', (float) ($sumHQ + $grandBase), '', '', '', '', '', '', '', '', '', '', '', '', ''];
+        $data[] = $pad(['BASE', (float) $grandBase]);
+        $data[] = $pad(['__RSTOTAL__', (float) ($sumHQ + $grandBase)]);
 
         $this->summaryLastRow = count($data);
 
@@ -299,7 +310,7 @@ class RepEstDracoBaseExport implements FromArray, WithEvents, WithHeadings, With
     {
         $head = ['CONTROLADOR', 'PARADERO'];
 
-        foreach (range(1, 12) as $m) {
+        foreach (range(1, $this->lastMonthWithData()) as $m) {
             $head[] = $this->months[$m];
         }
 
@@ -344,7 +355,9 @@ class RepEstDracoBaseExport implements FromArray, WithEvents, WithHeadings, With
                 $headerRow = 2;
                 $dataStartRow = 3;
                 $lastRow = $dataStartRow + $this->summaryLastRow - 1;
-                $lastCol = 'O'; // A..O (15 columnas)
+                $monthCount = $this->lastMonthWithData();
+                $totalColIdx = $monthCount + 3; // A,B + meses + TOTAL
+                $lastCol = Coordinate::stringFromColumnIndex($totalColIdx);
 
                 // ===== Título =====
                 $ws->setCellValue('A1', "REPORTE ESTADÍSTICO DRACO {$this->year}");
@@ -372,21 +385,22 @@ class RepEstDracoBaseExport implements FromArray, WithEvents, WithHeadings, With
                 // $ws->freezePane(...); // removido
 
                 // ===== Anchos fijos =====
-                foreach (range('A', 'O') as $c) {
+                foreach (range('A', $lastCol) as $c) {
                     $ws->getColumnDimension($c)->setAutoSize(false);
                 }
                 $ws->getColumnDimension('A')->setWidth(18.0);
                 $ws->getColumnDimension('B')->setWidth(18.0);
                 // Ancho por mes segun el largo del nombre (SEPTIEMBRE, NOVIEMBRE, etc.)
-                foreach (range('C', 'N') as $i => $c) {
-                    $name = $this->months[$i + 1];
-                    $ws->getColumnDimension($c)->setWidth(max(9.0, mb_strlen($name) * 1.3 + 1));
+                for ($m = 1; $m <= $monthCount; $m++) {
+                    $name = $this->months[$m];
+                    $ws->getColumnDimension(Coordinate::stringFromColumnIndex($m + 2))
+                        ->setWidth(max(9.0, mb_strlen($name) * 1.3 + 1));
                 }
-                $ws->getColumnDimension('O')->setWidth(10.5);
+                $ws->getColumnDimension($lastCol)->setWidth(10.5);
 
-                // ===== Ocultar columnas vacías (P en adelante) =====
-                foreach (range('P', 'Z') as $c) {
-                    $ws->getColumnDimension($c)->setVisible(false);
+                // ===== Ocultar columnas vacías (después del TOTAL) =====
+                for ($i = $totalColIdx + 1; $i <= 26; $i++) {
+                    $ws->getColumnDimension(Coordinate::stringFromColumnIndex($i))->setVisible(false);
                 }
 
                 // ===== Bordes datos: dotted+solid para área numérica (C-O), thin para A-B =====
@@ -396,7 +410,7 @@ class RepEstDracoBaseExport implements FromArray, WithEvents, WithHeadings, With
                     $ws->getStyle("A{$dataStartRow}:B{$mainLastRow}")->applyFromArray([
                         'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $black]]],
                     ]);
-                    $ws->getStyle("C{$dataStartRow}:O{$mainLastRow}")->applyFromArray([
+                    $ws->getStyle("C{$dataStartRow}:{$lastCol}{$mainLastRow}")->applyFromArray([
                         'borders' => [
                             'allBorders' => ['borderStyle' => Border::BORDER_DOTTED, 'color' => ['argb' => $gray]],
                             'vertical' => ['borderStyle' => Border::BORDER_THIN,   'color' => ['argb' => $black]],
@@ -408,13 +422,13 @@ class RepEstDracoBaseExport implements FromArray, WithEvents, WithHeadings, With
 
                 // ===== Alineaciones básicas
                 if ($mainLastRow >= $dataStartRow) {
-                    $ws->getStyle("A{$dataStartRow}:O{$mainLastRow}")
+                    $ws->getStyle("A{$dataStartRow}:{$lastCol}{$mainLastRow}")
                         ->getAlignment()
                         ->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 }
 
                 // ===== Formato moneda para meses + total
-                $ws->getStyle("C{$dataStartRow}:O{$mainLastRow}")
+                $ws->getStyle("C{$dataStartRow}:{$lastCol}{$mainLastRow}")
                     ->getNumberFormat()->setFormatCode('#,##0.00');
 
                 // ===== Forzar vacíos -> 0 en la tabla principal (C..O)
@@ -427,7 +441,7 @@ class RepEstDracoBaseExport implements FromArray, WithEvents, WithHeadings, With
                         continue;
                     }
 
-                    for ($col = 'C'; $col <= 'O'; $col++) {
+                    for ($col = 'C'; $col <= $lastCol; $col++) {
                         $cell = $ws->getCell("{$col}{$r}");
                         $val = $cell->getValue();
 
@@ -592,8 +606,8 @@ class RepEstDracoBaseExport implements FromArray, WithEvents, WithHeadings, With
                             ->getAlignment()
                             ->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-                        // Asegura 0 en vacíos C..O
-                        for ($col = 'C'; $col <= 'O'; $col++) {
+                        // Asegura 0 en vacíos C..TOTAL
+                        for ($col = 'C'; $col <= $lastCol; $col++) {
                             $cell = $ws->getCell("{$col}{$r}");
                             if ($cell->getValue() === '' || $cell->getValue() === null) {
                                 $cell->setValue(0);
@@ -676,8 +690,53 @@ class RepEstDracoBaseExport implements FromArray, WithEvents, WithHeadings, With
                         }
                     }
                 }
+
+                // ===== Impresión: una sola hoja (horizontal, sin márgenes, escala 80) =====
+                $ws->getPageSetup()
+                    ->setOrientation(PageSetup::ORIENTATION_LANDSCAPE)
+                    ->setPaperSize(PageSetup::PAPERSIZE_A4)
+                    ->setScale(80)
+                    ->setHorizontalCentered(true)
+                    ->setPrintArea("A1:{$lastCol}{$lastRow}");
+                $ws->getPageMargins()
+                    ->setTop(0)->setRight(0)->setBottom(0)->setLeft(0)
+                    ->setHeader(0)->setFooter(0);
             },
         ];
+    }
+
+    /**
+     * Último mes del año con información (BASE o DRACO de controladores).
+     * Si el año no tiene data, devuelve 12 (columnas completas).
+     */
+    private function lastMonthWithData(): int
+    {
+        if ($this->resolvedLastMonth !== null) {
+            return $this->resolvedLastMonth;
+        }
+
+        $last = 0;
+
+        if (Schema::hasTable('expenses')) {
+            [$controllerIds] = $this->loadUserIdsByRole($this->year);
+
+            $last = (int) DB::table('expenses')
+                ->whereYear($this->dateColumn, $this->year)
+                ->where('reason', 'like', '%BASE%')
+                ->max(DB::raw('MONTH('.$this->dateColumn.')'));
+
+            if (! empty($controllerIds)) {
+                $draco = (int) DB::table('expenses')
+                    ->whereYear($this->dateColumn, $this->year)
+                    ->where('reason', 'like', '%DRACO%')
+                    ->whereIn('user_id', $controllerIds)
+                    ->max(DB::raw('MONTH('.$this->dateColumn.')'));
+
+                $last = max($last, $draco);
+            }
+        }
+
+        return $this->resolvedLastMonth = ($last >= 1 && $last <= 12) ? $last : 12;
     }
 
     /**
@@ -687,12 +746,16 @@ class RepEstDracoBaseExport implements FromArray, WithEvents, WithHeadings, With
      */
     private function loadUserIdsByRole(int $year): array
     {
+        if ($this->roleIdsCache !== null) {
+            return $this->roleIdsCache;
+        }
+
         if (
             ! Schema::hasTable('roles') ||
             ! Schema::hasTable('model_has_roles') ||
             ! Schema::hasTable('users')
         ) {
-            return [[], []];
+            return $this->roleIdsCache = [[], []];
         }
 
         $onlyActive = ($year === (int) Carbon::now()->year);
@@ -718,6 +781,6 @@ class RepEstDracoBaseExport implements FromArray, WithEvents, WithHeadings, With
         $controllers = $fetch(['controller', 'controlador']);
         $admins = $fetch(['admin', 'administrator', 'administrador']);
 
-        return [$controllers, $admins];
+        return $this->roleIdsCache = [$controllers, $admins];
     }
 }
