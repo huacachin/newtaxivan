@@ -14,6 +14,7 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
+use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
 
 class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray, Responsable, WithTitle
 {
@@ -410,6 +411,17 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
                         $s->getStyle("{$colLet}{$r}")->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
                     }
                 }
+
+                // ===== Impresión: una sola hoja (vertical, sin márgenes, escala 80) =====
+                $s->getPageSetup()
+                    ->setOrientation(PageSetup::ORIENTATION_PORTRAIT)
+                    ->setPaperSize(PageSetup::PAPERSIZE_A4)
+                    ->setScale(80)
+                    ->setHorizontalCentered(true)
+                    ->setPrintArea("A1:P{$endComp}");
+                $s->getPageMargins()
+                    ->setTop(0)->setRight(0)->setBottom(0)->setLeft(0)
+                    ->setHeader(0)->setFooter(0);
             },
         ];
     }
