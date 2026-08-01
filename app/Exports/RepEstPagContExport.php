@@ -28,6 +28,7 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
     private array $comparativo;
     private array $comparativoTotales;
     private int $year;
+    private int $lastMonth = 12; // último mes con información
 
     // 16 columnas: A..P
     private array $monthLabels = [
@@ -49,6 +50,45 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
         $this->comparativo        = $comparativo;
         $this->comparativoTotales = $comparativoTotales;
         $this->year               = $year;
+        $this->lastMonth          = $this->resolveLastMonth();
+    }
+
+    /** Último mes con información en cualquiera de los cuadros; 12 si no hay data */
+    private function resolveLastMonth(): int
+    {
+        $last = 0;
+
+        $scan = function (array $byMonth) use (&$last) {
+            for ($m = 1; $m <= 12; $m++) {
+                if ($m > $last && abs((float) ($byMonth[$m] ?? 0)) > 0.0001) {
+                    $last = $m;
+                }
+            }
+        };
+
+        foreach ($this->rows as $block) {
+            foreach ($block['paraderos'] ?? [] as $p) {
+                $scan($p['ingresos_mes'] ?? []);
+            }
+            $scan($block['egreso_pago'] ?? []);
+            $scan($block['egreso_draco'] ?? []);
+            $scan($block['saldos'] ?? []);
+        }
+        $scan($this->totalesSaldoMes);
+
+        foreach ($this->comparativo as $r) {
+            $m = (int) ($r['item'] ?? 0);
+            if ($m >= 1 && $m <= 12 && $m > $last) {
+                foreach (['a_h', 'b_h', 'a_v', 'b_v'] as $k) {
+                    if (abs((float) ($r[$k] ?? 0)) > 0.0001) {
+                        $last = $m;
+                        break;
+                    }
+                }
+            }
+        }
+
+        return $last ?: 12;
     }
 
     /** Forzamos creación de hoja para que se dispare AfterSheet */
@@ -85,7 +125,8 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
                 $s->getDefaultRowDimension()->setRowHeight(15);
 
                 $row = 1;
-                $lastMainCol = 'P'; // A..P
+                $c1TotalIdx  = 3 + $this->lastMonth + 1; // A..C + meses + TOTAL
+                $lastMainCol = Coordinate::stringFromColumnIndex($c1TotalIdx); // cuadro 1
 
                 // Colores
                 $blue    = '2874A6';
@@ -121,11 +162,11 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
                 $s->mergeCells("B{$row}:C{$row}");
                 $s->setCellValue("B{$row}", 'PARADERO');
                 $col = 4; // D
-                foreach ($this->monthLabels as $lab) {
+                foreach (array_slice($this->monthLabels, 0, $this->lastMonth, true) as $lab) {
                     $s->setCellValueByColumnAndRow($col, $row, $lab);
                     $col++;
                 }
-                $s->setCellValue("P{$row}", 'TOTAL');
+                $s->setCellValue("{$lastMainCol}{$row}", 'TOTAL');
                 $s->getStyle("A{$row}:{$lastMainCol}{$row}")->applyFromArray([
                     'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $blue]],
                     'font'      => ['bold' => true, 'color' => ['rgb' => $white]],
@@ -152,7 +193,7 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
                         $paintBlue("B{$row}");
                         $paintBlue("C{$row}");
 
-                        for ($m=1; $m<=12; $m++) {
+                        for ($m=1; $m<=$this->lastMonth; $m++) {
                             $val = (float)($p['ingresos_mes'][$m] ?? 0);
                             $s->setCellValueByColumnAndRow(3+$m, $row, $val);
                             if ($val < 0) {
@@ -163,9 +204,9 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
                             }
                         }
                         $totalP = (float)$p['total'];
-                        $s->setCellValue("P{$row}", $totalP);
+                        $s->setCellValue("{$lastMainCol}{$row}", $totalP);
                         if ($totalP < 0) {
-                            $s->getStyle("P{$row}")->applyFromArray([
+                            $s->getStyle("{$lastMainCol}{$row}")->applyFromArray([
                                 'font' => ['bold' => true, 'color' => ['rgb' => $red]],
                             ]);
                         }
@@ -176,11 +217,11 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
                     $s->mergeCells("B{$row}:C{$row}");
                     $s->setCellValue("B{$row}", 'Egreso Pago');
                     $paintBlue("B{$row}:C{$row}");
-                    for ($m=1; $m<=12; $m++) {
+                    for ($m=1; $m<=$this->lastMonth; $m++) {
                         $s->setCellValueByColumnAndRow(3+$m, $row, (float)($block['egreso_pago'][$m] ?? 0));
                     }
-                    $s->setCellValue("P{$row}", (float)$block['tot_egr_pago']);
-                    $s->getStyle("D{$row}:P{$row}")->applyFromArray([
+                    $s->setCellValue("{$lastMainCol}{$row}", (float)$block['tot_egr_pago']);
+                    $s->getStyle("D{$row}:{$lastMainCol}{$row}")->applyFromArray([
                         'font' => ['bold' => true, 'color' => ['rgb' => $red]],
                     ]);
                     $row++;
@@ -189,11 +230,11 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
                     $s->mergeCells("B{$row}:C{$row}");
                     $s->setCellValue("B{$row}", 'Egreso Draco');
                     $paintBlue("B{$row}:C{$row}");
-                    for ($m=1; $m<=12; $m++) {
+                    for ($m=1; $m<=$this->lastMonth; $m++) {
                         $s->setCellValueByColumnAndRow(3+$m, $row, (float)($block['egreso_draco'][$m] ?? 0));
                     }
-                    $s->setCellValue("P{$row}", (float)$block['tot_egr_draco']);
-                    $s->getStyle("D{$row}:P{$row}")->applyFromArray([
+                    $s->setCellValue("{$lastMainCol}{$row}", (float)$block['tot_egr_draco']);
+                    $s->getStyle("D{$row}:{$lastMainCol}{$row}")->applyFromArray([
                         'font' => ['bold' => true, 'color' => ['rgb' => $red]],
                     ]);
                     $row++;
@@ -203,7 +244,7 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
                     $s->mergeCells("B{$row}:C{$row}");
                     $s->setCellValue("B{$row}", 'Saldo');
                     $paintBlue("B{$row}:C{$row}");
-                    for ($m=1; $m<=12; $m++) {
+                    for ($m=1; $m<=$this->lastMonth; $m++) {
                         $val = (float)($block['saldos'][$m] ?? 0);
                         $s->setCellValueByColumnAndRow(3+$m, $row, $val);
                         $col = Coordinate::stringFromColumnIndex(3+$m);
@@ -212,8 +253,8 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
                         ]);
                     }
                     $totSaldo = (float)$block['tot_saldo'];
-                    $s->setCellValue("P{$row}", $totSaldo);
-                    $s->getStyle("P{$row}")->applyFromArray([
+                    $s->setCellValue("{$lastMainCol}{$row}", $totSaldo);
+                    $s->getStyle("{$lastMainCol}{$row}")->applyFromArray([
                         'font' => ['bold' => true, 'color' => ['rgb' => $totSaldo < 0 ? $red : $black]],
                     ]);
                     $row++;
@@ -228,11 +269,11 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
                 // SALDO A FAVOR (footer — celeste)
                 $s->mergeCells("A{$row}:C{$row}");
                 $s->setCellValue("A{$row}", 'SALDO A FAVOR');
-                for ($m=1; $m<=12; $m++) {
+                for ($m=1; $m<=$this->lastMonth; $m++) {
                     $s->setCellValueByColumnAndRow(3+$m, $row, (float)($this->totalesSaldoMes[$m] ?? 0));
                 }
-                $s->setCellValue("P{$row}", (float)$this->totalSaldoFavor);
-                $s->getStyle("A{$row}:P{$row}")->applyFromArray([
+                $s->setCellValue("{$lastMainCol}{$row}", (float)$this->totalSaldoFavor);
+                $s->getStyle("A{$row}:{$lastMainCol}{$row}")->applyFromArray([
                     'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $celeste]],
                     'font'      => ['bold' => true, 'color' => ['rgb' => $black]],
                     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
@@ -244,7 +285,7 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
 
                 // Bordes datos cuadro 1: punteado horizontal + sólido vertical
                 if ($startTable <= $endTable - 1) {
-                    $s->getStyle("A{$startTable}:P" . ($endTable - 1))->applyFromArray([
+                    $s->getStyle("A{$startTable}:{$lastMainCol}" . ($endTable - 1))->applyFromArray([
                         'borders' => [
                             'allBorders' => ['borderStyle' => Border::BORDER_DOTTED, 'color' => ['rgb' => $gray]],
                             'vertical'   => ['borderStyle' => Border::BORDER_THIN,   'color' => ['rgb' => $black]],
@@ -255,16 +296,16 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
                     ]);
                 }
                 // Centrado cuadro 1
-                $s->getStyle("A{$startTable}:P{$endTable}")->getAlignment()
+                $s->getStyle("A{$startTable}:{$lastMainCol}{$endTable}")->getAlignment()
                     ->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 // Re-outline encabezado cuadro 1
-                $s->getStyle("A{$rowHeader}:P{$rowHeader}")->applyFromArray([
+                $s->getStyle("A{$rowHeader}:{$lastMainCol}{$rowHeader}")->applyFromArray([
                     'borders' => ['outline' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => $black]]],
                 ]);
 
                 // Rellenar celdas vacías con 0 (cuadro 1)
                 for ($r=$startTable; $r<=$endTable; $r++) {
-                    for ($c=4; $c<=16; $c++) {
+                    for ($c=4; $c<=$c1TotalIdx; $c++) {
                         $coord = Coordinate::stringFromColumnIndex($c).$r;
                         $val = $s->getCell($coord)->getValue();
                         if ($val === null || $val === '') { $s->setCellValue($coord, 0); }
@@ -333,6 +374,9 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
                 $startComp = $row;
 
                 foreach ($this->comparativo as $cRow) {
+                    if ((int) ($cRow['item'] ?? 0) > $this->lastMonth) {
+                        continue;
+                    }
                     $s->setCellValue("A{$row}", $cRow['item']);
                     $s->setCellValue("B{$row}", $cRow['mes']);
 
@@ -401,7 +445,7 @@ class RepEstPagContExport implements WithEvents, WithColumnFormatting, FromArray
 
                 // Formatos numéricos (2 decimales)
                 for ($r=$startTable; $r<=$endTable; $r++) {
-                    for ($c=4; $c<=16; $c++) {
+                    for ($c=4; $c<=$c1TotalIdx; $c++) {
                         $coord = Coordinate::stringFromColumnIndex($c).$r;
                         $s->getStyle($coord)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
                     }
