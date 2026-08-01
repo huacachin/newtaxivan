@@ -691,9 +691,9 @@ class RepEstDracoBaseExport implements FromArray, WithEvents, WithHeadings, With
                     }
                 }
 
-                // ===== Impresión: una sola hoja (horizontal, sin márgenes, escala 80) =====
+                // ===== Impresión: una sola hoja (vertical, sin márgenes, escala 80) =====
                 $ws->getPageSetup()
-                    ->setOrientation(PageSetup::ORIENTATION_LANDSCAPE)
+                    ->setOrientation(PageSetup::ORIENTATION_PORTRAIT)
                     ->setPaperSize(PageSetup::PAPERSIZE_A4)
                     ->setScale(80)
                     ->setHorizontalCentered(true)
