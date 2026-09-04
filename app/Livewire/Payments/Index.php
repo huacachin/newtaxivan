@@ -23,6 +23,15 @@ class Index extends Component
     public string $search = '';
     #[Url]
     public string $filter = '';          // 1=Placa, 2=Usuario, 3=Serie
+
+    /**
+     * Historial del buscador servido desde la BD. Se calculan las tres listas a la vez
+     * porque el filtro viaja diferido con @entangle: el cliente elige cual mostrar.
+     * @var array<int,string>
+     */
+    public array $platePaySuggestions = [];
+    public array $userPaySuggestions  = [];
+    public array $seriePaySuggestions = [];
     #[Url(as: 'from')]
     public string $date_start = '';
     #[Url(as: 'to')]
@@ -160,6 +169,67 @@ class Index extends Component
         $this->resetPage();
     }
 
+    /**
+     * Historial del buscador. Respeta el mismo recorte por usuario que el listado:
+     * quien no es admin solo ve placas, usuarios y series de sus propios pagos.
+     * Se calcula una vez por carga de pagina, no en cada render.
+     */
+    private function loadSearchSuggestions(): void
+    {
+        $since   = now(config('app.timezone', 'America/Lima'))->subDays(90)->toDateString();
+        $isAdmin = $this->isAdmin();
+        $uid     = Auth::id();
+
+        $scoped = function (string $table) use ($since, $isAdmin, $uid) {
+            $q = DB::table($table)->where('p.date_register', '>=', $since);
+            if (!$isAdmin) {
+                $q->where('p.user_id', $uid);
+            }
+
+            return $q;
+        };
+
+        // La busqueda por placa mira legacy_plate y tambien la placa del vehiculo,
+        // asi que la sugerencia une ambas fuentes.
+        $legacy = $scoped('payments as p')
+            ->whereNotNull('p.legacy_plate')->where('p.legacy_plate', '!=', '')
+            ->select('p.legacy_plate as v', DB::raw('COUNT(*) as c'))
+            ->groupBy('p.legacy_plate')->orderByDesc('c')->limit(40)->pluck('c', 'v');
+
+        $fleet = $scoped('payments as p')
+            ->join('vehicles as veh', 'veh.id', '=', 'p.vehicle_id')
+            ->whereNotNull('veh.plate')->where('veh.plate', '!=', '')
+            ->select('veh.plate as v', DB::raw('COUNT(*) as c'))
+            ->groupBy('veh.plate')->orderByDesc('c')->limit(40)->pluck('c', 'v');
+
+        $byPlate = [];
+        foreach ([$legacy, $fleet] as $set) {
+            foreach ($set as $plate => $count) {
+                $key = strtoupper(trim((string) $plate));
+                if ($key === '') {
+                    continue;
+                }
+                $byPlate[$key] = ($byPlate[$key] ?? 0) + (int) $count;
+            }
+        }
+        arsort($byPlate);
+        $this->platePaySuggestions = array_map('strval', array_slice(array_keys($byPlate), 0, 30));
+
+        // El filtro "Usuario" busca por users.name, no por username.
+        $this->userPaySuggestions = $scoped('payments as p')
+            ->join('users as u', 'u.id', '=', 'p.user_id')
+            ->whereNotNull('u.name')->where('u.name', '!=', '')
+            ->select('u.name as v', DB::raw('COUNT(*) as c'))
+            ->groupBy('u.name')->orderByDesc('c')->limit(30)
+            ->pluck('v')->map(fn ($x) => (string) $x)->values()->all();
+
+        $this->seriePaySuggestions = $scoped('payments as p')
+            ->whereNotNull('p.serie')->where('p.serie', '!=', '')
+            ->select('p.serie as v', DB::raw('MAX(p.date_register) as last_used'))
+            ->groupBy('p.serie')->orderByDesc('last_used')->limit(30)
+            ->pluck('v')->map(fn ($x) => (string) $x)->values()->all();
+    }
+
     public function updatedHeadquarterId(): void
     {
         $this->resetPage();
@@ -227,6 +297,8 @@ class Index extends Component
 
         // === INTEGRACIÓN ROLES/SEDES: catálogo de sedes para filtros y formularios
         $this->loadUserHeadquarters();
+
+        $this->loadSearchSuggestions();
         if ($this->isAdmin()) {
             $this->headquarters = Headquarter::where('status','active')
                 ->orderBy('name')->get(['id','name']);     // ✅ modelos Eloquent (no arrays)

@@ -108,6 +108,11 @@
                                        class="form-control form-control-sm"
                                        :placeholder="filterType == 1 ? 'Buscar por placa...' : (filterType == 2 ? 'Buscar por usuario...' : 'Buscar...')"
                                        aria-label="Buscar"
+                                       @focus="show()"
+                                       @click="show()"
+                                       @input="show()"
+                                       @keydown="onKey($event)"
+                                       @blur="onBlur()"
                                        wire:model.change="searchText">
                                 <ul class="txt-suggest__list" x-ref="list" role="listbox"
                                     x-show="open && items.length" x-cloak>

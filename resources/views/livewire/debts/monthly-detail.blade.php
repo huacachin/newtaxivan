@@ -168,6 +168,11 @@
                                          class="form-control form-control-sm @error('detailInput') is-invalid @enderror"
                                          style="background-color: yellow;"
                                          autocomplete="off"
+                                         @focus="show()"
+                                         @click="show()"
+                                         @input="show()"
+                                         @keydown="onKey($event)"
+                                         @blur="onBlur()"
                                          wire:model="detailInput"
                                          placeholder="Motivo / detalle">
                                   <ul class="txt-suggest__list" x-ref="list" role="listbox"

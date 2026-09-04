@@ -716,49 +716,52 @@ document.addEventListener('alpine:init', function () {
             items: [],
             active: -1,
             lastQuery: null,
+            closeTimer: null,
 
+            /**
+             * OJO: aqui NO se enganchan listeners con addEventListener. Livewire vuelve a
+             * inicializar el componente Alpine despues de cada commit y crea un estado nuevo,
+             * pero los listeners viejos seguirian apuntando al estado anterior: la lista dejaba
+             * de abrirse para siempre en cuanto la pantalla hacia una peticion. Los eventos se
+             * declaran en la vista (@focus, @click, @input, @keydown, @blur), que Alpine vuelve
+             * a enlazar en cada init.
+             */
             init: function () {
-                var self  = this;
-                var input = self.$refs.input;
-                if (!input) return;
-
-                // El historial lo pintamos nosotros: apagar el autofill del navegador
-                input.setAttribute('autocomplete', 'off');
-
-                input.addEventListener('focus', function () { self.show(); });
-                input.addEventListener('click', function () { self.show(); });
-                input.addEventListener('input', function () { self.show(); });
-
-                input.addEventListener('keydown', function (e) {
-                    if (e.key === 'ArrowDown') {
-                        e.preventDefault();
-                        if (!self.open) { self.show(); } else { self.move(1); }
-                    } else if (e.key === 'ArrowUp') {
-                        e.preventDefault();
-                        self.move(-1);
-                    } else if (e.key === 'Enter') {
-                        if (self.open && self.active >= 0 && self.items[self.active]) {
-                            e.preventDefault();
-                            self.pick(self.items[self.active].value);
-                        }
-                    } else if (e.key === 'Escape' || e.key === 'Tab') {
-                        self.close();
-                    }
-                });
-
-                input.addEventListener('blur', function () {
-                    self.record(input.value);
-                    // Pequeno retardo: si el blur fue por tocar un item, que llegue el click
-                    setTimeout(function () { self.close(); }, 150);
-                });
-
-                // Refrescar fuentes server cuando Livewire commitea (p. ej. tras guardar)
-                if (window.Livewire && Livewire.hook) {
-                    Livewire.hook('commit', function (_ref) {
-                        var succeed = _ref.succeed;
-                        succeed(function () { if (self.open) self.refresh(); });
-                    });
+                var input = this.$refs.input;
+                // El historial lo pintamos nosotros: apagar el autofill del navegador.
+                if (input) {
+                    input.setAttribute('autocomplete', 'off');
                 }
+            },
+
+            onKey: function (e) {
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (!this.open) { this.show(); } else { this.move(1); }
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    this.move(-1);
+                } else if (e.key === 'Enter') {
+                    if (this.open && this.active >= 0 && this.items[this.active]) {
+                        e.preventDefault();
+                        this.pick(this.items[this.active].value);
+                    } else {
+                        // Sin item resaltado se deja pasar el Enter: en un formulario envia,
+                        // y en un buscador con wire:model.change dispara la busqueda.
+                        this.close();
+                    }
+                } else if (e.key === 'Escape' || e.key === 'Tab') {
+                    this.close();
+                }
+            },
+
+            onBlur: function () {
+                var self  = this;
+                var input = this.$refs.input;
+                this.record(input ? input.value : '');
+                // Pequeno retardo: si el blur fue por tocar un item, que llegue el click.
+                clearTimeout(this.closeTimer);
+                this.closeTimer = setTimeout(function () { self.close(); }, 150);
             },
 
             /** storageKey admite string o funcion, para claves que dependen de un filtro reactivo. */
