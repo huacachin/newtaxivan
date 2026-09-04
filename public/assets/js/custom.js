@@ -706,7 +706,7 @@ document.addEventListener('alpine:init', function () {
     if (!window.Alpine) return;
 
     function normalize(str) {
-        return String(str || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+        return String(str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
     }
 
     window.Alpine.data('textSuggest', function (opts) {
@@ -715,6 +715,7 @@ document.addEventListener('alpine:init', function () {
             open: false,
             items: [],
             active: -1,
+            lastQuery: null,
 
             init: function () {
                 var self  = this;
@@ -760,6 +761,12 @@ document.addEventListener('alpine:init', function () {
                 }
             },
 
+            /** storageKey admite string o funcion, para claves que dependen de un filtro reactivo. */
+            resolveKey: function () {
+                var k = this.opts.storageKey;
+                return typeof k === 'function' ? k() : k;
+            },
+
             show: function () {
                 this.refresh();
                 this.open = this.items.length > 0;
@@ -799,8 +806,9 @@ document.addEventListener('alpine:init', function () {
                 };
 
                 // 1) LRU local (lo ultimo que escribio este usuario)
-                if (this.opts.storageKey) {
-                    window.numericLRU.get(this.opts.storageKey).forEach(function (v) {
+                var lruKey = this.resolveKey();
+                if (lruKey) {
+                    window.numericLRU.get(lruKey).forEach(function (v) {
                         add(v, 'Tu ultimo valor', 'lru');
                     });
                 }
@@ -819,8 +827,16 @@ document.addEventListener('alpine:init', function () {
                     } catch (e) {}
                 }
 
-                this.items  = pool.slice(0, max);
-                this.active = this.items.length ? Math.min(Math.max(this.active, -1), this.items.length - 1) : -1;
+                this.items = pool.slice(0, max);
+
+                // refresh() tambien se dispara desde el hook de Livewire (paginar, buscar...).
+                // Solo se pierde el resaltado cuando el texto tecleado cambio de verdad.
+                if (q !== this.lastQuery) {
+                    this.active = -1;
+                } else if (this.active > this.items.length - 1) {
+                    this.active = this.items.length - 1;
+                }
+                this.lastQuery = q;
             },
 
             pick: function (value) {
@@ -836,8 +852,9 @@ document.addEventListener('alpine:init', function () {
 
             record: function (value) {
                 var v = String(value || '').trim();
-                if (!this.opts.storageKey || v.length < 2) return;
-                window.numericLRU.record(this.opts.storageKey, v, 10);
+                var k = this.resolveKey();
+                if (!k || v.length < 2) return;
+                window.numericLRU.record(k, v, 10);
             },
 
             itemClass: function (item, index) {
