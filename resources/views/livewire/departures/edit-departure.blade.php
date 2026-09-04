@@ -39,10 +39,8 @@
                         </div>
                     @endif
 
-                    <div id="edit-departure-form" class="row" @if(!$plateExists) style="color:red;font-weight:bold" @endif>
-                    @if(!$plateExists)
-                    <style>#edit-departure-form input[type=text],#edit-departure-form input[type=number],#edit-departure-form input[type=date],#edit-departure-form select,#edit-departure-form textarea,#edit-departure-form label,#edit-departure-form input::placeholder,#edit-departure-form textarea::placeholder{color:red !important;font-weight:bold !important;}</style>
-                    @endif
+                    <style>.plate-missing input[type=text],.plate-missing input[type=number],.plate-missing input[type=date],.plate-missing select,.plate-missing textarea,.plate-missing label,.plate-missing input::placeholder,.plate-missing textarea::placeholder{color:red !important;font-weight:bold !important;}</style>
+                    <div id="edit-departure-form" class="row {{ $plateExists ? '' : 'plate-missing' }}" @if(!$plateExists) style="color:red;font-weight:bold" @endif>
                         <div class="col-md-2 col-12">
                             <div class="mb-3">
                                 <label for="dep_plate_edit" class="form-label">Placa</label>

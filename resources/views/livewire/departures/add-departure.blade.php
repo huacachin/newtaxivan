@@ -40,10 +40,13 @@
                         </div>
                     @endif
 
-                    <div class="row" @if(!$plateExists) style="color:red;font-weight:bold" @endif>
-                    @if(!$plateExists)
-                    <style>.row input[type=text],.row input[type=number],.row input[type=date],.row select,.row textarea,.row label,.row input::placeholder,.row textarea::placeholder{color:red !important;font-weight:bold !important;}</style>
-                    @endif
+                    {{-- El aviso de placa no registrada se activa con la clase .plate-missing.
+                         OJO: nada de insertar nodos condicionales dentro de la fila — al aparecer
+                         o desaparecer un hijo, el morph de Livewire empareja las columnas por
+                         posicion y les cruza los atributos (los chips y los wire:model de
+                         Salida/Pasajeros/Pasaje quedaban intercambiados). --}}
+                    <style>.plate-missing input[type=text],.plate-missing input[type=number],.plate-missing input[type=date],.plate-missing select,.plate-missing textarea,.plate-missing label,.plate-missing input::placeholder,.plate-missing textarea::placeholder{color:red !important;font-weight:bold !important;}</style>
+                    <div class="row {{ $plateExists ? '' : 'plate-missing' }}" @if(!$plateExists) style="color:red;font-weight:bold" @endif>
                         <div class="col-md-2 col-12">
                             <div class="mb-3">
                                 <label for="dep_plate" class="form-label">Placa</label>
