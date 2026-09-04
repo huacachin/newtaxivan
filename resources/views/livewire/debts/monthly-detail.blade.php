@@ -116,14 +116,28 @@
                                      value="{{ number_format($total,2) }}" readonly>
                           </div>
 
-                          {{-- Exonerado (input) --}}
+                          {{-- Exonerado (input) — chips con historial (LRU local + frecuentes del servidor) --}}
                           <div class="flex-item flex-item-md">
                               <label class="form-label mb-1">Exonerado (S/)</label>
-                              <input type="text" inputmode="decimal"
-                                     name="debt_exonerate" autocomplete="on"
-                                     class="form-control form-control-sm text-end @error('exonerateInput') is-invalid @enderror"
-                                     style="background-color: yellow;"
-                                     wire:model="exonerateInput">
+                              <div x-data="numericChips({
+                                  storageKey: 'monthly-debt.exonerate',
+                                  server: () => $wire.exonerateSuggestions,
+                                  decimals: 2
+                              })">
+                                  <input type="text" inputmode="decimal"
+                                         x-ref="input"
+                                         name="debt_exonerate" autocomplete="on"
+                                         class="form-control form-control-sm text-end @error('exonerateInput') is-invalid @enderror"
+                                         style="background-color: yellow;"
+                                         wire:model="exonerateInput">
+                                  <div class="num-chips" x-show="suggestions.length" x-cloak>
+                                      <template x-for="(s, i) in suggestions" :key="s.value">
+                                          <button type="button" :class="badgeClass(s.source)"
+                                                  :title="`${s.hint} (Alt+${i+1})`"
+                                                  @click="pick(s.value)" x-text="formatted(s.value)"></button>
+                                      </template>
+                                  </div>
+                              </div>
                               @error('exonerateInput')
                               <div class="invalid-feedback d-block">{{ $message }}</div>
                               @enderror
@@ -141,14 +155,21 @@
                               @enderror
                           </div>
 
-                          {{-- Detalle exoneración --}}
+                          {{-- Detalle exoneración — autocompletado con historial (datalist) --}}
                           <div class="flex-item flex-item-lg">
                               <label class="form-label mb-1">Detalle exoneración</label>
                               <input type="text"
                                      class="form-control form-control-sm @error('detailInput') is-invalid @enderror"
                                      style="background-color: yellow;"
-                                     wire:model.live.defer="detailInput"
+                                     list="detail-exoneration-suggestions"
+                                     autocomplete="off"
+                                     wire:model="detailInput"
                                      placeholder="Motivo / detalle">
+                              <datalist id="detail-exoneration-suggestions">
+                                  @foreach($detailSuggestions as $name)
+                                      <option value="{{ $name }}"></option>
+                                  @endforeach
+                              </datalist>
                               @error('detailInput')
                               <div class="invalid-feedback d-block">{{ $message }}</div>
                               @enderror

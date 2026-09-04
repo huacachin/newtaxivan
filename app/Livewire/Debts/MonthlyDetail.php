@@ -43,6 +43,10 @@ class MonthlyDetail extends Component
     // Tabla de detalles
     public $details = [];
 
+    // Sugerencias con historial (montos frecuentes y detalles ya usados)
+    public array $exonerateSuggestions = [];
+    public array $detailSuggestions    = [];
+
     public function updatedNewImages(): void
     {
         foreach ($this->new_images as $file) {
@@ -193,6 +197,8 @@ class MonthlyDetail extends Component
         $this->sumAmortized  = (float)$this->debtDay->details->sum('amortized');
         $this->pending       = max(0, round($this->total - $this->sumExonerated - $this->sumAmortized, 2));
 
+        $this->loadSuggestions();
+
         $this->details = $this->debtDay->details
             ->sortByDesc('date')
             ->values()
@@ -214,6 +220,39 @@ class MonthlyDetail extends Component
                     ])->all(),
                 ];
             })->all();
+    }
+
+    /**
+     * Historial para autocompletar: montos de exoneración más frecuentes
+     * (últimos 180 días) y detalles ya usados, los más recientes primero.
+     * Los marcadores técnicos "payment:123" se excluyen.
+     */
+    private function loadSuggestions(): void
+    {
+        $since = now(config('app.timezone', 'America/Lima'))->subDays(180)->toDateString();
+
+        $this->exonerateSuggestions = DebtDayDetail::query()
+            ->where('exonerated', '>', 0)
+            ->where('date', '>=', $since)
+            ->select('exonerated', DB::raw('COUNT(*) as c'))
+            ->groupBy('exonerated')
+            ->orderByDesc('c')
+            ->limit(3)
+            ->pluck('exonerated')
+            ->map(fn ($v) => number_format((float) $v, 2, '.', ''))
+            ->values()->all();
+
+        $this->detailSuggestions = DebtDayDetail::query()
+            ->whereNotNull('detail')
+            ->where('detail', '!=', '')
+            ->where('detail', 'not like', 'payment:%')
+            ->select('detail', DB::raw('MAX(date) as last_used'), DB::raw('COUNT(*) as uses'))
+            ->groupBy('detail')
+            ->orderByDesc('last_used')
+            ->orderByDesc('uses')
+            ->limit(50)
+            ->pluck('detail')
+            ->all();
     }
 
     /** Cuenta cuántos días d1..d31 están marcados con 'X' o 'X1'. */
