@@ -107,7 +107,14 @@
                                 </div>
                             </div>
 
+                            {{-- Historial propio (datalist/localStorage via data-search-history en custom.js),
+                                 igual que los buscadores de ingresos, egresos y salidas: Chrome clasifica estos
+                                 campos como caja de busqueda y no guarda su historial de autofill. --}}
                             <input type="search"
+                                   name="payments_search"
+                                   autocomplete="on"
+                                   list="payments_search_hist"
+                                   data-search-history="payments_search"
                                    class="form-control form-control-sm"
                                    placeholder="@switch($filter)
                                     @case('1') Buscar por placa... @break
@@ -117,6 +124,7 @@
                                 @endswitch"
                                    aria-label="Buscar"
                                    wire:model="search">
+                            <datalist id="payments_search_hist" wire:ignore></datalist>
                         </div>
 
                         <div class="col-auto">
