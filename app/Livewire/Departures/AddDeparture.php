@@ -178,6 +178,7 @@ class AddDeparture extends Component
 
         $this->passage   = 8;
         $this->passenger = 10;
+        $this->autoPassenger = 10;
         $this->applyPassengerByPlate();
     }
 
@@ -187,10 +188,25 @@ class AddDeparture extends Component
         $this->recomputeSuggestions();
     }
 
+    /**
+     * Ultimo valor que puso el prefill en precio/pasajeros. Si el campo ya no
+     * coincide es que el usuario escribio el suyo y los prefills posteriores no
+     * deben pisarlo: updatedPlate corre en cada tecla de la placa (wire:model.live)
+     * y sobreescribia lo tecleado, que ademas rebotaba al input y ensuciaba lo
+     * que la persona estaba escribiendo.
+     */
+    public ?float $autoPrice = null;
+    public ?int $autoPassenger = null;
+
     private function applyPriceByHeadquarter(?int $hqId): void
     {
+        if ($this->autoPrice !== null && (float) ($this->price ?? 0) !== (float) $this->autoPrice) {
+            return; // el usuario escribio su propio precio: no pisarlo
+        }
+
         if (!$hqId) {
             $this->price = 0;
+            $this->autoPrice = 0.0;
             return;
         }
 
@@ -234,6 +250,8 @@ class AddDeparture extends Component
                 $this->price = 0;
                 break;
         }
+
+        $this->autoPrice = (float) ($this->price ?? 0);
     }
 
     // ==============================
@@ -328,6 +346,10 @@ class AddDeparture extends Component
 
     private function applyPassengerByPlate(): void
     {
+        if ($this->autoPassenger !== null && (int) ($this->passenger ?? 0) !== $this->autoPassenger) {
+            return; // el usuario escribio sus propios pasajeros: no pisarlos
+        }
+
         $normalizedPlate = preg_replace('/\s+/', '', strtoupper(trim((string) $this->plate)));
 
         if (strlen($normalizedPlate) >= 6 && $this->plateExists) {
@@ -339,6 +361,8 @@ class AddDeparture extends Component
         } else {
             $this->passenger = 10;
         }
+
+        $this->autoPassenger = (int) $this->passenger;
     }
 
     // Persistencia: guardar (misma lógica del modal original, sin dispatch)
@@ -468,6 +492,8 @@ class AddDeparture extends Component
         $this->price = 0;
         $this->passenger = 10;
         $this->passage = 8;
+        $this->autoPrice = null;
+        $this->autoPassenger = 10;
         $this->latitude = null;
         $this->longitude = null;
 
