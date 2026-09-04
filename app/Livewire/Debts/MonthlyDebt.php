@@ -24,7 +24,7 @@ class MonthlyDebt extends Component
     // Selects mes/año para homogeneizar con la vista
     public int $month;            // 1..12
     public int $year;             // p.ej. 2023..2028
-    public array $months = [];    // [1=>'ENERO', ...]
+    public array $months = [];    // [1=>'Enero', ...]
     public array $years  = [];    // [2022,2023,2024,...]
 
     // Datos de salida
@@ -47,9 +47,9 @@ class MonthlyDebt extends Component
 
         // Catálogo de meses (ES)
         $this->months = [
-            1=>'ENERO', 2=>'FEBRERO', 3=>'MARZO', 4=>'ABRIL',
-            5=>'MAYO', 6=>'JUNIO', 7=>'JULIO', 8=>'AGOSTO',
-            9=>'SEPTIEMBRE', 10=>'OCTUBRE', 11=>'NOVIEMBRE', 12=>'DICIEMBRE',
+            1=>'Enero', 2=>'Febrero', 3=>'Marzo', 4=>'Abril',
+            5=>'Mayo', 6=>'Junio', 7=>'Julio', 8=>'Agosto',
+            9=>'Septiembre', 10=>'Octubre', 11=>'Noviembre', 12=>'Diciembre',
         ];
 
         // Rango de años (ajústalo a tu gusto)
