@@ -93,12 +93,20 @@
                                     </div>
                                 </div>
                             </div>
+                            {{-- Historial propio (datalist/localStorage via data-search-history en custom.js),
+                                 igual que los buscadores de ingresos y egresos: Chrome clasifica estos campos
+                                 como caja de busqueda y no guarda su historial de autofill. --}}
                             <input type="search"
+                                   name="departures_search"
+                                   autocomplete="on"
+                                   list="departures_search_hist"
+                                   data-search-history="departures_search"
                                    class="form-control form-control-sm"
                                    :placeholder="filterType == 1 ? 'Buscar por placa...' : (filterType == 2 ? 'Buscar por usuario...' : 'Buscar...')"
                                    aria-label="Buscar"
                                    wire:model="searchText"
                                    x-show="filterType != 3">
+                            <datalist id="departures_search_hist" wire:ignore></datalist>
                             <select class="form-control form-control-sm"
                                     aria-label="Selecciona sucursal"
                                     wire:model="searchText"
