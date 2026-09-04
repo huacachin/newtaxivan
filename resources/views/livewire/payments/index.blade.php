@@ -58,9 +58,7 @@
                     {{-- ===== Fila 2: Buscar + Fechas + Sucursal + Tipo + Aplicar ===== --}}
                     <div class="row g-2 align-items-end flex-wrap mb-2">
 
-                        {{-- Alpine refleja el filtro para que el buscador cambie de lista y de
-                             historial al instante: @entangle viaja diferido y el servidor va desfasado. --}}
-                        <div class="col-auto" x-data="{ filterType: @entangle('filter') }">
+                        <div class="col-auto">
                             <div class="row g-2 mb-2">
                                 <div class="col-12">
                                     <div class="d-flex flex-wrap align-items-center f-s-11">
@@ -72,7 +70,7 @@
                                                    name="rbFilterPay"
                                                    id="rbPlatePay"
                                                    value="1"
-                                                   x-model="filterType">
+                                                   wire:model="filter">
                                             <label class="form-check-label " for="rbPlatePay">Placa</label>
                                         </div>
 
@@ -82,7 +80,7 @@
                                                    name="rbFilterPay"
                                                    id="rbUserPay"
                                                    value="2"
-                                                   x-model="filterType">
+                                                   wire:model="filter">
                                             <label class="form-check-label" for="rbUserPay">Usuario</label>
                                         </div>
 
@@ -92,7 +90,7 @@
                                                    name="rbFilterPay"
                                                    id="rbSeriePay"
                                                    value="3"
-                                                   x-model="filterType">
+                                                   wire:model="filter">
                                             <label class="form-check-label" for="rbSeriePay">Serie</label>
                                         </div>
 
@@ -102,42 +100,23 @@
                                                    name="rbFilterPay"
                                                    id="rbMixedPay"
                                                    value=""
-                                                   x-model="filterType">
+                                                   wire:model="filter">
                                             <label class="form-check-label" for="rbMixedPay">Todos</label>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            {{-- Buscador con historial: LRU local por tipo de busqueda + valores del servidor.
-                                 wire:model.change hace que elegir del historial (o pulsar Enter) ejecute la busqueda;
-                                 sin el modificador, wire:model solo guarda el valor y espera al boton de la lupa. --}}
-                            <div class="txt-suggest"
-                                 x-data="textSuggest({
-                                     storageKey: () => 'payments.search.' + (filterType == 2 ? 'user' : (filterType == 3 ? 'serie' : 'plate')),
-                                     server: () => (filterType == 2 ? $wire.userPaySuggestions : (filterType == 3 ? $wire.seriePaySuggestions : $wire.platePaySuggestions)) || [],
-                                     max: 8
-                                 })">
-                                <input type="search"
-                                       x-ref="input"
-                                       class="form-control form-control-sm"
-                                       :placeholder="filterType == 1 ? 'Buscar por placa...' : (filterType == 2 ? 'Buscar por usuario...' : (filterType == 3 ? 'Buscar por serie...' : 'Buscar...'))"
-                                       aria-label="Buscar"
-                                       @focus="show()"
-                                       @click="show()"
-                                       @input="show()"
-                                       @keydown="onKey($event)"
-                                       @blur="onBlur()"
-                                       wire:model.change="search">
-                                <ul class="txt-suggest__list" x-ref="list" role="listbox"
-                                    x-show="open && items.length" x-cloak>
-                                    <template x-for="(it, i) in items" :key="it.value">
-                                        <li :class="itemClass(it, i)" role="option" :title="it.hint"
-                                            @mousedown.prevent @click="pick(it.value)"
-                                            @mouseenter="active = i" x-text="it.value"></li>
-                                    </template>
-                                </ul>
-                            </div>
+                            <input type="search"
+                                   class="form-control form-control-sm"
+                                   placeholder="@switch($filter)
+                                    @case('1') Buscar por placa... @break
+                                    @case('2') Buscar por usuario... @break
+                                    @case('3') Buscar por serie... @break
+                                    @default Buscar...
+                                @endswitch"
+                                   aria-label="Buscar"
+                                   wire:model="search">
                         </div>
 
                         <div class="col-auto">

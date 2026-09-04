@@ -49,14 +49,6 @@ class Index extends Component
     public ?string $searchUser = null;
 
     /**
-     * Historial del buscador servido desde la BD. Se calculan las dos listas a la vez
-     * porque searchType viaja diferido con @entangle: el cliente elige cual mostrar.
-     * @var array<int,string>
-     */
-    public array $plateSuggestions = [];
-    public array $userSuggestions  = [];
-
-    /**
      * Sección a mostrar: all, principal, apoyo.
      * @var string
      */
@@ -325,8 +317,6 @@ class Index extends Component
 
         $this->byHQ = ($this->searchType ?? 1) == 3;
 
-        $this->loadSearchSuggestions();
-
         // Si viene del RMP (showSection != all), forzar modo agrupado por placa
         if ($this->showSection !== 'all') {
             $this->groupMode = true;
@@ -338,63 +328,6 @@ class Index extends Component
     public function updatedSearchType($value)
     {
         $this->searchType = (int) $value;
-    }
-
-    /**
-     * Historial del buscador. Respeta el mismo recorte por usuario que las consultas
-     * del listado: quien no es admin solo ve placas y usuarios de sus propias salidas.
-     * Se calcula una vez por carga de pagina, no en cada render.
-     */
-    private function loadSearchSuggestions(): void
-    {
-        $since   = now(config('app.timezone', 'America/Lima'))->subDays(90)->toDateString();
-        $isAdmin = $this->isAdmin();
-        $uid     = Auth::id();
-
-        // La busqueda por placa mira v.plate en las salidas con vehiculo de flota y
-        // d.legacy_plate en las de apoyo, asi que la sugerencia une ambas fuentes.
-        $fleet = DB::table('departures as d')
-            ->join('vehicles as v', 'v.id', '=', 'd.vehicle_id')
-            ->where('d.date', '>=', $since)
-            ->whereNotNull('v.plate')->where('v.plate', '!=', '');
-        if (!$isAdmin) {
-            $fleet->where('d.user_id', $uid);
-        }
-        $fleet = $fleet->select('v.plate as p', DB::raw('COUNT(*) as c'))
-            ->groupBy('v.plate')->orderByDesc('c')->limit(40)->pluck('c', 'p');
-
-        $support = DB::table('departures as d')
-            ->where('d.date', '>=', $since)
-            ->whereNotNull('d.legacy_plate')->where('d.legacy_plate', '!=', '');
-        if (!$isAdmin) {
-            $support->where('d.user_id', $uid);
-        }
-        $support = $support->select('d.legacy_plate as p', DB::raw('COUNT(*) as c'))
-            ->groupBy('d.legacy_plate')->orderByDesc('c')->limit(40)->pluck('c', 'p');
-
-        $byPlate = [];
-        foreach ([$fleet, $support] as $set) {
-            foreach ($set as $plate => $count) {
-                $key = strtoupper(trim((string) $plate));
-                if ($key === '') {
-                    continue;
-                }
-                $byPlate[$key] = ($byPlate[$key] ?? 0) + (int) $count;
-            }
-        }
-        arsort($byPlate);
-        $this->plateSuggestions = array_map('strval', array_slice(array_keys($byPlate), 0, 30));
-
-        $users = DB::table('departures as d')
-            ->join('users as u', 'u.id', '=', 'd.user_id')
-            ->where('d.date', '>=', $since)
-            ->whereNotNull('u.username')->where('u.username', '!=', '');
-        if (!$isAdmin) {
-            $users->where('d.user_id', $uid);
-        }
-        $this->userSuggestions = $users->select('u.username as n', DB::raw('COUNT(*) as c'))
-            ->groupBy('u.username')->orderByDesc('c')->limit(30)
-            ->pluck('n')->map(fn ($v) => (string) $v)->values()->all();
     }
 
     // ==============================

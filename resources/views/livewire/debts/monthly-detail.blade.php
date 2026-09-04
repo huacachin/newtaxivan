@@ -116,28 +116,14 @@
                                      value="{{ number_format($total,2) }}" readonly>
                           </div>
 
-                          {{-- Exonerado (input) — chips con historial (LRU local + frecuentes del servidor) --}}
+                          {{-- Exonerado (input) --}}
                           <div class="flex-item flex-item-md">
                               <label class="form-label mb-1">Exonerado (S/)</label>
-                              <div x-data="numericChips({
-                                  storageKey: 'monthly-debt.exonerate',
-                                  server: () => $wire.exonerateSuggestions,
-                                  decimals: 2
-                              })">
-                                  <input type="text" inputmode="decimal"
-                                         x-ref="input"
-                                         name="debt_exonerate" autocomplete="on"
-                                         class="form-control form-control-sm text-end @error('exonerateInput') is-invalid @enderror"
-                                         style="background-color: yellow;"
-                                         wire:model="exonerateInput">
-                                  <div class="num-chips" x-show="suggestions.length" x-cloak>
-                                      <template x-for="(s, i) in suggestions" :key="s.value">
-                                          <button type="button" :class="badgeClass(s.source)"
-                                                  :title="`${s.hint} (Alt+${i+1})`"
-                                                  @click="pick(s.value)" x-text="formatted(s.value)"></button>
-                                      </template>
-                                  </div>
-                              </div>
+                              <input type="text" inputmode="decimal"
+                                     name="debt_exonerate" autocomplete="on"
+                                     class="form-control form-control-sm text-end @error('exonerateInput') is-invalid @enderror"
+                                     style="background-color: yellow;"
+                                     wire:model="exonerateInput">
                               @error('exonerateInput')
                               <div class="invalid-feedback d-block">{{ $message }}</div>
                               @enderror
@@ -155,35 +141,14 @@
                               @enderror
                           </div>
 
-                          {{-- Detalle exoneración — historial visible (LRU local + detalles ya usados) --}}
+                          {{-- Detalle exoneración --}}
                           <div class="flex-item flex-item-lg">
                               <label class="form-label mb-1">Detalle exoneración</label>
-                              <div class="txt-suggest" x-data="textSuggest({
-                                  storageKey: 'monthly-debt.detail',
-                                  server: () => $wire.detailSuggestions,
-                                  max: 8
-                              })">
-                                  <input type="text"
-                                         x-ref="input"
-                                         class="form-control form-control-sm @error('detailInput') is-invalid @enderror"
-                                         style="background-color: yellow;"
-                                         autocomplete="off"
-                                         @focus="show()"
-                                         @click="show()"
-                                         @input="show()"
-                                         @keydown="onKey($event)"
-                                         @blur="onBlur()"
-                                         wire:model="detailInput"
-                                         placeholder="Motivo / detalle">
-                                  <ul class="txt-suggest__list" x-ref="list" role="listbox"
-                                      x-show="open && items.length" x-cloak>
-                                      <template x-for="(it, i) in items" :key="it.value">
-                                          <li :class="itemClass(it, i)" role="option" :title="it.hint"
-                                              @mousedown.prevent @click="pick(it.value)"
-                                              @mouseenter="active = i" x-text="it.value"></li>
-                                      </template>
-                                  </ul>
-                              </div>
+                              <input type="text"
+                                     class="form-control form-control-sm @error('detailInput') is-invalid @enderror"
+                                     style="background-color: yellow;"
+                                     wire:model.live.defer="detailInput"
+                                     placeholder="Motivo / detalle">
                               @error('detailInput')
                               <div class="invalid-feedback d-block">{{ $message }}</div>
                               @enderror

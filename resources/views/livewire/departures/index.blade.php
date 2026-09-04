@@ -93,39 +93,15 @@
                                     </div>
                                 </div>
                             </div>
-                            {{-- Buscador con historial: LRU local por tipo de busqueda + valores del servidor.
-                                 wire:model.change hace que elegir del historial (o pulsar Enter) ejecute la busqueda;
-                                 sin el modificador, wire:model solo guarda el valor y espera al boton de la lupa. --}}
-                            <div class="txt-suggest"
-                                 x-show="filterType != 3"
-                                 x-data="textSuggest({
-                                     storageKey: () => filterType == 2 ? 'departures.search.user' : 'departures.search.plate',
-                                     server: () => (filterType == 2 ? $wire.userSuggestions : $wire.plateSuggestions) || [],
-                                     max: 8
-                                 })">
-                                <input type="search"
-                                       x-ref="input"
-                                       class="form-control form-control-sm"
-                                       :placeholder="filterType == 1 ? 'Buscar por placa...' : (filterType == 2 ? 'Buscar por usuario...' : 'Buscar...')"
-                                       aria-label="Buscar"
-                                       @focus="show()"
-                                       @click="show()"
-                                       @input="show()"
-                                       @keydown="onKey($event)"
-                                       @blur="onBlur()"
-                                       wire:model.change="searchText">
-                                <ul class="txt-suggest__list" x-ref="list" role="listbox"
-                                    x-show="open && items.length" x-cloak>
-                                    <template x-for="(it, i) in items" :key="it.value">
-                                        <li :class="itemClass(it, i)" role="option" :title="it.hint"
-                                            @mousedown.prevent @click="pick(it.value)"
-                                            @mouseenter="active = i" x-text="it.value"></li>
-                                    </template>
-                                </ul>
-                            </div>
+                            <input type="search"
+                                   class="form-control form-control-sm"
+                                   :placeholder="filterType == 1 ? 'Buscar por placa...' : (filterType == 2 ? 'Buscar por usuario...' : 'Buscar...')"
+                                   aria-label="Buscar"
+                                   wire:model="searchText"
+                                   x-show="filterType != 3">
                             <select class="form-control form-control-sm"
                                     aria-label="Selecciona sucursal"
-                                    wire:model.change="searchText"
+                                    wire:model="searchText"
                                     x-show="filterType == 3"
                                     x-cloak>
                                 <option value="">Todos</option>

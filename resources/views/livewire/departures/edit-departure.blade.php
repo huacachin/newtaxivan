@@ -199,11 +199,7 @@
             function bindUpperFor(el) {
                 if (!el || el.__upperBound) return;
                 const handler = () => forceUppercase(el);
-                // OJO: sin listener de 'input'. Mutar el valor en pleno tecleo rompe la
-                // composicion de los teclados moviles (Android duplica los caracteres).
-                // Mientras se escribe, .input-uppercase ya lo muestra en mayusculas por CSS
-                // y el servidor normaliza con strtoupper; el valor real se corrige al salir
-                // del campo, al pegar o en change.
+                el.addEventListener('input', handler);
                 el.addEventListener('change', handler);
                 el.addEventListener('paste', () => setTimeout(handler, 0));
                 el.addEventListener('blur', handler);
