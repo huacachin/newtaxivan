@@ -127,9 +127,12 @@
                                   <input type="text" inputmode="decimal"
                                          x-ref="input"
                                          name="debt_exonerate" autocomplete="on"
+                                         list="exonerate_hist"
+                                         data-search-history="monthly_debt_exonerate"
                                          class="form-control form-control-sm text-end @error('exonerateInput') is-invalid @enderror"
                                          style="background-color: yellow;"
                                          wire:model="exonerateInput">
+                                  <datalist id="exonerate_hist" wire:ignore></datalist>
                                   <div class="num-chips" x-show="suggestions.length" x-cloak>
                                       <template x-for="(s, i) in suggestions" :key="s.value">
                                           <button type="button" :class="badgeClass(s.source)"
@@ -155,21 +158,20 @@
                               @enderror
                           </div>
 
-                          {{-- Detalle exoneración — autocompletado con historial (datalist) --}}
+                          {{-- Detalle exoneración — historial propio (datalist/localStorage via
+                               data-search-history en custom.js), igual que los buscadores de caja. --}}
                           <div class="flex-item flex-item-lg">
                               <label class="form-label mb-1">Detalle exoneración</label>
                               <input type="text"
+                                     name="debt_exonerate_detail"
                                      class="form-control form-control-sm @error('detailInput') is-invalid @enderror"
                                      style="background-color: yellow;"
                                      list="detail-exoneration-suggestions"
+                                     data-search-history="monthly_debt_detail"
                                      autocomplete="off"
                                      wire:model="detailInput"
                                      placeholder="Motivo / detalle">
-                              <datalist id="detail-exoneration-suggestions">
-                                  @foreach($detailSuggestions as $name)
-                                      <option value="{{ $name }}"></option>
-                                  @endforeach
-                              </datalist>
+                              <datalist id="detail-exoneration-suggestions" wire:ignore></datalist>
                               @error('detailInput')
                               <div class="invalid-feedback d-block">{{ $message }}</div>
                               @enderror

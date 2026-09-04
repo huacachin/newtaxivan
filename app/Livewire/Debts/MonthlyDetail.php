@@ -43,9 +43,9 @@ class MonthlyDetail extends Component
     // Tabla de detalles
     public $details = [];
 
-    // Sugerencias con historial (montos frecuentes y detalles ya usados)
+    // Sugerencias con historial (montos frecuentes para los chips de exonerado;
+    // el detalle usa historial propio del navegador via data-search-history)
     public array $exonerateSuggestions = [];
-    public array $detailSuggestions    = [];
 
     public function updatedNewImages(): void
     {
@@ -241,18 +241,6 @@ class MonthlyDetail extends Component
             ->pluck('exonerated')
             ->map(fn ($v) => number_format((float) $v, 2, '.', ''))
             ->values()->all();
-
-        $this->detailSuggestions = DebtDayDetail::query()
-            ->whereNotNull('detail')
-            ->where('detail', '!=', '')
-            ->where('detail', 'not like', 'payment:%')
-            ->select('detail', DB::raw('MAX(date) as last_used'), DB::raw('COUNT(*) as uses'))
-            ->groupBy('detail')
-            ->orderByDesc('last_used')
-            ->orderByDesc('uses')
-            ->limit(50)
-            ->pluck('detail')
-            ->all();
     }
 
     /** Cuenta cuántos días d1..d31 están marcados con 'X' o 'X1'. */
