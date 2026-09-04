@@ -1,0 +1,65 @@
+// >>-- Text suggest css start --<<
+//
+// Lista de historial para inputs de texto (Alpine: textSuggest).
+// Reemplaza al <datalist> nativo, que en Firefox/movil no se abre al
+// hacer clic. Mismo lenguaje visual que los numeric chips: punto de color
+// por origen (server ambar, lru gris) y hover en primary.
+
+.txt-suggest {
+  position: relative;
+}
+
+.txt-suggest__list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1060;
+  margin: 2px 0 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--white, #fff);
+  color: var(--bs-body-color, #212529); // --body-color de la plantilla es un fondo, no texto
+  border: 1px solid rgba(var(--secondary), 0.25);
+  border-radius: 6px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.14);
+  max-height: 240px;
+  overflow-y: auto;
+  animation: numChipsIn 160ms ease-out;
+}
+
+.txt-suggest__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  line-height: 1.4;
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  &::before {
+    content: '';
+    flex: 0 0 auto;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(var(--secondary), 0.7);
+  }
+
+  &-server::before {
+    background: #f59e0b;
+  }
+
+  &:hover,
+  &.is-active {
+    background: rgba(var(--primary), 0.10);
+    color: rgba(var(--primary), 1);
+  }
+}
+
+// >>-- Text suggest css end --<<

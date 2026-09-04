@@ -684,6 +684,171 @@ document.addEventListener('alpine:init', function () {
     });
 });
 
+// =========================================================
+// Alpine factory: textSuggest
+// Lista de historial visible para inputs de texto. No depende del
+// <datalist> nativo (en Firefox y en movil solo aparece al escribir):
+// dibuja la lista debajo del input al enfocar, filtra al teclear y se
+// navega con flechas / Enter / Escape. Fuentes: LRU local (lo ultimo que
+// escribio el usuario) + server (valores historicos via Livewire).
+// Uso:
+//   <div class="txt-suggest" x-data="textSuggest({ storageKey: 'x.y', server: () => $wire.prop })">
+//     <input x-ref="input" ...>
+//     <ul class="txt-suggest__list" x-show="open && items.length" x-cloak>
+//       <template x-for="(it, i) in items" :key="it.value">
+//         <li :class="itemClass(it, i)" @mousedown.prevent @click="pick(it.value)"
+//             @mouseenter="active = i" x-text="it.value"></li>
+//       </template>
+//     </ul>
+//   </div>
+// =========================================================
+document.addEventListener('alpine:init', function () {
+    if (!window.Alpine) return;
+
+    function normalize(str) {
+        return String(str || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+    }
+
+    window.Alpine.data('textSuggest', function (opts) {
+        return {
+            opts: opts || {},
+            open: false,
+            items: [],
+            active: -1,
+
+            init: function () {
+                var self  = this;
+                var input = self.$refs.input;
+                if (!input) return;
+
+                // El historial lo pintamos nosotros: apagar el autofill del navegador
+                input.setAttribute('autocomplete', 'off');
+
+                input.addEventListener('focus', function () { self.show(); });
+                input.addEventListener('click', function () { self.show(); });
+                input.addEventListener('input', function () { self.show(); });
+
+                input.addEventListener('keydown', function (e) {
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        if (!self.open) { self.show(); } else { self.move(1); }
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        self.move(-1);
+                    } else if (e.key === 'Enter') {
+                        if (self.open && self.active >= 0 && self.items[self.active]) {
+                            e.preventDefault();
+                            self.pick(self.items[self.active].value);
+                        }
+                    } else if (e.key === 'Escape' || e.key === 'Tab') {
+                        self.close();
+                    }
+                });
+
+                input.addEventListener('blur', function () {
+                    self.record(input.value);
+                    // Pequeno retardo: si el blur fue por tocar un item, que llegue el click
+                    setTimeout(function () { self.close(); }, 150);
+                });
+
+                // Refrescar fuentes server cuando Livewire commitea (p. ej. tras guardar)
+                if (window.Livewire && Livewire.hook) {
+                    Livewire.hook('commit', function (_ref) {
+                        var succeed = _ref.succeed;
+                        succeed(function () { if (self.open) self.refresh(); });
+                    });
+                }
+            },
+
+            show: function () {
+                this.refresh();
+                this.open = this.items.length > 0;
+            },
+
+            close: function () {
+                this.open = false;
+                this.active = -1;
+            },
+
+            move: function (delta) {
+                if (!this.items.length) return;
+                var n = this.items.length;
+                this.active = ((this.active + delta) % n + n) % n;
+                var list = this.$refs.list;
+                if (list && list.children[this.active]) {
+                    list.children[this.active].scrollIntoView({ block: 'nearest' });
+                }
+            },
+
+            refresh: function () {
+                var input = this.$refs.input;
+                var q     = normalize(input ? input.value : '');
+                var max   = this.opts.max || 8;
+                var pool  = [];
+                var seen  = {};
+
+                var add = function (value, hint, source) {
+                    var v = String(value == null ? '' : value).trim();
+                    if (!v) return;
+                    var k = normalize(v);
+                    if (seen[k]) return;
+                    if (q && k.indexOf(q) === -1) return;
+                    if (q && k === q) return; // ya esta escrito tal cual
+                    seen[k] = true;
+                    pool.push({ value: v, hint: hint || '', source: source });
+                };
+
+                // 1) LRU local (lo ultimo que escribio este usuario)
+                if (this.opts.storageKey) {
+                    window.numericLRU.get(this.opts.storageKey).forEach(function (v) {
+                        add(v, 'Tu ultimo valor', 'lru');
+                    });
+                }
+
+                // 2) Server (historico via Livewire)
+                if (typeof this.opts.server === 'function') {
+                    try {
+                        var srv = this.opts.server() || [];
+                        (Array.isArray(srv) ? srv : Object.values(srv)).forEach(function (item) {
+                            if (item && typeof item === 'object') {
+                                add(item.value, item.hint || 'Usado antes', 'server');
+                            } else {
+                                add(item, 'Usado antes', 'server');
+                            }
+                        });
+                    } catch (e) {}
+                }
+
+                this.items  = pool.slice(0, max);
+                this.active = this.items.length ? Math.min(Math.max(this.active, -1), this.items.length - 1) : -1;
+            },
+
+            pick: function (value) {
+                var input = this.$refs.input;
+                if (!input) return;
+                input.value = value;
+                input.dispatchEvent(new Event('input',  { bubbles: true }));
+                input.dispatchEvent(new Event('change', { bubbles: true }));
+                this.record(value);
+                input.focus();
+                this.close();
+            },
+
+            record: function (value) {
+                var v = String(value || '').trim();
+                if (!this.opts.storageKey || v.length < 2) return;
+                window.numericLRU.record(this.opts.storageKey, v, 10);
+            },
+
+            itemClass: function (item, index) {
+                var cls = 'txt-suggest__item txt-suggest__item-' + item.source;
+                if (index === this.active) cls += ' is-active';
+                return cls;
+            }
+        };
+    });
+});
+
 // ===== Historial de busqueda propio (datalist + localStorage) =====
 // Chrome clasifica los buscadores como "search box" y no guarda su historial
 // de autofill, asi que lo manejamos nosotros. Uso: agregar al input

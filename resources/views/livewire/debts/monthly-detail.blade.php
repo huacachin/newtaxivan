@@ -155,21 +155,30 @@
                               @enderror
                           </div>
 
-                          {{-- Detalle exoneración — autocompletado con historial (datalist) --}}
+                          {{-- Detalle exoneración — historial visible (LRU local + detalles ya usados) --}}
                           <div class="flex-item flex-item-lg">
                               <label class="form-label mb-1">Detalle exoneración</label>
-                              <input type="text"
-                                     class="form-control form-control-sm @error('detailInput') is-invalid @enderror"
-                                     style="background-color: yellow;"
-                                     list="detail-exoneration-suggestions"
-                                     autocomplete="off"
-                                     wire:model="detailInput"
-                                     placeholder="Motivo / detalle">
-                              <datalist id="detail-exoneration-suggestions">
-                                  @foreach($detailSuggestions as $name)
-                                      <option value="{{ $name }}"></option>
-                                  @endforeach
-                              </datalist>
+                              <div class="txt-suggest" x-data="textSuggest({
+                                  storageKey: 'monthly-debt.detail',
+                                  server: () => $wire.detailSuggestions,
+                                  max: 8
+                              })">
+                                  <input type="text"
+                                         x-ref="input"
+                                         class="form-control form-control-sm @error('detailInput') is-invalid @enderror"
+                                         style="background-color: yellow;"
+                                         autocomplete="off"
+                                         wire:model="detailInput"
+                                         placeholder="Motivo / detalle">
+                                  <ul class="txt-suggest__list" x-ref="list" role="listbox"
+                                      x-show="open && items.length" x-cloak>
+                                      <template x-for="(it, i) in items" :key="it.value">
+                                          <li :class="itemClass(it, i)" role="option" :title="it.hint"
+                                              @mousedown.prevent @click="pick(it.value)"
+                                              @mouseenter="active = i" x-text="it.value"></li>
+                                      </template>
+                                  </ul>
+                              </div>
                               @error('detailInput')
                               <div class="invalid-feedback d-block">{{ $message }}</div>
                               @enderror
