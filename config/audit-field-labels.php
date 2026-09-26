@@ -169,4 +169,22 @@ return [
         'date'   => 'Fecha',
         'amount' => 'Monto',
     ],
+    // Accesos (action='login'), ver App\Listeners\LogSuccessfulLogin
+    'Sesiones' => [
+        'username'        => 'Usuario',
+        'name'            => 'Nombre',
+        'email'           => 'Email',
+        'document_type'   => 'Tipo Documento',
+        'document_number' => 'N° Documento',
+        'phone'           => 'Teléfono',
+        'role'            => 'Rol',
+        'headquarter'     => 'Sede principal',
+        'headquarters'    => 'Sedes asignadas',
+        'status'          => 'Estado',
+        'method'          => 'Método de acceso',
+        'remember'        => 'Marcó "Recordarme"',
+        'device'          => 'Dispositivo',
+        'os'              => 'Sistema operativo',
+        'browser'         => 'Navegador',
+    ],
 ];

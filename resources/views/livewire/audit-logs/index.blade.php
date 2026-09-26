@@ -38,6 +38,7 @@
                         <option value="created">Creación</option>
                         <option value="updated">Edición</option>
                         <option value="deleted">Eliminación</option>
+                        <option value="login">Acceso</option>
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -92,6 +93,8 @@
                                         <span class="badge bg-success">Creación</span>
                                     @elseif($log->action === 'updated')
                                         <span class="badge bg-warning text-dark">Edición</span>
+                                    @elseif($log->action === 'login')
+                                        <span class="badge bg-info">Acceso</span>
                                     @endif
                                 </td>
                                 <td>{{ $log->module }}</td>
@@ -135,6 +138,7 @@
                         @if($detail['action'] === 'created') <span class="text-success">Creación</span>
                         @elseif($detail['action'] === 'updated') <span class="text-warning">Edición</span>
                         @elseif($detail['action'] === 'deleted') <span class="text-danger">Eliminación</span>
+                        @elseif($detail['action'] === 'login') <span class="text-info">Acceso</span>
                         @endif
                     </h5>
                     <button type="button" class="btn-close" wire:click="closeDetail"></button>
@@ -214,6 +218,31 @@
                                             <td>{{ is_array($value) ? json_encode($value) : ($value ?? '—') }}</td>
                                         </tr>
                                     @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @elseif($detail['action'] === 'login')
+                        @php
+                            // MySQL reordena las claves del JSON: se muestran en el orden del config.
+                            $loginLabels = config('audit-field-labels.' . $detail['module'], []);
+                            $loginData = $detail['new_data'] ?? [];
+                            $loginData = array_merge(array_intersect_key($loginLabels, $loginData), $loginData);
+                        @endphp
+                        <h6>Datos del acceso</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered">
+                                <thead><tr><th>Campo</th><th>Valor</th></tr></thead>
+                                <tbody>
+                                    @foreach($loginData as $field => $value)
+                                        <tr>
+                                            <td class="fw-semibold">{{ $loginLabels[$field] ?? $field }}</td>
+                                            <td>{{ $field === 'role' && $value ? __('roles.' . $value) : (is_array($value) ? json_encode($value) : ($value ?? '—')) }}</td>
+                                        </tr>
+                                    @endforeach
+                                    <tr>
+                                        <td class="fw-semibold">Navegador (completo)</td>
+                                        <td class="text-break"><small>{{ $detail['user_agent'] ?? '—' }}</small></td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
