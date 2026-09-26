@@ -77,31 +77,31 @@
               {{-- Form con WRAP (rompe a 2da/3ra fila según espacio) --}}
               <div class="row mt-2">
                   <div class="col-12">
-                      <div class="d-flex flex-wrap align-items-end gap-2 py-1">
+                      <div class="d-flex flex-wrap align-items-start gap-2 py-1">
 
                           {{-- Placa --}}
-                          <div class="flex-item flex-item-md">
+                          <div class="flex-item flex-item-fit" style="--fit-ch: 10">
                               <label class="form-label mb-1">Placa</label>
                               <input type="text" class="form-control form-control-sm input-readonly"
                                      value="{{ $plate }}" readonly>
                           </div>
 
                           {{-- Fecha --}}
-                          <div class="flex-item flex-item-sm">
+                          <div class="flex-item flex-item-fit" style="--fit-ch: 10">
                               <label class="form-label mb-1">Fecha</label>
                               <input type="text" class="form-control form-control-sm"
                                      value="{{ $date }}" readonly>
                           </div>
 
                           {{-- Días (no trabajados) --}}
-                          <div class="flex-item flex-item-md">
+                          <div class="flex-item flex-item-fit" style="--fit-ch: 3">
                               <label class="form-label mb-1">Días (no trabajados)</label>
                               <input type="text" class="form-control form-control-sm input-readonly"
                                      value="{{ $days }}" readonly>
                           </div>
 
-                          {{-- Días no trabajados — detalle (más ancho, puede ir a otra fila) --}}
-                          <div class="flex-item flex-item-xl">
+                          {{-- Días no trabajados — detalle (texto: crece con el espacio libre) --}}
+                          <div class="flex-item flex-item-grow">
                               <label class="form-label mb-1">
                                   <b class="title-modules">Días no trabajados — detalle</b>
                               </label>
@@ -109,15 +109,16 @@
                           </div>
 
                           {{-- Deuda Total --}}
-                          <div class="flex-item flex-item-md">
+                          <div class="flex-item flex-item-fit" style="--fit-ch: 10">
                               <label class="form-label mb-1">Deuda Total (S/)</label>
                               <input type="text" class="form-control form-control-sm text-end input-readonly"
                                      style="color:red;font-weight:bold;"
                                      value="{{ number_format($total,2) }}" readonly>
                           </div>
 
-                          {{-- Exonerado (input) — chips con historial (LRU local + frecuentes del servidor) --}}
-                          <div class="flex-item flex-item-md">
+                          {{-- Exonerado (input) — chips con historial (LRU local + frecuentes del servidor).
+                               min-width: 2 chips por fila; sin él quedaría uno debajo de otro. --}}
+                          <div class="flex-item flex-item-fit" style="--fit-ch: 10; min-width: 140px;">
                               <label class="form-label mb-1">Exonerado (S/)</label>
                               <div x-data="numericChips({
                                   storageKey: 'monthly-debt.exonerate',
@@ -160,7 +161,7 @@
 
                           {{-- Detalle exoneración — historial propio (datalist/localStorage via
                                data-search-history en custom.js), igual que los buscadores de caja. --}}
-                          <div class="flex-item flex-item-lg">
+                          <div class="flex-item flex-item-grow">
                               <label class="form-label mb-1">Detalle exoneración</label>
                               <input type="text"
                                      name="debt_exonerate_detail"

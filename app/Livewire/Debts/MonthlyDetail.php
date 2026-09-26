@@ -185,7 +185,8 @@ class MonthlyDetail extends Component
         $this->debtDay = DebtDay::with(['vehicle','details.user','details.images'])
             ->findOrFail($this->id);
 
-        $this->date  = (string)$this->debtDay->date;
+        // La columna es DATE (sin hora): se muestra solo el dia, como en la tabla
+        $this->date  = $this->debtDay->date?->format('d/m/Y') ?? '';
         $this->plate = $this->debtDay->vehicle?->plate ?: ($this->debtDay->legacy_plate ?? '');
         $this->total = (float)($this->debtDay->total ?? 0);
 

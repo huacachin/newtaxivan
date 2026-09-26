@@ -267,6 +267,35 @@ input.hasDatepicker {
     max-width: 100%;
 }
 
+// Campo de texto que se reparte el espacio libre que dejan los .flex-item-fit
+.flex-item-grow {
+    flex: 1 1 200px;
+    min-width: 200px;
+}
+
+// Ancho segun contenido (no crece): el input mide --fit-ch caracteres
+// (+ padding/borde) y se estira al ancho del label si este es mayor.
+// Chips y mensajes de error no ensanchan el item: se ajustan a su ancho.
+// Uso: <div class="flex-item flex-item-fit" style="--fit-ch: 10">
+.flex-item-fit {
+    flex: 0 0 auto;
+
+    .form-label {
+        white-space: nowrap;
+    }
+
+    .form-control {
+        width: calc(var(--fit-ch, 10) * 1ch + 1.25rem);
+        min-width: 100%;
+    }
+
+    .num-chips,
+    .invalid-feedback {
+        width: 0;
+        min-width: 100%;
+    }
+}
+
 // --- Quick Access FAB ---
 .quick-access {
     display: flex;
