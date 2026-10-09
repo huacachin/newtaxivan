@@ -24,7 +24,6 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
     private int $rowCount = 0;
     private int $daysInMonth = 30;
     private array $daysPerRow = []; // [rowIndex => ['x'=>[...], 'x1'=>[...]]]
-    private array $pendingRealCond = []; // [rowIndex => condicion real] de las filas marcadas PEN
 
     /* ================= DATA ================= */
     public function array(): array
@@ -35,7 +34,7 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
 
         if ($this->condition === 'Exonerado') $q->where('exonerated', '>', 0);
         elseif ($this->condition === 'Amortizado') $q->where('amortized', '>', 0);
-        elseif ($this->condition === 'PEN') $q->whereNotNull('pending_at');
+        elseif ($this->condition === 'PEN') $q->whereRaw('COALESCE(total,0) - COALESCE(exonerated,0) - COALESCE(amortized,0) > 0');
         elseif ($this->condition !== '') $q->where('condition', $this->condition);
 
         $needle = mb_strtolower(trim($this->search ?? ''));
@@ -82,9 +81,6 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
             }
             $plate = $veh?->plate ?? ($r->legacy_plate ?? '');
             $cond  = $r->condition ?: ($veh->condition ?? '');
-            if ($r->pending_at !== null) {
-                $this->pendingRealCond[$item] = $cond;
-            }
 
             [$x, $x1] = $this->splitDays($r, $this->daysInMonth);
             $this->daysPerRow[$item] = ['x'=>$x, 'x1'=>$x1];
@@ -104,7 +100,7 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
                 'item'       => $item,
                 'cod'        => $veh?->sort_order ?? '',
                 'plate'      => $plate,
-                'condition'  => $r->pending_at !== null ? 'PEN' : $cond,
+                'condition'  => $cond,
                 'days_mix'   => $daysMixed, // RichText después
                 'days_late'  => $daysLate,
                 'total'      => $total,
@@ -272,15 +268,6 @@ class MonthlyDebtExport implements FromArray, WithHeadings, WithEvents, WithStyl
                             if ($i < count($union) - 1) $rt->createTextRun(',');
                         }
                         $ws->getCell("E{$r}")->setValue($rt);
-                    }
-
-                    // PEN: la condicion real va como comentario de la celda (equivale al tooltip de la vista)
-                    for ($r = $dataStartRow; $r <= $lastRow; $r++) {
-                        $item = (int) $ws->getCell("A{$r}")->getCalculatedValue();
-                        if (!array_key_exists($item, $this->pendingRealCond)) continue;
-
-                        $ws->getComment("D{$r}")->getText()
-                            ->createTextRun('Condición real: ' . ($this->pendingRealCond[$item] ?: '—'));
                     }
                 }
 

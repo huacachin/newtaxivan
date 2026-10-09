@@ -26,7 +26,6 @@ class DebtDay extends Model
         'detail_exonerated',
         'amortized',
         'condition',
-        'pending_at',
         'days_late',
     ];
 
@@ -36,7 +35,6 @@ class DebtDay extends Model
         'exonerated'  => 'decimal:2',
         'total'       => 'decimal:2',
         'amortized'   => 'decimal:2',
-        'pending_at'  => 'datetime',
     ];
 
     public function vehicle()

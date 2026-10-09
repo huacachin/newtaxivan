@@ -19,7 +19,7 @@ class MonthlyDebt extends Component
     public string $search = '';
 
     #[Url(as: 'cond', history: true)]
-    public string $condition = ''; // DT / GN / EX / EX5 / Exonerado / Amortizado / PEN
+    public string $condition = ''; // DT / GN / EX / EX5 / Exonerado / Amortizado / PEN (con deuda pendiente)
 
     // Selects mes/año para homogeneizar con la vista
     public int $month;            // 1..12
@@ -149,7 +149,8 @@ class MonthlyDebt extends Component
         } elseif ($this->condition === 'Amortizado') {
             $q->where('amortized', '>', 0);
         } elseif ($this->condition === 'PEN') {
-            $q->whereNotNull('pending_at');
+            // Misma formula que la columna PEND: total - exonerado - amortizado
+            $q->whereRaw('COALESCE(total,0) - COALESCE(exonerated,0) - COALESCE(amortized,0) > 0');
         } elseif (!empty($this->condition)) {
             $q->where('condition', $this->condition);
         }
@@ -233,7 +234,6 @@ class MonthlyDebt extends Component
                 'cod'            => $cod,
                 'plate'          => $plateStr,
                 'condition'      => $cond,
-                'is_pending'     => $row->pending_at !== null,
                 'days_text'      => $daysText,
                 'days_breakdown' => $daysBreakdown,
                 'days_late'      => $daysLate,
@@ -301,23 +301,6 @@ class MonthlyDebt extends Component
             }
         }
         return $out;
-    }
-
-    /**
-     * Marca/desmarca la fila como PEN (pendiente). Solo guarda debt_days.pending_at:
-     * la condicion del mes y la del vehiculo quedan intactas.
-     */
-    public function togglePending(int $id): void
-    {
-        abort_unless(auth()->user()?->can('debts.monthly'), 403);
-
-        [$from, $to] = $this->monthRange();
-        $debt = DebtDay::query()->whereBetween('date', [$from, $to])->findOrFail($id);
-
-        $debt->pending_at = $debt->pending_at ? null : now();
-        $debt->save();
-
-        $this->loadData();
     }
 
     public function detail($id): void
