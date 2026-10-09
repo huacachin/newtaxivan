@@ -76,6 +76,7 @@
                                         <option value="EX5">EX5</option>
                                         <option value="Exonerado">Exonerado</option>
                                         <option value="Amortizado">Amortizado</option>
+                                        <option value="PEN">PEN</option>
                                     </select>
                                 </div>
 
@@ -111,9 +112,17 @@
                                     <div class="list-card__title-wrap">
                                         <span class="list-card__index">{{ $loop->iteration }}</span>
                                         <span class="list-card__title list-card__title--plate">{{ $r['plate'] }}</span>
-                                        @if($r['condition'])
-                                            <span class="list-chip">{{ $r['condition'] }}</span>
-                                        @endif
+                                        {{-- Tocar el chip marca/desmarca PEN (en celular no hay clic derecho) --}}
+                                        <button type="button"
+                                                class="list-chip border-0 {{ $r['is_pending'] ? 'list-chip--warn' : '' }}"
+                                                wire:click="togglePending({{ $r['id'] }})"
+                                                aria-label="{{ $r['is_pending'] ? 'Quitar PEN' : 'Marcar PEN' }}">
+                                            @if($r['is_pending'])
+                                                PEN{{ $r['condition'] ? ' · '.$r['condition'] : '' }}
+                                            @else
+                                                {{ $r['condition'] ?: '—' }}
+                                            @endif
+                                        </button>
                                     </div>
                                     @hasanyrole('director|gerente|administrador')
                                         @if(($r['total'] ?? 0) > 0)
@@ -216,7 +225,15 @@
                                     <td>{{ $loop->iteration }}</td>
                                     <td>{{ $r['cod'] }}</td>
                                     <td><strong>{{ $r['plate'] }}</strong></td>
-                                    <td>{{ $r['condition'] }}</td>
+                                    <td wire:contextmenu.prevent="togglePending({{ $r['id'] }})"
+                                        style="cursor: context-menu"
+                                        title="{{ $r['is_pending'] ? 'Condición real: '.($r['condition'] ?: '—').' · Clic derecho para quitar PEN' : 'Clic derecho para marcar PEN' }}">
+                                        @if($r['is_pending'])
+                                            <span class="badge bg-warning text-dark">PEN</span>
+                                        @else
+                                            {{ $r['condition'] }}
+                                        @endif
+                                    </td>
                                     <td>{!! $r['days_text'] !!}</td>
                                     <td>{{ $r['days_late'] }}</td>
                                     <td>{{ number_format($r['total'], 2) }}</td>

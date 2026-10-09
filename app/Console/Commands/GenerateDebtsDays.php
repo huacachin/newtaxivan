@@ -101,20 +101,21 @@ class GenerateDebtsDays extends Command
             $costByVidDate[(int)$r->vehicle_id][$r->date] = (float)$r->amount;
         }
 
-        // ===== 5) Preservar exoneraciones/amortizaciones existentes =====
-        $this->line('- Preservando exoneraciones y amortizaciones...');
+        // ===== 5) Preservar exoneraciones/amortizaciones y marcas PEN existentes =====
+        $this->line('- Preservando exoneraciones, amortizaciones y marcas PEN...');
         $prevData = DB::table('debt_days')
             ->whereYear('date', $year)
             ->whereMonth('date', $month)
             ->where(function ($q) {
                 $q->where('exonerated', '>', 0)
                   ->orWhere('amortized', '>', 0)
-                  ->orWhereNotNull('detail_exonerated');
+                  ->orWhereNotNull('detail_exonerated')
+                  ->orWhereNotNull('pending_at');
             })
-            ->get(['vehicle_id', 'exonerated', 'detail_exonerated', 'amortized'])
+            ->get(['vehicle_id', 'exonerated', 'detail_exonerated', 'amortized', 'pending_at'])
             ->keyBy('vehicle_id');
 
-        $this->line("  Encontrados: " . $prevData->count() . " registros con exoneración/amortización");
+        $this->line("  Encontrados: " . $prevData->count() . " registros con exoneración/amortización/PEN");
 
         // ===== 6) Borrar previos =====
         $this->line('- Eliminando registros previos...');
@@ -202,6 +203,7 @@ class GenerateDebtsDays extends Command
                 'detail_exonerated' => null,
                 'amortized'         => 0,
                 'condition'         => $cond ?: null,
+                'pending_at'        => null,
                 'days_late'         => 0,
                 'created_at'        => $now,
                 'updated_at'        => $now,
@@ -236,6 +238,7 @@ class GenerateDebtsDays extends Command
                 $row['exonerated']        = (float) $prev->exonerated;
                 $row['detail_exonerated'] = $prev->detail_exonerated;
                 $row['amortized']         = (float) $prev->amortized;
+                $row['pending_at']        = $prev->pending_at;
             }
 
             $payload[] = $row;
