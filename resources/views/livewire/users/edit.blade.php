@@ -222,8 +222,21 @@
                 @if($canFullEdit)
                     @php
                         $directorRoleId = (int) (collect($roles)->firstWhere('name', 'director')?->id ?? 0);
+                        $controllerRoleId = (int) (collect($roles)->firstWhere('name', 'controlador')?->id ?? 0);
                         $originalRoleId = (int) (collect($roles)->firstWhere('name', $editedUserRoleName)?->id ?? 0);
                     @endphp
+                    {{-- Cambiar de rol reinicia permisos y sucursales (ver update): se avisa antes de guardar. --}}
+                    <div class="perm-row span-2" x-data x-cloak x-show.important="($wire.selectedRoleId ?? 0) != {{ $originalRoleId }}">
+                        <div class="perm-col-title"><i class="ti ti-alert-triangle"></i> Cambio de rol</div>
+                        <div class="perm-col-controls alert alert-warning py-2 mb-0 small">
+                            <b>Cambiar el rol reinicia los permisos y las sucursales de {{ $user->username }}.</b>
+                            <span x-show="($wire.selectedRoleId ?? 0) == {{ $directorRoleId }}">Como Director recibirá todos los permisos.</span>
+                            <span x-show="($wire.selectedRoleId ?? 0) != {{ $directorRoleId }}">
+                                Quedará <b>sin permisos</b> y no podrá entrar a ninguna pantalla: después de guardar, asígnaselos en Permisos<span x-show="($wire.selectedRoleId ?? 0) == {{ $controllerRoleId }}"> y vuelve a Editar para marcar sus sucursales (sin ellas no ve ninguna sede)</span>.
+                            </span>
+                        </div>
+                    </div>
+
                     <div class="perm-row span-2" x-data x-cloak
                          x-show.important="($wire.selectedRoleId ?? 0) != {{ $originalRoleId }} && (($wire.selectedRoleId ?? 0) == {{ $directorRoleId }} || {{ $originalRoleId }} == {{ $directorRoleId }})">
                         <div class="perm-col-title"><i class="ti ti-shield-lock"></i> Clave de seguridad</div>

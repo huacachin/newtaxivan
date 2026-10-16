@@ -12,6 +12,11 @@
         </div>
     </div>
 
+    {{-- Llega aquí quien intentó entrar a una pantalla sin permiso y tampoco puede ver Salidas (bootstrap/app.php) --}}
+    @if(session('noAccess'))
+        <div class="alert alert-warning py-2 small"><i class="ti ti-lock"></i> {{ session('noAccess') }}</div>
+    @endif
+
     {{-- Mis datos (solo lectura: los cambia quien administra usuarios) --}}
     <div class="card">
         <div class="card-header py-2 d-flex align-items-center gap-2">
