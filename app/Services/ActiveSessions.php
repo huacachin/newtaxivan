@@ -18,7 +18,9 @@ use Illuminate\Support\Facades\DB;
  * Cada sesión se entrega sin su id real (con el id y la clave de la app se
  * puede suplantar la sesión): `key` es su hash y sirve para cerrarla.
  * `current` marca la sesión del navegador que consulta y `active` la que tuvo
- * actividad en los últimos ACTIVE_MINUTES minutos.
+ * actividad en los últimos ACTIVE_MINUTES minutos. Las vencidas (más de
+ * session.lifetime sin actividad) no se listan: Laravel ya no las acepta y
+ * solo esperan a que su limpieza al azar las borre.
  *
  * Cerrar sesiones también borra el remember_token del usuario: si no, la
  * cookie "Recordarme" volvería a abrirla en el siguiente clic.
@@ -142,8 +144,10 @@ final class ActiveSessions
 
         $currentId = (string) session()->getId();
         $activeSince = now()->subMinutes(self::ACTIVE_MINUTES)->timestamp;
+        $expiredBefore = now()->subMinutes((int) config('session.lifetime'))->timestamp;
 
         return $filter(self::table())
+            ->where('last_activity', '>=', $expiredBefore)
             ->orderByDesc('last_activity')
             ->get(['id', 'user_id', 'ip_address', 'user_agent', 'last_activity'])
             ->map(fn ($session) => [
