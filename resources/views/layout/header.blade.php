@@ -103,6 +103,11 @@
                                                     </a>
                                                 </li>
                                                 <li class="app-divider-v dotted py-1"></li-->
+                                                <li>
+                                                    <a class="dropdown-item mb-0" href="{{ route('profile') }}">
+                                                        <i class="ti ti-user-circle pe-1 f-s-18"></i> Mi perfil
+                                                    </a>
+                                                </li>
                                                 <li class="btn-light-danger b-r-5">
                                                     <livewire:auth.logout />
                                                 </li>

@@ -3,6 +3,7 @@
 namespace App\Livewire\Users;
 
 use App\Models\User;
+use App\Services\ActiveSessions;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
@@ -26,7 +27,17 @@ class Index extends Component
         }
 
         $user->update(['status' => 'inactive']);
-        $this->dispatch('successAlert', ['message' => 'Usuario desactivado correctamente']);
+
+        // El login ya no lo deja entrar, pero una sesión abierta seguiría sirviendo hasta caducar.
+        $closed = ActiveSessions::closeForUser($user->id, keepCurrent: true);
+        if ($closed > 0) {
+            ActiveSessions::logClosure($user, [
+                'scope' => 'Todas sus sesiones (al desactivar el usuario)',
+                'sessions_closed' => $closed,
+            ]);
+        }
+
+        $this->dispatch('successAlert', ['message' => 'Usuario desactivado correctamente'.($closed > 0 ? " y {$closed} sesión(es) suya(s) cerrada(s)" : '')]);
     }
 
     public function export(): void

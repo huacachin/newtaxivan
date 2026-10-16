@@ -30,6 +30,9 @@ Route::middleware('auth')->group(function () {
     // Dashboard (raíz autenticada)
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
 
+    // Mi perfil: cualquier usuario logueado (sus datos y sus sesiones activas)
+    Route::get('profile', fn () => view('profile.index'))->name('profile');
+
     // Configuraciones
     Route::get('vehicles', [VehicleController::class,'index'])->name('settings.vehicles.index');
     Route::get('vehicles/create', [VehicleController::class,'create'])->name('settings.vehicles.create')->middleware('role:director|gerente|administrador');
@@ -119,6 +122,9 @@ Route::middleware('auth')->group(function () {
         ->whereNumber('id')
         ->name('audit.snapshot')
         ->middleware('role:director');
+
+    // Monitoreo (solo Director): sesiones abiertas de todos los usuarios
+    Route::get('monitoring', fn () => view('monitoring.index'))->name('monitoring.index')->middleware('role:director');
 
     //Exportar a excel
     Route::get('/exports/vehicles', [VehicleController::class, 'export'])

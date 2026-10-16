@@ -82,6 +82,14 @@
             'route' => 'audit.logs.index',
             'role'  => 'director',
         ],
+
+        [
+            'id'    => 'monitoring',
+            'title' => 'Monitoreo',
+            'icon'  => 'ti ti-devices',
+            'route' => 'monitoring.index',
+            'role'  => 'director',
+        ],
     ];
 @endphp
 

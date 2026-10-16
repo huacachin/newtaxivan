@@ -47,8 +47,10 @@ class Login extends Component
             ]);
         }
 
+        // Solo usuarios activos: un usuario desactivado ya no puede entrar.
+        // El intento fallido queda en la auditoría (App\Listeners\LogFailedLogin).
         if (! Auth::attempt(
-            ['username' => $this->username, 'password' => $this->password],
+            ['username' => $this->username, 'password' => $this->password, 'status' => 'active'],
             $this->remember
         )) {
             RateLimiter::hit($this->throttleKey(), 60); // 60s por intento fallido

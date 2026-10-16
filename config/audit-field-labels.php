@@ -174,10 +174,16 @@ return [
         'date'   => 'Fecha',
         'amount' => 'Monto',
     ],
-    // Accesos (action='login'), ver App\Listeners\LogSuccessfulLogin
+    // Accesos (action='login' / 'login_failed') y cierres de sesión (action='session_closed'),
+    // ver App\Listeners\LogSuccessfulLogin, App\Listeners\LogFailedLogin y App\Services\ActiveSessions
     'Sesiones' => [
         'username'        => 'Usuario',
         'name'            => 'Nombre',
+        'reason'          => 'Motivo',
+        'scope'           => 'Qué se cerró',
+        'sessions_closed' => 'Sesiones cerradas',
+        'ip'              => 'IP de la sesión',
+        'last_activity'   => 'Última actividad',
         'email'           => 'Email',
         'document_type'   => 'Tipo Documento',
         'document_number' => 'N° Documento',
