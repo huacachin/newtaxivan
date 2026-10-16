@@ -39,6 +39,8 @@
                         <option value="updated">Edición</option>
                         <option value="deleted">Eliminación</option>
                         <option value="login">Acceso</option>
+                        <option value="role_changed">Cambio de rol</option>
+                        <option value="role_change_denied">Clave incorrecta</option>
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -95,6 +97,10 @@
                                         <span class="badge bg-warning text-dark">Edición</span>
                                     @elseif($log->action === 'login')
                                         <span class="badge bg-info">Acceso</span>
+                                    @elseif($log->action === 'role_changed')
+                                        <span class="badge bg-primary">Cambio de rol</span>
+                                    @elseif($log->action === 'role_change_denied')
+                                        <span class="badge bg-dark">Clave incorrecta</span>
                                     @endif
                                 </td>
                                 <td>{{ $log->module }}</td>
@@ -139,6 +145,8 @@
                         @elseif($detail['action'] === 'updated') <span class="text-warning">Edición</span>
                         @elseif($detail['action'] === 'deleted') <span class="text-danger">Eliminación</span>
                         @elseif($detail['action'] === 'login') <span class="text-info">Acceso</span>
+                        @elseif($detail['action'] === 'role_changed') <span class="text-primary">Cambio de rol</span>
+                        @elseif($detail['action'] === 'role_change_denied') <span class="text-dark">Clave incorrecta</span>
                         @endif
                     </h5>
                     <button type="button" class="btn-close" wire:click="closeDetail"></button>
@@ -221,14 +229,14 @@
                                 </tbody>
                             </table>
                         </div>
-                    @elseif($detail['action'] === 'login')
+                    @elseif(in_array($detail['action'], ['login', 'role_changed', 'role_change_denied'], true))
                         @php
                             // MySQL reordena las claves del JSON: se muestran en el orden del config.
                             $loginLabels = config('audit-field-labels.' . $detail['module'], []);
                             $loginData = $detail['new_data'] ?? [];
                             $loginData = array_merge(array_intersect_key($loginLabels, $loginData), $loginData);
                         @endphp
-                        <h6>Datos del acceso</h6>
+                        <h6>{{ $detail['action'] === 'login' ? 'Datos del acceso' : 'Datos del cambio de rol' }}</h6>
                         <div class="table-responsive">
                             <table class="table table-sm table-bordered">
                                 <thead><tr><th>Campo</th><th>Valor</th></tr></thead>
@@ -236,7 +244,7 @@
                                     @foreach($loginData as $field => $value)
                                         <tr>
                                             <td class="fw-semibold">{{ $loginLabels[$field] ?? $field }}</td>
-                                            <td>{{ $field === 'role' && $value ? __('roles.' . $value) : (is_array($value) ? json_encode($value) : ($value ?? '—')) }}</td>
+                                            <td>{{ in_array($field, ['role', 'role_before', 'role_after'], true) && $value ? __('roles.' . $value) : (is_array($value) ? json_encode($value) : ($value ?? '—')) }}</td>
                                         </tr>
                                     @endforeach
                                     <tr>

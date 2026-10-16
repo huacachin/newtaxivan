@@ -4,6 +4,7 @@ namespace App\Livewire\Users;
 
 use App\Models\Headquarter;
 use App\Models\User;
+use App\Traits\ProtectsDirectorRole;
 use App\Traits\ValidatesUserAccount;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -13,6 +14,7 @@ use Spatie\Permission\Models\Role;
 
 class Edit extends Component
 {
+    use ProtectsDirectorRole;
     use ValidatesUserAccount;
 
     public User $user;
@@ -127,7 +129,7 @@ class Edit extends Component
         'selectedHeadquarters' => 'sucursales',
     ];
 
-    public function update()
+    public function update(string $directorKey = '')
     {
         $authUser = auth()->user();
         if (! $authUser->canManageUser($this->user)) {
@@ -136,6 +138,13 @@ class Edit extends Component
 
         if ($this->canFullEdit) {
             $this->validate();
+
+            // Dar o quitar el rol Director exige la clave de seguridad
+            $currentRole = $this->user->roles()->value('name');
+            $roleName = $this->selectedRoleName();
+            if ($this->directorRoleChangeBlocked($currentRole, $roleName, $this->user, $directorKey)) {
+                return;
+            }
 
             // Si el rol es admin, asignar todas las sedes con Huaycan como primaria
             if ($this->selectedRoleGetsAllHeadquarters()) {
@@ -172,10 +181,7 @@ class Edit extends Component
                 ?: (count($this->selectedHeadquarters) ? (int) $this->selectedHeadquarters[0] : null);
             $this->user->save();
 
-            $roleName = $this->selectedRoleName();
-
             // Si el rol cambió, limpiar permisos y sucursales
-            $currentRole = $this->user->roles->first()?->name;
             if ($roleName !== $currentRole) {
                 $this->user->headquarters()->sync([]);
                 $this->user->update(['headquarter_id' => null]);
@@ -189,6 +195,7 @@ class Edit extends Component
             }
 
             $this->user->syncRoles($roleName ? [$roleName] : []);
+            $this->logRoleChange($this->user, $currentRole, $roleName);
         } else {
             // No-Director: solo password y sucursales (sucursales solo si el editado es controlador)
             $rules = ['pwd' => ['nullable', 'string', Password::min(8)->mixedCase()->numbers()->symbols()]];

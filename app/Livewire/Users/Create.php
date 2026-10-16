@@ -4,6 +4,7 @@ namespace App\Livewire\Users;
 
 use App\Models\Headquarter;
 use App\Models\User;
+use App\Traits\ProtectsDirectorRole;
 use App\Traits\ValidatesUserAccount;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -13,6 +14,7 @@ use Spatie\Permission\Models\Role;
 
 class Create extends Component
 {
+    use ProtectsDirectorRole;
     use ValidatesUserAccount;
 
     public string $name = '';
@@ -93,9 +95,15 @@ class Create extends Component
         $this->roles = Role::all(['id', 'name'])->sortBy(fn ($r) => User::ROLE_HIERARCHY[$r->name] ?? 0)->values();
     }
 
-    public function save()
+    public function save(string $directorKey = '')
     {
         $this->validate();
+
+        // Dar de alta como Director exige la clave de seguridad
+        $newRole = $this->selectedRoleName();
+        if ($this->directorRoleChangeBlocked(null, $newRole, null, $directorKey)) {
+            return;
+        }
 
         // Si el rol es admin, asignar todas las sedes con Huaycan como primaria
         if ($this->selectedRoleGetsAllHeadquarters()) {
@@ -129,7 +137,8 @@ class Create extends Component
             ?: (count($this->selectedHeadquarters) ? (int) $this->selectedHeadquarters[0] : null);
         $user->save();
 
-        $user->syncRoles([$this->selectedRoleName()]);
+        $user->syncRoles([$newRole]);
+        $this->logRoleChange($user, null, $newRole);
 
         session()->flash('success', 'Usuario creado correctamente');
 

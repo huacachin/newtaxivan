@@ -134,6 +134,11 @@ return [
         'headquarter_id'   => 'Sede',
         'sort_order'       => 'Orden',
         'status'           => 'Estado',
+        // Cambios de rol (action='role_changed' / 'role_change_denied'), ver App\Traits\ProtectsDirectorRole
+        'role_before'      => 'Rol anterior',
+        'role_after'       => 'Rol nuevo',
+        'security_key'     => 'Con clave de seguridad',
+        'attempts'         => 'Intentos fallidos',
     ],
     'Conceptos' => [
         'name'       => 'Nombre',

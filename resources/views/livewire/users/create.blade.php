@@ -196,10 +196,24 @@
                         @error('selectedRoleId') <span class="title-modules small">{{ $message }}</span> @enderror
                     </div>
                 </div>
+
+                {{-- Dar de alta como Director pide la clave de seguridad. El campo aparece (Alpine) solo con
+                     Director marcado; el servidor la exige de todos modos. Sin wire:model: va como parámetro. --}}
+                @php $directorRoleId = (int) (collect($roles)->firstWhere('name', 'director')?->id ?? 0); @endphp
+                <div class="perm-row span-2" x-data x-cloak x-show.important="($wire.selectedRoleId ?? 0) == {{ $directorRoleId }}">
+                    <div class="perm-col-title"><i class="ti ti-shield-lock"></i> Clave de seguridad</div>
+                    <div class="perm-col-controls">
+                        <input type="password" class="form-control form-control-sm" id="director-key" name="director_key"
+                               autocomplete="one-time-code" placeholder="Clave para dar el rol Director"
+                               x-on:keydown.enter="$wire.save($event.target.value)">
+                        <small class="text-muted d-block">Dar el rol Director requiere la clave de seguridad.</small>
+                        @error('directorKey') <span class="title-modules small">{{ $message }}</span> @enderror
+                    </div>
+                </div>
             </div>
 
             <div class="mt-2 d-flex gap-2">
-                <button class="btn btn-primary btn-sm" wire:click="save" wire:loading.attr="disabled"><span wire:loading wire:target="save" class="spinner-border spinner-border-sm"></span><span wire:loading.remove wire:target="save">Guardar</span></button>
+                <button class="btn btn-primary btn-sm" x-on:click="$wire.save(document.getElementById('director-key').value)" wire:loading.attr="disabled"><span wire:loading wire:target="save" class="spinner-border spinner-border-sm"></span><span wire:loading.remove wire:target="save">Guardar</span></button>
                 <button type="button" class="btn btn-danger btn-sm" wire:click="clean">Limpiar</button>
                 <a class="btn btn-secondary btn-sm" href="{{ route('settings.users.index') }}">Volver</a>
             </div>
