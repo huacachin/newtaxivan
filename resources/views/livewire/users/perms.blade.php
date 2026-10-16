@@ -33,6 +33,14 @@
                 </div>
             @endif
 
+            @if(!$selectedRoleId)
+                <div class="alert alert-warning py-2 mb-3">
+                    <i class="ti ti-alert-triangle"></i>
+                    Este usuario no tiene rol. Asígnale uno desde <a href="{{ route('settings.users.edit', ['user' => $user->id]) }}">Editar</a> antes de guardar sus permisos.
+                </div>
+            @endif
+            @error('selectedRoleId') <div class="alert alert-warning py-2 mb-3">{{ $message }}</div> @enderror
+
             {{-- Permisos --}}
             <div class="perm-grid" @if(!$canEdit) style="opacity:.6; pointer-events:none" @endif>
                 @foreach($aclGroups as $groupKey => $group)
@@ -87,7 +95,7 @@
             </div>
 
             <div class="mt-2 d-flex gap-2">
-                @if($canEdit)
+                @if($canEdit && $selectedRoleId)
                 <button class="btn btn-sm btn-primary" wire:click="savePerms" wire:loading.attr="disabled"><span wire:loading wire:target="savePerms" class="spinner-border spinner-border-sm"></span><span wire:loading.remove wire:target="savePerms">Guardar</span></button>
                 @endif
                 <a class="btn btn-sm btn-secondary" href="{{ route('settings.users.index') }}">Volver</a>

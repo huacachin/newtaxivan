@@ -4,6 +4,7 @@ namespace App\Livewire\Users;
 
 use App\Models\Permission;
 use App\Models\User;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Spatie\Permission\Models\Role;
 
@@ -12,25 +13,32 @@ class Perms extends Component
     public User $user;
 
     public ?string $permsUserName = null;
+
+    /** El rol se asigna desde Editar; aquí solo se lee */
+    #[Locked]
     public ?int $selectedRoleId = null;
+
     public array $selectedPermissionNames = [];
+
     public array $aclGroups = [];
+
     public $roles = [];
+
     public bool $canEdit = false;
 
     public function mount(int $id)
     {
-        $this->user = User::with(['headquarters','roles'])->findOrFail($id);
+        $this->user = User::with(['headquarters', 'roles'])->findOrFail($id);
 
         $authUser = auth()->user();
-        if (!$authUser->canManageUser($this->user)) {
+        if (! $authUser->canManageUser($this->user)) {
             abort(403);
         }
 
         $this->canEdit = $authUser->isDirector();
 
         $this->permsUserName = $this->user->name;
-        $this->roles = Role::all(['id','name'])->sortBy(fn($r) => User::ROLE_HIERARCHY[$r->name] ?? 0)->values();
+        $this->roles = Role::all(['id', 'name'])->sortBy(fn ($r) => User::ROLE_HIERARCHY[$r->name] ?? 0)->values();
 
         $this->selectedRoleId = $this->user->roles()->value('id');
 
@@ -55,7 +63,7 @@ class Perms extends Component
         $perms = Permission::query()
             ->where('guard_name', 'web')
             ->orderBy('name')
-            ->get(['id','name','label','module','module_label']);
+            ->get(['id', 'name', 'label', 'module', 'module_label']);
 
         $groups = [];
         foreach ($perms as $p) {
@@ -64,11 +72,11 @@ class Perms extends Component
             $label = $override ?: ($p->label ?: ($p->module_label ?: $this->humanize($name)));
             if (str_contains($name, '.')) {
                 [$parent, $rest] = explode('.', $name, 2);
-                $groups[$parent] ??= ['type'=>'group','title'=>$this->humanize($parent),'items'=>[]];
-                $groups[$parent]['items'][] = ['key'=>$name,'label'=>$override ?: ($p->label ?: ($p->module_label ?: $this->humanize($rest)))];
+                $groups[$parent] ??= ['type' => 'group', 'title' => $this->humanize($parent), 'items' => []];
+                $groups[$parent]['items'][] = ['key' => $name, 'label' => $override ?: ($p->label ?: ($p->module_label ?: $this->humanize($rest)))];
             } else {
-                $groups[$name] ??= ['type'=>'single','title'=>$label,'items'=>[]];
-                $groups[$name]['items'][] = ['key'=>$name,'label'=>$label];
+                $groups[$name] ??= ['type' => 'single', 'title' => $label, 'items' => []];
+                $groups[$name]['items'][] = ['key' => $name, 'label' => $label];
             }
         }
         $sidebarOrder = ['dashboard', 'configuracion', 'departures', 'payments', 'debts', 'cash'];
@@ -83,12 +91,14 @@ class Perms extends Component
                 'configuracion.headquarters',
             ],
             'debts' => ['debts.days', 'debts.monthly'],
-            'cash'  => ['cash.incomes', 'cash.expenses', 'cash.report-general', 'cash.report-draco', 'cash.report-sal-pag-cont', 'cash.report-caja-ma'],
+            'cash' => ['cash.incomes', 'cash.expenses', 'cash.report-general', 'cash.report-draco', 'cash.report-sal-pag-cont', 'cash.report-caja-ma'],
         ];
 
         // Ordenar items dentro de cada grupo
         foreach ($itemsOrder as $groupKey => $order) {
-            if (!isset($groups[$groupKey])) continue;
+            if (! isset($groups[$groupKey])) {
+                continue;
+            }
             $items = $groups[$groupKey]['items'];
             $sorted = [];
             foreach ($order as $key) {
@@ -100,7 +110,7 @@ class Perms extends Component
                 }
             }
             foreach ($items as $item) {
-                if (!in_array($item['key'], $order)) {
+                if (! in_array($item['key'], $order)) {
                     $sorted[] = $item;
                 }
             }
@@ -115,7 +125,7 @@ class Perms extends Component
             }
         }
         foreach ($groups as $key => $group) {
-            if (!isset($ordered[$key])) {
+            if (! isset($ordered[$key])) {
                 $ordered[$key] = $group;
             }
         }
@@ -126,19 +136,24 @@ class Perms extends Component
     {
         $val = str_replace(['_', '-'], ' ', $val);
         $parts = explode('.', $val);
-        return implode(' · ', array_map(fn($x)=>mb_convert_case($x, MB_CASE_TITLE, "UTF-8"), $parts));
+
+        return implode(' · ', array_map(fn ($x) => mb_convert_case($x, MB_CASE_TITLE, 'UTF-8'), $parts));
     }
 
     public function selectGroup(string $groupKey): void
     {
-        if (!isset($this->aclGroups[$groupKey])) return;
+        if (! isset($this->aclGroups[$groupKey])) {
+            return;
+        }
         $keys = array_column($this->aclGroups[$groupKey]['items'], 'key');
         $this->selectedPermissionNames = array_values(array_unique(array_merge($this->selectedPermissionNames, $keys)));
     }
 
     public function deselectGroup(string $groupKey): void
     {
-        if (!isset($this->aclGroups[$groupKey])) return;
+        if (! isset($this->aclGroups[$groupKey])) {
+            return;
+        }
         $keys = array_column($this->aclGroups[$groupKey]['items'], 'key');
         $this->selectedPermissionNames = array_values(array_diff($this->selectedPermissionNames, $keys));
     }
@@ -146,9 +161,14 @@ class Perms extends Component
     public function savePerms(): void
     {
         $authUser = auth()->user();
-        if (!$authUser->isDirector() || !$authUser->canManageUser($this->user)) {
+        if (! $authUser->isDirector() || ! $authUser->canManageUser($this->user)) {
             abort(403);
         }
+
+        $this->validate(
+            ['selectedRoleId' => ['required', 'integer', 'exists:roles,id']],
+            ['selectedRoleId.required' => 'Este usuario no tiene rol. Asígnale uno desde Editar antes de guardar sus permisos.'],
+        );
 
         $user = $this->user;
 

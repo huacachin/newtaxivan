@@ -4,6 +4,7 @@ namespace App\Livewire\Users;
 
 use App\Models\Headquarter;
 use App\Models\User;
+use App\Traits\ValidatesUserAccount;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -12,20 +13,32 @@ use Spatie\Permission\Models\Role;
 
 class Create extends Component
 {
+    use ValidatesUserAccount;
+
     public string $name = '';
+
     public string $username = '';
+
     public string $pwd = '';
+
     public ?string $email = null;
+
     public string $document_type = 'dni';
+
     public string $document_number = '';
+
     public string $phone = '';
+
     public ?int $sort_order = 0;
 
     public $headquartes;
+
     public $roles = [];
 
     public array $selectedHeadquarters = [];
+
     public ?int $defaultHeadquarter = null;
+
     public ?int $selectedRoleId = null;
 
     /** Copia del estado anterior de sucursales para detectar cuál se acaba de marcar */
@@ -38,12 +51,12 @@ class Create extends Component
         $this->prevSelectedHeadquarters = $selected;
 
         // Se desmarcó la sucursal primaria: queda pendiente hasta el próximo check
-        if ($this->defaultHeadquarter && !in_array((int)$this->defaultHeadquarter, $selected, true)) {
+        if ($this->defaultHeadquarter && ! in_array((int) $this->defaultHeadquarter, $selected, true)) {
             $this->defaultHeadquarter = null;
         }
 
         // Sin primaria y se acaba de marcar una sucursal: esa nueva es la primaria
-        if (!$this->defaultHeadquarter && $added) {
+        if (! $this->defaultHeadquarter && $added) {
             $this->defaultHeadquarter = (int) end($added);
         }
     }
@@ -51,30 +64,33 @@ class Create extends Component
     protected function rules()
     {
         return [
-            'name'            => ['required','string','max:255'],
-            'username'        => ['required','string','min:3','max:64', Rule::unique('users','username')],
-            'email'           => ['nullable','email','max:255', Rule::unique('users','email')],
-            'pwd'             => ['required','string', Password::min(8)->mixedCase()->numbers()->symbols()],
-            'document_type'   => ['required','string','max:3'],
-            'document_number' => ['required','string','max:11', Rule::unique('users','document_number')->where(fn($q)=>$q->where('document_type',$this->document_type))],
-            'phone'           => ['required','string','max:15'],
-            'sort_order'      => ['nullable','integer'],
-            'selectedHeadquarters'   => ['array'],
-            'selectedHeadquarters.*' => ['integer','exists:headquarters,id'],
-            'defaultHeadquarter'     => ['nullable','integer','exists:headquarters,id'],
-            'selectedRoleId'         => ['nullable','integer','exists:roles,id'],
+            'name' => ['required', 'string', 'max:255'],
+            'username' => ['required', 'string', 'min:3', 'max:64', Rule::unique('users', 'username')],
+            'email' => ['nullable', 'email', 'max:255', Rule::unique('users', 'email')],
+            'pwd' => ['required', 'string', Password::min(8)->mixedCase()->numbers()->symbols()],
+            'document_type' => $this->documentTypeRules(),
+            'document_number' => ['required', 'string', 'max:12', ...$this->documentNumberFormatRules(), Rule::unique('users', 'document_number')->where(fn ($q) => $q->where('document_type', $this->document_type))],
+            'phone' => ['required', 'string', 'max:15'],
+            'sort_order' => ['nullable', 'integer'],
+            'selectedHeadquarters' => [Rule::requiredIf(fn () => ! $this->selectedRoleGetsAllHeadquarters()), 'array'],
+            'selectedHeadquarters.*' => ['integer', 'exists:headquarters,id'],
+            'defaultHeadquarter' => ['nullable', 'integer', 'exists:headquarters,id'],
+            'selectedRoleId' => ['required', 'integer', 'exists:roles,id'],
         ];
     }
 
     protected $validationAttributes = [
+        'document_type' => 'tipo de documento',
         'document_number' => 'número de documento',
-        'pwd' => 'contraseña'
+        'pwd' => 'contraseña',
+        'selectedRoleId' => 'rol',
+        'selectedHeadquarters' => 'sucursales',
     ];
 
     public function mount()
     {
-        $this->headquartes = Headquarter::where('status','active')->get(['id','name']);
-        $this->roles = Role::all(['id','name'])->sortBy(fn($r) => User::ROLE_HIERARCHY[$r->name] ?? 0)->values();
+        $this->headquartes = Headquarter::where('status', 'active')->get(['id', 'name']);
+        $this->roles = Role::all(['id', 'name'])->sortBy(fn ($r) => User::ROLE_HIERARCHY[$r->name] ?? 0)->values();
     }
 
     public function save()
@@ -82,47 +98,41 @@ class Create extends Component
         $this->validate();
 
         // Si el rol es admin, asignar todas las sedes con Huaycan como primaria
-        $roleName = $this->selectedRoleId
-            ? collect($this->roles)->firstWhere('id', $this->selectedRoleId)?->name
-            : null;
-
-        if ($roleName && in_array(mb_strtolower($roleName), ['director', 'gerente'])) {
-            $allHqs = Headquarter::where('status', 'active')->pluck('id')->map(fn($v) => (int)$v)->toArray();
+        if ($this->selectedRoleGetsAllHeadquarters()) {
+            $allHqs = Headquarter::where('status', 'active')->pluck('id')->map(fn ($v) => (int) $v)->toArray();
             $this->selectedHeadquarters = $allHqs;
             $huaycan = Headquarter::where('name', 'Huaycan')->value('id');
-            $this->defaultHeadquarter = $huaycan ? (int)$huaycan : ($allHqs[0] ?? null);
+            $this->defaultHeadquarter = $huaycan ? (int) $huaycan : ($allHqs[0] ?? null);
         }
 
-        if ($this->defaultHeadquarter && !in_array($this->defaultHeadquarter, $this->selectedHeadquarters, true)) {
+        if ($this->defaultHeadquarter && ! in_array($this->defaultHeadquarter, $this->selectedHeadquarters, true)) {
             $this->selectedHeadquarters[] = $this->defaultHeadquarter;
         }
 
         $user = User::create([
-            "name"            => $this->name,
-            "username"        => $this->username,
-            "email"           => $this->email,
-            "password"        => Hash::make($this->pwd),
-            "document_type"   => $this->document_type,
-            "document_number" => $this->document_number,
-            "phone"           => $this->phone,
-            "sort_order"      => $this->sort_order ?? 0,
+            'name' => $this->name,
+            'username' => $this->username,
+            'email' => $this->email,
+            'password' => Hash::make($this->pwd),
+            'document_type' => $this->document_type,
+            'document_number' => $this->document_number,
+            'phone' => $this->phone,
+            'sort_order' => $this->sort_order ?? 0,
         ]);
 
         $attach = collect($this->selectedHeadquarters)
-            ->mapWithKeys(fn($id) => [(int)$id => ['is_default' => (int)$id === (int)$this->defaultHeadquarter]])
+            ->mapWithKeys(fn ($id) => [(int) $id => ['is_default' => (int) $id === (int) $this->defaultHeadquarter]])
             ->all();
         $user->headquarters()->sync($attach);
 
         $user->headquarter_id = $this->defaultHeadquarter
-            ?: (count($this->selectedHeadquarters) ? (int)$this->selectedHeadquarters[0] : null);
+            ?: (count($this->selectedHeadquarters) ? (int) $this->selectedHeadquarters[0] : null);
         $user->save();
 
-        if ($this->selectedRoleId) {
-            $roleName = collect($this->roles)->firstWhere('id', $this->selectedRoleId)?->name;
-            if ($roleName) $user->syncRoles([$roleName]);
-        }
+        $user->syncRoles([$this->selectedRoleName()]);
 
-        session()->flash('success','Usuario creado correctamente');
+        session()->flash('success', 'Usuario creado correctamente');
+
         return redirect()->route('settings.users.index');
     }
 
