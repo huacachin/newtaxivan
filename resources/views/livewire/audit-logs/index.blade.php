@@ -22,9 +22,9 @@
     <div class="card">
         <div class="card-body pb-2">
 
-            <!-- Filtros -->
+            <!-- Filtros: una sola fila desde 1400 px; más angosto, dos filas de tres. Los botones nunca parten su texto -->
             <div class="row g-2 mb-3">
-                <div class="col-md-2">
+                <div class="col-6 col-md-4 col-xxl">
                     <select class="form-select form-select-sm" wire:model="module">
                         <option value="">Todos los módulos</option>
                         @foreach($modules as $m)
@@ -32,7 +32,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
+                <div class="col-6 col-md-4 col-xxl">
                     <select class="form-select form-select-sm" wire:model="action">
                         <option value="">Todas las acciones</option>
                         <option value="created">Creación</option>
@@ -45,7 +45,7 @@
                         <option value="role_change_denied">Clave incorrecta</option>
                     </select>
                 </div>
-                <div class="col-md-2">
+                <div class="col-12 col-md-4 col-xxl">
                     <select class="form-select form-select-sm" wire:model="userId">
                         <option value="">Todos los usuarios</option>
                         @foreach($users as $u)
@@ -53,17 +53,15 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
+                <div class="col-6 col-md-4 col-xxl">
                     <input type="text" wire:ignore id="audit_date_from" class="form-control form-control-sm" wire:model="dateFrom" autocomplete="off" placeholder="Desde">
                 </div>
-                <div class="col-md-2">
+                <div class="col-6 col-md-4 col-xxl">
                     <input type="text" wire:ignore id="audit_date_to" class="form-control form-control-sm" wire:model="dateTo" autocomplete="off" placeholder="Hasta">
                 </div>
-                <div class="col-md-1">
-                    <button class="btn btn-sm btn-primary w-100" wire:click="search">Buscar</button>
-                </div>
-                <div class="col-md-1">
-                    <button class="btn btn-sm btn-secondary w-100" wire:click="clearFilters">Limpiar</button>
+                <div class="col-12 col-md-4 col-xxl-auto d-flex gap-2">
+                    <button class="btn btn-sm btn-primary flex-fill text-nowrap" wire:click="search"><i class="ti ti-search"></i> Buscar</button>
+                    <button class="btn btn-sm btn-secondary flex-fill text-nowrap" wire:click="clearFilters"><i class="ti ti-eraser"></i> Limpiar</button>
                 </div>
             </div>
 
