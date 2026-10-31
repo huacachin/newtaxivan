@@ -37,6 +37,7 @@ class DrawController extends Controller
 
         return view('draws.public', [
             'title' => Draw::orderTitleFor($draw->date->toDateString()),
+            'dayTitle' => Draw::dayTitleFor($draw->date->toDateString()),
             'code' => $draw->code,
             'drawnAt' => $draw->created_at->format('d/m/Y H:i'),
             'participants' => $draw->participants,
@@ -72,6 +73,7 @@ class DrawController extends Controller
 
         return view('draws.public', [
             'title' => Draw::orderTitleFor($date),
+            'dayTitle' => Draw::dayTitleFor($date),
             'code' => 'Simulación',
             'drawnAt' => null,
             'participants' => count($items),

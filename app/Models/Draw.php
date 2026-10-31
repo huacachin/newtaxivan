@@ -97,6 +97,12 @@ class Draw extends Model
         return 'Orden de salida · '.Str::ucfirst($day->translatedFormat('l')).' '.$day->format('d/m');
     }
 
+    /** "Viernes 30 de octubre" */
+    public static function dayTitleFor(string $date): string
+    {
+        return Str::ucfirst(Carbon::parse($date)->translatedFormat('l j \d\e F'));
+    }
+
     /** wa.me con el título y el link público; WhatsApp arma la vista previa con el logo. */
     public function whatsappUrl(): string
     {
