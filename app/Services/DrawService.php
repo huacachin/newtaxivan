@@ -275,16 +275,19 @@ class DrawService
             return [];
         }
 
-        // Las placas bloqueadas tampoco entran a la simulación
+        // Las placas bloqueadas tampoco entran a la simulación: las de bloqueo
+        // total nunca y las de algunos días, esos días de la semana
         $vehicles = Vehicle::active()->with('driver:id,name')
-            ->whereNotIn('id', DrawBlock::active()->select('vehicle_id'))
+            ->whereNotIn('id', DrawBlock::active()->full()->select('vehicle_id'))
             ->orderBy('sort_order')->orderBy('plate')
             ->get(['id', 'plate', 'driver_id', 'not_working_since'])->keyBy('id');
+        $weekdayBlocks = DrawBlock::active()->whereNotNull('weekdays')->get(['vehicle_id', 'weekdays'])->keyBy('vehicle_id');
 
         $eligible = [];
         foreach ($dates as $date) {
             $eligible[$date] = $vehicles
-                ->filter(fn (Vehicle $v) => self::entersDrawOn($v->not_working_since?->toDateString(), $date))
+                ->filter(fn (Vehicle $v) => self::entersDrawOn($v->not_working_since?->toDateString(), $date)
+                    && ! ($weekdayBlocks[$v->id] ?? null)?->appliesOn($date))
                 ->keys()->all();
         }
 
@@ -443,19 +446,30 @@ class DrawService
     /* ---------- Base de datos ---------- */
 
     /**
-     * Vehículos que entran al sorteo de $date (hoy si es null): los activos,
-     * menos los NT en rojo (NOT_WORKING_DROP_DAYS o más sin trabajar a esa
-     * fecha) y menos las placas bloqueadas.
+     * Vehículos de la grilla: los activos, menos los NT en rojo
+     * (NOT_WORKING_DROP_DAYS o más sin trabajar a esa fecha) y menos los de
+     * bloqueo total. Los bloqueados solo algunos días siguen en la grilla.
      */
-    public static function activeVehicles(?string $date = null): Builder
+    public static function gridVehicles(?string $date = null): Builder
     {
         $cutoff = self::notWorkingCutoff($date ?? Carbon::today()->toDateString());
 
         return Vehicle::active()
             ->where(fn ($q) => $q->whereNull('not_working_since')->orWhere('not_working_since', '>', $cutoff))
-            ->whereNotIn('id', DrawBlock::active()->select('vehicle_id'))
+            ->whereNotIn('id', DrawBlock::active()->full()->select('vehicle_id'))
             ->orderBy('sort_order')
             ->orderBy('plate');
+    }
+
+    /**
+     * Vehículos que entran al sorteo de $date (hoy si es null): los de la
+     * grilla menos los bloqueados ese día de la semana.
+     */
+    public static function activeVehicles(?string $date = null): Builder
+    {
+        $date ??= Carbon::today()->toDateString();
+
+        return self::gridVehicles($date)->whereNotIn('id', DrawBlock::active()->onDate($date)->select('vehicle_id'));
     }
 
     /** Un NT marcado en esta fecha o antes ya está en rojo el $date y no entra al sorteo. */

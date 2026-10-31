@@ -1,3 +1,57 @@
+@push('scripts')
+    <script>
+        // Formulario de "Bloquear": todos los días o solo algunos días de la semana, y el motivo.
+        // Devuelve una promesa con { reason, weekdays } o null si se cancela.
+        window.drawsBlockForm = function (count, plates) {
+            var days = @js(\App\Models\DrawBlock::WEEKDAYS);
+            var checks = Object.keys(days).map(function (d) {
+                return '<label class="form-check form-check-inline m-0"><input class="form-check-input" type="checkbox" name="blk-day" value="' + d + '" disabled>'
+                    + '<span class="form-check-label">' + days[d] + '</span></label>';
+            }).join('');
+            var html = '<div class="text-start small">'
+                + '<p class="text-muted mb-2" id="blk-plates"></p>'
+                + '<div class="form-check"><input class="form-check-input" type="radio" name="blk-mode" id="blk-all" value="all" checked>'
+                + '<label class="form-check-label" for="blk-all">Todos los días, hasta desbloquearla</label></div>'
+                + '<div class="form-check"><input class="form-check-input" type="radio" name="blk-mode" id="blk-days" value="days">'
+                + '<label class="form-check-label" for="blk-days">Solo algunos días, todas las semanas</label></div>'
+                + '<div class="d-flex flex-wrap gap-2 ms-4 mt-1 mb-3" id="blk-weekdays">' + checks + '</div>'
+                + '<label class="form-label mb-1" for="blk-reason">Motivo (queda registrado)</label>'
+                + '<input type="text" class="form-control" id="blk-reason" maxlength="255" placeholder="Ej. En taller">'
+                + '</div>';
+
+            return Swal.fire({
+                title: 'Bloquear ' + count + ' placa(s)',
+                html: html,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonColor: '#212529',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Bloquear',
+                cancelButtonText: 'Cancelar',
+                didOpen: function (popup) {
+                    popup.querySelector('#blk-plates').textContent = plates;
+                    popup.querySelectorAll('input[name=blk-mode]').forEach(function (radio) {
+                        radio.addEventListener('change', function () {
+                            var byDays = popup.querySelector('#blk-days').checked;
+                            popup.querySelectorAll('input[name=blk-day]').forEach(function (c) { c.disabled = ! byDays; if (! byDays) { c.checked = false } });
+                        });
+                    });
+                    popup.querySelector('#blk-reason').focus();
+                },
+                preConfirm: function () {
+                    var popup = Swal.getPopup();
+                    var reason = popup.querySelector('#blk-reason').value.trim();
+                    var byDays = popup.querySelector('#blk-days').checked;
+                    var weekdays = Array.from(popup.querySelectorAll('input[name=blk-day]:checked')).map(function (c) { return Number(c.value) });
+                    if (byDays && ! weekdays.length) { Swal.showValidationMessage('Marca al menos un día de la semana.'); return false }
+                    if (reason.length < 3) { Swal.showValidationMessage('Escribe un motivo (mínimo 3 letras).'); return false }
+                    return { reason: reason, weekdays: byDays ? weekdays : [] };
+                },
+            }).then(function (result) { return result.isConfirmed ? result.value : null });
+        };
+    </script>
+@endpush
+
 @push('styles')
     <style>
         .draws-module .dr-table { font-size: 13px; }
@@ -17,6 +71,7 @@
         .draws-module .dr-blocked td { background: #f8fafc; color: #64748b; }
         .draws-module .dr-blocked td.dr-sticky { background: #f8fafc; }
         .draws-module .dr-lock { cursor: pointer; }
+        .draws-module .dr-locked { background: #f1f5f9; color: #94a3b8; font-size: 11px; }
         .draws-module .dr-sel { width: 30px; text-align: center; background: #eef4ff !important; }
         .draws-module thead .dr-sel { background: #1e3a8a !important; color: #fff; }
         .draws-module .dr-selbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; margin-bottom: 8px;
@@ -44,21 +99,8 @@
     },
     blockSelected() {
         if (! this.toBlock.length) { return }
-        Swal.fire({
-            title: 'Bloquear ' + this.toBlock.length + ' placa(s)',
-            text: this.platesOf(this.toBlock),
-            input: 'text',
-            inputLabel: 'Motivo (queda registrado)',
-            inputPlaceholder: 'Ej. En taller',
-            inputAttributes: { maxlength: 255 },
-            showCancelButton: true,
-            confirmButtonColor: '#212529',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Bloquear',
-            cancelButtonText: 'Cancelar',
-            inputValidator: (value) => (! value || value.trim().length < 3) ? 'Escribe un motivo (mínimo 3 letras).' : undefined,
-        }).then((result) => {
-            if (result.isConfirmed) { $wire.blockVehicles(this.toBlock, result.value).then(() => this.stopSelecting()) }
+        window.drawsBlockForm(this.toBlock.length, this.platesOf(this.toBlock)).then((form) => {
+            if (form) { $wire.blockVehicles(this.toBlock, form.reason, form.weekdays).then(() => this.stopSelecting()) }
         })
     },
     unblockSelected() {
@@ -271,7 +313,7 @@
                             @forelse($rows as $i => $row)
                                 @if($row['block'] && ! ($rows[$i - 1]['block'] ?? null))
                                     <tr class="dr-blocked-sep" wire:key="blocked-sep">
-                                        <td colspan="{{ count($days) + 8 }}"><i class="ti ti-lock"></i> BLOQUEADAS ({{ $blocks->count() }}): no entran al sorteo ni a la simulación hasta desbloquearlas</td>
+                                        <td colspan="{{ count($days) + 8 }}"><i class="ti ti-lock"></i> BLOQUEADAS TODOS LOS DÍAS ({{ $fullBlockCount }}): no entran al sorteo ni a la simulación hasta desbloquearlas</td>
                                     </tr>
                                 @endif
                                 <tr wire:key="row-{{ $row['id'] }}" @class(['dr-blocked' => $row['block']])>
@@ -291,6 +333,10 @@
                                                   title="Bloqueada desde el {{ $row['block']->created_at->format('d/m/Y') }} por {{ $row['block']->blockedBy?->name ?? '—' }}: {{ $row['block']->reason }}"><i class="ti ti-lock"></i></span>
                                         @elseif($row['active'])
                                             <strong>{{ $row['plate'] }}</strong>
+                                            @if($row['weekdayBlock'])
+                                                <span class="badge bg-light text-dark border dr-lock" wire:click="openBlocks"
+                                                      title="Bloqueada los {{ \App\Models\DrawBlock::weekdaysPhrase($row['weekdayBlock']->weekdays) }} desde el {{ $row['weekdayBlock']->created_at->format('d/m/Y') }} por {{ $row['weekdayBlock']->blockedBy?->name ?? '—' }}: {{ $row['weekdayBlock']->reason }}"><i class="ti ti-lock"></i> {{ $row['weekdayBlock']->weekdaysLabel() }}</span>
+                                            @endif
                                         @else
                                             <strong class="text-danger" data-bs-toggle="tooltip" title="Ya no entra al sorteo (inactivo o NT en rojo)">{{ $row['plate'] }}</strong>
                                         @endif
@@ -304,8 +350,13 @@
                                         @php
                                             $date = $day['date'];
                                             $cell = $cells[$date][$row['id']] ?? null;
+                                            $wb = $row['weekdayBlock'];
+                                            // Candado en los días que la bloquea (en lo simulado y desde que se bloqueó)
+                                            $lockedDay = $wb && $wb->appliesOn($date) && ($simulating || $date >= $wb->created_at->toDateString());
                                         @endphp
-                                        @if(isset($results[$date]))
+                                        @if(! $cell && $lockedDay)
+                                            <td class="text-center dr-locked" title="Bloqueada los {{ \App\Models\DrawBlock::weekdaysPhrase($wb->weekdays) }}: {{ $wb->reason }}"><i class="ti ti-lock"></i></td>
+                                        @elseif(isset($results[$date]))
                                             @if(! $cell)
                                                 <td></td>
                                             @elseif($cell->number === null)
@@ -317,7 +368,7 @@
                                                     {{ $cell->number }}@if($cell->deviated)<sup>*</sup>@endif
                                                 </td>
                                             @endif
-                                        @elseif($row['active'] && in_array($date, $drawable, true))
+                                        @elseif($row['active'] && in_array($date, $drawable, true) && in_array($row['id'], $eligible[$date] ?? [], true))
                                             <td class="text-center dr-open">
                                                 <input type="checkbox" class="form-check-input m-0" wire:model="included.{{ $date }}" value="{{ $row['id'] }}"
                                                        title="Desmarca para que no participe el {{ $drawableLabels[$date] }}">
@@ -359,7 +410,7 @@
                             <span><span class="dr-swatch dr-high"></span>Alto: último tercio</span>
                             <span><b>*</b> no pudo seguir el ciclo ese día</span>
                             <span><b>—</b> no participó</span>
-                            <span><i class="ti ti-lock"></i> placa bloqueada: no entra hasta desbloquearla</span>
+                            <span><i class="ti ti-lock"></i> bloqueada: todos los días (abajo) o solo algunos días de la semana (candado en esos días)</span>
                             <span><span class="dr-swatch" style="outline: 2px solid #dc2626; outline-offset: -2px;"></span>número repetido en el mes</span>
                         </div>
                         <div>Cada vehículo rota bajo → medio → alto → bajo, nunca repite franja dos sorteos seguidos ni un número dentro del mes. Solo días de lunes a sábado sin feriados. Los NT en rojo ({{ \App\Models\Vehicle::NOT_WORKING_DROP_DAYS }}+ días sin trabajar) no entran al sorteo.</div>
@@ -469,7 +520,7 @@
 
                     <div class="alert alert-light border small py-2 mb-3">
                         @if($canBlock)
-                            <i class="ti ti-info-circle"></i> Para bloquear, usa <b>Seleccionar varios</b> en la tabla, marca las placas y pulsa <b>Bloquear</b>.
+                            <i class="ti ti-info-circle"></i> Para bloquear, usa <b>Seleccionar varios</b> en la tabla, marca las placas y pulsa <b>Bloquear</b>: todos los días o solo algunos días de la semana. Para cambiar los días de una placa, vuelve a bloquearla: reemplaza el bloqueo anterior.
                         @else
                             Solo el director, el gerente o un administrador pueden bloquear y desbloquear placas.
                         @endif
@@ -478,13 +529,14 @@
                     <div class="table-responsive">
                         <table class="table table-sm table-bordered mb-0 small">
                             <thead>
-                            <tr><th>Placa</th><th>Conductor</th><th>Motivo</th><th>Bloqueada por</th><th>Desde</th><th></th></tr>
+                            <tr><th>Placa</th><th>Conductor</th><th>Días</th><th>Motivo</th><th>Bloqueada por</th><th>Desde</th><th></th></tr>
                             </thead>
                             <tbody>
                             @forelse($blocks as $block)
                                 <tr wire:key="block-{{ $block->id }}">
                                     <td><strong>{{ $block->vehicle?->plate ?? '—' }}</strong></td>
                                     <td>{{ $block->vehicle?->driver?->name ?? '—' }}</td>
+                                    <td>{{ $block->weekdaysLabel() }}</td>
                                     <td style="white-space: normal;">{{ $block->reason }}</td>
                                     <td>{{ $block->blockedBy?->name ?? '—' }}</td>
                                     <td>{{ $block->created_at->format('d/m/Y H:i') }}</td>
@@ -498,7 +550,7 @@
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="6" class="text-center text-muted">No hay placas bloqueadas.</td></tr>
+                                <tr><td colspan="7" class="text-center text-muted">No hay placas bloqueadas.</td></tr>
                             @endforelse
                             </tbody>
                         </table>

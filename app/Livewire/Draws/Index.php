@@ -10,6 +10,7 @@ use App\Models\Vehicle;
 use App\Services\DrawService;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -26,8 +27,9 @@ use Random\Randomizer;
  * Cada día sorteado (real o simulado) abre el PDF de su orden de salida, que
  * se descarga y se manda por WhatsApp como archivo.
  *
- * Placas bloqueadas (director, gerente y administrador): no entran al sorteo ni a la
- * simulación hasta desbloquearlas y en la grilla van abajo de todo.
+ * Placas bloqueadas (director, gerente y administrador): con bloqueo total no
+ * entran al sorteo ni a la simulación hasta desbloquearlas y van abajo de
+ * todo; con bloqueo por días solo faltan esos días de la semana, todas las semanas.
  *
  * Simular llena el mes en pantalla sin guardar nada: cada día participan al
  * azar entre simMin y simMax vehículos y al resto se le quita el check. Se
@@ -161,7 +163,7 @@ class Index extends Component
         if ($excluded->isNotEmpty()) {
             $html .= '<br>Sin participar ('.$excluded->count().'): <b>'.e($excluded->pluck('plate')->implode(', ')).'</b>';
         }
-        $blockedPlates = Vehicle::whereIn('id', DrawBlock::blockedVehicleIds())->orderBy('plate')->pluck('plate');
+        $blockedPlates = Vehicle::whereIn('id', DrawBlock::blockedVehicleIdsOn($date))->orderBy('plate')->pluck('plate');
         if ($blockedPlates->isNotEmpty()) {
             $html .= '<br>Bloqueadas, no entran ('.$blockedPlates->count().'): '.e($blockedPlates->implode(', '));
         }
@@ -261,11 +263,14 @@ class Index extends Component
 
     /**
      * Bloquea las placas marcadas en la tabla ("Seleccionar varios") con un
-     * mismo motivo: no entran al sorteo ni a la simulación hasta desbloquearlas.
+     * mismo motivo: todos los días ($weekdays vacío) o solo esos días de la
+     * semana, todas las semanas (1 = lunes ... 6 = sábado). Si una placa ya
+     * tenía un bloqueo, el nuevo lo reemplaza y el anterior queda en el historial.
      *
      * @param  array<int, int|string>  $vehicleIds
+     * @param  array<int, int|string>  $weekdays
      */
-    public function blockVehicles(array $vehicleIds, string $reason): void
+    public function blockVehicles(array $vehicleIds, string $reason, array $weekdays = []): void
     {
         $this->authorizeBlocking();
 
@@ -276,19 +281,31 @@ class Index extends Component
             return;
         }
 
-        $vehicles = Vehicle::active()
-            ->whereIn('id', array_map('intval', $vehicleIds))
-            ->whereNotIn('id', DrawBlock::active()->select('vehicle_id'))
-            ->orderBy('plate')
-            ->get(['id', 'plate']);
+        $weekdays = array_values(array_unique(array_filter(array_map('intval', $weekdays), fn (int $d) => isset(DrawBlock::WEEKDAYS[$d]))));
+        sort($weekdays);
+        // Los 6 días marcados es lo mismo que un bloqueo total
+        $weekdays = count($weekdays) === count(DrawBlock::WEEKDAYS) ? [] : $weekdays;
 
-        foreach ($vehicles as $vehicle) {
-            DrawBlock::create(['vehicle_id' => $vehicle->id, 'reason' => $reason, 'blocked_by' => auth()->id()]);
-        }
+        $vehicles = Vehicle::active()->whereIn('id', array_map('intval', $vehicleIds))->orderBy('plate')->get(['id', 'plate']);
 
+        DB::transaction(function () use ($vehicles, $reason, $weekdays) {
+            foreach ($vehicles as $vehicle) {
+                DrawBlock::active()->where('vehicle_id', $vehicle->id)->get()
+                    ->each(fn (DrawBlock $old) => $old->update(['unblocked_at' => now(), 'unblocked_by' => auth()->id()]));
+
+                DrawBlock::create([
+                    'vehicle_id' => $vehicle->id,
+                    'reason' => $reason,
+                    'weekdays' => $weekdays ?: null,
+                    'blocked_by' => auth()->id(),
+                ]);
+            }
+        });
+
+        $when = $weekdays ? ' los '.DrawBlock::weekdaysPhrase($weekdays) : '';
         $this->dispatch('successAlert', ['message' => $vehicles->isEmpty()
             ? 'No había placas para bloquear.'
-            : 'Bloqueadas ('.$vehicles->count().'): '.$vehicles->pluck('plate')->implode(', ')]);
+            : 'Bloqueadas'.$when.' ('.$vehicles->count().'): '.$vehicles->pluck('plate')->implode(', ')]);
     }
 
     /**
@@ -390,22 +407,29 @@ class Index extends Component
 
         $days = DrawService::workingDaysOfMonth($this->year, $this->month);
 
-        $activeVehicles = DrawService::activeVehicles()->get(['id', 'sort_order', 'plate', 'condition', 'not_working_since']);
+        $activeVehicles = DrawService::gridVehicles()->get(['id', 'sort_order', 'plate', 'condition', 'not_working_since']);
         $simulating = $this->simSeed !== null;
         $drawable = $simulating ? [] : $this->drawableDates();
+        // Quién entra a cada día sorteable (los bloqueados ese día de la semana no tienen casilla)
+        $eligible = [];
+        foreach ($drawable as $date) {
+            $eligible[$date] = DrawService::activeVehicles($date)->pluck('id')->map(fn ($id) => (int) $id)->all();
+        }
         if (! $simulating) {
-            $this->syncIncluded($drawable, $activeVehicles->pluck('id')->all());
+            $this->syncIncluded($drawable, $eligible);
         }
 
         [$results, $cells, $simulated] = $simulating
             ? $this->simulatedMonth(array_column($days, 'date'))
             : [...$this->recordedMonth($from, $to), []];
 
-        // Placas bloqueadas (activas): van abajo de todo y no entran al sorteo
+        // Bloqueos vigentes: los totales van abajo de todo; los de algunos días
+        // se quedan en su lugar con candado esos días
         $blocks = DrawBlock::active()->with('blockedBy:id,name', 'vehicle.driver:id,name')->get()
             ->sortBy(fn (DrawBlock $b) => [$b->vehicle?->sort_order ?? PHP_INT_MAX, $b->vehicle?->plate])->values();
-        $blockByVehicle = $blocks->keyBy('vehicle_id');
-        $blockedVehicles = Vehicle::active()->whereIn('id', $blockByVehicle->keys())->orderBy('sort_order')->orderBy('plate')
+        $fullBlocks = $blocks->filter(fn (DrawBlock $b) => $b->isFull())->keyBy('vehicle_id');
+        $weekdayBlocks = $blocks->reject(fn (DrawBlock $b) => $b->isFull())->keyBy('vehicle_id');
+        $blockedVehicles = Vehicle::active()->whereIn('id', $fullBlocks->keys())->orderBy('sort_order')->orderBy('plate')
             ->get(['id', 'sort_order', 'plate', 'condition', 'not_working_since']);
 
         // Vehículos con resultados este mes que hoy ya no entran (inactivos o NT en rojo), antes de las bloqueadas
@@ -433,7 +457,8 @@ class Index extends Component
                     'condition' => $vehicle->condition,
                     'nt' => Vehicle::notWorkingBadge($vehicle->not_working_since),
                     'active' => $kind === 'active',
-                    'block' => $kind === 'blocked' ? $blockByVehicle[$vehicle->id] : null,
+                    'block' => $kind === 'blocked' ? $fullBlocks[$vehicle->id] : null,
+                    'weekdayBlock' => $kind === 'active' ? ($weekdayBlocks[$vehicle->id] ?? null) : null,
                     'counts' => $counts,
                     // Números que esta placa recibió más de una vez en el mes (no debería pasar)
                     'repeatedNumbers' => array_keys(array_filter(array_count_values($numbers), fn (int $times) => $times > 1)),
@@ -452,6 +477,9 @@ class Index extends Component
                 'year' => $this->year, 'month' => $this->month, 'seed' => $this->simSeed, 'min' => $this->simMin, 'max' => $this->simMax,
             ]) : null,
             'drawable' => $drawable,
+            'eligible' => $eligible,
+            'today' => Carbon::today()->toDateString(),
+            'fullBlockCount' => $fullBlocks->count(),
             'drawableLabels' => array_combine($drawable, array_map(fn ($d) => $this->dayLabel($d), $drawable)),
             'monthHolidays' => $monthHolidays,
             'yearHolidays' => Holiday::whereYear('date', $this->year)->orderBy('date')->get(),
@@ -554,17 +582,17 @@ class Index extends Component
     }
 
     /**
-     * Deja solo los días sorteables y marca a todos los activos en los nuevos;
-     * lo que el usuario ya desmarcó se respeta.
+     * Deja solo los días sorteables y marca en los nuevos a todos los que
+     * entran ese día; lo que el usuario ya desmarcó se respeta.
      *
      * @param  array<int, string>  $drawable
-     * @param  array<int, int>  $activeIds
+     * @param  array<string, array<int, int>>  $eligible  fecha => vehicle_ids que entran
      */
-    private function syncIncluded(array $drawable, array $activeIds): void
+    private function syncIncluded(array $drawable, array $eligible): void
     {
         $this->included = array_intersect_key($this->included, array_flip($drawable));
         foreach ($drawable as $date) {
-            $this->included[$date] ??= array_map('strval', $activeIds);
+            $this->included[$date] ??= array_map('strval', $eligible[$date] ?? []);
         }
     }
 

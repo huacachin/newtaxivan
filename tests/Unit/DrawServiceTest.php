@@ -242,6 +242,22 @@ class DrawServiceTest extends TestCase
         $this->assertFalse(DrawService::entersDrawOn('2026-07-10', '2026-10-30'));
     }
 
+    public function test_a_weekday_block_only_applies_on_those_days_every_week(): void
+    {
+        $tuesdayAndSaturday = new \App\Models\DrawBlock(['weekdays' => [2, 6]]);
+        $full = new \App\Models\DrawBlock(['weekdays' => null]);
+
+        $this->assertTrue($tuesdayAndSaturday->appliesOn('2026-11-03'));  // martes
+        $this->assertTrue($tuesdayAndSaturday->appliesOn('2026-11-10'));  // martes de la semana siguiente
+        $this->assertTrue($tuesdayAndSaturday->appliesOn('2026-10-31'));  // sábado
+        $this->assertFalse($tuesdayAndSaturday->appliesOn('2026-11-02')); // lunes
+        $this->assertSame('Mar, Sáb', $tuesdayAndSaturday->weekdaysLabel());
+
+        $this->assertTrue($full->isFull());
+        $this->assertTrue($full->appliesOn('2026-11-02'));
+        $this->assertSame('Todos los días', $full->weekdaysLabel());
+    }
+
     public function test_working_days_are_monday_to_saturday_except_holidays(): void
     {
         $holidays = ['2026-12-08'];
