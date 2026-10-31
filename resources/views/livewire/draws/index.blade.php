@@ -294,7 +294,7 @@
                                                 @endif
                                             </div>
                                         @elseif($isOpen)
-                                            <button type="button" class="btn btn-sm btn-primary mt-1 px-2 py-0" wire:click="confirmDraw('{{ $day['date'] }}')"
+                                            <button type="button" class="btn btn-sm btn-warning mt-1 px-2 py-0" wire:click="confirmDraw('{{ $day['date'] }}')"
                                                     wire:loading.attr="disabled" wire:target="confirmDraw,draw">
                                                 <i class="ti ti-arrows-shuffle"></i> Sortear
                                             </button>
