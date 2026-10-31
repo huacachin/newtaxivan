@@ -76,6 +76,14 @@
         ],
 
         [
+            'id'    => 'draws',
+            'title' => 'Sorteos',
+            'icon'  => 'ti ti-arrows-shuffle',
+            'route' => 'draws.index',
+            'can'   => 'draws',
+        ],
+
+        [
             'id'    => 'audit-logs',
             'title' => 'Auditoría',
             'icon'  => 'ti ti-clipboard-list',

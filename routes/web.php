@@ -6,8 +6,14 @@ use App\Http\Controllers\{
     DashboardController, VehicleController, OwnerController, DriverController,
     CostPerPlateController, DspController, UserController, ConceptController,
     DepartureController, PaymentController, DebtController, CashController,
-    HeadquarterController
+    HeadquarterController, DrawController
 };
+
+// === Orden de salida de un sorteo: público (sin login), se comparte por WhatsApp ===
+Route::get('sorteo/{code}', [DrawController::class, 'show'])
+    ->where('code', '[A-Z0-9]{6,12}')
+    ->middleware('throttle:60,1')
+    ->name('draws.public');
 
 // === Público (solo invitados) ===
 Route::middleware('guest')->group(function () {
@@ -115,6 +121,10 @@ Route::middleware('auth')->group(function () {
     Route::get('cash/report/est-draco-base',[CashController::class,'reportEstDracoBase'])->name('cash.report.est-draco-base');
     Route::get('cash/report/est-sal-pag-cont',[CashController::class,'reportEstSalPagCont'])->name('cash.report.est-sal-pag-cont');
     Route::get('cash/report/est-caja-ma',[CashController::class,'reportEstCajaMa'])->name('cash.report.est-caja-ma');
+
+    // Sorteos
+    Route::get('draws', [DrawController::class, 'index'])->name('draws.index');
+    Route::get('draws/simulation/{date}', [DrawController::class, 'simulation'])->name('draws.simulation');
 
     // Auditoría (solo Director)
     Route::get('audit-logs', fn() => view('audit-logs.index'))->name('audit.logs.index')->middleware('role:director');

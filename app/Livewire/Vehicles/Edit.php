@@ -232,6 +232,7 @@ class Edit extends Component
         $departures = \DB::table('departures')->where('vehicle_id', $id)->count();
         $payments = \DB::table('payments')->where('vehicle_id', $id)->count();
         $debtDays = \DB::table('debt_days')->where('vehicle_id', $id)->count();
+        $draws = \DB::table('draw_entries')->where('vehicle_id', $id)->count();
 
         if ($departures > 0) {
             $relations[] = "{$departures} salida(s)";
@@ -243,6 +244,9 @@ class Edit extends Component
         $cond = strtoupper(trim($vehicle->condition ?? ''));
         if ($debtDays > 0 && $cond !== 'EX') {
             $relations[] = "{$debtDays} deuda(s)";
+        }
+        if ($draws > 0) {
+            $relations[] = "{$draws} sorteo(s)";
         }
 
         if (! empty($relations)) {

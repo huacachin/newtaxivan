@@ -79,7 +79,7 @@ class Perms extends Component
                 $groups[$name]['items'][] = ['key' => $name, 'label' => $label];
             }
         }
-        $sidebarOrder = ['dashboard', 'configuracion', 'departures', 'payments', 'debts', 'cash'];
+        $sidebarOrder = ['dashboard', 'configuracion', 'departures', 'payments', 'debts', 'cash', 'draws'];
         $itemsOrder = [
             'configuracion' => [
                 'configuracion.vehicles',

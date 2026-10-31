@@ -14,6 +14,9 @@ class Vehicle extends Model
 
     protected $auditModule = 'Vehículos';
 
+    /** Días "No trabaja" tras los que el badge NT pasa a rojo: se sugiere la baja y ya no entra a Sorteos. */
+    public const NOT_WORKING_DROP_DAYS = 60;
+
     protected $fillable = [
         'sort_order',
         'plate',
@@ -138,7 +141,7 @@ class Vehicle extends Model
         }
 
         $days = (int) Carbon::parse($since)->startOfDay()->diffInDays(Carbon::today());
-        $left = 60 - $days;
+        $left = self::NOT_WORKING_DROP_DAYS - $days;
 
         return [
             'abbr' => "NT {$days}d",
@@ -149,8 +152,8 @@ class Vehicle extends Model
             'html' => $left > 0
                 ? "<div class='text-start'><strong>&#128663; No trabaja</strong><br>Hace <b>{$days}</b> día(s)<br>Faltan <b>{$left}</b> día(s) para sugerir la baja</div>"
                 : "<div class='text-start'><strong>&#128663; No trabaja</strong><br>Hace <b>{$days}</b> día(s)<br><b>Cumplió los 60 días:</b> evaluar darle de baja</div>",
-            'class' => $days >= 60 ? 'bg-danger' : 'bg-warning',
-            'text' => $days >= 60 ? 'text-white' : 'text-dark',
+            'class' => $left <= 0 ? 'bg-danger' : 'bg-warning',
+            'text' => $left <= 0 ? 'text-white' : 'text-dark',
         ];
     }
 
