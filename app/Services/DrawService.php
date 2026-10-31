@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Draw;
+use App\Models\DrawBlock;
 use App\Models\DrawEntry;
 use App\Models\Holiday;
 use App\Models\User;
@@ -274,7 +275,10 @@ class DrawService
             return [];
         }
 
-        $vehicles = Vehicle::active()->with('driver:id,name')->orderBy('sort_order')->orderBy('plate')
+        // Las placas bloqueadas tampoco entran a la simulación
+        $vehicles = Vehicle::active()->with('driver:id,name')
+            ->whereNotIn('id', DrawBlock::active()->select('vehicle_id'))
+            ->orderBy('sort_order')->orderBy('plate')
             ->get(['id', 'plate', 'driver_id', 'not_working_since'])->keyBy('id');
 
         $eligible = [];
@@ -439,8 +443,9 @@ class DrawService
     /* ---------- Base de datos ---------- */
 
     /**
-     * Vehículos que entran a la grilla y al sorteo de $date (hoy si es null):
-     * los activos, menos los NT en rojo (NOT_WORKING_DROP_DAYS o más sin trabajar a esa fecha).
+     * Vehículos que entran al sorteo de $date (hoy si es null): los activos,
+     * menos los NT en rojo (NOT_WORKING_DROP_DAYS o más sin trabajar a esa
+     * fecha) y menos las placas bloqueadas.
      */
     public static function activeVehicles(?string $date = null): Builder
     {
@@ -448,6 +453,7 @@ class DrawService
 
         return Vehicle::active()
             ->where(fn ($q) => $q->whereNull('not_working_since')->orWhere('not_working_since', '>', $cutoff))
+            ->whereNotIn('id', DrawBlock::active()->select('vehicle_id'))
             ->orderBy('sort_order')
             ->orderBy('plate');
     }
@@ -515,6 +521,7 @@ class DrawService
                 'active_date' => $date,
                 'participants' => count($assigned),
                 'deviations' => count(array_filter($assigned, fn (array $a) => $a['deviated'])),
+                'repeated_numbers' => count(array_filter($assigned, fn (array $a) => $a['number_repeated'])),
                 'drawn_by' => $user->id,
             ]);
 
@@ -612,6 +619,30 @@ class DrawService
             });
 
         return $used;
+    }
+
+    /**
+     * Placas que en este sorteo repitieron un número que ya habían tenido en
+     * el mes (fuerza mayor: pocos participantes).
+     *
+     * @return array<int, string>
+     */
+    public function repeatedPlates(Draw $draw): array
+    {
+        $date = $draw->date->toDateString();
+
+        return DB::table('draw_entries as e')
+            ->join('draw_entries as p', fn ($j) => $j->on('p.vehicle_id', '=', 'e.vehicle_id')->on('p.number', '=', 'e.number'))
+            ->join('draws as d', 'd.id', '=', 'p.draw_id')
+            ->where('e.draw_id', $draw->id)
+            ->whereNotNull('e.number')
+            ->where('d.id', '!=', $draw->id)
+            ->whereNull('d.annulled_at')
+            ->whereBetween('d.date', [Carbon::parse($date)->startOfMonth()->toDateString(), Carbon::parse($date)->subDay()->toDateString()])
+            ->orderBy('e.plate')
+            ->distinct()
+            ->pluck('e.plate')
+            ->all();
     }
 
     /**

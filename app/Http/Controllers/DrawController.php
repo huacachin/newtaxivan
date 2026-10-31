@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Exports\DrawSimulationExport;
 use App\Models\Draw;
 use App\Services\DrawService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Random\Engine\Mt19937;
@@ -17,7 +19,7 @@ class DrawController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['auth', 'permission:draws'])->only(['index', 'simulation', 'exportSimulation']);
+        $this->middleware(['auth', 'permission:draws'])->only(['index', 'pdf', 'simulation', 'exportSimulation']);
     }
 
     public function index(): View
@@ -26,39 +28,31 @@ class DrawController extends Controller
     }
 
     /**
-     * Página pública (sin login) del orden de salida de un sorteo, la que se
-     * comparte por WhatsApp. Si se anuló sigue abriendo, marcada como anulada
-     * y con el link al sorteo vigente de ese día si lo hay.
+     * PDF del orden de salida de un sorteo, para mandarlo por WhatsApp como
+     * archivo. Un sorteo anulado sigue saliendo, marcado como anulado.
      */
-    public function show(Request $request, string $code): View
+    public function pdf(Request $request, Draw $draw): Response
     {
-        $draw = Draw::where('code', $code)->firstOrFail();
+        $date = $draw->date->toDateString();
         $entries = $draw->entries()->whereNotNull('number')->get(['number', 'plate', 'driver_name']);
-        $replacement = $draw->isAnnulled()
-            ? Draw::active()->whereDate('date', $draw->date)->first(['id', 'code'])
-            : null;
 
-        return view('draws.public', [
-            'title' => Draw::orderTitleFor($draw->date->toDateString()),
-            'dayTitle' => Draw::dayTitleFor($draw->date->toDateString()),
+        return $this->orderPdf($request, [
+            'title' => Draw::orderTitleFor($date),
+            'dayTitle' => Draw::dayTitleFor($date),
             'code' => $draw->code,
             'drawnAt' => $draw->created_at->format('d/m/Y H:i'),
             'participants' => $draw->participants,
             'items' => DrawService::orderItems($entries),
             'simulated' => false,
             'annulledAt' => $draw->annulled_at?->format('d/m/Y H:i'),
-            'replacementUrl' => $replacement?->publicUrl(),
-            'shareUrl' => $draw->publicUrl(),
-            'whatsappUrl' => $draw->whatsappUrl(),
-            'reveal' => $request->boolean('revelar'),
-        ]);
+        ], "orden_salida_{$date}_{$draw->code}.pdf");
     }
 
     /**
-     * Un día de la simulación del mes (no se guarda): misma semilla, mínimo y
-     * máximo que la grilla, así muestra exactamente lo mismo. Solo con sesión.
+     * PDF de un día de la simulación del mes (no se guarda): misma semilla,
+     * mínimo y máximo que la grilla, así muestra exactamente lo mismo.
      */
-    public function simulation(Request $request, string $date): View
+    public function simulation(Request $request, string $date): Response
     {
         $data = $request->validate([
             'seed' => 'required|integer|min:1|max:2147483647',
@@ -74,20 +68,16 @@ class DrawController extends Controller
         $service = new DrawService(new Randomizer(new Mt19937((int) $data['seed'])));
         $items = DrawService::orderItems($service->simulateMonth($dates, (int) $data['min'], (int) $data['max'])[$date] ?? []);
 
-        return view('draws.public', [
+        return $this->orderPdf($request, [
             'title' => Draw::orderTitleFor($date),
             'dayTitle' => Draw::dayTitleFor($date),
-            'code' => 'Simulación',
+            'code' => null,
             'drawnAt' => null,
             'participants' => count($items),
             'items' => $items,
             'simulated' => true,
             'annulledAt' => null,
-            'replacementUrl' => null,
-            'shareUrl' => null,
-            'whatsappUrl' => null,
-            'reveal' => $request->boolean('revelar'),
-        ]);
+        ], "simulacion_orden_salida_{$date}.pdf");
     }
 
     /**
@@ -110,5 +100,18 @@ class DrawController extends Controller
             new DrawSimulationExport((int) $data['year'], (int) $data['month'], (int) $data['seed'], (int) $data['min'], (int) $data['max']),
             $file,
         );
+    }
+
+    /**
+     * Arma el PDF A4 del orden de salida. Con ?descargar=1 baja el archivo;
+     * si no, lo abre en el navegador (desde ahí también se comparte).
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function orderPdf(Request $request, array $data, string $filename): Response
+    {
+        $pdf = Pdf::loadView('draws.pdf', $data + ['generatedAt' => now()->format('d/m/Y H:i')])->setPaper('a4');
+
+        return $request->boolean('descargar') ? $pdf->download($filename) : $pdf->stream($filename);
     }
 }

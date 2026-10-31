@@ -13,6 +13,15 @@
         .draws-module .dr-mid { background: #fef3c7; color: #92400e; font-weight: 600; }
         .draws-module .dr-high { background: #fee2e2; color: #991b1b; font-weight: 600; }
         .draws-module .dr-repeat { outline: 2px solid #dc2626; outline-offset: -2px; }
+        .draws-module .dr-blocked-sep td { background: #f1f5f9 !important; color: #475569; font-weight: 600; font-size: 12px; letter-spacing: .02em; }
+        .draws-module .dr-blocked td { background: #f8fafc; color: #64748b; }
+        .draws-module .dr-blocked td.dr-sticky { background: #f8fafc; }
+        .draws-module .dr-lock { cursor: pointer; }
+        .draws-module .dr-sel { width: 30px; text-align: center; background: #eef4ff !important; }
+        .draws-module thead .dr-sel { background: #1e3a8a !important; color: #fff; }
+        .draws-module .dr-selbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; margin-bottom: 8px;
+            border: 1px solid #c7d7fe; background: #eef4ff; border-radius: 10px; font-size: 13px; }
+        [x-cloak] { display: none !important; }
         .draws-module .dr-swatch { display: inline-block; width: 14px; height: 14px; border-radius: 3px; vertical-align: -2px; margin-right: 4px; }
         .draws-module .dr-pending .btn { border-radius: 10px; }
         .draws-module .dr-day-done { position: relative; cursor: pointer; }
@@ -23,6 +32,40 @@
 @endpush
 
 <div class="container-fluid draws-module" x-data="{
+    selecting: false,
+    toBlock: [],
+    toUnblock: [],
+    stopSelecting() { this.selecting = false; this.toBlock = []; this.toUnblock = [] },
+    platesOf(ids) {
+        return ids.map(id => document.querySelector(`input[data-sel][value='${id}']`)?.dataset.plate).filter(Boolean).join(', ')
+    },
+    toggleAll(checked) {
+        this.toBlock = checked ? [...document.querySelectorAll('input[data-sel=block]')].map(c => c.value) : []
+    },
+    blockSelected() {
+        if (! this.toBlock.length) { return }
+        Swal.fire({
+            title: 'Bloquear ' + this.toBlock.length + ' placa(s)',
+            text: this.platesOf(this.toBlock),
+            input: 'text',
+            inputLabel: 'Motivo (queda registrado)',
+            inputPlaceholder: 'Ej. En taller',
+            inputAttributes: { maxlength: 255 },
+            showCancelButton: true,
+            confirmButtonColor: '#212529',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Bloquear',
+            cancelButtonText: 'Cancelar',
+            inputValidator: (value) => (! value || value.trim().length < 3) ? 'Escribe un motivo (mínimo 3 letras).' : undefined,
+        }).then((result) => {
+            if (result.isConfirmed) { $wire.blockVehicles(this.toBlock, result.value).then(() => this.stopSelecting()) }
+        })
+    },
+    unblockSelected() {
+        if (! this.toUnblock.length) { return }
+        this.confirmThen('¿Desbloquear ' + this.toUnblock.length + ' placa(s)?', this.platesOf(this.toUnblock) + ' vuelven a entrar desde el próximo sorteo.',
+            () => $wire.unblockVehicles(this.toUnblock).then(() => this.stopSelecting()), 'Sí, desbloquear')
+    },
     ask(d) {
         Swal.fire({
             title: d.title,
@@ -38,15 +81,21 @@
     done(d) {
         const html = document.createElement('div');
         html.innerHTML = '<p class=\'mb-3\'></p><div class=\'d-flex flex-wrap justify-content-center gap-2\'>'
-            + '<a class=\'btn btn-primary\' target=\'_blank\' rel=\'noopener\'><i class=\'ti ti-list-numbers\'></i> Ver orden de salida</a>'
-            + '<a class=\'btn btn-success\' target=\'_blank\' rel=\'noopener\'><i class=\'ti ti-brand-whatsapp\'></i> Enviar por WhatsApp</a></div>';
+            + '<a class=\'btn btn-primary\' target=\'_blank\' rel=\'noopener\'><i class=\'ti ti-file-text\'></i> Ver PDF</a>'
+            + '<a class=\'btn btn-success\'><i class=\'ti ti-download\'></i> Descargar PDF</a></div>';
         html.querySelector('p').textContent = d.text;
+        if (d.warning) {
+            const warn = document.createElement('div');
+            warn.className = 'alert alert-warning text-start small py-2 mb-3';
+            warn.textContent = d.warning;
+            html.querySelector('p').after(warn);
+        }
         const links = html.querySelectorAll('a');
-        links[0].href = d.pageUrl;
-        links[1].href = d.whatsappUrl;
-        Swal.fire({ title: d.title, html: html, icon: 'success', confirmButtonText: 'Cerrar', confirmButtonColor: '#6c757d' })
+        links[0].href = d.pdfUrl;
+        links[1].href = d.downloadUrl;
+        Swal.fire({ title: d.title, html: html, icon: d.warning ? 'warning' : 'success', confirmButtonText: 'Cerrar', confirmButtonColor: '#6c757d' })
     },
-    confirmThen(title, text, action) {
+    confirmThen(title, text, action, confirmText = 'Sí, quitar') {
         Swal.fire({
             title: title,
             text: text,
@@ -54,7 +103,7 @@
             showCancelButton: true,
             confirmButtonColor: '#d33',
             cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Sí, quitar',
+            confirmButtonText: confirmText,
             cancelButtonText: 'Cancelar',
         }).then((result) => { if (result.isConfirmed) { action() } })
     }
@@ -121,6 +170,18 @@
                                     <i class="ti ti-flask"></i> Simular
                                 </button>
                             @endunless
+                            @if($canBlock && ! $simulating)
+                                <button class="btn btn-sm" :class="selecting ? 'btn-primary' : 'btn-outline-primary'" x-on:click="selecting ? stopSelecting() : selecting = true"
+                                        title="Marcar varias placas en la tabla para bloquearlas o desbloquearlas">
+                                    <i class="ti ti-checkbox"></i> <span x-text="selecting ? 'Terminar selección' : 'Seleccionar varios'">Seleccionar varios</span>
+                                </button>
+                            @endif
+                            <button class="btn btn-sm btn-outline-secondary" wire:click="openBlocks" title="Placas que no entran al sorteo hasta desbloquearlas">
+                                <i class="ti ti-lock"></i> Bloqueos
+                                @if($blocks->isNotEmpty())
+                                    <span class="badge bg-secondary ms-1">{{ $blocks->count() }}</span>
+                                @endif
+                            </button>
                             <button class="btn btn-sm btn-outline-secondary" wire:click="openHolidays">
                                 <i class="ti ti-calendar-off"></i> Feriados
                             </button>
@@ -148,10 +209,26 @@
                         </div>
                     @endif
 
+                    @if($canBlock && ! $simulating)
+                        <div class="dr-selbar" x-show="selecting" x-cloak>
+                            <span><i class="ti ti-checkbox"></i> Marca las placas en la columna azul de la tabla.</span>
+                            <button type="button" class="btn btn-sm btn-dark" :disabled="! toBlock.length" x-on:click="blockSelected()">
+                                <i class="ti ti-lock"></i> Bloquear (<span x-text="toBlock.length">0</span>)
+                            </button>
+                            <button type="button" class="btn btn-sm btn-success" x-show="toUnblock.length" x-on:click="unblockSelected()">
+                                <i class="ti ti-lock-open"></i> Desbloquear (<span x-text="toUnblock.length">0</span>)
+                            </button>
+                            <button type="button" class="btn btn-sm btn-light ms-auto" x-on:click="stopSelecting()">Cancelar</button>
+                        </div>
+                    @endif
+
                     <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%">
                         <table class="table table-bordered table-hover dr-table mb-2">
                             <thead class="bg-primary">
                             <tr>
+                                <th class="dr-sel" x-show="selecting" x-cloak title="Marcar todas las que entran al sorteo">
+                                    <input type="checkbox" class="form-check-input m-0" x-on:change="toggleAll($event.target.checked)">
+                                </th>
                                 <th>Nº</th>
                                 <th>COD</th>
                                 <th class="dr-sticky">PLACA</th>
@@ -162,12 +239,12 @@
                                         $isOpen = ! $result && in_array($day['date'], $drawable, true);
                                     @endphp
                                     <th class="dr-day {{ $isOpen ? 'dr-day-open' : '' }} {{ $result ? 'dr-day-done' : '' }}" wire:key="head-{{ $day['date'] }}"
-                                        @if($result) title="{{ $result['title'] }} · clic para abrir el orden de salida" @endif>
+                                        @if($result) title="{{ $result['title'] }} · clic para abrir el PDF del orden de salida" @endif>
                                         <div class="small">{{ $day['weekday'] }}</div>
                                         <div class="fw-bold">{{ $day['n'] }}</div>
                                         @if($result)
                                             <div class="dr-day-meta">
-                                                <a href="{{ $result['url'] }}" target="_blank" rel="noopener" class="stretched-link text-white text-decoration-none" aria-label="Abrir el orden de salida del {{ $day['weekday'] }} {{ $day['n'] }}"><i class="ti ti-list-numbers"></i>{{ $result['participants'] }}</a>
+                                                <a href="{{ $result['url'] }}" target="_blank" rel="noopener" class="stretched-link text-white text-decoration-none" aria-label="Abrir el PDF del orden de salida del {{ $day['weekday'] }} {{ $day['n'] }}"><i class="ti ti-list-numbers"></i>{{ $result['participants'] }}</a>
                                                 @if($isDirector && $result['drawId'] && $result['drawId'] === $lastActiveDrawId)
                                                     <button type="button" class="btn btn-link btn-sm p-0 text-white dr-annul" wire:click.stop="openAnnul({{ $result['drawId'] }})" title="Anular este sorteo">
                                                         <i class="ti ti-ban"></i>
@@ -192,11 +269,27 @@
 
                             <tbody>
                             @forelse($rows as $i => $row)
-                                <tr wire:key="row-{{ $row['id'] }}">
+                                @if($row['block'] && ! ($rows[$i - 1]['block'] ?? null))
+                                    <tr class="dr-blocked-sep" wire:key="blocked-sep">
+                                        <td colspan="{{ count($days) + 8 }}"><i class="ti ti-lock"></i> BLOQUEADAS ({{ $blocks->count() }}): no entran al sorteo ni a la simulación hasta desbloquearlas</td>
+                                    </tr>
+                                @endif
+                                <tr wire:key="row-{{ $row['id'] }}" @class(['dr-blocked' => $row['block']])>
+                                    <td class="dr-sel" x-show="selecting" x-cloak>
+                                        @if($row['block'])
+                                            <input type="checkbox" class="form-check-input m-0" data-sel="unblock" data-plate="{{ $row['plate'] }}" value="{{ $row['id'] }}" x-model="toUnblock" title="Marcar para desbloquear">
+                                        @elseif($row['active'])
+                                            <input type="checkbox" class="form-check-input m-0" data-sel="block" data-plate="{{ $row['plate'] }}" value="{{ $row['id'] }}" x-model="toBlock" title="Marcar para bloquear">
+                                        @endif
+                                    </td>
                                     <td>{{ $i + 1 }}</td>
                                     <td>{{ $row['cod'] }}</td>
                                     <td class="dr-sticky">
-                                        @if($row['active'])
+                                        @if($row['block'])
+                                            <strong>{{ $row['plate'] }}</strong>
+                                            <span class="badge bg-secondary dr-lock" wire:click="openBlocks"
+                                                  title="Bloqueada desde el {{ $row['block']->created_at->format('d/m/Y') }} por {{ $row['block']->blockedBy?->name ?? '—' }}: {{ $row['block']->reason }}"><i class="ti ti-lock"></i></span>
+                                        @elseif($row['active'])
                                             <strong>{{ $row['plate'] }}</strong>
                                         @else
                                             <strong class="text-danger" data-bs-toggle="tooltip" title="Ya no entra al sorteo (inactivo o NT en rojo)">{{ $row['plate'] }}</strong>
@@ -239,12 +332,13 @@
                                     <td class="text-center dr-high">{{ $row['counts']['high'] }}</td>
                                 </tr>
                             @empty
-                                <tr><td colspan="{{ count($days) + 7 }}" class="text-center text-muted">No hay vehículos activos.</td></tr>
+                                <tr><td colspan="{{ count($days) + 8 }}" class="text-center text-muted">No hay vehículos activos.</td></tr>
                             @endforelse
                             </tbody>
 
                             <tfoot class="bg-primary">
                             <tr>
+                                <td x-show="selecting" x-cloak></td>
                                 <td colspan="2"></td>
                                 <td class="dr-sticky">PARTICIPAN</td>
                                 <td></td>
@@ -265,6 +359,7 @@
                             <span><span class="dr-swatch dr-high"></span>Alto: último tercio</span>
                             <span><b>*</b> no pudo seguir el ciclo ese día</span>
                             <span><b>—</b> no participó</span>
+                            <span><i class="ti ti-lock"></i> placa bloqueada: no entra hasta desbloquearla</span>
                             <span><span class="dr-swatch" style="outline: 2px solid #dc2626; outline-offset: -2px;"></span>número repetido en el mes</span>
                         </div>
                         <div>Cada vehículo rota bajo → medio → alto → bajo, nunca repite franja dos sorteos seguidos ni un número dentro del mes. Solo días de lunes a sábado sin feriados. Los NT en rojo ({{ \App\Models\Vehicle::NOT_WORKING_DROP_DAYS }}+ días sin trabajar) no entran al sorteo.</div>
@@ -282,7 +377,7 @@
                             <div class="table-responsive">
                                 <table class="table table-sm table-bordered mb-0 small">
                                     <thead>
-                                    <tr><th>Día</th><th>Sorteado por</th><th>Anulado por</th><th>Cuándo</th><th>Motivo</th></tr>
+                                    <tr><th>Día</th><th>Sorteado por</th><th>Anulado por</th><th>Cuándo</th><th>Motivo</th><th></th></tr>
                                     </thead>
                                     <tbody>
                                     @foreach($annulledDraws as $annulled)
@@ -292,6 +387,7 @@
                                             <td>{{ $annulled->annulledBy?->name ?? '—' }}</td>
                                             <td>{{ $annulled->annulled_at->format('d/m/Y H:i') }}</td>
                                             <td style="white-space: normal;">{{ $annulled->annul_reason }}</td>
+                                            <td><a href="{{ route('draws.pdf', $annulled) }}" target="_blank" rel="noopener" title="PDF del sorteo anulado"><i class="ti ti-file-text"></i></a></td>
                                         </tr>
                                     @endforeach
                                     </tbody>
@@ -357,6 +453,58 @@
                     <button type="submit" class="btn btn-primary" wire:loading.attr="disabled" wire:target="simulate"><i class="ti ti-flask"></i> Simular</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    {{-- Modal: placas bloqueadas --}}
+    <div class="modal fade" id="blocksModal" tabindex="-1" aria-hidden="true" wire:ignore.self>
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="ti ti-lock"></i> Placas bloqueadas</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small text-muted mb-3">Una placa bloqueada no entra al sorteo ni a la simulación hasta que se desbloquee, y en la grilla va abajo de todo. Queda registrado quién la bloqueó, quién la desbloqueó y cuándo.</p>
+
+                    <div class="alert alert-light border small py-2 mb-3">
+                        @if($canBlock)
+                            <i class="ti ti-info-circle"></i> Para bloquear, usa <b>Seleccionar varios</b> en la tabla, marca las placas y pulsa <b>Bloquear</b>.
+                        @else
+                            Solo el director o el gerente pueden bloquear y desbloquear placas.
+                        @endif
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered mb-0 small">
+                            <thead>
+                            <tr><th>Placa</th><th>Conductor</th><th>Motivo</th><th>Bloqueada por</th><th>Desde</th><th></th></tr>
+                            </thead>
+                            <tbody>
+                            @forelse($blocks as $block)
+                                <tr wire:key="block-{{ $block->id }}">
+                                    <td><strong>{{ $block->vehicle?->plate ?? '—' }}</strong></td>
+                                    <td>{{ $block->vehicle?->driver?->name ?? '—' }}</td>
+                                    <td style="white-space: normal;">{{ $block->reason }}</td>
+                                    <td>{{ $block->blockedBy?->name ?? '—' }}</td>
+                                    <td>{{ $block->created_at->format('d/m/Y H:i') }}</td>
+                                    <td class="text-end">
+                                        @if($canBlock)
+                                            <button type="button" class="btn btn-sm btn-outline-success py-0"
+                                                    x-on:click="confirmThen('¿Desbloquear la placa?', @js(($block->vehicle?->plate ?? '').' vuelve a entrar desde el próximo sorteo.'), () => $wire.unblockVehicle({{ $block->id }}), 'Sí, desbloquear')">
+                                                <i class="ti ti-lock-open"></i> Desbloquear
+                                            </button>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="6" class="text-center text-muted">No hay placas bloqueadas.</td></tr>
+                            @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

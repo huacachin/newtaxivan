@@ -31,6 +31,7 @@ class Draw extends Model
         'active_date',
         'participants',
         'deviations',
+        'repeated_numbers',
         'drawn_by',
         'annulled_at',
         'annulled_by',
@@ -42,6 +43,7 @@ class Draw extends Model
         'active_date' => 'date',
         'participants' => 'integer',
         'deviations' => 'integer',
+        'repeated_numbers' => 'integer',
         'annulled_at' => 'datetime',
     ];
 
@@ -70,7 +72,7 @@ class Draw extends Model
         return $this->annulled_at !== null;
     }
 
-    /** Código público nuevo, p. ej. "K7QM4XTB" (31^8 combinaciones). */
+    /** Código del sorteo que identifica su PDF, p. ej. "K7QM4XTB" (31^8 combinaciones). */
     public static function newCode(): string
     {
         do {
@@ -81,12 +83,6 @@ class Draw extends Model
         } while (static::where('code', $code)->exists());
 
         return $code;
-    }
-
-    /** Página pública (sin login) del orden de salida, la que se manda por WhatsApp. */
-    public function publicUrl(): string
-    {
-        return route('draws.public', $this->code);
     }
 
     /** "Orden de salida · Sábado 31/10" */
@@ -101,15 +97,5 @@ class Draw extends Model
     public static function dayTitleFor(string $date): string
     {
         return Str::ucfirst(Carbon::parse($date)->translatedFormat('l j \d\e F'));
-    }
-
-    /** wa.me con el título y el link público; WhatsApp arma la vista previa con el logo. */
-    public function whatsappUrl(): string
-    {
-        $text = '*'.self::orderTitleFor($this->date->toDateString())."*\n"
-            ."Huacachin · {$this->participants} participantes\n"
-            .$this->publicUrl();
-
-        return 'https://wa.me/?text='.rawurlencode($text);
     }
 }

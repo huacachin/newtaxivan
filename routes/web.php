@@ -9,12 +9,6 @@ use App\Http\Controllers\{
     HeadquarterController, DrawController
 };
 
-// === Orden de salida de un sorteo: público (sin login), se comparte por WhatsApp ===
-Route::get('sorteo/{code}', [DrawController::class, 'show'])
-    ->where('code', '[A-Z0-9]{6,12}')
-    ->middleware('throttle:60,1')
-    ->name('draws.public');
-
 // === Público (solo invitados) ===
 Route::middleware('guest')->group(function () {
     Route::get('/login', fn () => view('auth.index'))->name('login');
@@ -124,6 +118,7 @@ Route::middleware('auth')->group(function () {
 
     // Sorteos
     Route::get('draws', [DrawController::class, 'index'])->name('draws.index');
+    Route::get('draws/{draw}/pdf', [DrawController::class, 'pdf'])->whereNumber('draw')->name('draws.pdf');
     Route::get('draws/simulation/{date}', [DrawController::class, 'simulation'])->name('draws.simulation');
 
     // Auditoría (solo Director)

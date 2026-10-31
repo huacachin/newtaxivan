@@ -3,6 +3,7 @@
 namespace App\Livewire\Draws;
 
 use App\Models\Draw;
+use App\Models\DrawBlock;
 use App\Models\DrawEntry;
 use App\Models\Holiday;
 use App\Models\Vehicle;
@@ -22,8 +23,11 @@ use Random\Randomizer;
  * día (queda registrado como excluido). El reparto y sus reglas viven en
  * DrawService. Solo el director anula, solo el último sorteo y con motivo.
  *
- * Cada día sorteado abre su página "Orden de salida": pública (sin login) para
- * mandarla por WhatsApp, o con sesión si es un día simulado.
+ * Cada día sorteado (real o simulado) abre el PDF de su orden de salida, que
+ * se descarga y se manda por WhatsApp como archivo.
+ *
+ * Placas bloqueadas (director y gerente): no entran al sorteo ni a la
+ * simulación hasta desbloquearlas y en la grilla van abajo de todo.
  *
  * Simular llena el mes en pantalla sin guardar nada: cada día participan al
  * azar entre simMin y simMax vehículos y al resto se le quita el check. Se
@@ -157,6 +161,10 @@ class Index extends Component
         if ($excluded->isNotEmpty()) {
             $html .= '<br>Sin participar ('.$excluded->count().'): <b>'.e($excluded->pluck('plate')->implode(', ')).'</b>';
         }
+        $blockedPlates = Vehicle::whereIn('id', DrawBlock::blockedVehicleIds())->orderBy('plate')->pluck('plate');
+        if ($blockedPlates->isNotEmpty()) {
+            $html .= '<br>Bloqueadas, no entran ('.$blockedPlates->count().'): '.e($blockedPlates->implode(', '));
+        }
         if ($date !== $drawable[0]) {
             $html .= '<br><span class="text-danger">El '.e($this->dayLabel($drawable[0])).' quedará sin sorteo.</span>';
         }
@@ -187,12 +195,22 @@ class Index extends Component
 
         unset($this->included[$date]);
 
-        // Aviso con el link público del orden de salida (se abre con la lista apareciendo de a uno)
+        // Si por fuerza mayor alguien repitió número en el mes, se avisa en el momento
+        $warning = '';
+        if ($draw->repeated_numbers > 0) {
+            $plates = app(DrawService::class)->repeatedPlates($draw);
+            $warning = "Ojo: {$draw->repeated_numbers} placa(s) repitieron un número que ya tuvieron este mes"
+                .($plates ? ' ('.implode(', ', $plates).')' : '')
+                .'. Pasa cuando participan pocos vehículos; en la grilla quedan con recuadro rojo.';
+        }
+
+        // Aviso con el PDF del orden de salida para verlo o descargarlo y mandarlo por WhatsApp
         $this->dispatch('draw-done',
             title: '¡Sorteo realizado!',
             text: Draw::orderTitleFor($draw->date->toDateString())." · {$draw->participants} participantes",
-            pageUrl: $draw->publicUrl().'?revelar=1',
-            whatsappUrl: $draw->whatsappUrl(),
+            warning: $warning,
+            pdfUrl: route('draws.pdf', $draw),
+            downloadUrl: route('draws.pdf', ['draw' => $draw, 'descargar' => 1]),
         );
     }
 
@@ -230,6 +248,74 @@ class Index extends Component
         $this->reset('annulDrawId', 'annulReason');
         $this->dispatch('modal-close', ['name' => 'annulDrawModal']);
         $this->dispatch('successAlert', ['message' => 'Sorteo del '.$this->dayLabel($draw->date->toDateString()).' anulado.']);
+    }
+
+    /* ---------- Placas bloqueadas ---------- */
+
+    public function openBlocks(): void
+    {
+        $this->authorizeAccess();
+
+        $this->dispatch('open-modal', ['name' => 'blocksModal']);
+    }
+
+    /**
+     * Bloquea las placas marcadas en la tabla ("Seleccionar varios") con un
+     * mismo motivo: no entran al sorteo ni a la simulación hasta desbloquearlas.
+     *
+     * @param  array<int, int|string>  $vehicleIds
+     */
+    public function blockVehicles(array $vehicleIds, string $reason): void
+    {
+        $this->authorizeBlocking();
+
+        $reason = trim($reason);
+        if (mb_strlen($reason) < 3 || mb_strlen($reason) > 255) {
+            $this->dispatch('errorAlert', ['message' => 'Escribe un motivo de 3 a 255 caracteres.']);
+
+            return;
+        }
+
+        $vehicles = Vehicle::active()
+            ->whereIn('id', array_map('intval', $vehicleIds))
+            ->whereNotIn('id', DrawBlock::active()->select('vehicle_id'))
+            ->orderBy('plate')
+            ->get(['id', 'plate']);
+
+        foreach ($vehicles as $vehicle) {
+            DrawBlock::create(['vehicle_id' => $vehicle->id, 'reason' => $reason, 'blocked_by' => auth()->id()]);
+        }
+
+        $this->dispatch('successAlert', ['message' => $vehicles->isEmpty()
+            ? 'No había placas para bloquear.'
+            : 'Bloqueadas ('.$vehicles->count().'): '.$vehicles->pluck('plate')->implode(', ')]);
+    }
+
+    /**
+     * Desbloquea las placas bloqueadas marcadas en la tabla.
+     *
+     * @param  array<int, int|string>  $vehicleIds
+     */
+    public function unblockVehicles(array $vehicleIds): void
+    {
+        $this->authorizeBlocking();
+
+        $blocks = DrawBlock::active()->with('vehicle:id,plate')->whereIn('vehicle_id', array_map('intval', $vehicleIds))->get();
+        foreach ($blocks as $block) {
+            $block->update(['unblocked_at' => now(), 'unblocked_by' => auth()->id()]);
+        }
+
+        $this->dispatch('successAlert', ['message' => 'Desbloqueadas ('.$blocks->count().'): '.$blocks->pluck('vehicle.plate')->implode(', ')]);
+    }
+
+    public function unblockVehicle(int $blockId): void
+    {
+        $this->authorizeBlocking();
+
+        DrawBlock::active()->findOrFail($blockId)->update([
+            'unblocked_at' => now(),
+            'unblocked_by' => auth()->id(),
+        ]);
     }
 
     /* ---------- Feriados ---------- */
@@ -315,13 +401,21 @@ class Index extends Component
             ? $this->simulatedMonth(array_column($days, 'date'))
             : [...$this->recordedMonth($from, $to), []];
 
-        // Vehículos con resultados este mes que hoy ya no entran (inactivos o NT en rojo): al final
-        $formerIds = collect($cells)->flatMap(fn (array $day) => array_keys($day))->unique()->diff($activeVehicles->pluck('id'));
+        // Placas bloqueadas (activas): van abajo de todo y no entran al sorteo
+        $blocks = DrawBlock::active()->with('blockedBy:id,name', 'vehicle.driver:id,name')->get()
+            ->sortBy(fn (DrawBlock $b) => [$b->vehicle?->sort_order ?? PHP_INT_MAX, $b->vehicle?->plate])->values();
+        $blockByVehicle = $blocks->keyBy('vehicle_id');
+        $blockedVehicles = Vehicle::active()->whereIn('id', $blockByVehicle->keys())->orderBy('sort_order')->orderBy('plate')
+            ->get(['id', 'sort_order', 'plate', 'condition', 'not_working_since']);
+
+        // Vehículos con resultados este mes que hoy ya no entran (inactivos o NT en rojo), antes de las bloqueadas
+        $formerIds = collect($cells)->flatMap(fn (array $day) => array_keys($day))->unique()
+            ->diff($activeVehicles->pluck('id'))->diff($blockedVehicles->pluck('id'));
         $formerVehicles = Vehicle::whereIn('id', $formerIds)->orderBy('sort_order')->orderBy('plate')
             ->get(['id', 'sort_order', 'plate', 'condition', 'not_working_since']);
 
         $rows = [];
-        foreach ([[$activeVehicles, true], [$formerVehicles, false]] as [$vehicles, $isActive]) {
+        foreach ([[$activeVehicles, 'active'], [$formerVehicles, 'former'], [$blockedVehicles, 'blocked']] as [$vehicles, $kind]) {
             foreach ($vehicles as $vehicle) {
                 $counts = array_fill_keys(DrawEntry::BANDS, 0);
                 $numbers = [];
@@ -338,7 +432,8 @@ class Index extends Component
                     'plate' => $vehicle->plate,
                     'condition' => $vehicle->condition,
                     'nt' => Vehicle::notWorkingBadge($vehicle->not_working_since),
-                    'active' => $isActive,
+                    'active' => $kind === 'active',
+                    'block' => $kind === 'blocked' ? $blockByVehicle[$vehicle->id] : null,
                     'counts' => $counts,
                     // Números que esta placa recibió más de una vez en el mes (no debería pasar)
                     'repeatedNumbers' => array_keys(array_filter(array_count_values($numbers), fn (int $times) => $times > 1)),
@@ -360,6 +455,8 @@ class Index extends Component
             'drawableLabels' => array_combine($drawable, array_map(fn ($d) => $this->dayLabel($d), $drawable)),
             'monthHolidays' => $monthHolidays,
             'yearHolidays' => Holiday::whereYear('date', $this->year)->orderBy('date')->get(),
+            'blocks' => $blocks,
+            'canBlock' => $this->canBlock(),
             'annulledDraws' => $simulating ? collect() : Draw::whereNotNull('annulled_at')->whereBetween('date', [$from, $to])
                 ->with('drawnBy:id,name', 'annulledBy:id,name')->orderBy('annulled_at')->get(),
             'lastActiveDrawId' => $simulating ? null : Draw::active()->orderByDesc('date')->value('id'),
@@ -389,12 +486,13 @@ class Index extends Component
                 'participants' => $draw->participants,
                 'deviations' => $draw->deviations,
                 'title' => 'Sorteado por '.($draw->drawnBy?->name ?? '—').' el '.$draw->created_at->format('d/m H:i')
-                    ." · {$draw->participants} participantes · {$draw->deviations} desvío(s)",
+                    ." · {$draw->participants} participantes · {$draw->deviations} desvío(s)"
+                    .($draw->repeated_numbers > 0 ? " · {$draw->repeated_numbers} número(s) repetido(s) en el mes" : ''),
                 'drawId' => $draw->id,
                 'drawnAt' => $draw->created_at->format('d/m/Y H:i'),
                 'drawnBy' => $draw->drawnBy?->name,
                 'simulated' => false,
-                'url' => $draw->publicUrl(),
+                'url' => route('draws.pdf', $draw),
             ];
         }
 
@@ -481,6 +579,17 @@ class Index extends Component
     private function authorizeAccess(): void
     {
         abort_unless(auth()->user()?->can('draws'), 403);
+    }
+
+    /** Bloquear y desbloquear placas: director y gerente. */
+    private function canBlock(): bool
+    {
+        return (bool) auth()->user()?->hasAnyRole('director', 'gerente');
+    }
+
+    private function authorizeBlocking(): void
+    {
+        abort_unless($this->canBlock(), 403);
     }
 
     private function authorizeDirector(): void
