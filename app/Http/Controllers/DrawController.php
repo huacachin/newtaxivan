@@ -9,6 +9,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Random\Engine\Mt19937;
@@ -45,7 +46,7 @@ class DrawController extends Controller
             'items' => DrawService::orderItems($entries),
             'simulated' => false,
             'annulledAt' => $draw->annulled_at?->format('d/m/Y H:i'),
-        ], "orden_salida_{$date}_{$draw->code}.pdf");
+        ], 'orden_salida_'.$this->fileDay($date).'_'.$draw->code.'.pdf');
     }
 
     /**
@@ -77,7 +78,7 @@ class DrawController extends Controller
             'items' => $items,
             'simulated' => true,
             'annulledAt' => null,
-        ], "simulacion_orden_salida_{$date}.pdf");
+        ], 'simulacion_orden_salida_'.$this->fileDay($date).'.pdf');
     }
 
     /**
@@ -100,6 +101,12 @@ class DrawController extends Controller
             new DrawSimulationExport((int) $data['year'], (int) $data['month'], (int) $data['seed'], (int) $data['min'], (int) $data['max']),
             $file,
         );
+    }
+
+    /** "lunes_2026-11-02" para el nombre del archivo (sin tildes: miercoles, sabado). */
+    private function fileDay(string $date): string
+    {
+        return Str::slug(Carbon::parse($date)->translatedFormat('l')).'_'.$date;
     }
 
     /**
