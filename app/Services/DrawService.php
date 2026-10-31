@@ -299,6 +299,52 @@ class DrawService
     }
 
     /**
+     * Totales de una simulación (salida de simulate o simulateMonth), para el
+     * aviso de la grilla y la hoja Excel.
+     *
+     * @param  array<string, array<int, array{number: int|null, band: string|null, previous_band: string|null, deviated: bool}>>  $simulated
+     * @return array{days: int, minParticipants: int, maxParticipants: int, numbers: int, deviations: int, repeats: int, repeatedNumbers: int, even: int, vehicles: int, maxGap: int}
+     */
+    public static function summarize(array $simulated): array
+    {
+        $participants = [];
+        $deviations = 0;
+        $repeats = 0;
+        $numbers = [];
+        $bands = [];
+        foreach ($simulated as $day) {
+            $count = 0;
+            foreach ($day as $vehicleId => $entry) {
+                if ($entry['number'] === null) {
+                    continue;
+                }
+                $count++;
+                $deviations += $entry['deviated'] ? 1 : 0;
+                $repeats += $entry['band'] === $entry['previous_band'] ? 1 : 0;
+                $numbers[$vehicleId][] = $entry['number'];
+                $bands[$vehicleId][$entry['band']] = ($bands[$vehicleId][$entry['band']] ?? 0) + 1;
+            }
+            $participants[] = $count;
+        }
+
+        $zero = array_fill_keys(DrawEntry::BANDS, 0);
+        $gaps = array_map(fn (array $b) => max($b + $zero) - min($b + $zero), $bands);
+
+        return [
+            'days' => count($simulated),
+            'minParticipants' => $participants ? min($participants) : 0,
+            'maxParticipants' => $participants ? max($participants) : 0,
+            'numbers' => array_sum($participants),
+            'deviations' => $deviations,
+            'repeats' => $repeats,
+            'repeatedNumbers' => array_sum(array_map(fn (array $n) => count($n) - count(array_unique($n)), $numbers)),
+            'even' => count(array_filter($gaps, fn (int $g) => $g <= 1)),
+            'vehicles' => count($gaps),
+            'maxGap' => $gaps ? max($gaps) : 0,
+        ];
+    }
+
+    /**
      * Lista del orden de salida (1..N) a partir de los resultados de un día.
      *
      * @param  iterable<object|array>  $entries  filas con number, plate y driver_name

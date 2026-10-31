@@ -157,6 +157,8 @@ Route::middleware('auth')->group(function () {
         ->name('exports.debts-per-days-detail');
     Route::get('/exports/debts-monthly', [DebtController::class, 'exportMonthly'])
         ->name('exports.debts-monthly');
+    Route::get('/exports/draws-simulation', [DrawController::class, 'exportSimulation'])
+        ->name('exports.draws-simulation');
     Route::get('/exports/cash-general-report', [CashController::class, 'exportGeneralReport'])
         ->name('exports.cash-general-report');
     Route::get('/exports/cash-draco-report', [CashController::class, 'exportDracoReport'])

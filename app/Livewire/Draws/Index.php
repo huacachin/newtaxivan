@@ -311,9 +311,9 @@ class Index extends Component
             $this->syncIncluded($drawable, $activeVehicles->pluck('id')->all());
         }
 
-        [$results, $cells] = $simulating
+        [$results, $cells, $simulated] = $simulating
             ? $this->simulatedMonth(array_column($days, 'date'))
-            : $this->recordedMonth($from, $to);
+            : [...$this->recordedMonth($from, $to), []];
 
         // Vehículos con resultados este mes que hoy ya no entran (inactivos o NT en rojo): al final
         $formerIds = collect($cells)->flatMap(fn (array $day) => array_keys($day))->unique()->diff($activeVehicles->pluck('id'));
@@ -352,7 +352,10 @@ class Index extends Component
             'cells' => $cells,
             'results' => $results,
             'simulating' => $simulating,
-            'simSummary' => $simulating ? $this->simulationSummary($results, $cells, $rows) : null,
+            'simSummary' => $simulating ? DrawService::summarize($simulated) : null,
+            'simExportUrl' => $simulating ? route('exports.draws-simulation', [
+                'year' => $this->year, 'month' => $this->month, 'seed' => $this->simSeed, 'min' => $this->simMin, 'max' => $this->simMax,
+            ]) : null,
             'drawable' => $drawable,
             'drawableLabels' => array_combine($drawable, array_map(fn ($d) => $this->dayLabel($d), $drawable)),
             'monthHolidays' => $monthHolidays,
@@ -409,12 +412,12 @@ class Index extends Component
      * anteriores al mes. Cada día entran los habilitados a esa fecha.
      *
      * @param  array<int, string>  $dates
-     * @return array{0: array<string, array{participants: int, deviations: int, title: string, drawId: int|null, drawnAt: string|null, drawnBy: string|null, simulated: bool, url: string}>, 1: array<string, array<int, object>>}
+     * @return array{0: array<string, array{participants: int, deviations: int, title: string, drawId: int|null, drawnAt: string|null, drawnBy: string|null, simulated: bool, url: string}>, 1: array<string, array<int, object>>, 2: array<string, array<int, array>>}
      */
     private function simulatedMonth(array $dates): array
     {
         if (count($dates) === 0) {
-            return [[], []];
+            return [[], [], []];
         }
 
         $service = new DrawService(new Randomizer(new Mt19937($this->simSeed)));
@@ -438,37 +441,7 @@ class Index extends Component
             $cells[$date] = array_map(fn (array $e) => (object) $e, $day);
         }
 
-        return [$results, $cells];
-    }
-
-    /**
-     * Totales de la simulación para el aviso de arriba.
-     *
-     * @return array{days: int, minParticipants: int, maxParticipants: int, numbers: int, deviations: int, repeats: int, repeatedNumbers: int, even: int, vehicles: int, maxGap: int}
-     */
-    private function simulationSummary(array $results, array $cells, array $rows): array
-    {
-        $participants = array_column($results, 'participants');
-        $repeats = 0;
-        foreach ($cells as $day) {
-            foreach ($day as $entry) {
-                $repeats += ($entry->band !== null && $entry->band === $entry->previous_band) ? 1 : 0;
-            }
-        }
-        $gaps = array_map(fn (array $r) => max($r['counts']) - min($r['counts']), array_filter($rows, fn (array $r) => array_sum($r['counts']) > 0));
-
-        return [
-            'days' => count($results),
-            'minParticipants' => $participants ? min($participants) : 0,
-            'maxParticipants' => $participants ? max($participants) : 0,
-            'numbers' => array_sum($participants),
-            'deviations' => array_sum(array_column($results, 'deviations')),
-            'repeats' => $repeats,
-            'repeatedNumbers' => array_sum(array_map(fn (array $r) => count($r['repeatedNumbers']), $rows)),
-            'even' => count(array_filter($gaps, fn (int $g) => $g <= 1)),
-            'vehicles' => count($gaps),
-            'maxGap' => $gaps ? max($gaps) : 0,
-        ];
+        return [$results, $cells, $simulated];
     }
 
     /**

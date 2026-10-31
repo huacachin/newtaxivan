@@ -142,6 +142,7 @@
                                     B/M/A parejo (diferencia de 1 o menos) en {{ $simSummary['even'] }} de {{ $simSummary['vehicles'] }} vehículos, diferencia máxima {{ $simSummary['maxGap'] }}
                                 </div>
                             </div>
+                            <a class="btn btn-sm btn-export" href="{{ $simExportUrl }}"><i class="ti ti-file-spreadsheet"></i> Exportar Excel</a>
                             <button class="btn btn-sm btn-warning" wire:click="resimulate" wire:loading.attr="disabled" wire:target="resimulate"><i class="ti ti-refresh"></i> Otra simulación</button>
                             <button class="btn btn-sm btn-dark" wire:click="exitSimulation"><i class="ti ti-x"></i> Salir de la simulación</button>
                         </div>

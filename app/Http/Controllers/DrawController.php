@@ -2,19 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\DrawSimulationExport;
 use App\Models\Draw;
 use App\Services\DrawService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
 use Random\Engine\Mt19937;
 use Random\Randomizer;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class DrawController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['auth', 'permission:draws'])->only(['index', 'simulation']);
+        $this->middleware(['auth', 'permission:draws'])->only(['index', 'simulation', 'exportSimulation']);
     }
 
     public function index(): View
@@ -85,5 +88,27 @@ class DrawController extends Controller
             'whatsappUrl' => null,
             'reveal' => $request->boolean('revelar'),
         ]);
+    }
+
+    /**
+     * Excel de la simulación que se está viendo en la grilla (misma semilla,
+     * mínimo y máximo, así sale idéntica). No guarda nada.
+     */
+    public function exportSimulation(Request $request): BinaryFileResponse
+    {
+        $data = $request->validate([
+            'year' => 'required|integer|min:2000|max:2100',
+            'month' => 'required|integer|min:1|max:12',
+            'seed' => 'required|integer|min:1|max:2147483647',
+            'min' => 'required|integer|min:1|max:999',
+            'max' => 'required|integer|gte:min|max:999',
+        ]);
+
+        $file = sprintf('simulacion_sorteos_%04d_%02d_%s.xlsx', $data['year'], $data['month'], now()->format('Ymd_His'));
+
+        return Excel::download(
+            new DrawSimulationExport((int) $data['year'], (int) $data['month'], (int) $data['seed'], (int) $data['min'], (int) $data['max']),
+            $file,
+        );
     }
 }
