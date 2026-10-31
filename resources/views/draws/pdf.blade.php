@@ -1,7 +1,7 @@
 {{-- PDF del orden de salida de un día (sorteo real o simulado), para descargar y
      mandar por WhatsApp como archivo. dompdf no entiende flex ni grid: todo va en
-     tablas. Misma línea gráfica que tenía la página: logo, franja roja bajo la
-     fecha y la lista en 3 columnas con los 3 primeros en rojo. --}}
+     tablas. Logo "Taxivan" (imagen en Brush Script, como el de Huacachin) con su franja roja,
+     franja roja bajo la fecha y la lista en 3 columnas con los 3 primeros en rojo. --}}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -15,7 +15,8 @@
         .page { padding: 26px 36px 18px; }
         .top { width: 100%; }
         .top td { vertical-align: middle; padding: 0; }
-        .logo { height: 34px; }
+        .brand { display: block; height: 36px; }
+        .brand-stripe { display: block; width: 136px; height: 5px; margin-top: 2px; }
         .tag { font-size: 9px; font-weight: bold; letter-spacing: 1px; padding: 4px 10px; border-radius: 9px; }
         .tag-sim { color: #ff4a12; background: #ffece4; }
         .tag-annulled { color: #b91c1c; background: #fee2e2; }
@@ -43,7 +44,6 @@
         .annulled-list .plate, .annulled-list .driver { color: #94a3b8; }
         .foot { width: 100%; margin-top: 12px; border-top: 1px solid #e6eaf0; }
         .foot td { padding-top: 10px; vertical-align: middle; }
-        .seal { width: 32px; height: 32px; }
         .muted { color: #64748b; font-size: 9px; }
     </style>
 </head>
@@ -59,7 +59,10 @@
 <div class="page">
     <table class="top">
         <tr>
-            <td><img src="{{ public_path('assets/images/logo/logo-color.png') }}" class="logo" alt="Huacachin"></td>
+            <td>
+                <div><img src="{{ public_path('assets/images/logo/taxivan-logo.png') }}" class="brand" alt="Taxivan"></div>
+                <div><img src="{{ public_path('assets/images/logo/franja-roja.png') }}" class="brand-stripe" alt=""></div>
+            </td>
             <td style="text-align: right;">
                 @if($simulated)
                     <span class="tag tag-sim">SIMULACIÓN</span>
@@ -117,12 +120,11 @@
 
     <table class="foot">
         <tr>
-            <td style="width: 40px;"><img src="{{ public_path('assets/images/logo/logo-sello.png') }}" class="seal" alt=""></td>
             <td>
                 @if($simulated)
                     <b>Simulación</b><br><span class="muted">No es un sorteo real ni se guardó.</span>
                 @else
-                    <b>Certificado por el sistema Huacachin</b><br><span class="muted">Sorteo #{{ $code }}</span>
+                    <b>Certificado por el sistema Taxivan</b><br><span class="muted">Sorteo #{{ $code }}</span>
                 @endif
             </td>
             <td style="text-align: right;" class="muted">Generado el {{ $generatedAt }}</td>
