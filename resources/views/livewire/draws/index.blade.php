@@ -471,7 +471,7 @@
                         @if($canBlock)
                             <i class="ti ti-info-circle"></i> Para bloquear, usa <b>Seleccionar varios</b> en la tabla, marca las placas y pulsa <b>Bloquear</b>.
                         @else
-                            Solo el director o el gerente pueden bloquear y desbloquear placas.
+                            Solo el director, el gerente o un administrador pueden bloquear y desbloquear placas.
                         @endif
                     </div>
 

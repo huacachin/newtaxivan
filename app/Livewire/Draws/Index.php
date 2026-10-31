@@ -26,7 +26,7 @@ use Random\Randomizer;
  * Cada día sorteado (real o simulado) abre el PDF de su orden de salida, que
  * se descarga y se manda por WhatsApp como archivo.
  *
- * Placas bloqueadas (director y gerente): no entran al sorteo ni a la
+ * Placas bloqueadas (director, gerente y administrador): no entran al sorteo ni a la
  * simulación hasta desbloquearlas y en la grilla van abajo de todo.
  *
  * Simular llena el mes en pantalla sin guardar nada: cada día participan al
@@ -581,10 +581,10 @@ class Index extends Component
         abort_unless(auth()->user()?->can('draws'), 403);
     }
 
-    /** Bloquear y desbloquear placas: director y gerente. */
+    /** Bloquear y desbloquear placas: director, gerente y administrador. */
     private function canBlock(): bool
     {
-        return (bool) auth()->user()?->hasAnyRole('director', 'gerente');
+        return (bool) auth()->user()?->hasAnyRole('director', 'gerente', 'administrador');
     }
 
     private function authorizeBlocking(): void
