@@ -324,10 +324,12 @@ class Index extends Component
         foreach ([[$activeVehicles, true], [$formerVehicles, false]] as [$vehicles, $isActive]) {
             foreach ($vehicles as $vehicle) {
                 $counts = array_fill_keys(DrawEntry::BANDS, 0);
+                $numbers = [];
                 foreach ($cells as $day) {
                     $band = $day[$vehicle->id]->band ?? null;
                     if ($band !== null) {
                         $counts[$band]++;
+                        $numbers[] = $day[$vehicle->id]->number;
                     }
                 }
                 $rows[] = [
@@ -338,6 +340,8 @@ class Index extends Component
                     'nt' => Vehicle::notWorkingBadge($vehicle->not_working_since),
                     'active' => $isActive,
                     'counts' => $counts,
+                    // Números que esta placa recibió más de una vez en el mes (no debería pasar)
+                    'repeatedNumbers' => array_keys(array_filter(array_count_values($numbers), fn (int $times) => $times > 1)),
                 ];
             }
         }
@@ -440,7 +444,7 @@ class Index extends Component
     /**
      * Totales de la simulación para el aviso de arriba.
      *
-     * @return array{days: int, minParticipants: int, maxParticipants: int, numbers: int, deviations: int, repeats: int, even: int, vehicles: int, maxGap: int}
+     * @return array{days: int, minParticipants: int, maxParticipants: int, numbers: int, deviations: int, repeats: int, repeatedNumbers: int, even: int, vehicles: int, maxGap: int}
      */
     private function simulationSummary(array $results, array $cells, array $rows): array
     {
@@ -460,6 +464,7 @@ class Index extends Component
             'numbers' => array_sum($participants),
             'deviations' => array_sum(array_column($results, 'deviations')),
             'repeats' => $repeats,
+            'repeatedNumbers' => array_sum(array_map(fn (array $r) => count($r['repeatedNumbers']), $rows)),
             'even' => count(array_filter($gaps, fn (int $g) => $g <= 1)),
             'vehicles' => count($gaps),
             'maxGap' => $gaps ? max($gaps) : 0,

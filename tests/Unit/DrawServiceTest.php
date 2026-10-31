@@ -200,6 +200,7 @@ class DrawServiceTest extends TestCase
 
         $this->assertSame($dates, array_keys($result));
         $lastBand = [];
+        $monthNumbers = [];
         foreach ($result as $date => $day) {
             $this->assertCount(43, $day, "{$date}: todos los habilitados quedan registrados");
             $drawn = array_filter($day, fn (array $e) => $e['number'] !== null);
@@ -209,8 +210,26 @@ class DrawServiceTest extends TestCase
             foreach ($drawn as $vehicleId => $entry) {
                 $this->assertSame($lastBand[$vehicleId] ?? null, $entry['previous_band'], "{$date}: parte de su último sorteo");
                 $this->assertNotSame($entry['previous_band'], $entry['band'], "{$date}: nadie repite franja");
+                $this->assertNotContains($entry['number'], $monthNumbers[$vehicleId] ?? [], "{$date}: nadie repite número en el mes");
+                $this->assertFalse($entry['number_repeated']);
                 $lastBand[$vehicleId] = $entry['band'];
+                $monthNumbers[$vehicleId][] = $entry['number'];
             }
+        }
+    }
+
+    public function test_a_number_already_used_this_month_is_not_repeated(): void
+    {
+        // Vehículo 1 ya tuvo 1..4 este mes y viene de "alto": solo le queda el 5 en "bajo"
+        $previous = $this->previousBands([self::HIGH => 1, 'none' => 14]);
+        $used = [1 => [1, 2, 3, 4]];
+
+        foreach ([1, 2, 3, 4, 5] as $seed) {
+            $result = $this->service($seed)->assign($previous, [], $used);
+
+            $this->assertValidDraw($result, 15);
+            $this->assertSame(5, $result[1]['number']);
+            $this->assertFalse($result[1]['number_repeated']);
         }
     }
 

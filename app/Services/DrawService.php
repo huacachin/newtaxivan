@@ -18,27 +18,29 @@ use Random\Randomizer;
  * participan, rotando su franja (bajo -> medio -> alto -> bajo).
  *
  * Las franjas son tercios de N; si N no es divisible entre 3 el sobrante va
- * a bajo y luego a medio (44 = 15/15/14). Regla dura: nadie repite la franja
- * de su sorteo anterior. Objetivo: que cada uno reciba la franja que le toca
- * en el ciclo. Cuando no cuadra (vehículos quitados, N no divisible) se
- * desvía a la menor cantidad posible hacia la otra franja permitida, eligiendo
- * entre quienes menos desvíos acumulan. Solo si ni así alcanza (casi todos
- * venían de la misma franja) alguien repite, y queda registrado igual.
+ * a bajo y luego a medio (44 = 15/15/14). Prioridades, de mayor a menor:
+ *  1. nadie repite la franja de su sorteo anterior;
+ *  2. nadie repite en el mismo mes un número que ya tuvo;
+ *  3. cada uno recibe la franja que le toca en el ciclo; si no cuadra
+ *     (vehículos quitados, N no divisible) se desvía a la menor cantidad
+ *     posible, eligiendo a quienes menos desvíos acumulan.
+ * Las reglas 1 y 2 solo se rompen si no hay forma de cumplirlas, y queda
+ * registrado igual.
  *
- * El reparto es un problema de transporte mínimo: grupos según la franja
- * anterior -> franjas de hoy, con costo 0 la que toca, 1 la otra permitida y
- * REPEAT_COST repetir. Lo resuelve un flujo de costo mínimo de 9 nodos.
+ * El reparto es una asignación de costo mínimo vehículo -> número (método
+ * húngaro, N x N): cada prioridad pesa mucho más que la siguiente. Vehículos
+ * y números se barajan antes, así entre repartos de igual costo decide la suerte.
  */
 class DrawService
 {
-    /** Costo de ir a la franja permitida que no tocaba en el ciclo. */
-    private const DEVIATE_COST = 1;
+    /** Costo de ir a la franja permitida que no tocaba en el ciclo (+1 por cada desvío previo). */
+    private const DEVIATE_COST = 100;
+
+    /** Costo de repetir en el mes un número que el vehículo ya tuvo. */
+    private const NUMBER_REPEAT_COST = 10_000;
 
     /** Costo de repetir la franja anterior: solo cuando no hay otra salida. */
-    private const REPEAT_COST = 1000;
-
-    /** Grupo de los vehículos sin sorteos previos: entran en cualquier franja. */
-    private const NO_HISTORY = 'none';
+    private const REPEAT_COST = 1_000_000;
 
     /** Días que se miran hacia adelante para hallar el siguiente día hábil. */
     private const HOLIDAY_LOOKAHEAD_DAYS = 20;
@@ -163,59 +165,47 @@ class DrawService
      *
      * @param  array<int, string|null>  $previousBands  vehicle_id => franja de su sorteo anterior (null = nunca participó)
      * @param  array<int, int>  $pastDeviations  vehicle_id => desvíos acumulados (para repartir los nuevos)
-     * @return array<int, array{number: int, band: string, previous_band: string|null, deviated: bool}>
+     * @param  array<int, array<int, int>>  $usedNumbers  vehicle_id => números que ya recibió este mes (no se repiten)
+     * @return array<int, array{number: int, band: string, previous_band: string|null, deviated: bool, number_repeated: bool}>
      */
-    public function assign(array $previousBands, array $pastDeviations = []): array
+    public function assign(array $previousBands, array $pastDeviations = [], array $usedNumbers = []): array
     {
         $total = count($previousBands);
         if ($total === 0) {
             return [];
         }
 
-        $capacity = self::bandSizes($total);
-
-        // Grupos por franja anterior, barajados para desempatar al azar
-        $groups = array_fill_keys([...DrawEntry::BANDS, self::NO_HISTORY], []);
-        foreach ($previousBands as $vehicleId => $band) {
-            $groups[$band ?? self::NO_HISTORY][] = $vehicleId;
-        }
-        foreach ($groups as $key => $ids) {
-            $groups[$key] = $this->randomizer->shuffleArray($ids);
-        }
-
-        $flow = $this->solveTransport(
-            array_map('count', $groups),
-            $capacity,
-            fn (string $group, string $band) => $this->bandCost($group, $band),
-        );
-
-        // Qué vehículos de cada grupo van a cada franja: primero la que toca
-        // (a quien más desvíos acumula), luego la otra permitida y al final repetir.
-        $byBand = array_fill_keys(DrawEntry::BANDS, []);
-        foreach ($groups as $group => $ids) {
-            if ($group !== self::NO_HISTORY) {
-                usort($ids, fn ($a, $b) => ($pastDeviations[$b] ?? 0) <=> ($pastDeviations[$a] ?? 0));
+        $bandOf = [];
+        foreach (self::bandRanges($total) as $band => [$from, $to]) {
+            for ($number = $from; $number <= $to; $number++) {
+                $bandOf[$number] = $band;
             }
-            $bands = DrawEntry::BANDS;
-            usort($bands, fn ($a, $b) => $this->bandCost($group, $a) <=> $this->bandCost($group, $b));
-            foreach ($bands as $band) {
-                $take = $flow[$group][$band] ?? 0;
-                array_push($byBand[$band], ...array_splice($ids, 0, $take));
+        }
+
+        $vehicleIds = $this->randomizer->shuffleArray(array_keys($previousBands));
+        $numbers = $this->randomizer->shuffleArray(range(1, $total));
+
+        $cost = [];
+        foreach ($vehicleIds as $i => $vehicleId) {
+            $used = array_flip($usedNumbers[$vehicleId] ?? []);
+            foreach ($numbers as $j => $number) {
+                $cost[$i][$j] = $this->bandCost($previousBands[$vehicleId], $bandOf[$number], $pastDeviations[$vehicleId] ?? 0)
+                    + (isset($used[$number]) ? self::NUMBER_REPEAT_COST : 0);
             }
         }
 
         $result = [];
-        foreach (self::bandRanges($total) as $band => [$from, $to]) {
-            $numbers = $from <= $to ? $this->randomizer->shuffleArray(range($from, $to)) : [];
-            foreach ($byBand[$band] as $i => $vehicleId) {
-                $previous = $previousBands[$vehicleId];
-                $result[$vehicleId] = [
-                    'number' => $numbers[$i],
-                    'band' => $band,
-                    'previous_band' => $previous,
-                    'deviated' => $previous !== null && $band !== DrawEntry::nextBand($previous),
-                ];
-            }
+        foreach ($this->solveAssignment($cost) as $i => $j) {
+            $vehicleId = $vehicleIds[$i];
+            $number = $numbers[$j];
+            $previous = $previousBands[$vehicleId];
+            $result[$vehicleId] = [
+                'number' => $number,
+                'band' => $bandOf[$number],
+                'previous_band' => $previous,
+                'deviated' => $previous !== null && $bandOf[$number] !== DrawEntry::nextBand($previous),
+                'number_repeated' => in_array($number, $usedNumbers[$vehicleId] ?? [], true),
+            ];
         }
 
         return $result;
@@ -229,12 +219,13 @@ class DrawService
      * @param  array<int, string>  $dates  días en orden (Y-m-d)
      * @param  array<string, array<int, int>>  $eligibleByDate  fecha => vehicle_ids habilitados ese día
      * @param  array<int, string>  $previousBands  vehicle_id => franja real antes del primer día
-     * @return array<string, array<int, array{number: int|null, band: string|null, previous_band: string|null, deviated: bool}>>
+     * @return array<string, array<int, array{number: int|null, band: string|null, previous_band: string|null, deviated: bool, number_repeated: bool}>>
      */
     public function simulate(array $dates, array $eligibleByDate, array $previousBands, int $min, int $max): array
     {
         $lastBand = $previousBands;
         $deviations = [];
+        $usedNumbers = [];
         $result = [];
 
         foreach ($dates as $date) {
@@ -251,15 +242,17 @@ class DrawService
             foreach ($participants as $vehicleId) {
                 $previous[$vehicleId] = $lastBand[$vehicleId] ?? null;
             }
-            $assigned = $this->assign($previous, $deviations);
+            $month = substr($date, 0, 7);
+            $assigned = $this->assign($previous, $deviations, $usedNumbers[$month] ?? []);
 
             foreach ($eligible as $vehicleId) {
                 $result[$date][$vehicleId] = $assigned[$vehicleId]
-                    ?? ['number' => null, 'band' => null, 'previous_band' => null, 'deviated' => false];
+                    ?? ['number' => null, 'band' => null, 'previous_band' => null, 'deviated' => false, 'number_repeated' => false];
             }
             foreach ($assigned as $vehicleId => $entry) {
                 $lastBand[$vehicleId] = $entry['band'];
                 $deviations[$vehicleId] = ($deviations[$vehicleId] ?? 0) + ($entry['deviated'] ? 1 : 0);
+                $usedNumbers[$month][$vehicleId][] = $entry['number'];
             }
         }
 
@@ -322,98 +315,79 @@ class DrawService
             ->all();
     }
 
-    private function bandCost(string $group, string $band): int
+    private function bandCost(?string $previous, string $band, int $pastDeviations): int
     {
-        if ($group === self::NO_HISTORY || $band === DrawEntry::nextBand($group)) {
+        if ($previous === null || $band === DrawEntry::nextBand($previous)) {
             return 0;
         }
 
-        return $band === $group ? self::REPEAT_COST : self::DEVIATE_COST;
+        return $band === $previous ? self::REPEAT_COST : self::DEVIATE_COST + $pastDeviations;
     }
 
     /**
-     * Transporte de costo mínimo (caminos más cortos sucesivos con
-     * Bellman-Ford): cuántos de cada grupo van a cada franja.
+     * Asignación de costo mínimo en una matriz cuadrada (método húngaro con
+     * potenciales, O(n³); con 45 vehículos tarda milisegundos).
      *
-     * @param  array<string, int>  $supply  grupo => cantidad de vehículos
-     * @param  array<string, int>  $capacity  franja => cantidad de números
-     * @param  callable(string, string): int  $cost
-     * @return array<string, array<string, int>>
+     * @param  array<int, array<int, int>>  $cost  fila (vehículo) => columna (número) => costo
+     * @return array<int, int> fila => columna
      */
-    private function solveTransport(array $supply, array $capacity, callable $cost): array
+    private function solveAssignment(array $cost): array
     {
-        $edges = [];
-        $addEdge = function (int $from, int $to, int $cap, int $edgeCost) use (&$edges): int {
-            $edges[] = ['from' => $from, 'to' => $to, 'cap' => $cap, 'cost' => $edgeCost];
-            $edges[] = ['from' => $to, 'to' => $from, 'cap' => 0, 'cost' => -$edgeCost];
+        $n = count($cost);
+        $inf = PHP_INT_MAX >> 2;
+        $u = array_fill(0, $n + 1, 0);
+        $v = array_fill(0, $n + 1, 0);
+        $match = array_fill(0, $n + 1, 0); // columna => fila (1-indexado)
+        $way = array_fill(0, $n + 1, 0);
 
-            return count($edges) - 2;
-        };
-
-        $source = 0;
-        $node = 1;
-        $groupNodes = [];
-        foreach (array_keys($supply) as $group) {
-            $groupNodes[$group] = $node++;
-        }
-        $bandNodes = [];
-        foreach (array_keys($capacity) as $band) {
-            $bandNodes[$band] = $node++;
-        }
-        $sink = $node++;
-        $nodes = $node;
-
-        $total = array_sum($supply);
-        $pairEdges = [];
-        foreach ($supply as $group => $count) {
-            $addEdge($source, $groupNodes[$group], $count, 0);
-            foreach ($capacity as $band => $_) {
-                $pairEdges[$group][$band] = $addEdge($groupNodes[$group], $bandNodes[$band], $total, $cost($group, $band));
-            }
-        }
-        foreach ($capacity as $band => $cap) {
-            $addEdge($bandNodes[$band], $sink, $cap, 0);
-        }
-
-        while (true) {
-            $dist = array_fill(0, $nodes, PHP_INT_MAX);
-            $via = array_fill(0, $nodes, -1);
-            $dist[$source] = 0;
-            for ($round = 1; $round < $nodes; $round++) {
-                $changed = false;
-                foreach ($edges as $id => $e) {
-                    if ($e['cap'] > 0 && $dist[$e['from']] !== PHP_INT_MAX && $dist[$e['to']] > $dist[$e['from']] + $e['cost']) {
-                        $dist[$e['to']] = $dist[$e['from']] + $e['cost'];
-                        $via[$e['to']] = $id;
-                        $changed = true;
+        for ($row = 1; $row <= $n; $row++) {
+            $match[0] = $row;
+            $col0 = 0;
+            $minv = array_fill(0, $n + 1, $inf);
+            $used = array_fill(0, $n + 1, false);
+            do {
+                $used[$col0] = true;
+                $row0 = $match[$col0];
+                $delta = $inf;
+                $col1 = 0;
+                for ($col = 1; $col <= $n; $col++) {
+                    if ($used[$col]) {
+                        continue;
+                    }
+                    $current = $cost[$row0 - 1][$col - 1] - $u[$row0] - $v[$col];
+                    if ($current < $minv[$col]) {
+                        $minv[$col] = $current;
+                        $way[$col] = $col0;
+                    }
+                    if ($minv[$col] < $delta) {
+                        $delta = $minv[$col];
+                        $col1 = $col;
                     }
                 }
-                if (! $changed) {
-                    break;
+                for ($col = 0; $col <= $n; $col++) {
+                    if ($used[$col]) {
+                        $u[$match[$col]] += $delta;
+                        $v[$col] -= $delta;
+                    } else {
+                        $minv[$col] -= $delta;
+                    }
                 }
-            }
-            if ($dist[$sink] === PHP_INT_MAX) {
-                break;
-            }
+                $col0 = $col1;
+            } while ($match[$col0] !== 0);
 
-            $push = PHP_INT_MAX;
-            for ($v = $sink; $v !== $source; $v = $edges[$via[$v]]['from']) {
-                $push = min($push, $edges[$via[$v]]['cap']);
-            }
-            for ($v = $sink; $v !== $source; $v = $edges[$via[$v]]['from']) {
-                $edges[$via[$v]]['cap'] -= $push;
-                $edges[$via[$v] ^ 1]['cap'] += $push;
-            }
+            do {
+                $col1 = $way[$col0];
+                $match[$col0] = $match[$col1];
+                $col0 = $col1;
+            } while ($col0 !== 0);
         }
 
-        $flow = [];
-        foreach ($pairEdges as $group => $bands) {
-            foreach ($bands as $band => $id) {
-                $flow[$group][$band] = $edges[$id ^ 1]['cap'];
-            }
+        $assignment = [];
+        for ($col = 1; $col <= $n; $col++) {
+            $assignment[$match[$col] - 1] = $col - 1;
         }
 
-        return $flow;
+        return $assignment;
     }
 
     /* ---------- Base de datos ---------- */
@@ -487,7 +461,7 @@ class DrawService
                 $previousBands[$vehicleId] = $band;
             }
 
-            $assigned = $this->assign($previousBands, $this->pastDeviations($participantIds));
+            $assigned = $this->assign($previousBands, $this->pastDeviations($participantIds), $this->usedNumbersInMonth($participantIds, $date));
 
             $draw = Draw::create([
                 'code' => Draw::newCode(),
@@ -568,6 +542,30 @@ class DrawService
             ->pluck('e.band', 'e.vehicle_id')
             ->map(fn ($band) => (string) $band)
             ->all();
+    }
+
+    /**
+     * Números que cada vehículo ya recibió en sorteos vigentes del mismo mes,
+     * antes de $date: no se le pueden repetir.
+     *
+     * @param  array<int, int>  $vehicleIds
+     * @return array<int, array<int, int>> vehicle_id => números
+     */
+    public function usedNumbersInMonth(array $vehicleIds, string $date): array
+    {
+        $used = [];
+        DB::table('draw_entries as e')
+            ->join('draws as d', 'd.id', '=', 'e.draw_id')
+            ->whereNull('d.annulled_at')
+            ->whereNotNull('e.number')
+            ->whereIn('e.vehicle_id', $vehicleIds)
+            ->whereBetween('d.date', [Carbon::parse($date)->startOfMonth()->toDateString(), Carbon::parse($date)->subDay()->toDateString()])
+            ->get(['e.vehicle_id', 'e.number'])
+            ->each(function ($row) use (&$used) {
+                $used[$row->vehicle_id][] = (int) $row->number;
+            });
+
+        return $used;
     }
 
     /**

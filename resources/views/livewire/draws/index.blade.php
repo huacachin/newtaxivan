@@ -12,6 +12,7 @@
         .draws-module .dr-low { background: #dcfce7; color: #166534; font-weight: 600; }
         .draws-module .dr-mid { background: #fef3c7; color: #92400e; font-weight: 600; }
         .draws-module .dr-high { background: #fee2e2; color: #991b1b; font-weight: 600; }
+        .draws-module .dr-repeat { outline: 2px solid #dc2626; outline-offset: -2px; }
         .draws-module .dr-swatch { display: inline-block; width: 14px; height: 14px; border-radius: 3px; vertical-align: -2px; margin-right: 4px; }
         .draws-module .dr-pending .btn { border-radius: 10px; }
         .draws-module .dr-day-done { position: relative; cursor: pointer; }
@@ -136,6 +137,7 @@
                                     {{ $simSummary['minParticipants'] }}–{{ $simSummary['maxParticipants'] }} participantes por día ·
                                     {{ number_format($simSummary['numbers']) }} números ·
                                     <b>{{ $simSummary['repeats'] }}</b> repeticiones de franja ·
+                                    <b>{{ $simSummary['repeatedNumbers'] }}</b> números repetidos en el mes ·
                                     {{ $simSummary['deviations'] }} desvíos ·
                                     B/M/A parejo (diferencia de 1 o menos) en {{ $simSummary['even'] }} de {{ $simSummary['vehicles'] }} vehículos, diferencia máxima {{ $simSummary['maxGap'] }}
                                 </div>
@@ -215,8 +217,9 @@
                                             @elseif($cell->number === null)
                                                 <td class="text-center text-muted" title="No participó">—</td>
                                             @else
-                                                <td class="text-center dr-{{ $cell->band }}"
-                                                    title="{{ $bandLabels[$cell->band] }}@if($cell->deviated) · no siguió el ciclo: venía de {{ \Illuminate\Support\Str::lower($bandLabels[$cell->previous_band]) }} y le tocaba {{ \Illuminate\Support\Str::lower($bandLabels[\App\Models\DrawEntry::nextBand($cell->previous_band)]) }}@endif">
+                                                @php $isRepeated = in_array($cell->number, $row['repeatedNumbers'], true); @endphp
+                                                <td class="text-center dr-{{ $cell->band }} {{ $isRepeated ? 'dr-repeat' : '' }}"
+                                                    title="{{ $bandLabels[$cell->band] }}@if($cell->deviated) · no siguió el ciclo: venía de {{ \Illuminate\Support\Str::lower($bandLabels[$cell->previous_band]) }} y le tocaba {{ \Illuminate\Support\Str::lower($bandLabels[\App\Models\DrawEntry::nextBand($cell->previous_band)]) }}@endif @if($isRepeated) · número repetido en el mes @endif">
                                                     {{ $cell->number }}@if($cell->deviated)<sup>*</sup>@endif
                                                 </td>
                                             @endif
@@ -261,8 +264,9 @@
                             <span><span class="dr-swatch dr-high"></span>Alto: último tercio</span>
                             <span><b>*</b> no pudo seguir el ciclo ese día</span>
                             <span><b>—</b> no participó</span>
+                            <span><span class="dr-swatch" style="outline: 2px solid #dc2626; outline-offset: -2px;"></span>número repetido en el mes</span>
                         </div>
-                        <div>Cada vehículo rota bajo → medio → alto → bajo y nunca repite franja dos sorteos seguidos. Solo días de lunes a sábado sin feriados. Los NT en rojo ({{ \App\Models\Vehicle::NOT_WORKING_DROP_DAYS }}+ días sin trabajar) no entran al sorteo.</div>
+                        <div>Cada vehículo rota bajo → medio → alto → bajo, nunca repite franja dos sorteos seguidos ni un número dentro del mes. Solo días de lunes a sábado sin feriados. Los NT en rojo ({{ \App\Models\Vehicle::NOT_WORKING_DROP_DAYS }}+ días sin trabajar) no entran al sorteo.</div>
                         @if($monthHolidays->isNotEmpty())
                             <div>Feriados del mes:
                                 {{ $monthHolidays->map(fn ($h) => $h->date->format('d/m').' '.$h->description)->implode(' · ') }}
