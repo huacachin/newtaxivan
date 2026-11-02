@@ -48,6 +48,9 @@ class DrawService
 
     private const WEEKDAY_LABELS = [1 => 'Lun', 2 => 'Mar', 3 => 'Mié', 4 => 'Jue', 5 => 'Vie', 6 => 'Sáb', 0 => 'Dom'];
 
+    /** Partículas de apellidos compuestos ("De La Cruz", "Del Castillo"). */
+    private const SURNAME_PARTICLES = ['de', 'del', 'la', 'las', 'los', 'san', 'santa'];
+
     public function __construct(private Randomizer $randomizer = new Randomizer) {}
 
     /* ---------- Calendario ---------- */
@@ -363,9 +366,30 @@ class DrawService
             ->map(fn ($e) => (object) (is_array($e) ? $e : ['number' => $e->number, 'plate' => $e->plate, 'driver_name' => $e->driver_name]))
             ->filter(fn (object $e) => $e->number !== null)
             ->sortBy('number')
-            ->map(fn (object $e) => ['number' => (int) $e->number, 'plate' => (string) $e->plate, 'driver' => (string) $e->driver_name])
+            ->map(fn (object $e) => ['number' => (int) $e->number, 'plate' => (string) $e->plate, 'driver' => self::firstName($e->driver_name)])
             ->values()
             ->all();
+    }
+
+    /**
+     * Solo el primer nombre, para el orden de salida. El conductor se guarda
+     * como "Apellido paterno Apellido materno Nombres": se saltan los dos
+     * apellidos con sus partículas ("De La Cruz Vidal Efrain Herson" → "Efrain").
+     * Si no queda nada (nombre de una o dos palabras), la última palabra.
+     */
+    public static function firstName(?string $fullName): string
+    {
+        $words = preg_split('/\s+/', trim((string) $fullName), -1, PREG_SPLIT_NO_EMPTY);
+        $index = 0;
+
+        for ($surnames = 0; $surnames < 2 && $index < count($words); $surnames++) {
+            while ($index < count($words) - 1 && in_array(mb_strtolower($words[$index]), self::SURNAME_PARTICLES, true)) {
+                $index++;
+            }
+            $index++;
+        }
+
+        return (array_slice($words, $index) ?: array_slice($words, -1))[0] ?? '';
     }
 
     private function bandCost(?string $previous, string $band, int $pastDeviations): int

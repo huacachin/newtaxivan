@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1431.2" height="240" viewBox="-4 -4 1431.2 240" role="img" aria-labelledby="titulo">
+<title id="titulo">TAXIVAN · Horizontal · Color principal</title>
+<g id="TAXIVAN" transform="translate(0 0) scale(1)">
+  <path id="T" fill="#112342" fill-rule="evenodd" d="M0,0 L190,0 L190,52 L121,52 L121,232 L57.2,232 L57.2,52 L0,52 Z"/>
+  <path id="A-1" fill="#112342" fill-rule="evenodd" d="M164,232 L255,0 L322.6,0 L410.7,232 L349.4,232 L331,189.2 L242,189.2 L224.2,232 Z M261.8,142.9 L313.8,142.9 L287.3,77.9 Z"/>
+  <path id="X" fill="#112342" fill-rule="evenodd" d="M409.7,232 L481.7,110 L418.3,0 L487.4,0 L526.3,63.4 L566.3,0 L635.8,0 L559.7,110 L636.2,232 L566.3,232 L519.3,161.2 L474.3,232 Z"/>
+  <path id="I" fill="#112342" fill-rule="evenodd" d="M655,0 L714,0 L714,232 L655,232 Z"/>
+  <path id="V" fill="#0C55DC" fill-rule="evenodd" d="M742.6,0 L808.1,0 L864.2,151.4 L923.3,0 L987,0 L900.4,232 L826.1,232 Z"/>
+  <path id="A-2" fill="#0C55DC" fill-rule="evenodd" d="M949.5,232 L1038,0 L1101.8,0 L1191.2,232 L1131.5,232 L1114.2,189.2 L1026.3,189.2 L1009.6,232 Z M1044.7,142.9 L1096.1,142.9 L1070.3,77.9 Z"/>
+  <path id="N" fill="#0C55DC" fill-rule="evenodd" d="M1205.5,0 L1262.4,0 L1358.6,131.6 L1358.6,0 L1423.2,0 L1423.2,232 L1358.2,232 L1262.2,101.8 L1262.2,232 L1205.5,232 Z"/>
+</g>
+</svg>

@@ -1,28 +1,27 @@
 {{-- PDF del orden de salida de un día (sorteo real o simulado), para descargar y
      mandar por WhatsApp como archivo. dompdf no entiende flex ni grid: todo va en
-     tablas. Logo "Taxivan" (imagen en Brush Script, como el de Huacachin) con su franja roja,
-     franja roja bajo la fecha y la lista en 3 columnas con los 3 primeros en rojo. --}}
+     tablas. Logo oficial de Taxivan (SVG, vectorial) y la lista en 3 columnas
+     con los 3 primeros en rojo. --}}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <title>{{ $title }}</title>
     <style>
-        @page { margin: 0; }
+        @page { margin: 0 0 7px; }
         body { margin: 0; font-family: Helvetica, Arial, sans-serif; color: #0f172a; font-size: 11px; }
         table { border-collapse: collapse; }
         .accent td { height: 7px; padding: 0; }
+        .accent-bottom { position: fixed; left: 0; right: 0; bottom: -7px; height: 7px; }
         .page { padding: 26px 36px 18px; }
         .top { width: 100%; }
         .top td { vertical-align: middle; padding: 0; }
-        .brand { display: block; height: 36px; }
-        .brand-stripe { display: block; width: 136px; height: 5px; margin-top: 2px; }
+        .brand { display: block; height: 26px; }
         .tag { font-size: 9px; font-weight: bold; letter-spacing: 1px; padding: 4px 10px; border-radius: 9px; }
         .tag-sim { color: #ff4a12; background: #ffece4; }
         .tag-annulled { color: #b91c1c; background: #fee2e2; }
         .eyebrow { margin: 20px 0 3px; font-size: 9px; font-weight: bold; letter-spacing: 2px; color: #0b22a8; text-transform: uppercase; }
-        .title { margin: 0; font-size: 26px; font-weight: bold; }
-        .stripe { display: block; width: 220px; height: 6px; margin: 7px 0 12px; }
+        .title { margin: 0 0 14px; font-size: 26px; font-weight: bold; }
         .chips td { padding: 0 6px 0 0; }
         .chip { background: #f1f4f9; color: #64748b; border-radius: 9px; padding: 4px 10px; font-size: 10px; }
         .chip b { color: #0f172a; }
@@ -55,13 +54,22 @@
         <td style="background: #0b22a8;"></td>
     </tr>
 </table>
+{{-- La misma franja al pie: fija, así sale al final de cada hoja (va en el margen inferior de @page). --}}
+<div class="accent-bottom">
+    <table style="width: 100%;" class="accent">
+        <tr>
+            <td style="background: #00b4f0;"></td>
+            <td style="background: #0a5bd7;"></td>
+            <td style="background: #0b22a8;"></td>
+        </tr>
+    </table>
+</div>
 
 <div class="page">
     <table class="top">
         <tr>
             <td>
-                <div><img src="{{ public_path('assets/images/logo/taxivan-logo.png') }}" class="brand" alt="Taxivan"></div>
-                <div><img src="{{ public_path('assets/images/logo/franja-roja.png') }}" class="brand-stripe" alt=""></div>
+                <div><img src="{{ public_path('assets/images/logo/taxivan-logo.svg') }}" class="brand" alt="Taxivan"></div>
             </td>
             <td style="text-align: right;">
                 @if($simulated)
@@ -75,7 +83,6 @@
 
     <p class="eyebrow">Orden de salida</p>
     <h1 class="title">{{ $dayTitle }}</h1>
-    <img src="{{ public_path('assets/images/logo/franja-roja.png') }}" class="stripe" alt="">
     <table class="chips">
         <tr>
             <td><span class="chip">{{ $simulated ? 'Simulación' : 'Sorteo' }} <b>{{ $simulated ? '' : '#'.$code }}</b></span></td>

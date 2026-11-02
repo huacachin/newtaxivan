@@ -282,6 +282,21 @@ class DrawServiceTest extends TestCase
         $this->assertSame(['2026-04-04'], DrawService::drawableDates(null, Carbon::parse('2026-04-02'), ['2026-04-02', '2026-04-03']));
     }
 
+    public function test_order_shows_only_the_drivers_first_name(): void
+    {
+        $this->assertSame('Juan', DrawService::firstName('Perez Lopez Juan Carlos'));
+        $this->assertSame('Pedro', DrawService::firstName('Quispe Mamani Pedro'));
+        $this->assertSame('Luis', DrawService::firstName('De La Cruz Vidal Luis Alberto'));
+        $this->assertSame('Ana', DrawService::firstName('Del Castillo  Rojas  Ana Maria'));
+        $this->assertSame('Maria', DrawService::firstName('Rojas Torres Maria Del Pilar'));
+        $this->assertSame('Juan', DrawService::firstName('Perez Juan'));
+        $this->assertSame('Juan', DrawService::firstName('Juan'));
+        $this->assertSame('', DrawService::firstName(null));
+
+        $items = DrawService::orderItems([['number' => 1, 'plate' => 'ABC123', 'driver_name' => 'Perez Lopez Juan Carlos']]);
+        $this->assertSame('Juan', $items[0]['driver']);
+    }
+
     public function test_national_holidays_include_holy_thursday_and_friday(): void
     {
         $this->assertSame('2026-04-05', Holiday::easterSunday(2026)->toDateString());
