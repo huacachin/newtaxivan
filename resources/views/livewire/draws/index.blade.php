@@ -121,6 +121,13 @@
         .draws-module .dr-day-open { background: #fff7d6 !important; color: #1b2430 !important; }
         .draws-module .dr-day-meta { font-size: 11px; opacity: .9; }
         .draws-module .dr-open { background: #fffbeb; }
+        /* Domingo: sorteo opcional, columna con otro tono */
+        .draws-module thead .dr-day-sunday:not(.dr-day-done) { background: #ede9fe !important; color: #4c1d95 !important; }
+        .draws-module .dr-sunday-cell { background: #f5f3ff; }
+        .draws-module .dr-sunday-list { max-height: 55vh; overflow-y: auto; }
+        .draws-module .dr-sunday-list label { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-bottom: 1px solid #f1f5f9; cursor: pointer; margin: 0; }
+        .draws-module .dr-sunday-list label:hover { background: #f8fafc; }
+        .draws-module .dr-sunday-list .form-check-input { width: 1.2em; height: 1.2em; margin: 0; flex: none; }
         .draws-module .dr-low { background: #dcfce7; color: #166534; font-weight: 600; }
         .draws-module .dr-mid { background: #fef3c7; color: #92400e; font-weight: 600; }
         .draws-module .dr-high { background: #fee2e2; color: #991b1b; font-weight: 600; }
@@ -395,8 +402,8 @@
                                         $result = $results[$day['date']] ?? null;
                                         $isOpen = ! $result && in_array($day['date'], $drawable, true);
                                     @endphp
-                                    <th class="dr-day {{ $isOpen ? 'dr-day-open' : '' }} {{ $result ? 'dr-day-done' : '' }}" wire:key="head-{{ $day['date'] }}"
-                                        @if($result) title="{{ $result['title'] }} · clic para abrir el PDF del orden de salida" @endif>
+                                    <th class="dr-day {{ $isOpen ? 'dr-day-open' : '' }} {{ $result ? 'dr-day-done' : '' }} {{ ($day['sunday'] ?? false) ? 'dr-day-sunday' : '' }}" wire:key="head-{{ $day['date'] }}"
+                                        @if($result) title="{{ $result['title'] }} · clic para abrir el PDF del orden de salida" @elseif($day['sunday'] ?? false) title="Domingo: sorteo opcional, solo con las placas que elijas" @endif>
                                         <div class="small">{{ $day['weekday'] }}</div>
                                         <div class="fw-bold">{{ $day['n'] }}</div>
                                         @if($result)
@@ -408,6 +415,12 @@
                                                     </button>
                                                 @endif
                                             </div>
+                                        @elseif($isOpen && ($day['sunday'] ?? false))
+                                            {{-- Domingo: primero se eligen en una lista quiénes participan --}}
+                                            <button type="button" class="btn btn-sm btn-warning mt-1 px-2 py-0" wire:click="openSundayDraw('{{ $day['date'] }}')"
+                                                    wire:loading.attr="disabled" wire:target="openSundayDraw,confirmDraw,draw">
+                                                <i class="ti ti-arrows-shuffle"></i> Sortear
+                                            </button>
                                         @elseif($isOpen)
                                             <button type="button" class="btn btn-sm btn-warning mt-1 px-2 py-0" wire:click="confirmDraw('{{ $day['date'] }}')"
                                                     wire:loading.attr="disabled" wire:target="confirmDraw,draw">
@@ -488,6 +501,13 @@
                                                     {{ $cell->number }}@if($cell->deviated)<sup>*</sup>@endif
                                                 </td>
                                             @endif
+                                        @elseif(($day['sunday'] ?? false) && $row['active'] && in_array($date, $drawable, true) && in_array($row['id'], $eligible[$date] ?? [], true))
+                                            {{-- Domingo: se elige en la lista de "Sortear"; aquí solo se ve quién quedó elegido --}}
+                                            <td class="text-center dr-open dr-sunday-cell">
+                                                @if(in_array((string) $row['id'], $included[$date] ?? [], true))
+                                                    <i class="ti ti-check text-success" title="Elegida para el sorteo del domingo"></i>
+                                                @endif
+                                            </td>
                                         @elseif($row['active'] && in_array($date, $drawable, true) && in_array($row['id'], $eligible[$date] ?? [], true))
                                             <td class="text-center dr-open">
                                                 <input type="checkbox" class="form-check-input m-0" wire:model="included.{{ $date }}" value="{{ $row['id'] }}"
@@ -762,6 +782,69 @@
                     @if($historyVehicle)
                         @include('draws._sanctions', ['history' => $history, 'vehicle' => $historyVehicle])
                     @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal: sorteo del domingo. Se eligen (selección múltiple) las placas que SOLO participan;
+         empiezan sin marcar. La selección vive en Alpine y se manda al confirmar. --}}
+    <div class="modal fade" id="sundayDrawModal" tabindex="-1" aria-hidden="true" wire:ignore.self
+         x-data="{
+             date: null,
+             selected: [],
+             q: '',
+             visibleIds() {
+                 return [...$el.querySelectorAll('[data-sunday-row]')].filter(r => r.style.display !== 'none').map(r => Number(r.dataset.id))
+             },
+         }"
+         x-on:sunday-draw-open.window="date = $event.detail.date; selected = ($event.detail.selected || []).map(Number); q = ''; $nextTick(() => bootstrap.Modal.getOrCreateInstance($el).show())">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="ti ti-arrows-shuffle"></i> Sorteo del domingo
+                        @if($sundayDate)
+                            <small class="text-muted fw-normal">· {{ \App\Models\Draw::dayTitleFor($sundayDate) }}</small>
+                        @endif
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small text-muted mb-2">
+                        Marca las placas que <b>sí</b> trabajan este domingo: solo ellas entran al sorteo.
+                        Son las {{ $sundayVehicles->count() }} activas (sin las bloqueadas ni las NT en rojo).
+                    </p>
+                    <div class="d-flex gap-2 mb-2">
+                        <input type="search" class="form-control form-control-sm" placeholder="Buscar placa o conductor" x-model="q">
+                        <button type="button" class="btn btn-sm btn-outline-primary text-nowrap"
+                                x-on:click="selected = [...new Set([...selected, ...visibleIds()])]">Marcar todas</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary text-nowrap" x-on:click="selected = []">Quitar todas</button>
+                    </div>
+                    <div class="dr-sunday-list border rounded">
+                        @forelse($sundayVehicles as $vehicle)
+                            @php $firstName = \App\Services\DrawService::firstName($vehicle->driver?->name); @endphp
+                            <label data-sunday-row data-id="{{ $vehicle->id }}" wire:key="sunday-{{ $vehicle->id }}"
+                                   data-search="{{ \Illuminate\Support\Str::lower($vehicle->plate.' '.$vehicle->sort_order.' '.$vehicle->driver?->name) }}"
+                                   x-show="! q || $el.dataset.search.includes(q.toLowerCase())">
+                                <input type="checkbox" class="form-check-input" value="{{ $vehicle->id }}" x-model.number="selected">
+                                <span class="text-muted small" style="width: 34px;">{{ $vehicle->sort_order }}</span>
+                                <strong>{{ $vehicle->plate }}</strong>
+                                <span class="text-muted small">{{ $firstName }}</span>
+                                <span class="ms-auto small text-muted">{{ $vehicle->condition }}</span>
+                            </label>
+                        @empty
+                            <div class="text-center text-muted small py-3">No hay placas que puedan entrar este domingo.</div>
+                        @endforelse
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <span class="me-auto small text-muted"><b x-text="selected.length">0</b> elegida(s)</span>
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-sm btn-warning" :disabled="! selected.length"
+                            x-on:click="$wire.confirmSundayDraw(date, selected)" wire:loading.attr="disabled" wire:target="confirmSundayDraw">
+                        <i class="ti ti-arrows-shuffle"></i> Sortear con <span x-text="selected.length">0</span>
+                    </button>
                 </div>
             </div>
         </div>

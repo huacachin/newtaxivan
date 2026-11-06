@@ -85,19 +85,40 @@ class DrawService
      * para sortear el mismo día o la noche anterior, y siempre posteriores al
      * último sorteo vigente. Un día pasado sin sorteo se salta.
      *
+     * El domingo es opcional: se puede sortear el de hoy o el que cae antes del
+     * siguiente día hábil (el sábado ya se ve el domingo y el lunes). Si no se
+     * sortea, se salta como cualquier día pasado. Un domingo feriado no.
+     *
      * @param  array<int, string>  $holidays
      * @return array<int, string> fechas Y-m-d
      */
     public static function drawableDates(?string $lastDrawDate, Carbon $today, array $holidays): array
     {
         $today = $today->copy()->startOfDay();
+        $next = self::nextWorkingDay($today, $holidays);
+
         $dates = [];
-        if (self::isWorkingDay($today, $holidays)) {
+        if (self::isWorkingDay($today, $holidays) || self::isDrawableSunday($today, $holidays)) {
             $dates[] = $today->toDateString();
         }
-        $dates[] = self::nextWorkingDay($today, $holidays)->toDateString();
+        for ($day = $today->copy()->addDay(); $day->lt($next); $day->addDay()) {
+            if (self::isDrawableSunday($day, $holidays)) {
+                $dates[] = $day->toDateString();
+            }
+        }
+        $dates[] = $next->toDateString();
 
         return array_values(array_filter($dates, fn (string $d) => $lastDrawDate === null || $d > $lastDrawDate));
+    }
+
+    /**
+     * Domingo que se puede sortear (opcional, eligiendo quiénes participan): cualquiera que no sea feriado.
+     *
+     * @param  array<int, string>  $holidays
+     */
+    public static function isDrawableSunday(Carbon $date, array $holidays): bool
+    {
+        return $date->isSunday() && ! in_array($date->toDateString(), $holidays, true);
     }
 
     /**

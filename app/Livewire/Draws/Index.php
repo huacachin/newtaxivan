@@ -75,6 +75,9 @@ class Index extends Component
     /** Placa cuyo historial de sanciones se está viendo. */
     public ?int $historyVehicleId = null;
 
+    /** Domingo cuyo sorteo se está preparando (lista para elegir quiénes participan). */
+    public ?string $sundayDate = null;
+
     public function mount(): void
     {
         $this->authorizeAccess();
@@ -169,19 +172,74 @@ class Index extends Component
         }
 
         $html = 'Participan <b>'.$participants->count().'</b> vehículo(s), números del 1 al '.$participants->count().'.';
-        if ($excluded->isNotEmpty()) {
-            $html .= '<br>Sin participar ('.$excluded->count().'): <b>'.e($excluded->pluck('plate')->implode(', ')).'</b>';
+        if (Carbon::parse($date)->isSunday()) {
+            // Domingo: entran solo los elegidos en la lista; se nombran ellos, no los que faltan
+            $html .= '<br>Solo ellos: <b>'.e($participants->sortBy('plate')->pluck('plate')->implode(', ')).'</b>';
+        } else {
+            if ($excluded->isNotEmpty()) {
+                $html .= '<br>Sin participar ('.$excluded->count().'): <b>'.e($excluded->pluck('plate')->implode(', ')).'</b>';
+            }
+            $blockedPlates = Vehicle::whereIn('id', DrawBlock::blockedVehicleIdsOn($date))->orderBy('plate')->pluck('plate');
+            if ($blockedPlates->isNotEmpty()) {
+                $html .= '<br>Bloqueadas, no entran ('.$blockedPlates->count().'): '.e($blockedPlates->implode(', '));
+            }
         }
-        $blockedPlates = Vehicle::whereIn('id', DrawBlock::blockedVehicleIdsOn($date))->orderBy('plate')->pluck('plate');
-        if ($blockedPlates->isNotEmpty()) {
-            $html .= '<br>Bloqueadas, no entran ('.$blockedPlates->count().'): '.e($blockedPlates->implode(', '));
-        }
-        if ($date !== $drawable[0]) {
-            $html .= '<br><span class="text-danger">El '.e($this->dayLabel($drawable[0])).' quedará sin sorteo.</span>';
+        // Días hábiles que se saltan (el domingo es opcional, no se avisa)
+        $skipped = array_filter($drawable, fn (string $d) => $d < $date && ! Carbon::parse($d)->isSunday());
+        if ($skipped) {
+            $html .= '<br><span class="text-danger">El '.e(implode(' y el ', array_map(fn (string $d) => $this->dayLabel($d), $skipped))).' quedará sin sorteo.</span>';
         }
         $html .= '<br><small class="text-muted">Una vez sorteado no se puede repetir; solo el director puede anularlo.</small>';
 
         $this->dispatch('draw-confirm', date: $date, title: '¿Sortear el '.$this->dayLabel($date).'?', html: $html);
+    }
+
+    /**
+     * Sortear un domingo: primero se abre la lista de placas activas (sin las
+     * bloqueadas ni los NT en rojo), todas sin marcar, para elegir quiénes
+     * SOLO participan.
+     */
+    public function openSundayDraw(string $date): void
+    {
+        $this->authorizeAccess();
+
+        if (! Carbon::parse($date)->isSunday() || ! in_array($date, $this->drawableDates(), true)) {
+            $this->dispatch('errorAlert', ['message' => 'Ese domingo ya no se puede sortear. Actualiza la página.']);
+
+            return;
+        }
+
+        $this->sundayDate = $date;
+        $this->dispatch('sunday-draw-open', date: $date, selected: array_map('intval', $this->included[$date] ?? []));
+    }
+
+    /**
+     * Toma las placas elegidas en la lista del domingo y pasa a la confirmación
+     * de siempre (y de ahí al sorteo).
+     *
+     * @param  array<int, int|string>  $vehicleIds
+     */
+    public function confirmSundayDraw(string $date, array $vehicleIds): void
+    {
+        $this->authorizeAccess();
+
+        if ($date !== $this->sundayDate || ! Carbon::parse($date)->isSunday()) {
+            $this->dispatch('errorAlert', ['message' => 'Vuelve a abrir el sorteo del domingo.']);
+
+            return;
+        }
+
+        $eligible = DrawService::activeVehicles($date)->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $chosen = array_values(array_intersect(array_map('intval', $vehicleIds), $eligible));
+        if (! $chosen) {
+            $this->dispatch('errorAlert', ['message' => 'Marca al menos una placa para el sorteo del domingo.']);
+
+            return;
+        }
+
+        $this->included[$date] = array_map('strval', $chosen);
+        $this->dispatch('modal-close', ['name' => 'sundayDrawModal']);
+        $this->confirmDraw($date);
     }
 
     public function draw(string $date): void
@@ -205,6 +263,9 @@ class Index extends Component
         }
 
         unset($this->included[$date]);
+        if ($this->sundayDate === $date) {
+            $this->sundayDate = null;
+        }
 
         // Si por fuerza mayor alguien repitió número en el mes, se avisa en el momento
         $warning = '';
@@ -526,6 +587,10 @@ class Index extends Component
         $activeVehicles = DrawService::gridVehicles()->get(['id', 'sort_order', 'plate', 'condition', 'not_working_since']);
         $simulating = $this->simSeed !== null;
         $drawable = $simulating ? [] : $this->drawableDates();
+        // Domingos: solo los sorteados o el que hoy se puede sortear (la simulación no los usa)
+        if (! $simulating) {
+            $days = $this->withSundays($days, $drawable, $from, $to);
+        }
         // Quién entra a cada día sorteable (los bloqueados ese día de la semana no tienen casilla)
         $eligible = [];
         foreach ($drawable as $date) {
@@ -614,6 +679,10 @@ class Index extends Component
             'yearHolidays' => Holiday::whereYear('date', $this->year)->orderBy('date')->get(),
             'blocks' => $blocks,
             'lockedDays' => $lockedDays,
+            // Lista del domingo que se está preparando: las placas que pueden entrar ese día
+            'sundayVehicles' => ! $simulating && $this->sundayDate && in_array($this->sundayDate, $drawable, true)
+                ? DrawService::activeVehicles($this->sundayDate)->with('driver:id,name')->get(['id', 'sort_order', 'plate', 'condition', 'driver_id'])
+                : collect(),
             ...$this->historyData(),
             'canBlock' => $this->canBlock(),
             'annulledDraws' => $simulating ? collect() : Draw::whereNotNull('annulled_at')->whereBetween('date', [$from, $to])
@@ -886,7 +955,8 @@ class Index extends Component
 
     /**
      * Deja solo los días sorteables y marca en los nuevos a todos los que
-     * entran ese día; lo que el usuario ya desmarcó se respeta.
+     * entran ese día; lo que el usuario ya desmarcó se respeta. Los domingos
+     * empiezan sin nadie: se elige quiénes participan en su lista.
      *
      * @param  array<int, string>  $drawable
      * @param  array<string, array<int, int>>  $eligible  fecha => vehicle_ids que entran
@@ -895,8 +965,33 @@ class Index extends Component
     {
         $this->included = array_intersect_key($this->included, array_flip($drawable));
         foreach ($drawable as $date) {
-            $this->included[$date] ??= array_map('strval', $eligible[$date] ?? []);
+            $this->included[$date] ??= Carbon::parse($date)->isSunday() ? [] : array_map('strval', $eligible[$date] ?? []);
         }
+    }
+
+    /**
+     * Columnas de la grilla: los días hábiles del mes más los domingos que se
+     * sortearon o que hoy se pueden sortear (los demás domingos no se muestran).
+     *
+     * @param  array<int, array{date: string, n: int, weekday: string}>  $days
+     * @param  array<int, string>  $drawable
+     * @return array<int, array{date: string, n: int, weekday: string, sunday?: bool}>
+     */
+    private function withSundays(array $days, array $drawable, string $from, string $to): array
+    {
+        $sundays = collect(Draw::active()->whereBetween('date', [$from, $to])->pluck('date'))
+            ->map(fn ($d) => Carbon::parse($d)->toDateString())
+            ->merge(array_filter($drawable, fn (string $d) => $d >= $from && $d <= $to))
+            ->filter(fn (string $d) => Carbon::parse($d)->isSunday())
+            ->unique();
+
+        foreach ($sundays as $date) {
+            $day = Carbon::parse($date);
+            $days[] = ['date' => $date, 'n' => $day->day, 'weekday' => DrawService::weekdayLabel($day), 'sunday' => true];
+        }
+        usort($days, fn (array $a, array $b) => strcmp($a['date'], $b['date']));
+
+        return $days;
     }
 
     /** "Sáb 31/10" */

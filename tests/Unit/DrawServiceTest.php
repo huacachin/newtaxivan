@@ -249,8 +249,8 @@ class DrawServiceTest extends TestCase
         $this->assertSame('2026-11-06', DrawService::firstOpenDate('2026-11-05', $friday, []));  // hoy sin sortear
         $this->assertSame('2026-11-07', DrawService::firstOpenDate('2026-11-06', $friday, []));  // hoy ya sorteado
         $this->assertSame('2026-11-09', DrawService::firstOpenDate('2026-11-07', $friday, []));  // sábado adelantado
-        $this->assertSame('2026-11-09', DrawService::firstOpenDate('2026-11-06', $friday, ['2026-11-07'])); // sábado feriado
-        $this->assertSame('2026-11-09', DrawService::firstOpenDate('2026-11-07', Carbon::parse('2026-11-08'), [])); // domingo
+        $this->assertSame('2026-11-08', DrawService::firstOpenDate('2026-11-06', $friday, ['2026-11-07'])); // sábado feriado: el domingo (opcional)
+        $this->assertSame('2026-11-08', DrawService::firstOpenDate('2026-11-07', Carbon::parse('2026-11-08'), [])); // domingo: hoy se puede sortear
     }
 
     public function test_working_days_are_monday_to_saturday_except_holidays(): void
@@ -266,13 +266,22 @@ class DrawServiceTest extends TestCase
     public function test_drawable_dates_are_today_and_the_next_working_day_after_the_last_draw(): void
     {
         $saturday = Carbon::parse('2026-10-31');
+        $friday = Carbon::parse('2026-10-30');
 
-        $this->assertSame(['2026-10-31', '2026-11-02'], DrawService::drawableDates('2026-10-30', $saturday, []));
-        $this->assertSame(['2026-11-02'], DrawService::drawableDates('2026-10-31', $saturday, []));
+        $this->assertSame(['2026-10-30', '2026-10-31'], DrawService::drawableDates('2026-10-29', $friday, []));
+        // Sábado: además del lunes, el domingo (opcional)
+        $this->assertSame(['2026-10-31', '2026-11-01', '2026-11-02'], DrawService::drawableDates('2026-10-30', $saturday, []));
+        $this->assertSame(['2026-11-01', '2026-11-02'], DrawService::drawableDates('2026-10-31', $saturday, []));
+        // El lunes adelantado: el domingo ya no (sería anterior al último sorteo)
         $this->assertSame([], DrawService::drawableDates('2026-11-02', $saturday, []));
-        $this->assertSame(['2026-11-02'], DrawService::drawableDates(null, Carbon::parse('2026-11-01'), []));
-        // Día pasado sin sorteo: se salta, solo cuentan hoy y el siguiente
-        $this->assertSame(['2026-10-31', '2026-11-02'], DrawService::drawableDates('2026-10-20', $saturday, []));
+        // Domingo: hoy y el lunes
+        $this->assertSame(['2026-11-01', '2026-11-02'], DrawService::drawableDates(null, Carbon::parse('2026-11-01'), []));
+        // Domingo sin sortear: el lunes ya no lo ofrece
+        $this->assertSame(['2026-11-02', '2026-11-03'], DrawService::drawableDates('2026-10-31', Carbon::parse('2026-11-02'), []));
+        // Domingo feriado: no se sortea
+        $this->assertSame(['2026-10-31', '2026-11-02'], DrawService::drawableDates('2026-10-30', $saturday, ['2026-11-01']));
+        // Día pasado sin sorteo: se salta, solo cuentan hoy y lo siguiente
+        $this->assertSame(['2026-10-31', '2026-11-01', '2026-11-02'], DrawService::drawableDates('2026-10-20', $saturday, []));
         // Jueves y Viernes Santo seguidos
         $this->assertSame(['2026-04-04'], DrawService::drawableDates(null, Carbon::parse('2026-04-02'), ['2026-04-02', '2026-04-03']));
     }
