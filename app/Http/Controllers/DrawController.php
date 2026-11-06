@@ -7,6 +7,7 @@ use App\Models\Draw;
 use App\Services\DrawService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
@@ -20,12 +21,26 @@ class DrawController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['auth', 'permission:draws'])->only(['index', 'pdf', 'simulation', 'exportSimulation']);
+        $this->middleware(['auth', 'permission:draws'])->only(['index', 'mobile', 'pdf', 'simulation', 'exportSimulation']);
     }
 
-    public function index(): View
+    /**
+     * Grilla del mes. Desde un celular va a la versión del celular (por día,
+     * sin grilla), salvo que se pida la grilla con ?escritorio=1.
+     */
+    public function index(Request $request): View|RedirectResponse
     {
+        if (! $request->boolean('escritorio') && preg_match('/Mobi|Android|iPhone/i', (string) $request->userAgent())) {
+            return redirect()->route('draws.mobile');
+        }
+
         return view('draws.index');
+    }
+
+    /** Sorteos en el celular: se trabaja por día (Livewire Draws\Mobile). */
+    public function mobile(): View
+    {
+        return view('draws.mobile');
     }
 
     /**

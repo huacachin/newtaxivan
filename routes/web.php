@@ -118,6 +118,7 @@ Route::middleware('auth')->group(function () {
 
     // Sorteos
     Route::get('draws', [DrawController::class, 'index'])->name('draws.index');
+    Route::get('draws/celular', [DrawController::class, 'mobile'])->name('draws.mobile');
     Route::get('draws/{draw}/pdf', [DrawController::class, 'pdf'])->whereNumber('draw')->name('draws.pdf');
     Route::get('draws/simulation/{date}', [DrawController::class, 'simulation'])->name('draws.simulation');
 

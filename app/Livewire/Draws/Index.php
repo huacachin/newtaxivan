@@ -773,7 +773,7 @@ class Index extends Component
     /**
      * @return array<int, string>
      */
-    private function drawableDates(): array
+    protected function drawableDates(): array
     {
         $today = Carbon::today();
         $lastDate = Draw::active()->max('date');
@@ -813,7 +813,7 @@ class Index extends Component
      *
      * @return array{historyVehicle: Vehicle|null, history: \Illuminate\Support\Collection<int, DrawBlock>}
      */
-    private function historyData(): array
+    protected function historyData(): array
     {
         $vehicle = $this->historyVehicleId
             ? Vehicle::with('driver:id,name')->find($this->historyVehicleId, ['id', 'plate', 'sort_order', 'driver_id'])
@@ -843,7 +843,7 @@ class Index extends Component
     }
 
     /** Primer día que todavía se puede sortear (desde ahí se bloquea o desbloquea). */
-    private function firstOpenDate(): string
+    protected function firstOpenDate(): string
     {
         $today = Carbon::today();
         $lastDate = Draw::active()->max('date');
@@ -961,7 +961,7 @@ class Index extends Component
      * @param  array<int, string>  $drawable
      * @param  array<string, array<int, int>>  $eligible  fecha => vehicle_ids que entran
      */
-    private function syncIncluded(array $drawable, array $eligible): void
+    protected function syncIncluded(array $drawable, array $eligible): void
     {
         $this->included = array_intersect_key($this->included, array_flip($drawable));
         foreach ($drawable as $date) {
@@ -995,22 +995,22 @@ class Index extends Component
     }
 
     /** "Sáb 31/10" */
-    private function dayLabel(string $date): string
+    protected function dayLabel(string $date): string
     {
         $day = Carbon::parse($date);
 
         return DrawService::weekdayLabel($day).' '.$day->format('d/m');
     }
 
-    private function authorizeAccess(): void
+    protected function authorizeAccess(): void
     {
         abort_unless(auth()->user()?->can('draws'), 403);
     }
 
-    /** Bloquear y desbloquear placas: director, gerente y administrador. */
-    private function canBlock(): bool
+    /** Bloquear y desbloquear placas: director, gerente, administrador y controlador (los controladores manejan Sorteos desde el celular). */
+    protected function canBlock(): bool
     {
-        return (bool) auth()->user()?->hasAnyRole('director', 'gerente', 'administrador');
+        return (bool) auth()->user()?->hasAnyRole('director', 'gerente', 'administrador', 'controlador');
     }
 
     private function authorizeBlocking(): void
