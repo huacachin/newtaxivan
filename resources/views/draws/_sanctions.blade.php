@@ -11,7 +11,7 @@
     <span class="badge bg-light text-dark border">COD {{ $vehicle->sort_order ?? '—' }}</span>
     <span class="badge bg-dark">{{ $vehicle->plate }}</span>
     @if($vehicle->driver?->name)
-        <span class="text-muted">{{ $vehicle->driver->name }}</span>
+        <span class="text-muted" title="{{ $vehicle->driver->name }}">{{ \App\Services\DrawService::firstName($vehicle->driver->name) }}</span>
     @endif
     <span class="text-muted ms-auto">
         {{ $history->count() }} {{ $history->count() === 1 ? 'sanción registrada' : 'sanciones registradas' }}, de la más reciente a la más antigua.

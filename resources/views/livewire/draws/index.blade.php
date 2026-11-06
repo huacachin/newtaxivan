@@ -661,7 +661,7 @@
                                         <a href="#" class="dr-plate" title="Ver historial de sanciones"
                                            x-on:click.prevent="hideModal('blocksModal'); $wire.openHistory({{ $block->vehicle_id }})"><strong>{{ $block->vehicle?->plate ?? '—' }}</strong></a>
                                     </td>
-                                    <td>{{ $block->vehicle?->driver?->name ?? '—' }}</td>
+                                    <td title="{{ $block->vehicle?->driver?->name }}">{{ \App\Services\DrawService::firstName($block->vehicle?->driver?->name) ?: '—' }}</td>
                                     <td class="dr-nowrap">{{ $block->created_at->format('d/m/Y H:i') }}</td>
                                     <td>{{ \App\Models\DrawBlock::userLabel($block->blockedBy) }}</td>
                                     <td>{{ \App\Models\DrawBlock::KIND_LABELS[$block->kind] ?? $block->kind }}</td>
