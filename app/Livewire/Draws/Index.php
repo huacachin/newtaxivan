@@ -540,7 +540,7 @@ class Index extends Component
             : [...$this->recordedMonth($from, $to), []];
 
         // Bloqueos vigentes (para la lista y el detalle de cada placa) y días con candado del mes
-        $blocks = DrawBlock::active()->with('blockedBy:id,name', 'vehicle.driver:id,name', 'exceptions')->get()
+        $blocks = DrawBlock::active()->with('blockedBy:id,name', 'vehicle.driver:id,name', 'exceptions.createdBy:id,name')->get()
             ->sortBy(fn (DrawBlock $b) => [$b->vehicle?->sort_order ?? PHP_INT_MAX, $b->vehicle?->plate, $b->starts_on])->values();
         $blocksByVehicle = $blocks->groupBy('vehicle_id');
         // Placas que alguna vez tuvieron un bloqueo (aunque ya se cumplió o se levantó): van en rojo
@@ -590,7 +590,13 @@ class Index extends Component
             }
         }
 
+        // Nº de cada placa en la tabla, y la lista de bloqueos en ese mismo orden
+        $rowNumbers = array_flip(array_column($rows, 'id'));
+        $rowNumbers = array_map(fn (int $index) => $index + 1, $rowNumbers);
+        $blocks = $blocks->sortBy(fn (DrawBlock $b) => [$rowNumbers[$b->vehicle_id] ?? PHP_INT_MAX, $b->starts_on])->values();
+
         return view('livewire.draws.index', [
+            'rowNumbers' => $rowNumbers,
             'days' => $days,
             'rows' => $rows,
             'cells' => $cells,
@@ -610,7 +616,7 @@ class Index extends Component
             'yearHolidays' => Holiday::whereYear('date', $this->year)->orderBy('date')->get(),
             'blocks' => $blocks,
             'lockedDays' => $lockedDays,
-            ...$this->historyData(),
+            ...$this->historyData($rows),
             'canBlock' => $this->canBlock(),
             'annulledDraws' => $simulating ? collect() : Draw::whereNotNull('annulled_at')->whereBetween('date', [$from, $to])
                 ->with('drawnBy:id,name', 'annulledBy:id,name')->orderBy('annulled_at')->get(),
@@ -736,18 +742,21 @@ class Index extends Component
 
     /**
      * Historial de sanciones de la placa abierta: todos sus bloqueos con sus
-     * días desbloqueados, del más nuevo al más viejo.
+     * días desbloqueados, del más nuevo al más viejo, y en qué Nº de la
+     * tabla está la placa (null si no está en la grilla de este mes).
      *
-     * @return array{historyVehicle: Vehicle|null, history: \Illuminate\Support\Collection<int, DrawBlock>}
+     * @param  array<int, array{id: int}>  $rows  filas de la grilla, en orden
+     * @return array{historyVehicle: Vehicle|null, history: \Illuminate\Support\Collection<int, DrawBlock>, historyRowNumber: int|null}
      */
-    private function historyData(): array
+    private function historyData(array $rows): array
     {
         $vehicle = $this->historyVehicleId
-            ? Vehicle::with('driver:id,name')->find($this->historyVehicleId, ['id', 'plate', 'driver_id'])
+            ? Vehicle::with('driver:id,name')->find($this->historyVehicleId, ['id', 'plate', 'sort_order', 'driver_id'])
             : null;
         $history = $vehicle ? DrawBlock::historyFor($vehicle->id) : collect();
+        $index = $vehicle ? array_search($vehicle->id, array_column($rows, 'id'), true) : false;
 
-        return ['historyVehicle' => $vehicle, 'history' => $history];
+        return ['historyVehicle' => $vehicle, 'history' => $history, 'historyRowNumber' => $index === false ? null : $index + 1];
     }
 
     /** El motivo sin espacios de más, o null (con aviso) si no tiene de 3 a 255 caracteres. */

@@ -130,7 +130,7 @@
         .draws-module .dr-blocked td.dr-sticky { background: #f8fafc; }
         .draws-module .dr-lock { cursor: pointer; }
         .draws-module .dr-list th, .draws-module .dr-list td { word-break: normal; overflow-wrap: normal; }
-        .draws-module .dr-nowrap { white-space: nowrap; }
+        .draws-module .dr-nowrap { white-space: nowrap !important; } /* el tema fuerza text-wrap en las celdas */
         .draws-module .dr-plate { color: inherit; text-decoration: none; }
         .draws-module .dr-plate:hover { text-decoration: underline; }
         .draws-module .dr-locked { background: #f1f5f9; color: #94a3b8; font-size: 11px; }
@@ -471,11 +471,11 @@
                                         @if(! $cell && $lock && $canBlock && ! $simulating && $date >= $firstOpen)
                                             <td class="text-center dr-locked dr-locked-open" data-day="{{ $dayKey }}" data-label="{{ $row['plate'] }} {{ \App\Models\DrawBlock::dayLabel($date) }}"
                                                 :class="days.includes('{{ $dayKey }}') && 'dr-day-sel'" x-on:click="toggleDay('{{ $dayKey }}')"
-                                                title="{{ $lock->periodLabel() }}: {{ $lock->reason }} · clic para marcar este día y desbloquearlo">
+                                                title="{{ $lock->periodLabel() }}: {{ $lock->reason }} · bloqueado por {{ $lock->blockedBy?->name ?? '—' }} el {{ $lock->created_at->format('d/m/Y H:i') }} · clic para marcar este día y desbloquearlo">
                                                 <i class="ti" :class="days.includes('{{ $dayKey }}') ? 'ti-lock-open' : 'ti-lock'"></i>
                                             </td>
                                         @elseif(! $cell && $lock)
-                                            <td class="text-center dr-locked" title="{{ $lock->periodLabel() }}: {{ $lock->reason }}"><i class="ti ti-lock"></i></td>
+                                            <td class="text-center dr-locked" title="{{ $lock->periodLabel() }}: {{ $lock->reason }} · bloqueado por {{ $lock->blockedBy?->name ?? '—' }} el {{ $lock->created_at->format('d/m/Y H:i') }}"><i class="ti ti-lock"></i></td>
                                         @elseif(isset($results[$date]))
                                             @if(! $cell)
                                                 <td></td>
@@ -650,26 +650,30 @@
                     <div class="table-responsive">
                         <table class="table table-sm table-bordered mb-0 small dr-list">
                             <thead>
-                            <tr><th>Placa</th><th>Conductor</th><th>Tipo</th><th>Periodo</th><th>Motivo</th><th>Bloqueada por</th><th>Registrado</th><th></th></tr>
+                            <tr><th>Nº</th><th>COD</th><th>Placa</th><th>Conductor</th><th>Fecha y hora</th><th>Bloqueado por</th><th>Tipo</th><th>Periodo</th><th>Motivo</th><th></th></tr>
                             </thead>
                             <tbody>
                             @forelse($blocks as $block)
                                 <tr wire:key="block-{{ $block->id }}">
+                                    <td class="text-center">{{ $rowNumbers[$block->vehicle_id] ?? '—' }}</td>
+                                    <td class="text-center">{{ $block->vehicle?->sort_order ?? '—' }}</td>
                                     <td class="dr-nowrap">
                                         <a href="#" class="dr-plate" title="Ver historial de sanciones"
                                            x-on:click.prevent="hideModal('blocksModal'); $wire.openHistory({{ $block->vehicle_id }})"><strong>{{ $block->vehicle?->plate ?? '—' }}</strong></a>
                                     </td>
                                     <td>{{ $block->vehicle?->driver?->name ?? '—' }}</td>
+                                    <td class="dr-nowrap">{{ $block->created_at->format('d/m/Y H:i') }}</td>
+                                    <td>{{ $block->blockedBy?->name ?? '—' }}</td>
                                     <td>{{ \App\Models\DrawBlock::KIND_LABELS[$block->kind] ?? $block->kind }}</td>
                                     <td style="white-space: normal;">
                                         {{ $block->periodLabel() }}
                                         @if($block->exceptions->isNotEmpty())
-                                            <div class="text-success">Desbloqueados: {{ $block->exceptions->map(fn ($e) => \App\Models\DrawBlock::dayLabel($e->date->toDateString()))->implode(', ') }}</div>
+                                            @foreach($block->exceptions as $exception)
+                                                @include('draws._unblocked_day', ['exception' => $exception])
+                                            @endforeach
                                         @endif
                                     </td>
                                     <td style="white-space: normal;">{{ $block->reason }}</td>
-                                    <td>{{ $block->blockedBy?->name ?? '—' }}</td>
-                                    <td class="dr-nowrap">{{ $block->created_at->format('d/m/Y H:i') }}</td>
                                     <td class="text-end dr-nowrap">
                                         @if($canBlock)
                                             <button type="button" class="btn btn-sm btn-outline-success py-0"
@@ -680,7 +684,7 @@
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="8" class="text-center text-muted">No hay placas bloqueadas.</td></tr>
+                                <tr><td colspan="10" class="text-center text-muted">No hay placas bloqueadas.</td></tr>
                             @endforelse
                             </tbody>
                         </table>
@@ -748,14 +752,13 @@
                         <i class="ti ti-history"></i> Historial de sanciones
                         @if($historyVehicle)
                             · <strong>{{ $historyVehicle->plate }}</strong>
-                            <small class="text-muted fw-normal">{{ $historyVehicle->driver?->name }}</small>
                         @endif
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     @if($historyVehicle)
-                        @include('draws._sanctions', ['history' => $history])
+                        @include('draws._sanctions', ['history' => $history, 'vehicle' => $historyVehicle, 'rowNumber' => $historyRowNumber])
                     @endif
                 </div>
             </div>

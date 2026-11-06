@@ -47,7 +47,7 @@
                     <h6 class="mb-0"><i class="ti ti-history"></i> Historial de sanciones en Sorteos</h6>
                     <a href="{{ route('draws.index') }}" class="btn btn-sm btn-outline-secondary"><i class="ti ti-arrows-shuffle"></i> Ir a Sorteos</a>
                 </div>
-                @include('draws._sanctions', ['history' => $drawHistory])
+                @include('draws._sanctions', ['history' => $drawHistory, 'vehicle' => $vehicle])
             </div>
         </div>
     @endif
