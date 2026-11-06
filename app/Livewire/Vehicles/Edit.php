@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Vehicles;
 
+use App\Models\DrawBlock;
 use App\Models\Driver;
 use App\Models\Headquarter;
 use App\Models\Owner;
@@ -397,6 +398,9 @@ class Edit extends Component
 
     public function render()
     {
-        return view('livewire.vehicles.edit');
+        return view('livewire.vehicles.edit', [
+            // Historial de sanciones en Sorteos, para quien tiene acceso a Sorteos
+            'drawHistory' => auth()->user()?->can('draws') ? DrawBlock::historyFor($this->vehicle->id) : null,
+        ]);
     }
 }

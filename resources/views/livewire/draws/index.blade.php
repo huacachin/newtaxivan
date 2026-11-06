@@ -1,54 +1,112 @@
-@push('scripts')
-    <script>
-        // Formulario de "Bloquear": todos los días o solo algunos días de la semana, y el motivo.
-        // Devuelve una promesa con { reason, weekdays } o null si se cancela.
-        window.drawsBlockForm = function (count, plates) {
-            var days = @js(\App\Models\DrawBlock::WEEKDAYS);
-            var checks = Object.keys(days).map(function (d) {
-                return '<label class="form-check form-check-inline m-0"><input class="form-check-input" type="checkbox" name="blk-day" value="' + d + '" disabled>'
-                    + '<span class="form-check-label">' + days[d] + '</span></label>';
-            }).join('');
-            var html = '<div class="text-start small">'
-                + '<p class="text-muted mb-2" id="blk-plates"></p>'
-                + '<div class="form-check"><input class="form-check-input" type="radio" name="blk-mode" id="blk-all" value="all" checked>'
-                + '<label class="form-check-label" for="blk-all">Todos los días, hasta desbloquearla</label></div>'
-                + '<div class="form-check"><input class="form-check-input" type="radio" name="blk-mode" id="blk-days" value="days">'
-                + '<label class="form-check-label" for="blk-days">Solo algunos días, todas las semanas</label></div>'
-                + '<div class="d-flex flex-wrap gap-2 ms-4 mt-1 mb-3" id="blk-weekdays">' + checks + '</div>'
-                + '<label class="form-label mb-1" for="blk-reason">Motivo (queda registrado)</label>'
-                + '<input type="text" class="form-control" id="blk-reason" maxlength="255" placeholder="Ej. En taller">'
-                + '</div>';
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('assets/vendor/datepikar/flatpickr.min.css') }}">
+@endpush
 
-            return Swal.fire({
-                title: 'Bloquear ' + count + ' placa(s)',
-                html: html,
-                focusConfirm: false,
-                showCancelButton: true,
-                confirmButtonColor: '#212529',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Bloquear',
-                cancelButtonText: 'Cancelar',
-                didOpen: function (popup) {
-                    popup.querySelector('#blk-plates').textContent = plates;
-                    popup.querySelectorAll('input[name=blk-mode]').forEach(function (radio) {
-                        radio.addEventListener('change', function () {
-                            var byDays = popup.querySelector('#blk-days').checked;
-                            popup.querySelectorAll('input[name=blk-day]').forEach(function (c) { c.disabled = ! byDays; if (! byDays) { c.checked = false } });
-                        });
-                    });
-                    popup.querySelector('#blk-reason').focus();
+@push('scripts')
+    <script src="{{ asset('assets/vendor/datepikar/flatpickr.js') }}"></script>
+    <script>
+        // Formulario de "Bloquear" (modal #blockFormModal): todo el mes, rango de fechas (calendario),
+        // días específicos (calendario, varios) o hasta desbloquearla, y el motivo.
+        // opts = { minDate, maxDate, holidays: [...], months: [{ value, label }] } (lo da el servidor).
+        // submit(form) devuelve una promesa con true si se guardó; recién ahí se cierra el modal.
+        window.drawsBlockForm = (function () {
+            var DAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+            var es = {
+                weekdays: { shorthand: ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá'], longhand: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'] },
+                months: {
+                    shorthand: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+                    longhand: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
                 },
-                preConfirm: function () {
-                    var popup = Swal.getPopup();
-                    var reason = popup.querySelector('#blk-reason').value.trim();
-                    var byDays = popup.querySelector('#blk-days').checked;
-                    var weekdays = Array.from(popup.querySelectorAll('input[name=blk-day]:checked')).map(function (c) { return Number(c.value) });
-                    if (byDays && ! weekdays.length) { Swal.showValidationMessage('Marca al menos un día de la semana.'); return false }
-                    if (reason.length < 3) { Swal.showValidationMessage('Escribe un motivo (mínimo 3 letras).'); return false }
-                    return { reason: reason, weekdays: byDays ? weekdays : [] };
-                },
-            }).then(function (result) { return result.isConfirmed ? result.value : null });
-        };
+                firstDayOfWeek: 1, rangeSeparator: ' a ', ordinal: function () { return 'º' },
+            };
+            var calendars = {};
+            var submitFn = null;
+            var holidays = [];
+
+            function $(name) { return document.querySelector('#blockFormModal [data-blk="' + name + '"]') }
+            function pad(n) { return (n < 10 ? '0' : '') + n }
+            function iso(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) }
+            function label(d) { return DAYS[d.getDay()] + ' ' + pad(d.getDate()) + '/' + pad(d.getMonth() + 1) }
+            function workingDays(from, to) {
+                var n = 0;
+                for (var d = new Date(from); d <= to; d.setDate(d.getDate() + 1)) {
+                    if (d.getDay() !== 0 && holidays.indexOf(iso(d)) === -1) { n++ }
+                }
+                return n;
+            }
+            function kind() { return document.querySelector('#blockFormModal input[name=blk-kind]:checked').value }
+            function showPane() {
+                document.querySelectorAll('#blockFormModal [data-blk-pane]').forEach(function (p) { p.hidden = p.dataset.blkPane !== kind() });
+                $('error').hidden = true;
+            }
+            function error(message) { $('error').textContent = message; $('error').hidden = false }
+
+            function noDraw(d) { return d.getDay() === 0 || holidays.indexOf(iso(d)) !== -1 }
+            function calendar(name, mode, opts, onChange) {
+                if (calendars[name]) { calendars[name].destroy() }
+                $(name + '-input').value = ''; // si no, flatpickr vuelve a marcar los días de la vez anterior
+                calendars[name] = flatpickr($(name + '-input'), {
+                    inline: true, mode: mode, locale: es, dateFormat: 'Y-m-d', minDate: opts.minDate, maxDate: opts.maxDate, defaultDate: [],
+                    // En el rango no se deshabilitan domingos ni feriados: flatpickr no deja que un rango
+                    // pase por un día deshabilitado y no se podría cruzar un fin de semana. Solo se ven en gris.
+                    disable: mode === 'range' ? [] : [noDraw],
+                    onDayCreate: function (sel, str, fp, dayElem) {
+                        if (noDraw(dayElem.dateObj)) { dayElem.classList.add('dr-no-draw'); dayElem.title = 'Sin sorteo' }
+                    },
+                    onChange: onChange,
+                });
+            }
+
+            function bindOnce() {
+                if ($('submit').dataset.bound) { return }
+                $('submit').dataset.bound = '1';
+                document.querySelectorAll('#blockFormModal input[name=blk-kind]').forEach(function (r) { r.addEventListener('change', showPane) });
+                $('submit').addEventListener('click', function () {
+                    var form = { kind: kind(), reason: document.getElementById('blk-reason').value.trim() };
+                    if (form.kind === 'month') { form.month = $('month').value }
+                    if (form.kind === 'range') {
+                        var range = calendars.range.selectedDates;
+                        if (range.length < 2) { return error('Marca en el calendario el primer y el último día.') }
+                        form.from = iso(range[0]); form.to = iso(range[1]);
+                    }
+                    if (form.kind === 'dates') {
+                        form.dates = calendars.dates.selectedDates.map(iso).sort();
+                        if (! form.dates.length) { return error('Marca al menos un día en el calendario.') }
+                    }
+                    if (form.reason.length < 3) { return error('Escribe un motivo (mínimo 3 letras).') }
+                    $('submit').disabled = true;
+                    Promise.resolve(submitFn(form)).then(function (ok) {
+                        if (ok) { bootstrap.Modal.getOrCreateInstance(document.getElementById('blockFormModal')).hide() }
+                    }).finally(function () { $('submit').disabled = false });
+                });
+            }
+
+            return function (count, plates, opts, submit) {
+                bindOnce();
+                submitFn = submit;
+                holidays = opts.holidays || [];
+                $('count').textContent = count;
+                $('plates').textContent = plates;
+                $('min-label').textContent = label(new Date(opts.minDate + 'T00:00:00'));
+                $('month').innerHTML = '';
+                opts.months.forEach(function (m) { $('month').add(new Option(m.label, m.value)) });
+                document.getElementById('blk-kind-month').checked = true;
+                document.getElementById('blk-reason').value = '';
+                $('range-text').textContent = 'Marca el primer y el último día.';
+                $('dates-text').textContent = 'Marca uno o varios días.';
+                showPane();
+
+                calendar('range', 'range', opts, function (sel) {
+                    $('range-text').textContent = sel.length < 2 ? 'Marca el primer y el último día.'
+                        : 'Del ' + label(sel[0]) + ' al ' + label(sel[1]) + ' · ' + workingDays(sel[0], sel[1]) + ' día(s) de sorteo';
+                });
+                calendar('dates', 'multiple', opts, function (sel) {
+                    $('dates-text').textContent = sel.length ? sel.slice().sort(function (a, b) { return a - b }).map(label).join(', ') : 'Marca uno o varios días.';
+                });
+
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('blockFormModal')).show();
+            };
+        })();
     </script>
 @endpush
 
@@ -71,7 +129,24 @@
         .draws-module .dr-blocked td { background: #f8fafc; color: #64748b; }
         .draws-module .dr-blocked td.dr-sticky { background: #f8fafc; }
         .draws-module .dr-lock { cursor: pointer; }
+        .draws-module .dr-list th, .draws-module .dr-list td { word-break: normal; overflow-wrap: normal; }
+        .draws-module .dr-nowrap { white-space: nowrap; }
+        .draws-module .dr-plate { color: inherit; text-decoration: none; }
+        .draws-module .dr-plate:hover { text-decoration: underline; }
         .draws-module .dr-locked { background: #f1f5f9; color: #94a3b8; font-size: 11px; }
+        .draws-module .dr-locked-open { cursor: pointer; color: #64748b; }
+        .draws-module .dr-locked-open:hover { background: #e2e8f0; color: #1e293b; }
+        .draws-module .dr-locked.dr-day-sel { background: #dcfce7 !important; color: #166534; outline: 2px solid #16a34a; outline-offset: -2px; }
+        /* Flotante abajo: si empujara la tabla, el siguiente clic caería en otra fila */
+        .draws-module .dr-daybar { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 1040; margin: 0;
+            border-color: #86efac; background: #f0fdf4; box-shadow: 0 8px 24px rgba(15, 23, 42, .18); max-width: calc(100vw - 32px); }
+        #blockFormModal .flatpickr-calendar.inline { margin: 0 auto; box-shadow: none; border: 1px solid #e2e8f0; }
+        #blockFormModal [data-blk$="-input"] { display: none !important; }
+        #blockFormModal .flatpickr-day.flatpickr-disabled { color: #cbd5e1; }
+        #blockFormModal .flatpickr-day.dr-no-draw:not(.selected):not(.startRange):not(.endRange) { color: #cbd5e1; }
+        /* Hoy solo con borde: el tema lo pinta lleno y parece un día elegido */
+        #blockFormModal .flatpickr-day.today:not(.selected):not(.startRange):not(.endRange):not(.inRange) {
+            background: transparent !important; border-color: #94a3b8 !important; color: #1e293b !important; }
         .draws-module .dr-sel { width: 30px; text-align: center; background: #eef4ff !important; }
         .draws-module thead .dr-sel { background: #1e3a8a !important; color: #fff; }
         .draws-module .dr-selbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; margin-bottom: 8px;
@@ -89,24 +164,56 @@
 <div class="container-fluid draws-module" x-data="{
     selecting: false,
     toBlock: [],
-    toUnblock: [],
-    stopSelecting() { this.selecting = false; this.toBlock = []; this.toUnblock = [] },
+    days: [],
+    stopSelecting() { this.selecting = false; this.toBlock = [] },
     platesOf(ids) {
         return ids.map(id => document.querySelector(`input[data-sel][value='${id}']`)?.dataset.plate).filter(Boolean).join(', ')
+    },
+    withBlocks() {
+        return this.toBlock.filter(id => document.querySelector(`input[data-sel][value='${id}']`)?.dataset.hasBlock === '1')
     },
     toggleAll(checked) {
         this.toBlock = checked ? [...document.querySelectorAll('input[data-sel=block]')].map(c => c.value) : []
     },
     blockSelected() {
         if (! this.toBlock.length) { return }
-        window.drawsBlockForm(this.toBlock.length, this.platesOf(this.toBlock)).then((form) => {
-            if (form) { $wire.blockVehicles(this.toBlock, form.reason, form.weekdays).then(() => this.stopSelecting()) }
-        })
+        const ids = [...this.toBlock];
+        $wire.blockFormOptions().then((opts) => window.drawsBlockForm(ids.length, this.platesOf(ids), opts,
+            (form) => $wire.blockVehicles(ids, form).then((ok) => { if (ok) { this.stopSelecting() } return ok })))
     },
     unblockSelected() {
-        if (! this.toUnblock.length) { return }
-        this.confirmThen('¿Desbloquear ' + this.toUnblock.length + ' placa(s)?', this.platesOf(this.toUnblock) + ' vuelven a entrar desde el próximo sorteo.',
-            () => $wire.unblockVehicles(this.toUnblock).then(() => this.stopSelecting()), 'Sí, desbloquear')
+        const ids = this.withBlocks();
+        if (! ids.length) { return }
+        this.askReason('Quitar todos los bloqueos de ' + ids.length + ' placa(s)', this.platesOf(ids) + ' vuelven a entrar desde el próximo sorteo.',
+            (reason) => $wire.unblockVehicles(ids, reason).then((ok) => { if (ok) { this.stopSelecting() } }))
+    },
+    toggleDay(key) {
+        const i = this.days.indexOf(key);
+        if (i === -1) { this.days.push(key) } else { this.days.splice(i, 1) }
+    },
+    unblockDaysSelected() {
+        if (! this.days.length) { return }
+        const cells = [...this.days];
+        this.askReason('Desbloquear ' + cells.length + ' día(s)', cells.map(k => document.querySelector(`[data-day='${k}']`)?.dataset.label || k).join(', '),
+            (reason) => $wire.unblockDays(cells, reason).then((ok) => { if (ok) { this.days = [] } }))
+    },
+    askReason(title, text, action) {
+        const info = document.createElement('div');
+        info.className = 'small text-muted mb-2';
+        info.textContent = text;
+        Swal.fire({
+            title: title,
+            html: info,
+            input: 'text',
+            inputPlaceholder: 'Motivo (queda en el historial)',
+            inputAttributes: { maxlength: 255 },
+            inputValidator: (v) => (! v || v.trim().length < 3) ? 'Escribe un motivo (mínimo 3 letras).' : undefined,
+            showCancelButton: true,
+            confirmButtonColor: '#198754',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Desbloquear',
+            cancelButtonText: 'Cancelar',
+        }).then((result) => { if (result.isConfirmed) { action(result.value.trim()) } })
     },
     ask(d) {
         Swal.fire({
@@ -257,10 +364,18 @@
                             <button type="button" class="btn btn-sm btn-dark" :disabled="! toBlock.length" x-on:click="blockSelected()">
                                 <i class="ti ti-lock"></i> Bloquear (<span x-text="toBlock.length">0</span>)
                             </button>
-                            <button type="button" class="btn btn-sm btn-success" x-show="toUnblock.length" x-on:click="unblockSelected()">
-                                <i class="ti ti-lock-open"></i> Desbloquear (<span x-text="toUnblock.length">0</span>)
+                            <button type="button" class="btn btn-sm btn-success" x-show="withBlocks().length" x-on:click="unblockSelected()"
+                                    title="Quita todos los bloqueos vigentes de las placas marcadas">
+                                <i class="ti ti-lock-open"></i> Desbloquear (<span x-text="withBlocks().length">0</span>)
                             </button>
                             <button type="button" class="btn btn-sm btn-light ms-auto" x-on:click="stopSelecting()">Cancelar</button>
+                        </div>
+                        <div class="dr-selbar dr-daybar" x-show="days.length" x-cloak>
+                            <span><i class="ti ti-calendar-event"></i> <b x-text="days.length">0</b> día(s) con candado marcados.</span>
+                            <button type="button" class="btn btn-sm btn-success" x-on:click="unblockDaysSelected()">
+                                <i class="ti ti-lock-open"></i> Desbloquear esos días
+                            </button>
+                            <button type="button" class="btn btn-sm btn-light ms-auto" x-on:click="days = []">Limpiar</button>
                         </div>
                     @endif
 
@@ -311,34 +426,33 @@
 
                             <tbody>
                             @forelse($rows as $i => $row)
-                                @if($row['block'] && ! ($rows[$i - 1]['block'] ?? null))
+                                @if($row['blocked'] && ! ($rows[$i - 1]['blocked'] ?? false))
                                     <tr class="dr-blocked-sep" wire:key="blocked-sep">
-                                        <td colspan="{{ count($days) + 8 }}"><i class="ti ti-lock"></i> BLOQUEADAS TODOS LOS DÍAS ({{ $fullBlockCount }}): no entran al sorteo ni a la simulación hasta desbloquearlas</td>
+                                        <td colspan="{{ count($days) + 8 }}"><i class="ti ti-lock"></i> BLOQUEADAS EL RESTO DEL MES ({{ $bottomCount }}): no entran a ningún sorteo que queda de {{ \Illuminate\Support\Str::lower($monthName) }}@if($canBlock && ! $simulating). Clic en un candado para desbloquear ese día.@endif</td>
                                     </tr>
                                 @endif
-                                <tr wire:key="row-{{ $row['id'] }}" @class(['dr-blocked' => $row['block']])>
+                                @php
+                                    $blockTitle = $row['blocks']->map(fn ($b) => $b->periodLabel().': '.$b->reason.' ('.($b->blockedBy?->name ?? '—').')')->implode(' · ');
+                                @endphp
+                                <tr wire:key="row-{{ $row['id'] }}" @class(['dr-blocked' => $row['blocked']])>
                                     <td class="dr-sel" x-show="selecting" x-cloak>
-                                        @if($row['block'])
-                                            <input type="checkbox" class="form-check-input m-0" data-sel="unblock" data-plate="{{ $row['plate'] }}" value="{{ $row['id'] }}" x-model="toUnblock" title="Marcar para desbloquear">
-                                        @elseif($row['active'])
-                                            <input type="checkbox" class="form-check-input m-0" data-sel="block" data-plate="{{ $row['plate'] }}" value="{{ $row['id'] }}" x-model="toBlock" title="Marcar para bloquear">
+                                        @if($row['active'] || $row['blocked'])
+                                            <input type="checkbox" class="form-check-input m-0" data-sel="{{ $row['blocked'] ? 'blocked' : 'block' }}" data-plate="{{ $row['plate'] }}"
+                                                   data-has-block="{{ $row['blocks']->isNotEmpty() ? 1 : 0 }}" value="{{ $row['id'] }}" x-model="toBlock" title="Marcar para bloquear o desbloquear">
                                         @endif
                                     </td>
                                     <td>{{ $i + 1 }}</td>
                                     <td>{{ $row['cod'] }}</td>
                                     <td class="dr-sticky">
-                                        @if($row['block'])
-                                            <strong>{{ $row['plate'] }}</strong>
-                                            <span class="badge bg-secondary dr-lock" wire:click="openBlocks"
-                                                  title="Bloqueada desde el {{ $row['block']->created_at->format('d/m/Y') }} por {{ $row['block']->blockedBy?->name ?? '—' }}: {{ $row['block']->reason }}"><i class="ti ti-lock"></i></span>
-                                        @elseif($row['active'])
-                                            <strong>{{ $row['plate'] }}</strong>
-                                            @if($row['weekdayBlock'])
-                                                <span class="badge bg-light text-dark border dr-lock" wire:click="openBlocks"
-                                                      title="Bloqueada los {{ \App\Models\DrawBlock::weekdaysPhrase($row['weekdayBlock']->weekdays) }} desde el {{ $row['weekdayBlock']->created_at->format('d/m/Y') }} por {{ $row['weekdayBlock']->blockedBy?->name ?? '—' }}: {{ $row['weekdayBlock']->reason }}"><i class="ti ti-lock"></i> {{ $row['weekdayBlock']->weekdaysLabel() }}</span>
+                                        @if($row['active'] || $row['blocked'])
+                                            <a href="#" class="dr-plate" wire:click.prevent="openHistory({{ $row['id'] }})"
+                                               title="{{ $row['everBlocked'] ? 'Tiene sanciones en su historial · ' : '' }}Ver historial de sanciones"><strong @class(['text-danger' => $row['everBlocked']])>{{ $row['plate'] }}</strong></a>
+                                            @if($row['blocks']->isNotEmpty())
+                                                <span @class(['badge dr-lock', 'bg-secondary' => $row['blocked'], 'bg-light text-dark border' => ! $row['blocked']])
+                                                      wire:click="openHistory({{ $row['id'] }})" title="{{ $blockTitle }}"><i class="ti ti-lock"></i>@if($row['blocks']->count() > 1) {{ $row['blocks']->count() }}@endif</span>
                                             @endif
                                         @else
-                                            <strong class="text-danger" data-bs-toggle="tooltip" title="Ya no entra al sorteo (inactivo o NT en rojo)">{{ $row['plate'] }}</strong>
+                                            <a href="#" class="dr-plate" wire:click.prevent="openHistory({{ $row['id'] }})" title="Ya no entra al sorteo (inactivo o NT en rojo). Ver historial de sanciones"><strong class="text-danger">{{ $row['plate'] }}</strong></a>
                                         @endif
                                         @if($row['nt'])
                                             <span class="badge {{ $row['nt']['class'] }} {{ $row['nt']['text'] }}" title="{{ $row['nt']['title'] }}">{{ $row['nt']['abbr'] }}</span>
@@ -350,12 +464,18 @@
                                         @php
                                             $date = $day['date'];
                                             $cell = $cells[$date][$row['id']] ?? null;
-                                            $wb = $row['weekdayBlock'];
-                                            // Candado en los días que la bloquea (en lo simulado y desde que se bloqueó)
-                                            $lockedDay = $wb && $wb->appliesOn($date) && ($simulating || $date >= $wb->created_at->toDateString());
+                                            // Candado los días que estuvo o está bloqueada (desde que se registró hasta que se levantó)
+                                            $lock = $lockedDays[$row['id']][$date] ?? null;
+                                            $dayKey = $row['id'].'|'.$date;
                                         @endphp
-                                        @if(! $cell && $lockedDay)
-                                            <td class="text-center dr-locked" title="Bloqueada los {{ \App\Models\DrawBlock::weekdaysPhrase($wb->weekdays) }}: {{ $wb->reason }}"><i class="ti ti-lock"></i></td>
+                                        @if(! $cell && $lock && $canBlock && ! $simulating && $date >= $firstOpen)
+                                            <td class="text-center dr-locked dr-locked-open" data-day="{{ $dayKey }}" data-label="{{ $row['plate'] }} {{ \App\Models\DrawBlock::dayLabel($date) }}"
+                                                :class="days.includes('{{ $dayKey }}') && 'dr-day-sel'" x-on:click="toggleDay('{{ $dayKey }}')"
+                                                title="{{ $lock->periodLabel() }}: {{ $lock->reason }} · clic para marcar este día y desbloquearlo">
+                                                <i class="ti" :class="days.includes('{{ $dayKey }}') ? 'ti-lock-open' : 'ti-lock'"></i>
+                                            </td>
+                                        @elseif(! $cell && $lock)
+                                            <td class="text-center dr-locked" title="{{ $lock->periodLabel() }}: {{ $lock->reason }}"><i class="ti ti-lock"></i></td>
                                         @elseif(isset($results[$date]))
                                             @if(! $cell)
                                                 <td></td>
@@ -509,52 +629,134 @@
 
     {{-- Modal: placas bloqueadas --}}
     <div class="modal fade" id="blocksModal" tabindex="-1" aria-hidden="true" wire:ignore.self>
-        <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="ti ti-lock"></i> Placas bloqueadas</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="small text-muted mb-3">Una placa bloqueada no entra al sorteo ni a la simulación hasta que se desbloquee, y en la grilla va abajo de todo. Queda registrado quién la bloqueó, quién la desbloqueó y cuándo.</p>
+                    <p class="small text-muted mb-3">Los días que cubre un bloqueo, la placa no entra al sorteo ni a la simulación (candado en la grilla). Si ya no entra a ningún sorteo que queda del mes, va abajo de todo. Queda registrado quién, cuándo y por qué; el historial de cada placa se ve con clic en la placa.</p>
 
                     <div class="alert alert-light border small py-2 mb-3">
                         @if($canBlock)
-                            <i class="ti ti-info-circle"></i> Para bloquear, usa <b>Seleccionar varios</b> en la tabla, marca las placas y pulsa <b>Bloquear</b>: todos los días o solo algunos días de la semana. Para cambiar los días de una placa, vuelve a bloquearla: reemplaza el bloqueo anterior.
+                            <i class="ti ti-info-circle"></i> Para bloquear, usa <b>Seleccionar varios</b> en la tabla, marca las placas y pulsa <b>Bloquear</b>: todo el mes, un rango de fechas, días específicos o hasta desbloquearla.
+                            Para que entre un día suelto (por ejemplo un sábado), haz clic en sus candados de la grilla, puedes marcar varios, y pulsa <b>Desbloquear esos días</b> con el motivo.
                         @else
                             Solo el director, el gerente o un administrador pueden bloquear y desbloquear placas.
                         @endif
                     </div>
 
                     <div class="table-responsive">
-                        <table class="table table-sm table-bordered mb-0 small">
+                        <table class="table table-sm table-bordered mb-0 small dr-list">
                             <thead>
-                            <tr><th>Placa</th><th>Conductor</th><th>Días</th><th>Motivo</th><th>Bloqueada por</th><th>Desde</th><th></th></tr>
+                            <tr><th>Placa</th><th>Conductor</th><th>Tipo</th><th>Periodo</th><th>Motivo</th><th>Bloqueada por</th><th>Registrado</th><th></th></tr>
                             </thead>
                             <tbody>
                             @forelse($blocks as $block)
                                 <tr wire:key="block-{{ $block->id }}">
-                                    <td><strong>{{ $block->vehicle?->plate ?? '—' }}</strong></td>
+                                    <td class="dr-nowrap">
+                                        <a href="#" class="dr-plate" title="Ver historial de sanciones"
+                                           x-on:click.prevent="hideModal('blocksModal'); $wire.openHistory({{ $block->vehicle_id }})"><strong>{{ $block->vehicle?->plate ?? '—' }}</strong></a>
+                                    </td>
                                     <td>{{ $block->vehicle?->driver?->name ?? '—' }}</td>
-                                    <td>{{ $block->weekdaysLabel() }}</td>
+                                    <td>{{ \App\Models\DrawBlock::KIND_LABELS[$block->kind] ?? $block->kind }}</td>
+                                    <td style="white-space: normal;">
+                                        {{ $block->periodLabel() }}
+                                        @if($block->exceptions->isNotEmpty())
+                                            <div class="text-success">Desbloqueados: {{ $block->exceptions->map(fn ($e) => \App\Models\DrawBlock::dayLabel($e->date->toDateString()))->implode(', ') }}</div>
+                                        @endif
+                                    </td>
                                     <td style="white-space: normal;">{{ $block->reason }}</td>
                                     <td>{{ $block->blockedBy?->name ?? '—' }}</td>
-                                    <td>{{ $block->created_at->format('d/m/Y H:i') }}</td>
-                                    <td class="text-end">
+                                    <td class="dr-nowrap">{{ $block->created_at->format('d/m/Y H:i') }}</td>
+                                    <td class="text-end dr-nowrap">
                                         @if($canBlock)
                                             <button type="button" class="btn btn-sm btn-outline-success py-0"
-                                                    x-on:click="confirmThen('¿Desbloquear la placa?', @js(($block->vehicle?->plate ?? '').' vuelve a entrar desde el próximo sorteo.'), () => $wire.unblockVehicle({{ $block->id }}), 'Sí, desbloquear')">
+                                                    x-on:click="hideModal('blocksModal'); askReason('Desbloquear ' + @js($block->vehicle?->plate ?? ''), @js($block->periodLabel().' · vuelve a entrar desde el próximo sorteo.'), (reason) => $wire.unblockVehicle({{ $block->id }}, reason))">
                                                 <i class="ti ti-lock-open"></i> Desbloquear
                                             </button>
                                         @endif
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="7" class="text-center text-muted">No hay placas bloqueadas.</td></tr>
+                                <tr><td colspan="8" class="text-center text-muted">No hay placas bloqueadas.</td></tr>
                             @endforelse
                             </tbody>
                         </table>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal: formulario de "Bloquear" (lo maneja window.drawsBlockForm; wire:ignore para que Livewire no rehaga los calendarios) --}}
+    @if($canBlock)
+        <div class="modal fade" id="blockFormModal" tabindex="-1" aria-hidden="true" wire:ignore>
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="ti ti-lock"></i> Bloquear <span data-blk="count"></span> placa(s)</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body small">
+                        <p class="text-muted mb-2" data-blk="plates"></p>
+
+                        <div class="d-flex flex-wrap gap-1 mb-3" role="group" aria-label="Cómo bloquear">
+                            @foreach(\App\Models\DrawBlock::KIND_LABELS as $kind => $kindLabel)
+                                <input type="radio" class="btn-check" name="blk-kind" id="blk-kind-{{ $kind }}" value="{{ $kind }}" @checked($loop->first)>
+                                <label class="btn btn-sm btn-outline-dark" for="blk-kind-{{ $kind }}">{{ $kindLabel }}</label>
+                            @endforeach
+                        </div>
+
+                        <div data-blk-pane="month">
+                            <label class="form-label mb-1" for="blk-month">Mes</label>
+                            <select class="form-select form-select-sm" id="blk-month" data-blk="month"></select>
+                            <div class="form-text">No entra a ningún sorteo de ese mes. Después se puede desbloquear un día suelto con clic en su candado.</div>
+                        </div>
+                        <div data-blk-pane="range" hidden>
+                            <input type="hidden" data-blk="range-input">
+                            <div class="form-text text-center" data-blk="range-text"></div>
+                        </div>
+                        <div data-blk-pane="dates" hidden>
+                            <input type="hidden" data-blk="dates-input">
+                            <div class="form-text text-center" data-blk="dates-text"></div>
+                        </div>
+                        <div data-blk-pane="indefinite" hidden>
+                            <div class="form-text mt-0">No entra a ningún sorteo desde el <b data-blk="min-label"></b> hasta que la desbloqueen.</div>
+                        </div>
+
+                        <label class="form-label mt-3 mb-1" for="blk-reason">Motivo (queda registrado)</label>
+                        <input type="text" class="form-control form-control-sm" id="blk-reason" maxlength="255" placeholder="Ej. En taller">
+                        <div class="text-danger mt-2" data-blk="error" hidden></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-sm btn-dark" data-blk="submit"><i class="ti ti-lock"></i> Bloquear</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Modal: historial de sanciones de una placa --}}
+    <div class="modal fade" id="historyModal" tabindex="-1" aria-hidden="true" wire:ignore.self>
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="ti ti-history"></i> Historial de sanciones
+                        @if($historyVehicle)
+                            · <strong>{{ $historyVehicle->plate }}</strong>
+                            <small class="text-muted fw-normal">{{ $historyVehicle->driver?->name }}</small>
+                        @endif
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    @if($historyVehicle)
+                        @include('draws._sanctions', ['history' => $history])
+                    @endif
                 </div>
             </div>
         </div>

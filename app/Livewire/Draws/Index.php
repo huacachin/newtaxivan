@@ -4,6 +4,7 @@ namespace App\Livewire\Draws;
 
 use App\Models\Draw;
 use App\Models\DrawBlock;
+use App\Models\DrawBlockException;
 use App\Models\DrawEntry;
 use App\Models\Holiday;
 use App\Models\Vehicle;
@@ -11,7 +12,9 @@ use App\Services\DrawService;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Livewire\Attributes\Renderless;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Random\Engine\Mt19937;
@@ -27,9 +30,12 @@ use Random\Randomizer;
  * Cada día sorteado (real o simulado) abre el PDF de su orden de salida, que
  * se descarga y se manda por WhatsApp como archivo.
  *
- * Placas bloqueadas (director, gerente y administrador): con bloqueo total no
- * entran al sorteo ni a la simulación hasta desbloquearlas y van abajo de
- * todo; con bloqueo por días solo faltan esos días de la semana, todas las semanas.
+ * Placas bloqueadas (director, gerente y administrador): se bloquean todo un
+ * mes, un rango de fechas, días específicos o hasta desbloquearlas, y no
+ * entran al sorteo ni a la simulación esos días (candado en la grilla). Las
+ * que no entran a ningún sorteo que queda del mes van abajo de todo. Con clic
+ * en los candados se marcan días para desbloquearlos con un motivo. Cada placa
+ * tiene su historial de sanciones (clic en la placa).
  *
  * Simular llena el mes en pantalla sin guardar nada: cada día participan al
  * azar entre simMin y simMax vehículos y al resto se le quita el check. Se
@@ -65,6 +71,9 @@ class Index extends Component
     public int $simMin = 28;
 
     public int $simMax = 38;
+
+    /** Placa cuyo historial de sanciones se está viendo. */
+    public ?int $historyVehicleId = null;
 
     public function mount(): void
     {
@@ -262,77 +271,184 @@ class Index extends Component
     }
 
     /**
-     * Bloquea las placas marcadas en la tabla ("Seleccionar varios") con un
-     * mismo motivo: todos los días ($weekdays vacío) o solo esos días de la
-     * semana, todas las semanas (1 = lunes ... 6 = sábado). Si una placa ya
-     * tenía un bloqueo, el nuevo lo reemplaza y el anterior queda en el historial.
+     * Datos del formulario de "Bloquear": desde qué día se puede bloquear (lo
+     * ya sorteado no cambia), los feriados que el calendario deshabilita y los
+     * meses que se pueden bloquear completos.
      *
-     * @param  array<int, int|string>  $vehicleIds
-     * @param  array<int, int|string>  $weekdays
+     * @return array{minDate: string, maxDate: string, holidays: array<int, string>, months: array<int, array{value: string, label: string}>}
      */
-    public function blockVehicles(array $vehicleIds, string $reason, array $weekdays = []): void
+    #[Renderless]
+    public function blockFormOptions(): array
     {
         $this->authorizeBlocking();
 
-        $reason = trim($reason);
-        if (mb_strlen($reason) < 3 || mb_strlen($reason) > 255) {
-            $this->dispatch('errorAlert', ['message' => 'Escribe un motivo de 3 a 255 caracteres.']);
-
-            return;
+        $firstOpen = Carbon::parse($this->firstOpenDate());
+        $maxDate = $firstOpen->copy()->addYear();
+        $months = [];
+        for ($month = $firstOpen->copy()->startOfMonth(), $i = 0; $i < 3; $i++, $month->addMonth()) {
+            $months[] = ['value' => $month->format('Y-m'), 'label' => Str::ucfirst($month->translatedFormat('F Y'))];
         }
 
-        $weekdays = array_values(array_unique(array_filter(array_map('intval', $weekdays), fn (int $d) => isset(DrawBlock::WEEKDAYS[$d]))));
-        sort($weekdays);
-        // Los 6 días marcados es lo mismo que un bloqueo total
-        $weekdays = count($weekdays) === count(DrawBlock::WEEKDAYS) ? [] : $weekdays;
-
-        $vehicles = Vehicle::active()->whereIn('id', array_map('intval', $vehicleIds))->orderBy('plate')->get(['id', 'plate']);
-
-        DB::transaction(function () use ($vehicles, $reason, $weekdays) {
-            foreach ($vehicles as $vehicle) {
-                DrawBlock::active()->where('vehicle_id', $vehicle->id)->get()
-                    ->each(fn (DrawBlock $old) => $old->update(['unblocked_at' => now(), 'unblocked_by' => auth()->id()]));
-
-                DrawBlock::create([
-                    'vehicle_id' => $vehicle->id,
-                    'reason' => $reason,
-                    'weekdays' => $weekdays ?: null,
-                    'blocked_by' => auth()->id(),
-                ]);
-            }
-        });
-
-        $when = $weekdays ? ' los '.DrawBlock::weekdaysPhrase($weekdays) : '';
-        $this->dispatch('successAlert', ['message' => $vehicles->isEmpty()
-            ? 'No había placas para bloquear.'
-            : 'Bloqueadas'.$when.' ('.$vehicles->count().'): '.$vehicles->pluck('plate')->implode(', ')]);
+        return [
+            'minDate' => $firstOpen->toDateString(),
+            'maxDate' => $maxDate->toDateString(),
+            'holidays' => Holiday::datesBetween($firstOpen->toDateString(), $maxDate->toDateString()),
+            'months' => $months,
+        ];
     }
 
     /**
-     * Desbloquea las placas bloqueadas marcadas en la tabla.
+     * Bloquea las placas marcadas en la tabla ("Seleccionar varios") con un
+     * mismo motivo y periodo: todo un mes, un rango de fechas, días
+     * específicos o hasta desbloquearlas. Cada placa queda con su bloqueo
+     * (los que ya tenía siguen igual). Devuelve true si se guardó.
+     *
+     * @param  array<int, int|string>  $vehicleIds
+     * @param  array{kind?: string, month?: string, from?: string, to?: string, dates?: array<int, string>, reason?: string}  $form
+     */
+    public function blockVehicles(array $vehicleIds, array $form): bool
+    {
+        $this->authorizeBlocking();
+
+        try {
+            $period = $this->blockPeriod($form);
+        } catch (ValidationException $e) {
+            $this->dispatch('errorAlert', ['message' => collect($e->errors())->flatten()->first()]);
+
+            return false;
+        }
+
+        $vehicles = Vehicle::active()->whereIn('id', array_map('intval', $vehicleIds))->orderBy('plate')->get(['id', 'plate']);
+        if ($vehicles->isEmpty()) {
+            $this->dispatch('errorAlert', ['message' => 'Marca al menos una placa para bloquear.']);
+
+            return false;
+        }
+
+        $created = DB::transaction(fn () => $vehicles->map(fn (Vehicle $vehicle) => DrawBlock::create($period + [
+            'vehicle_id' => $vehicle->id,
+            'blocked_by' => auth()->id(),
+        ])));
+
+        $this->dispatch('successAlert', ['message' => 'Bloqueadas ('.$vehicles->count().'): '.$vehicles->pluck('plate')->implode(', ')
+            .' · '.$created->first()->periodLabel()]);
+
+        return true;
+    }
+
+    /**
+     * Desbloquea días sueltos (clic en los candados de la grilla): ese día la
+     * placa sí entra al sorteo aunque su bloqueo lo cubra. Solo días que
+     * todavía no se sortearon; el motivo queda en su historial.
+     *
+     * @param  array<int, string>  $cells  "vehicleId|Y-m-d"
+     */
+    public function unblockDays(array $cells, string $reason): bool
+    {
+        $this->authorizeBlocking();
+
+        $reason = $this->cleanReason($reason);
+        if ($reason === null) {
+            return false;
+        }
+
+        $firstOpen = $this->firstOpenDate();
+        $pairs = collect($cells)
+            ->map(fn ($cell) => explode('|', (string) $cell))
+            ->filter(fn (array $p) => count($p) === 2 && ctype_digit($p[0]) && $this->validDate($p[1]) && $p[1] >= $firstOpen)
+            ->map(fn (array $p) => [(int) $p[0], $p[1]])
+            ->unique(fn (array $p) => $p[0].'|'.$p[1])
+            ->sortBy(fn (array $p) => $p[1])->values();
+
+        $unblocked = DB::transaction(function () use ($pairs, $reason) {
+            $done = [];
+            foreach ($pairs as [$vehicleId, $date]) {
+                $blocks = DrawBlock::active()->where('vehicle_id', $vehicleId)->onDate($date)->get();
+                foreach ($blocks as $block) {
+                    DrawBlockException::firstOrCreate(
+                        ['draw_block_id' => $block->id, 'date' => $date],
+                        ['reason' => $reason, 'created_by' => auth()->id()],
+                    );
+                }
+                if ($blocks->isNotEmpty()) {
+                    $done[] = [$vehicleId, $date];
+                }
+            }
+
+            return $done;
+        });
+
+        if (! $unblocked) {
+            $this->dispatch('errorAlert', ['message' => 'Marca días con candado que todavía no se hayan sorteado.']);
+
+            return false;
+        }
+
+        foreach ($unblocked as [$vehicleId, $date]) {
+            $this->includeAgain([$vehicleId], $date);
+        }
+        $plates = Vehicle::whereIn('id', array_column($unblocked, 0))->pluck('plate', 'id');
+        $this->dispatch('successAlert', ['message' => 'Desbloqueados '.count($unblocked).' día(s): '
+            .implode(', ', array_map(fn (array $p) => $plates[$p[0]].' '.DrawBlock::dayLabel($p[1]), $unblocked))]);
+
+        return true;
+    }
+
+    /** Abre el historial de sanciones (bloqueos y días desbloqueados) de una placa. */
+    public function openHistory(int $vehicleId): void
+    {
+        $this->authorizeAccess();
+
+        $this->historyVehicleId = Vehicle::whereKey($vehicleId)->value('id');
+        $this->dispatch('open-modal', ['name' => 'historyModal']);
+    }
+
+    /**
+     * Quita todos los bloqueos vigentes de las placas marcadas en la tabla,
+     * con el motivo (queda en su historial). Devuelve true si se guardó.
      *
      * @param  array<int, int|string>  $vehicleIds
      */
-    public function unblockVehicles(array $vehicleIds): void
+    public function unblockVehicles(array $vehicleIds, string $reason): bool
     {
         $this->authorizeBlocking();
 
-        $blocks = DrawBlock::active()->with('vehicle:id,plate')->whereIn('vehicle_id', array_map('intval', $vehicleIds))->get();
-        foreach ($blocks as $block) {
-            $block->update(['unblocked_at' => now(), 'unblocked_by' => auth()->id()]);
+        $reason = $this->cleanReason($reason);
+        if ($reason === null) {
+            return false;
         }
 
-        $this->dispatch('successAlert', ['message' => 'Desbloqueadas ('.$blocks->count().'): '.$blocks->pluck('vehicle.plate')->implode(', ')]);
+        $blocks = DrawBlock::active()->with('vehicle:id,plate')->whereIn('vehicle_id', array_map('intval', $vehicleIds))->get();
+        if ($blocks->isEmpty()) {
+            $this->dispatch('errorAlert', ['message' => 'Las placas marcadas no tienen bloqueos vigentes.']);
+
+            return false;
+        }
+
+        DB::transaction(fn () => $blocks->each(fn (DrawBlock $block) => $this->lift($block, $reason)));
+        $this->includeAgain($blocks->pluck('vehicle_id')->unique()->all());
+
+        $this->dispatch('successAlert', ['message' => 'Desbloqueadas: '.$blocks->pluck('vehicle.plate')->unique()->implode(', ')]);
+
+        return true;
     }
 
-    public function unblockVehicle(int $blockId): void
+    /** Levanta un bloqueo de la lista de Bloqueos, con el motivo. */
+    public function unblockVehicle(int $blockId, string $reason): bool
     {
         $this->authorizeBlocking();
 
-        DrawBlock::active()->findOrFail($blockId)->update([
-            'unblocked_at' => now(),
-            'unblocked_by' => auth()->id(),
-        ]);
+        $reason = $this->cleanReason($reason);
+        if ($reason === null) {
+            return false;
+        }
+
+        $block = DrawBlock::active()->with('vehicle:id,plate')->findOrFail($blockId);
+        $this->lift($block, $reason);
+        $this->includeAgain([$block->vehicle_id]);
+        $this->dispatch('successAlert', ['message' => 'Desbloqueada: '.$block->vehicle?->plate]);
+
+        return true;
     }
 
     /* ---------- Feriados ---------- */
@@ -423,23 +539,29 @@ class Index extends Component
             ? $this->simulatedMonth(array_column($days, 'date'))
             : [...$this->recordedMonth($from, $to), []];
 
-        // Bloqueos vigentes: los totales van abajo de todo; los de algunos días
-        // se quedan en su lugar con candado esos días
-        $blocks = DrawBlock::active()->with('blockedBy:id,name', 'vehicle.driver:id,name')->get()
-            ->sortBy(fn (DrawBlock $b) => [$b->vehicle?->sort_order ?? PHP_INT_MAX, $b->vehicle?->plate])->values();
-        $fullBlocks = $blocks->filter(fn (DrawBlock $b) => $b->isFull())->keyBy('vehicle_id');
-        $weekdayBlocks = $blocks->reject(fn (DrawBlock $b) => $b->isFull())->keyBy('vehicle_id');
-        $blockedVehicles = Vehicle::active()->whereIn('id', $fullBlocks->keys())->orderBy('sort_order')->orderBy('plate')
-            ->get(['id', 'sort_order', 'plate', 'condition', 'not_working_since']);
+        // Bloqueos vigentes (para la lista y el detalle de cada placa) y días con candado del mes
+        $blocks = DrawBlock::active()->with('blockedBy:id,name', 'vehicle.driver:id,name', 'exceptions')->get()
+            ->sortBy(fn (DrawBlock $b) => [$b->vehicle?->sort_order ?? PHP_INT_MAX, $b->vehicle?->plate, $b->starts_on])->values();
+        $blocksByVehicle = $blocks->groupBy('vehicle_id');
+        // Placas que alguna vez tuvieron un bloqueo (aunque ya se cumplió o se levantó): van en rojo
+        $everBlocked = DrawBlock::distinct()->pluck('vehicle_id')->flip();
+        $lockedDays = $this->blockedDaysOfMonth(array_column($days, 'date'), $from, $to);
+
+        // Abajo de todo van las que no entran a ningún sorteo que queda del mes;
+        // las demás se quedan en su lugar con candado los días que no entran
+        $firstOpen = $this->firstOpenDate();
+        $openDates = array_values(array_filter(array_column($days, 'date'), fn (string $d) => $d >= $firstOpen));
+        $isBottom = fn (Vehicle $v) => $openDates && collect($openDates)->every(fn (string $d) => isset($lockedDays[$v->id][$d]));
+        $bottomVehicles = $activeVehicles->filter($isBottom)->values();
+        $inPlaceVehicles = $activeVehicles->reject($isBottom)->values();
 
         // Vehículos con resultados este mes que hoy ya no entran (inactivos o NT en rojo), antes de las bloqueadas
-        $formerIds = collect($cells)->flatMap(fn (array $day) => array_keys($day))->unique()
-            ->diff($activeVehicles->pluck('id'))->diff($blockedVehicles->pluck('id'));
+        $formerIds = collect($cells)->flatMap(fn (array $day) => array_keys($day))->unique()->diff($activeVehicles->pluck('id'));
         $formerVehicles = Vehicle::whereIn('id', $formerIds)->orderBy('sort_order')->orderBy('plate')
             ->get(['id', 'sort_order', 'plate', 'condition', 'not_working_since']);
 
         $rows = [];
-        foreach ([[$activeVehicles, 'active'], [$formerVehicles, 'former'], [$blockedVehicles, 'blocked']] as [$vehicles, $kind]) {
+        foreach ([[$inPlaceVehicles, 'active'], [$formerVehicles, 'former'], [$bottomVehicles, 'blocked']] as [$vehicles, $kind]) {
             foreach ($vehicles as $vehicle) {
                 $counts = array_fill_keys(DrawEntry::BANDS, 0);
                 $numbers = [];
@@ -457,8 +579,10 @@ class Index extends Component
                     'condition' => $vehicle->condition,
                     'nt' => Vehicle::notWorkingBadge($vehicle->not_working_since),
                     'active' => $kind === 'active',
-                    'block' => $kind === 'blocked' ? $fullBlocks[$vehicle->id] : null,
-                    'weekdayBlock' => $kind === 'active' ? ($weekdayBlocks[$vehicle->id] ?? null) : null,
+                    'blocked' => $kind === 'blocked',
+                    // Bloqueos vigentes de la placa (para el candado junto a la placa)
+                    'blocks' => $kind === 'former' ? collect() : ($blocksByVehicle[$vehicle->id] ?? collect()),
+                    'everBlocked' => isset($everBlocked[$vehicle->id]),
                     'counts' => $counts,
                     // Números que esta placa recibió más de una vez en el mes (no debería pasar)
                     'repeatedNumbers' => array_keys(array_filter(array_count_values($numbers), fn (int $times) => $times > 1)),
@@ -479,11 +603,14 @@ class Index extends Component
             'drawable' => $drawable,
             'eligible' => $eligible,
             'today' => Carbon::today()->toDateString(),
-            'fullBlockCount' => $fullBlocks->count(),
+            'firstOpen' => $firstOpen,
+            'bottomCount' => $bottomVehicles->count(),
             'drawableLabels' => array_combine($drawable, array_map(fn ($d) => $this->dayLabel($d), $drawable)),
             'monthHolidays' => $monthHolidays,
             'yearHolidays' => Holiday::whereYear('date', $this->year)->orderBy('date')->get(),
             'blocks' => $blocks,
+            'lockedDays' => $lockedDays,
+            ...$this->historyData(),
             'canBlock' => $this->canBlock(),
             'annulledDraws' => $simulating ? collect() : Draw::whereNotNull('annulled_at')->whereBetween('date', [$from, $to])
                 ->with('drawnBy:id,name', 'annulledBy:id,name')->orderBy('annulled_at')->get(),
@@ -579,6 +706,178 @@ class Index extends Component
         $lastDate = Draw::active()->max('date');
 
         return DrawService::drawableDates($lastDate ? Carbon::parse($lastDate)->toDateString() : null, $today, DrawService::holidaysAround($today));
+    }
+
+    /**
+     * Días hábiles del mes en que cada placa estuvo o está bloqueada, para el
+     * candado de la grilla: cuentan desde que se registró el bloqueo hasta que
+     * se levantó (también los ya cumplidos), menos los días desbloqueados.
+     *
+     * @param  array<int, string>  $dates  días hábiles del mes
+     * @return array<int, array<string, DrawBlock>> vehicle_id => [Y-m-d => bloqueo]
+     */
+    private function blockedDaysOfMonth(array $dates, string $from, string $to): array
+    {
+        $blocks = DrawBlock::overlapping($from, $to)->with('blockedBy:id,name', 'exceptions')->orderBy('id')->get();
+
+        $locked = [];
+        foreach ($blocks as $block) {
+            $since = $block->created_at->toDateString();
+            $until = $block->unblocked_at?->toDateString();
+            foreach ($dates as $date) {
+                if ($date >= $since && ($until === null || $date <= $until) && $block->appliesOn($date)) {
+                    $locked[$block->vehicle_id][$date] = $block;
+                }
+            }
+        }
+
+        return $locked;
+    }
+
+    /**
+     * Historial de sanciones de la placa abierta: todos sus bloqueos con sus
+     * días desbloqueados, del más nuevo al más viejo.
+     *
+     * @return array{historyVehicle: Vehicle|null, history: \Illuminate\Support\Collection<int, DrawBlock>}
+     */
+    private function historyData(): array
+    {
+        $vehicle = $this->historyVehicleId
+            ? Vehicle::with('driver:id,name')->find($this->historyVehicleId, ['id', 'plate', 'driver_id'])
+            : null;
+        $history = $vehicle ? DrawBlock::historyFor($vehicle->id) : collect();
+
+        return ['historyVehicle' => $vehicle, 'history' => $history];
+    }
+
+    /** El motivo sin espacios de más, o null (con aviso) si no tiene de 3 a 255 caracteres. */
+    private function cleanReason(string $reason): ?string
+    {
+        $reason = trim($reason);
+        if (mb_strlen($reason) < 3 || mb_strlen($reason) > 255) {
+            $this->dispatch('errorAlert', ['message' => 'Escribe un motivo de 3 a 255 caracteres.']);
+
+            return null;
+        }
+
+        return $reason;
+    }
+
+    /** Levanta un bloqueo completo: queda en el historial con quién, cuándo y por qué. */
+    private function lift(DrawBlock $block, string $reason): void
+    {
+        $block->update(['unblocked_at' => now(), 'unblocked_by' => auth()->id(), 'unblock_reason' => $reason]);
+    }
+
+    /** Primer día que todavía se puede sortear (desde ahí se bloquea o desbloquea). */
+    private function firstOpenDate(): string
+    {
+        $today = Carbon::today();
+        $lastDate = Draw::active()->max('date');
+
+        return DrawService::firstOpenDate($lastDate ? Carbon::parse($lastDate)->toDateString() : null, $today, DrawService::holidaysAround($today));
+    }
+
+    /**
+     * Valida el formulario de "Bloquear" y arma el periodo del bloqueo.
+     *
+     * @param  array<string, mixed>  $form
+     * @return array{kind: string, reason: string, starts_on: string, ends_on: string|null, dates: array<int, string>|null}
+     *
+     * @throws ValidationException
+     */
+    private function blockPeriod(array $form): array
+    {
+        $fail = fn (string $message) => throw ValidationException::withMessages(['block' => $message]);
+
+        $reason = trim((string) ($form['reason'] ?? ''));
+        if (mb_strlen($reason) < 3 || mb_strlen($reason) > 255) {
+            $fail('Escribe un motivo de 3 a 255 caracteres.');
+        }
+
+        $firstOpen = $this->firstOpenDate();
+        $tooEarly = 'Solo se puede bloquear desde el '.DrawBlock::dayLabel($firstOpen).': lo anterior ya se sorteó.';
+        $base = ['kind' => (string) ($form['kind'] ?? ''), 'reason' => $reason, 'dates' => null];
+
+        switch ($base['kind']) {
+            case DrawBlock::KIND_MONTH:
+                $month = (string) ($form['month'] ?? '');
+                if (! preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $month)) {
+                    $fail('Elige el mes que quieres bloquear.');
+                }
+                $start = Carbon::createFromFormat('!Y-m', $month);
+                if ($start->copy()->endOfMonth()->toDateString() < $firstOpen) {
+                    $fail('Ese mes ya terminó de sortearse.');
+                }
+
+                return $base + ['starts_on' => $start->toDateString(), 'ends_on' => $start->copy()->endOfMonth()->toDateString()];
+
+            case DrawBlock::KIND_RANGE:
+                $from = $this->validDate($form['from'] ?? null);
+                $to = $this->validDate($form['to'] ?? null);
+                if (! $from || ! $to) {
+                    $fail('Elige desde qué día y hasta qué día.');
+                }
+                if ($from > $to) {
+                    [$from, $to] = [$to, $from];
+                }
+                if ($from < $firstOpen) {
+                    $fail($tooEarly);
+                }
+                if (Carbon::parse($from)->addYear()->toDateString() < $to) {
+                    $fail('El rango no puede pasar de un año.');
+                }
+
+                return $base + ['starts_on' => $from, 'ends_on' => $to];
+
+            case DrawBlock::KIND_DATES:
+                $dates = collect((array) ($form['dates'] ?? []))->map(fn ($d) => $this->validDate($d))->filter()->unique()->sort()->values()->all();
+                if (! $dates) {
+                    $fail('Elige al menos un día en el calendario.');
+                }
+                if (count($dates) > 60) {
+                    $fail('Son demasiados días sueltos: usa un rango de fechas.');
+                }
+                if ($dates[0] < $firstOpen) {
+                    $fail($tooEarly);
+                }
+
+                return ['dates' => $dates] + $base + ['starts_on' => $dates[0], 'ends_on' => end($dates)];
+
+            case DrawBlock::KIND_INDEFINITE:
+                return $base + ['starts_on' => $firstOpen, 'ends_on' => null];
+        }
+
+        $fail('Elige cómo quieres bloquear.');
+    }
+
+    /** "2026-11-07" si es una fecha válida; null si no. */
+    private function validDate(mixed $value): ?string
+    {
+        $value = (string) $value;
+        $date = preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) ? Carbon::createFromFormat('!Y-m-d', $value) : false;
+
+        return $date && $date->toDateString() === $value ? $value : null;
+    }
+
+    /**
+     * Vuelve a marcar (participan) a las placas desbloqueadas en los días
+     * sorteables, o solo en $date: al desbloquear entran como todos.
+     *
+     * @param  array<int, int>  $vehicleIds
+     */
+    private function includeAgain(array $vehicleIds, ?string $date = null): void
+    {
+        foreach ($this->drawableDates() as $drawable) {
+            if ($date !== null && $drawable !== $date) {
+                continue;
+            }
+            $current = $this->included[$drawable] ?? null;
+            if ($current === null) {
+                continue; // aún no se pintó ese día: al pintarse entran todos los habilitados
+            }
+            $this->included[$drawable] = array_values(array_unique(array_merge($current, array_map('strval', $vehicleIds))));
+        }
     }
 
     /**

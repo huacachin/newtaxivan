@@ -101,6 +101,18 @@ class DrawService
     }
 
     /**
+     * Primer día que todavía se puede sortear: desde ahí se puede bloquear o
+     * desbloquear (lo ya sorteado no cambia).
+     *
+     * @param  array<int, string>  $holidays
+     */
+    public static function firstOpenDate(?string $lastDrawDate, Carbon $today, array $holidays): string
+    {
+        return self::drawableDates($lastDrawDate, $today, $holidays)[0]
+            ?? self::nextWorkingDay(Carbon::parse($lastDrawDate), $holidays)->toDateString();
+    }
+
+    /**
      * Días hábiles de un mes, en orden, para las columnas de la grilla.
      *
      * @return array<int, array{date: string, n: int, weekday: string}>
@@ -278,19 +290,18 @@ class DrawService
             return [];
         }
 
-        // Las placas bloqueadas tampoco entran a la simulación: las de bloqueo
-        // total nunca y las de algunos días, esos días de la semana
+        // Las placas bloqueadas tampoco entran a la simulación los días que cubre
+        // su bloqueo (menos los días desbloqueados)
         $vehicles = Vehicle::active()->with('driver:id,name')
-            ->whereNotIn('id', DrawBlock::active()->full()->select('vehicle_id'))
             ->orderBy('sort_order')->orderBy('plate')
             ->get(['id', 'plate', 'driver_id', 'not_working_since'])->keyBy('id');
-        $weekdayBlocks = DrawBlock::active()->whereNotNull('weekdays')->get(['vehicle_id', 'weekdays'])->keyBy('vehicle_id');
+        $blocks = DrawBlock::active()->overlapping($dates[0], end($dates))->with('exceptions')->get()->groupBy('vehicle_id');
 
         $eligible = [];
         foreach ($dates as $date) {
             $eligible[$date] = $vehicles
                 ->filter(fn (Vehicle $v) => self::entersDrawOn($v->not_working_since?->toDateString(), $date)
-                    && ! ($weekdayBlocks[$v->id] ?? null)?->appliesOn($date))
+                    && ! ($blocks[$v->id] ?? collect())->contains(fn (DrawBlock $b) => $b->appliesOn($date)))
                 ->keys()->all();
         }
 
@@ -471,8 +482,8 @@ class DrawService
 
     /**
      * Vehículos de la grilla: los activos, menos los NT en rojo
-     * (NOT_WORKING_DROP_DAYS o más sin trabajar a esa fecha) y menos los de
-     * bloqueo total. Los bloqueados solo algunos días siguen en la grilla.
+     * (NOT_WORKING_DROP_DAYS o más sin trabajar a esa fecha). Los bloqueados
+     * siguen en la grilla, con candado los días que no entran.
      */
     public static function gridVehicles(?string $date = null): Builder
     {
@@ -480,14 +491,13 @@ class DrawService
 
         return Vehicle::active()
             ->where(fn ($q) => $q->whereNull('not_working_since')->orWhere('not_working_since', '>', $cutoff))
-            ->whereNotIn('id', DrawBlock::active()->full()->select('vehicle_id'))
             ->orderBy('sort_order')
             ->orderBy('plate');
     }
 
     /**
      * Vehículos que entran al sorteo de $date (hoy si es null): los de la
-     * grilla menos los bloqueados ese día de la semana.
+     * grilla menos los bloqueados ese día (sin contar los días desbloqueados).
      */
     public static function activeVehicles(?string $date = null): Builder
     {

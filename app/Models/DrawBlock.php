@@ -5,30 +5,59 @@ namespace App\Models;
 use App\Traits\Auditable;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * Bloqueo de una placa en Sorteos: vigente mientras unblocked_at sea NULL.
- * Sin weekdays es total (no entra ningún día); con weekdays solo esos días
- * de la semana, todas las semanas (1 = lunes ... 6 = sábado).
- * Desbloquear completa unblocked_at/unblocked_by; nunca se borra.
+ * Bloqueo (sanción) de una placa en Sorteos: los días que cubre no entra al
+ * sorteo ni a la simulación. Según `kind` cubre:
+ *  - indefinite: desde starts_on hasta que lo desbloqueen (ends_on NULL)
+ *  - month:      todo un mes (del día 1 al último)
+ *  - range:      de starts_on a ends_on
+ *  - dates:      solo los días de `dates` (starts_on/ends_on = el primero y el último)
+ *
+ * Dentro del periodo se pueden desbloquear días sueltos (exceptions), cada uno
+ * con su motivo. Levantarlo completo guarda unblocked_at/unblocked_by y el
+ * motivo (unblock_reason); nunca se borra, así cada placa tiene su historial
+ * de sanciones (historyFor).
  */
 class DrawBlock extends Model
 {
     use Auditable;
 
-    /** Días que se pueden bloquear (no hay sorteo los domingos). */
-    public const WEEKDAYS = [1 => 'Lunes', 2 => 'Martes', 3 => 'Miércoles', 4 => 'Jueves', 5 => 'Viernes', 6 => 'Sábado'];
+    public const KIND_INDEFINITE = 'indefinite';
 
-    public const WEEKDAYS_SHORT = [1 => 'Lun', 2 => 'Mar', 3 => 'Mié', 4 => 'Jue', 5 => 'Vie', 6 => 'Sáb'];
+    public const KIND_MONTH = 'month';
+
+    public const KIND_RANGE = 'range';
+
+    public const KIND_DATES = 'dates';
+
+    public const KIND_LABELS = [
+        self::KIND_MONTH => 'Todo el mes',
+        self::KIND_RANGE => 'Rango de fechas',
+        self::KIND_DATES => 'Días específicos',
+        self::KIND_INDEFINITE => 'Hasta desbloquearla',
+    ];
+
+    public const STATUS_ACTIVE = 'vigente';
+
+    public const STATUS_EXPIRED = 'cumplida';
+
+    public const STATUS_LIFTED = 'levantada';
+
+    private const WEEKDAYS_SHORT = [0 => 'Dom', 1 => 'Lun', 2 => 'Mar', 3 => 'Mié', 4 => 'Jue', 5 => 'Vie', 6 => 'Sáb'];
 
     protected $auditModule = 'Sorteos - Bloqueos';
 
-    protected $fillable = ['vehicle_id', 'reason', 'weekdays', 'blocked_by', 'unblocked_at', 'unblocked_by'];
+    protected $fillable = ['vehicle_id', 'reason', 'kind', 'starts_on', 'ends_on', 'dates', 'blocked_by', 'unblocked_at', 'unblocked_by', 'unblock_reason'];
 
     protected $casts = [
-        'weekdays' => 'array',
+        'starts_on' => 'date',
+        'ends_on' => 'date',
+        'dates' => 'array',
         'unblocked_at' => 'datetime',
     ];
 
@@ -47,59 +76,115 @@ class DrawBlock extends Model
         return $this->belongsTo(User::class, 'unblocked_by');
     }
 
+    public function exceptions(): HasMany
+    {
+        return $this->hasMany(DrawBlockException::class)->orderBy('date');
+    }
+
+    /** Vigentes hoy: sin desbloquear y con su periodo sin terminar. */
     public function scopeActive(Builder $q): Builder
     {
-        return $q->whereNull('unblocked_at');
+        return $q->whereNull('unblocked_at')
+            ->where(fn (Builder $w) => $w->whereNull('ends_on')->orWhere('ends_on', '>=', Carbon::today()->toDateString()));
     }
 
-    /** Bloqueos totales (todos los días). */
-    public function scopeFull(Builder $q): Builder
-    {
-        return $q->whereNull('weekdays');
-    }
-
-    /** Bloqueos que aplican en $date: los totales y los de ese día de la semana. */
+    /** Los que cubren $date (sin contar los días desbloqueados). */
     public function scopeOnDate(Builder $q, string $date): Builder
     {
-        $weekday = Carbon::parse($date)->dayOfWeek;
-
-        return $q->where(fn (Builder $w) => $w->whereNull('weekdays')->orWhereJsonContains('weekdays', $weekday));
+        return $q->where('starts_on', '<=', $date)
+            ->where(fn (Builder $w) => $w->whereNull('ends_on')->orWhere('ends_on', '>=', $date))
+            ->where(fn (Builder $w) => $w->whereNull('dates')->orWhereJsonContains('dates', $date))
+            ->whereDoesntHave('exceptions', fn (Builder $e) => $e->where('date', $date));
     }
 
-    public function isFull(): bool
+    /** Los que tocan algún día entre $from y $to. */
+    public function scopeOverlapping(Builder $q, string $from, string $to): Builder
     {
-        return empty($this->weekdays);
+        return $q->where('starts_on', '<=', $to)
+            ->where(fn (Builder $w) => $w->whereNull('ends_on')->orWhere('ends_on', '>=', $from));
     }
 
-    public function appliesOn(string $date): bool
+    public function isIndefinite(): bool
     {
-        return $this->isFull() || in_array(Carbon::parse($date)->dayOfWeek, $this->weekdays, true);
+        return $this->kind === self::KIND_INDEFINITE;
     }
 
-    /** "Todos los días" o "Mar, Sáb". */
-    public function weekdaysLabel(): string
+    /** ¿$date cae en el periodo? (sin mirar días desbloqueados ni si está vigente) */
+    public function coversDate(string $date): bool
     {
-        return $this->isFull()
-            ? 'Todos los días'
-            : implode(', ', array_map(fn (int $d) => self::WEEKDAYS_SHORT[$d], $this->weekdays));
-    }
-
-    /** "martes y sábados", "lunes, miércoles y viernes" (para "bloqueada los …"). */
-    public static function weekdaysPhrase(array $weekdays): string
-    {
-        $names = array_map(fn (int $d) => mb_strtolower(self::WEEKDAYS[$d]).($d === 6 ? 's' : ''), $weekdays);
-        $last = array_pop($names);
-
-        return $names ? implode(', ', $names).' y '.$last : (string) $last;
+        return (! $this->starts_on || $date >= $this->starts_on->toDateString())
+            && (! $this->ends_on || $date <= $this->ends_on->toDateString())
+            && ($this->dates === null || in_array($date, $this->dates, true));
     }
 
     /**
-     * IDs de los vehículos que no entran al sorteo de $date (bloqueo total o de ese día).
+     * Días desbloqueados dentro del periodo.
+     *
+     * @return array<int, string>
+     */
+    public function exceptionDates(): array
+    {
+        return $this->exceptions->map(fn (DrawBlockException $e) => $e->date->toDateString())->all();
+    }
+
+    /** ¿Bloquea $date? Cubre el día y ese día no se desbloqueó. */
+    public function appliesOn(string $date): bool
+    {
+        return $this->coversDate($date) && ! in_array($date, $this->exceptionDates(), true);
+    }
+
+    /** "Todo noviembre 2026", "Del 09/11 al 14/11/2026", "Mié 04/11, Jue 05/11", "Desde el 31/10/2026, hasta desbloquearla". */
+    public function periodLabel(): string
+    {
+        return match ($this->kind) {
+            self::KIND_MONTH => 'Todo '.$this->starts_on->translatedFormat('F Y'),
+            self::KIND_RANGE => 'Del '.$this->starts_on->format('d/m').' al '.$this->ends_on->format('d/m/Y'),
+            self::KIND_DATES => implode(', ', array_map(fn (string $date) => self::dayLabel($date), $this->dates ?? [])),
+            default => 'Desde el '.($this->starts_on?->format('d/m/Y') ?? '—').', hasta desbloquearla',
+        };
+    }
+
+    /** Vigente, cumplida (ya terminó su periodo) o levantada (la desbloquearon). */
+    public function status(): string
+    {
+        if ($this->unblocked_at) {
+            return self::STATUS_LIFTED;
+        }
+        if ($this->ends_on && $this->ends_on->lt(Carbon::today())) {
+            return self::STATUS_EXPIRED;
+        }
+
+        return self::STATUS_ACTIVE;
+    }
+
+    /** "Sáb 07/11" */
+    public static function dayLabel(string $date): string
+    {
+        $day = Carbon::parse($date);
+
+        return self::WEEKDAYS_SHORT[$day->dayOfWeek].' '.$day->format('d/m');
+    }
+
+    /**
+     * Historial de sanciones de una placa: todos sus bloqueos con quién los
+     * puso y levantó y sus días desbloqueados, del más nuevo al más viejo.
+     *
+     * @return Collection<int, DrawBlock>
+     */
+    public static function historyFor(int $vehicleId): Collection
+    {
+        return static::where('vehicle_id', $vehicleId)
+            ->with('blockedBy:id,name', 'unblockedBy:id,name', 'exceptions.createdBy:id,name')
+            ->orderByDesc('created_at')->orderByDesc('id')->get();
+    }
+
+    /**
+     * IDs de los vehículos que no entran al sorteo de $date.
      *
      * @return array<int, int>
      */
     public static function blockedVehicleIdsOn(string $date): array
     {
-        return static::active()->onDate($date)->pluck('vehicle_id')->map(fn ($id) => (int) $id)->all();
+        return static::active()->onDate($date)->pluck('vehicle_id')->map(fn ($id) => (int) $id)->unique()->values()->all();
     }
 }

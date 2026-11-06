@@ -39,6 +39,18 @@
         </div>
 
     </div>
+
+    @if($drawHistory !== null)
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                    <h6 class="mb-0"><i class="ti ti-history"></i> Historial de sanciones en Sorteos</h6>
+                    <a href="{{ route('draws.index') }}" class="btn btn-sm btn-outline-secondary"><i class="ti ti-arrows-shuffle"></i> Ir a Sorteos</a>
+                </div>
+                @include('draws._sanctions', ['history' => $drawHistory])
+            </div>
+        </div>
+    @endif
 </div>
 
 @push('datepicker_js')

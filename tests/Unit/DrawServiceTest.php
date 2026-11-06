@@ -242,20 +242,15 @@ class DrawServiceTest extends TestCase
         $this->assertFalse(DrawService::entersDrawOn('2026-07-10', '2026-10-30'));
     }
 
-    public function test_a_weekday_block_only_applies_on_those_days_every_week(): void
+    public function test_blocks_start_on_the_first_day_not_drawn_yet(): void
     {
-        $tuesdayAndSaturday = new \App\Models\DrawBlock(['weekdays' => [2, 6]]);
-        $full = new \App\Models\DrawBlock(['weekdays' => null]);
+        $friday = Carbon::parse('2026-11-06 10:00');
 
-        $this->assertTrue($tuesdayAndSaturday->appliesOn('2026-11-03'));  // martes
-        $this->assertTrue($tuesdayAndSaturday->appliesOn('2026-11-10'));  // martes de la semana siguiente
-        $this->assertTrue($tuesdayAndSaturday->appliesOn('2026-10-31'));  // sábado
-        $this->assertFalse($tuesdayAndSaturday->appliesOn('2026-11-02')); // lunes
-        $this->assertSame('Mar, Sáb', $tuesdayAndSaturday->weekdaysLabel());
-
-        $this->assertTrue($full->isFull());
-        $this->assertTrue($full->appliesOn('2026-11-02'));
-        $this->assertSame('Todos los días', $full->weekdaysLabel());
+        $this->assertSame('2026-11-06', DrawService::firstOpenDate('2026-11-05', $friday, []));  // hoy sin sortear
+        $this->assertSame('2026-11-07', DrawService::firstOpenDate('2026-11-06', $friday, []));  // hoy ya sorteado
+        $this->assertSame('2026-11-09', DrawService::firstOpenDate('2026-11-07', $friday, []));  // sábado adelantado
+        $this->assertSame('2026-11-09', DrawService::firstOpenDate('2026-11-06', $friday, ['2026-11-07'])); // sábado feriado
+        $this->assertSame('2026-11-09', DrawService::firstOpenDate('2026-11-07', Carbon::parse('2026-11-08'), [])); // domingo
     }
 
     public function test_working_days_are_monday_to_saturday_except_holidays(): void
