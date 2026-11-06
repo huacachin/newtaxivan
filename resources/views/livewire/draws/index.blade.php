@@ -647,6 +647,16 @@
                         @endif
                     </div>
 
+                    {{-- Leyenda: el color del motivo indica el tipo de bloqueo --}}
+                    <div class="d-flex flex-wrap align-items-center gap-3 small mb-2">
+                        <span class="text-muted">Color del motivo según el tipo:</span>
+                        @foreach(\App\Models\DrawBlock::KIND_LABELS as $kind => $kindLabel)
+                            <span class="fw-semibold" style="color: {{ \App\Models\DrawBlock::KIND_COLORS[$kind] }};">
+                                <span class="dr-swatch" style="background: {{ \App\Models\DrawBlock::KIND_COLORS[$kind] }};"></span>{{ $kindLabel }}
+                            </span>
+                        @endforeach
+                    </div>
+
                     <div class="table-responsive">
                         <table class="table table-sm table-bordered mb-0 small dr-list">
                             <thead>
@@ -655,7 +665,7 @@
                             <tbody>
                             @forelse($blocks as $block)
                                 <tr wire:key="block-{{ $block->id }}">
-                                    <td class="text-center">{{ $rowNumbers[$block->vehicle_id] ?? '—' }}</td>
+                                    <td class="text-center">{{ $loop->iteration }}</td>
                                     <td class="text-center">{{ $block->vehicle?->sort_order ?? '—' }}</td>
                                     <td class="dr-nowrap">
                                         <a href="#" class="dr-plate" title="Ver historial de sanciones"
@@ -673,7 +683,7 @@
                                             @endforeach
                                         @endif
                                     </td>
-                                    <td style="white-space: normal;">{{ $block->reason }}</td>
+                                    <td class="fw-semibold" style="white-space: normal; color: {{ \App\Models\DrawBlock::KIND_COLORS[$block->kind] ?? 'inherit' }};">{{ $block->reason }}</td>
                                     <td class="text-end dr-nowrap">
                                         @if($canBlock)
                                             <button type="button" class="btn btn-sm btn-outline-success py-0"

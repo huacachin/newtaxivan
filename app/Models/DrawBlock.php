@@ -42,6 +42,14 @@ class DrawBlock extends Model
         self::KIND_INDEFINITE => 'Hasta desbloquearla',
     ];
 
+    /** Color del motivo según el tipo, en la lista de Placas bloqueadas (sin rojo, que ya marca otras cosas). */
+    public const KIND_COLORS = [
+        self::KIND_MONTH => '#1d4ed8',
+        self::KIND_RANGE => '#0e7490', // no verde: el verde es de los días desbloqueados
+        self::KIND_DATES => '#7e22ce',
+        self::KIND_INDEFINITE => '#b45309',
+    ];
+
     public const STATUS_ACTIVE = 'vigente';
 
     public const STATUS_EXPIRED = 'cumplida';

@@ -590,13 +590,11 @@ class Index extends Component
             }
         }
 
-        // Nº de cada placa en la tabla, y la lista de bloqueos en ese mismo orden
-        $rowNumbers = array_flip(array_column($rows, 'id'));
-        $rowNumbers = array_map(fn (int $index) => $index + 1, $rowNumbers);
-        $blocks = $blocks->sortBy(fn (DrawBlock $b) => [$rowNumbers[$b->vehicle_id] ?? PHP_INT_MAX, $b->starts_on])->values();
+        // La lista de bloqueos en el mismo orden que la tabla (su Nº es correlativo)
+        $rowPositions = array_flip(array_column($rows, 'id'));
+        $blocks = $blocks->sortBy(fn (DrawBlock $b) => [$rowPositions[$b->vehicle_id] ?? PHP_INT_MAX, $b->starts_on])->values();
 
         return view('livewire.draws.index', [
-            'rowNumbers' => $rowNumbers,
             'days' => $days,
             'rows' => $rows,
             'cells' => $cells,
