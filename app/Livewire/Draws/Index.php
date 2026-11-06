@@ -540,7 +540,7 @@ class Index extends Component
             : [...$this->recordedMonth($from, $to), []];
 
         // Bloqueos vigentes (para la lista y el detalle de cada placa) y días con candado del mes
-        $blocks = DrawBlock::active()->with('blockedBy:id,name', 'vehicle.driver:id,name', 'exceptions.createdBy:id,name')->get()
+        $blocks = DrawBlock::active()->with('blockedBy:id,name,username', 'vehicle.driver:id,name', 'exceptions.createdBy:id,name,username')->get()
             ->sortBy(fn (DrawBlock $b) => [$b->vehicle?->sort_order ?? PHP_INT_MAX, $b->vehicle?->plate, $b->starts_on])->values();
         $blocksByVehicle = $blocks->groupBy('vehicle_id');
         // Placas que alguna vez tuvieron un bloqueo (aunque ya se cumplió o se levantó): van en rojo
@@ -724,7 +724,7 @@ class Index extends Component
      */
     private function blockedDaysOfMonth(array $dates, string $from, string $to): array
     {
-        $blocks = DrawBlock::overlapping($from, $to)->with('blockedBy:id,name', 'exceptions')->orderBy('id')->get();
+        $blocks = DrawBlock::overlapping($from, $to)->with('blockedBy:id,name,username', 'exceptions')->orderBy('id')->get();
 
         $locked = [];
         foreach ($blocks as $block) {

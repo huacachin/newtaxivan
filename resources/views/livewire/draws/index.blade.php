@@ -432,7 +432,7 @@
                                     </tr>
                                 @endif
                                 @php
-                                    $blockTitle = $row['blocks']->map(fn ($b) => $b->periodLabel().': '.$b->reason.' ('.($b->blockedBy?->name ?? '—').')')->implode(' · ');
+                                    $blockTitle = $row['blocks']->map(fn ($b) => $b->periodLabel().': '.$b->reason.' ('.\App\Models\DrawBlock::userLabel($b->blockedBy).')')->implode(' · ');
                                 @endphp
                                 <tr wire:key="row-{{ $row['id'] }}" @class(['dr-blocked' => $row['blocked']])>
                                     <td class="dr-sel" x-show="selecting" x-cloak>
@@ -471,11 +471,11 @@
                                         @if(! $cell && $lock && $canBlock && ! $simulating && $date >= $firstOpen)
                                             <td class="text-center dr-locked dr-locked-open" data-day="{{ $dayKey }}" data-label="{{ $row['plate'] }} {{ \App\Models\DrawBlock::dayLabel($date) }}"
                                                 :class="days.includes('{{ $dayKey }}') && 'dr-day-sel'" x-on:click="toggleDay('{{ $dayKey }}')"
-                                                title="{{ $lock->periodLabel() }}: {{ $lock->reason }} · bloqueado por {{ $lock->blockedBy?->name ?? '—' }} el {{ $lock->created_at->format('d/m/Y H:i') }} · clic para marcar este día y desbloquearlo">
+                                                title="{{ $lock->periodLabel() }}: {{ $lock->reason }} · bloqueado por {{ \App\Models\DrawBlock::userLabel($lock->blockedBy) }} el {{ $lock->created_at->format('d/m/Y H:i') }} · clic para marcar este día y desbloquearlo">
                                                 <i class="ti" :class="days.includes('{{ $dayKey }}') ? 'ti-lock-open' : 'ti-lock'"></i>
                                             </td>
                                         @elseif(! $cell && $lock)
-                                            <td class="text-center dr-locked" title="{{ $lock->periodLabel() }}: {{ $lock->reason }} · bloqueado por {{ $lock->blockedBy?->name ?? '—' }} el {{ $lock->created_at->format('d/m/Y H:i') }}"><i class="ti ti-lock"></i></td>
+                                            <td class="text-center dr-locked" title="{{ $lock->periodLabel() }}: {{ $lock->reason }} · bloqueado por {{ \App\Models\DrawBlock::userLabel($lock->blockedBy) }} el {{ $lock->created_at->format('d/m/Y H:i') }}"><i class="ti ti-lock"></i></td>
                                         @elseif(isset($results[$date]))
                                             @if(! $cell)
                                                 <td></td>
@@ -650,7 +650,7 @@
                     <div class="table-responsive">
                         <table class="table table-sm table-bordered mb-0 small dr-list">
                             <thead>
-                            <tr><th>Nº</th><th>COD</th><th>Placa</th><th>Conductor</th><th>Fecha y hora</th><th>Bloqueado por</th><th>Tipo</th><th>Periodo</th><th>Motivo</th><th></th></tr>
+                            <tr><th>Nº</th><th>COD</th><th>Placa</th><th>Conductor</th><th>Fecha y hora</th><th>Usuario</th><th>Tipo</th><th>Periodo</th><th>Motivo</th><th></th></tr>
                             </thead>
                             <tbody>
                             @forelse($blocks as $block)
@@ -663,7 +663,7 @@
                                     </td>
                                     <td>{{ $block->vehicle?->driver?->name ?? '—' }}</td>
                                     <td class="dr-nowrap">{{ $block->created_at->format('d/m/Y H:i') }}</td>
-                                    <td>{{ $block->blockedBy?->name ?? '—' }}</td>
+                                    <td>{{ \App\Models\DrawBlock::userLabel($block->blockedBy) }}</td>
                                     <td>{{ \App\Models\DrawBlock::KIND_LABELS[$block->kind] ?? $block->kind }}</td>
                                     <td style="white-space: normal;">
                                         {{ $block->periodLabel() }}

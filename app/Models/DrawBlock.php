@@ -157,6 +157,12 @@ class DrawBlock extends Model
         return self::STATUS_ACTIVE;
     }
 
+    /** Usuario que se muestra en bloqueos e historial: su username ("Licet"), no nombre y apellidos. */
+    public static function userLabel(?User $user): string
+    {
+        return $user?->username ?: ($user?->name ?? '—');
+    }
+
     /** "Sáb 07/11" */
     public static function dayLabel(string $date): string
     {
@@ -174,7 +180,7 @@ class DrawBlock extends Model
     public static function historyFor(int $vehicleId): Collection
     {
         return static::where('vehicle_id', $vehicleId)
-            ->with('blockedBy:id,name', 'unblockedBy:id,name', 'exceptions.createdBy:id,name')
+            ->with('blockedBy:id,name,username', 'unblockedBy:id,name,username', 'exceptions.createdBy:id,name,username')
             ->orderByDesc('created_at')->orderByDesc('id')->get();
     }
 

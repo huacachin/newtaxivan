@@ -3,7 +3,7 @@
      cuándo y por qué. Arriba, la placa con su Nº en la tabla de Sorteos ($rowNumber, si se sabe)
      y su COD. Se usa en el modal de Sorteos y en la ficha del vehículo. --}}
 {{-- El tema corta las palabras dentro de las celdas; aquí no --}}
-<style>.dr-sanctions th, .dr-sanctions td { word-break: normal; overflow-wrap: normal; }</style>
+<style>.dr-sanctions th, .dr-sanctions td { word-break: normal; overflow-wrap: normal; } .dr-sanctions .dr-date { white-space: nowrap !important; }</style>
 <div class="d-flex flex-wrap align-items-center gap-2 mb-2 small">
     @isset($rowNumber)
         <span class="badge bg-light text-dark border">Nº {{ $rowNumber }}</span>
@@ -20,14 +20,14 @@
 <div class="table-responsive">
     <table class="table table-sm table-bordered mb-0 small dr-sanctions">
         <thead>
-        <tr><th>Fecha y hora</th><th>Bloqueado por</th><th>Tipo</th><th>Periodo</th><th>Motivo</th><th>Estado</th></tr>
+        <tr><th>Fecha y hora</th><th>Usuario</th><th>Tipo</th><th>Periodo</th><th>Motivo</th><th>Estado</th></tr>
         </thead>
         <tbody>
         @forelse($history as $sanction)
             @php $status = $sanction->status(); @endphp
             <tr wire:key="sanction-{{ $sanction->id }}">
-                <td style="white-space: nowrap;">{{ $sanction->created_at->format('d/m/Y H:i') }}</td>
-                <td>{{ $sanction->blockedBy?->name ?? '—' }}</td>
+                <td class="dr-date">{{ $sanction->created_at->format('d/m/Y H:i') }}</td>
+                <td>{{ \App\Models\DrawBlock::userLabel($sanction->blockedBy) }}</td>
                 <td>{{ \App\Models\DrawBlock::KIND_LABELS[$sanction->kind] ?? $sanction->kind }}</td>
                 <td style="white-space: normal;">
                     {{ $sanction->periodLabel() }}
@@ -43,7 +43,7 @@
                         <span class="badge bg-secondary">Cumplida</span>
                     @else
                         <span class="badge bg-light text-dark border">Levantada</span>
-                        <div class="text-muted">{{ $sanction->unblocked_at->format('d/m/Y H:i') }} · {{ $sanction->unblockedBy?->name ?? '—' }}</div>
+                        <div class="text-muted">{{ $sanction->unblocked_at->format('d/m/Y H:i') }} · {{ \App\Models\DrawBlock::userLabel($sanction->unblockedBy) }}</div>
                         @if($sanction->unblock_reason)
                             <div>{{ $sanction->unblock_reason }}</div>
                         @endif
