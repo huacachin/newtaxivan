@@ -17,6 +17,7 @@
         {{ $history->count() }} {{ $history->count() === 1 ? 'sanción registrada' : 'sanciones registradas' }}, de la más reciente a la más antigua.
     </span>
 </div>
+@include('draws._kind_legend')
 <div class="table-responsive">
     <table class="table table-sm table-bordered mb-0 small dr-sanctions">
         <thead>
@@ -35,7 +36,7 @@
                         @include('draws._unblocked_day', ['exception' => $exception])
                     @endforeach
                 </td>
-                <td style="white-space: normal;">{{ $sanction->reason }}</td>
+                <td class="fw-semibold" style="white-space: normal; color: {{ \App\Models\DrawBlock::KIND_COLORS[$sanction->kind] ?? 'inherit' }};">{{ $sanction->reason }}</td>
                 <td style="white-space: normal;">
                     @if($status === \App\Models\DrawBlock::STATUS_ACTIVE)
                         <span class="badge bg-danger">Vigente</span>

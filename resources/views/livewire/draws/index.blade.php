@@ -647,15 +647,7 @@
                         @endif
                     </div>
 
-                    {{-- Leyenda: el color del motivo indica el tipo de bloqueo --}}
-                    <div class="d-flex flex-wrap align-items-center gap-3 small mb-2">
-                        <span class="text-muted">Color del motivo según el tipo:</span>
-                        @foreach(\App\Models\DrawBlock::KIND_LABELS as $kind => $kindLabel)
-                            <span class="fw-semibold" style="color: {{ \App\Models\DrawBlock::KIND_COLORS[$kind] }};">
-                                <span class="dr-swatch" style="background: {{ \App\Models\DrawBlock::KIND_COLORS[$kind] }};"></span>{{ $kindLabel }}
-                            </span>
-                        @endforeach
-                    </div>
+                    @include('draws._kind_legend')
 
                     <div class="table-responsive">
                         <table class="table table-sm table-bordered mb-0 small dr-list">
