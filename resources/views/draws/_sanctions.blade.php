@@ -1,13 +1,10 @@
 {{-- Historial de sanciones de una placa en Sorteos (DrawBlock::historyFor): cada bloqueo con
      su periodo, motivo, quién lo puso y cuándo, sus días desbloqueados y, si se levantó, quién,
-     cuándo y por qué. Arriba, la placa con su Nº en la tabla de Sorteos ($rowNumber, si se sabe)
-     y su COD. Se usa en el modal de Sorteos y en la ficha del vehículo. --}}
+     cuándo y por qué. Arriba, la placa con su COD; el Nº de cada fila es correlativo.
+     Se usa en el modal de Sorteos y en la ficha del vehículo. --}}
 {{-- El tema corta las palabras dentro de las celdas; aquí no --}}
 <style>.dr-sanctions th, .dr-sanctions td { word-break: normal; overflow-wrap: normal; } .dr-sanctions .dr-date { white-space: nowrap !important; }</style>
 <div class="d-flex flex-wrap align-items-center gap-2 mb-2 small">
-    @isset($rowNumber)
-        <span class="badge bg-light text-dark border">Nº {{ $rowNumber }}</span>
-    @endisset
     <span class="badge bg-light text-dark border">COD {{ $vehicle->sort_order ?? '—' }}</span>
     <span class="badge bg-dark">{{ $vehicle->plate }}</span>
     @if($vehicle->driver?->name)
@@ -21,12 +18,13 @@
 <div class="table-responsive">
     <table class="table table-sm table-bordered mb-0 small dr-sanctions">
         <thead>
-        <tr><th>Fecha y hora</th><th>Usuario</th><th>Tipo</th><th>Periodo</th><th>Motivo</th><th>Estado</th></tr>
+        <tr><th>Nº</th><th>Fecha y hora</th><th>Usuario</th><th>Tipo</th><th>Periodo</th><th>Motivo</th><th>Estado</th></tr>
         </thead>
         <tbody>
         @forelse($history as $sanction)
             @php $status = $sanction->status(); @endphp
             <tr wire:key="sanction-{{ $sanction->id }}">
+                <td class="text-center">{{ $loop->iteration }}</td>
                 <td class="dr-date">{{ $sanction->created_at->format('d/m/Y H:i') }}</td>
                 <td>{{ \App\Models\DrawBlock::userLabel($sanction->blockedBy) }}</td>
                 <td>{{ \App\Models\DrawBlock::KIND_LABELS[$sanction->kind] ?? $sanction->kind }}</td>
@@ -52,7 +50,7 @@
                 </td>
             </tr>
         @empty
-            <tr><td colspan="6" class="text-center text-muted">Esta placa no tiene sanciones registradas.</td></tr>
+            <tr><td colspan="7" class="text-center text-muted">Esta placa no tiene sanciones registradas.</td></tr>
         @endforelse
         </tbody>
     </table>

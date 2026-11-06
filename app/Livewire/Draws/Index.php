@@ -614,7 +614,7 @@ class Index extends Component
             'yearHolidays' => Holiday::whereYear('date', $this->year)->orderBy('date')->get(),
             'blocks' => $blocks,
             'lockedDays' => $lockedDays,
-            ...$this->historyData($rows),
+            ...$this->historyData(),
             'canBlock' => $this->canBlock(),
             'annulledDraws' => $simulating ? collect() : Draw::whereNotNull('annulled_at')->whereBetween('date', [$from, $to])
                 ->with('drawnBy:id,name', 'annulledBy:id,name')->orderBy('annulled_at')->get(),
@@ -740,21 +740,18 @@ class Index extends Component
 
     /**
      * Historial de sanciones de la placa abierta: todos sus bloqueos con sus
-     * días desbloqueados, del más nuevo al más viejo, y en qué Nº de la
-     * tabla está la placa (null si no está en la grilla de este mes).
+     * días desbloqueados, del más nuevo al más viejo.
      *
-     * @param  array<int, array{id: int}>  $rows  filas de la grilla, en orden
-     * @return array{historyVehicle: Vehicle|null, history: \Illuminate\Support\Collection<int, DrawBlock>, historyRowNumber: int|null}
+     * @return array{historyVehicle: Vehicle|null, history: \Illuminate\Support\Collection<int, DrawBlock>}
      */
-    private function historyData(array $rows): array
+    private function historyData(): array
     {
         $vehicle = $this->historyVehicleId
             ? Vehicle::with('driver:id,name')->find($this->historyVehicleId, ['id', 'plate', 'sort_order', 'driver_id'])
             : null;
         $history = $vehicle ? DrawBlock::historyFor($vehicle->id) : collect();
-        $index = $vehicle ? array_search($vehicle->id, array_column($rows, 'id'), true) : false;
 
-        return ['historyVehicle' => $vehicle, 'history' => $history, 'historyRowNumber' => $index === false ? null : $index + 1];
+        return ['historyVehicle' => $vehicle, 'history' => $history];
     }
 
     /** El motivo sin espacios de más, o null (con aviso) si no tiene de 3 a 255 caracteres. */

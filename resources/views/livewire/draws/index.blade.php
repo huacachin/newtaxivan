@@ -760,7 +760,7 @@
                 </div>
                 <div class="modal-body">
                     @if($historyVehicle)
-                        @include('draws._sanctions', ['history' => $history, 'vehicle' => $historyVehicle, 'rowNumber' => $historyRowNumber])
+                        @include('draws._sanctions', ['history' => $history, 'vehicle' => $historyVehicle])
                     @endif
                 </div>
             </div>
