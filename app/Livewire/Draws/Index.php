@@ -201,6 +201,11 @@ class Index extends Component
         if ($skipped) {
             $html .= '<br><span class="text-danger">El '.e(implode(' y el ', array_map(fn (string $d) => $this->dayLabel($d), $skipped))).' quedará sin sorteo.</span>';
         }
+        // Domingo tardío: el lunes ya está sorteado y no cambia
+        $lastDate = Draw::active()->max('date');
+        if ($lastDate && $date < Carbon::parse($lastDate)->toDateString()) {
+            $html .= '<br><small>El '.e($this->dayLabel(Carbon::parse($lastDate)->toDateString())).' ya está sorteado y no cambia; nadie repite la franja que tuvo el día anterior ni la de ese día.</small>';
+        }
         $html .= '<br><small class="text-muted">Una vez sorteado no se puede repetir; solo el director puede anularlo.</small>';
 
         $this->dispatch('draw-confirm', date: $date, title: '¿Sortear el '.$this->dayLabel($date).'?', html: $html);
@@ -426,9 +431,10 @@ class Index extends Component
         }
 
         $firstOpen = $this->firstOpenDate();
+        $drawable = $this->drawableDates(); // incluye el domingo tardío
         $pairs = collect($cells)
             ->map(fn ($cell) => explode('|', (string) $cell))
-            ->filter(fn (array $p) => count($p) === 2 && ctype_digit($p[0]) && $this->validDate($p[1]) && $p[1] >= $firstOpen)
+            ->filter(fn (array $p) => count($p) === 2 && ctype_digit($p[0]) && $this->validDate($p[1]) && ($p[1] >= $firstOpen || in_array($p[1], $drawable, true)))
             ->map(fn (array $p) => [(int) $p[0], $p[1]])
             ->unique(fn (array $p) => $p[0].'|'.$p[1])
             ->sortBy(fn (array $p) => $p[1])->values();
@@ -850,8 +856,10 @@ class Index extends Component
     {
         $today = Carbon::today();
         $lastDate = Draw::active()->max('date');
+        // Para el domingo tardío: el domingo sin sortear aunque ya esté sorteado el lunes
+        $drawn = Draw::active()->where('date', '>=', $today->toDateString())->pluck('date')->map(fn ($d) => Carbon::parse($d)->toDateString())->all();
 
-        return DrawService::drawableDates($lastDate ? Carbon::parse($lastDate)->toDateString() : null, $today, DrawService::holidaysAround($today));
+        return DrawService::drawableDates($lastDate ? Carbon::parse($lastDate)->toDateString() : null, $today, DrawService::holidaysAround($today), $drawn);
     }
 
     /**

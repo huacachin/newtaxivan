@@ -92,10 +92,16 @@ class DrawService
      * siguiente día hábil (el sábado ya se ve el domingo y el lunes). Si no se
      * sortea, se salta como cualquier día pasado. Un domingo feriado no.
      *
+     * Con $drawnDates (los días ya sorteados), ese domingo se puede sortear
+     * aunque ya se haya sorteado el lunes (domingo tardío): el lunes no cambia
+     * y en el domingo nadie repite la franja del sábado ni la del lunes (run).
+     * Sin $drawnDates (bloqueos, firstOpenDate) solo cuentan los posteriores al último sorteo.
+     *
      * @param  array<int, string>  $holidays
+     * @param  array<int, string>|null  $drawnDates  fechas Y-m-d con sorteo vigente
      * @return array<int, string> fechas Y-m-d
      */
-    public static function drawableDates(?string $lastDrawDate, Carbon $today, array $holidays): array
+    public static function drawableDates(?string $lastDrawDate, Carbon $today, array $holidays, ?array $drawnDates = null): array
     {
         $today = $today->copy()->startOfDay();
         $next = self::nextWorkingDay($today, $holidays);
@@ -111,7 +117,8 @@ class DrawService
         }
         $dates[] = $next->toDateString();
 
-        return array_values(array_filter($dates, fn (string $d) => $lastDrawDate === null || $d > $lastDrawDate));
+        return array_values(array_filter($dates, fn (string $d) => $lastDrawDate === null || $d > $lastDrawDate
+            || ($drawnDates !== null && Carbon::parse($d)->isSunday() && ! in_array($d, $drawnDates, true))));
     }
 
     /**
@@ -232,7 +239,7 @@ class DrawService
      * @param  array<int, array<int, int>>  $usedNumbers  vehicle_id => números que ya recibió este mes (no se repiten)
      * @return array<int, array{number: int, band: string, previous_band: string|null, deviated: bool, number_repeated: bool}>
      */
-    public function assign(array $previousBands, array $pastDeviations = [], array $usedNumbers = []): array
+    public function assign(array $previousBands, array $pastDeviations = [], array $usedNumbers = [], array $nextBands = []): array
     {
         $total = count($previousBands);
         if ($total === 0) {
@@ -253,7 +260,7 @@ class DrawService
         foreach ($vehicleIds as $i => $vehicleId) {
             $used = array_flip($usedNumbers[$vehicleId] ?? []);
             foreach ($numbers as $j => $number) {
-                $cost[$i][$j] = $this->bandCost($previousBands[$vehicleId], $bandOf[$number], $pastDeviations[$vehicleId] ?? 0)
+                $cost[$i][$j] = $this->bandCost($previousBands[$vehicleId], $bandOf[$number], $pastDeviations[$vehicleId] ?? 0, $nextBands[$vehicleId] ?? null)
                     + (isset($used[$number]) ? self::NUMBER_REPEAT_COST : 0);
             }
         }
@@ -263,11 +270,12 @@ class DrawService
             $vehicleId = $vehicleIds[$i];
             $number = $numbers[$j];
             $previous = $previousBands[$vehicleId];
+            $target = self::targetBand($previous, $nextBands[$vehicleId] ?? null);
             $result[$vehicleId] = [
                 'number' => $number,
                 'band' => $bandOf[$number],
                 'previous_band' => $previous,
-                'deviated' => $previous !== null && $bandOf[$number] !== DrawEntry::nextBand($previous),
+                'deviated' => $target !== null && $bandOf[$number] !== $target,
                 'number_repeated' => in_array($number, $usedNumbers[$vehicleId] ?? [], true),
             ];
         }
@@ -451,13 +459,39 @@ class DrawService
         return (array_slice($words, $index) ?: array_slice($words, -1))[0] ?? '';
     }
 
-    private function bandCost(?string $previous, string $band, int $pastDeviations): int
+    private function bandCost(?string $previous, string $band, int $pastDeviations, ?string $next = null): int
     {
-        if ($previous === null || $band === DrawEntry::nextBand($previous)) {
-            return 0;
+        if ($band === $previous || ($next !== null && $band === $next)) {
+            return self::REPEAT_COST;
+        }
+        $target = self::targetBand($previous, $next);
+
+        return $target === null || $band === $target ? 0 : self::DEVIATE_COST + $pastDeviations;
+    }
+
+    /**
+     * Franja que le toca a un vehículo: la siguiente del ciclo a la que tuvo
+     * antes. En un domingo tardío también se conoce la del sorteo de después
+     * ($next): le toca la que no es ninguna de las dos, o la anterior en el
+     * ciclo a $next si no tenía sorteo previo. Null = cualquiera.
+     */
+    public static function targetBand(?string $previous, ?string $next = null): ?string
+    {
+        if ($previous !== null && $next !== null && $previous !== $next) {
+            return array_values(array_diff(DrawEntry::BANDS, [$previous, $next]))[0];
+        }
+        if ($previous !== null) {
+            return DrawEntry::nextBand($previous);
+        }
+        if ($next !== null) {
+            foreach (DrawEntry::BANDS as $band) {
+                if (DrawEntry::nextBand($band) === $next) {
+                    return $band;
+                }
+            }
         }
 
-        return $band === $previous ? self::REPEAT_COST : self::DEVIATE_COST + $pastDeviations;
+        return null;
     }
 
     /**
@@ -594,7 +628,8 @@ class DrawService
             $lastDate = $lastDate ? Carbon::parse($lastDate)->toDateString() : null;
 
             $today = Carbon::today();
-            if (! in_array($date, self::drawableDates($lastDate, $today, self::holidaysAround($today)), true)) {
+            $drawn = Draw::active()->where('date', '>=', $today->toDateString())->pluck('date')->map(fn ($d) => Carbon::parse($d)->toDateString())->all();
+            if (! in_array($date, self::drawableDates($lastDate, $today, self::holidaysAround($today), $drawn), true)) {
                 throw ValidationException::withMessages(['date' => 'Ese día ya no se puede sortear. Actualiza la página.']);
             }
 
@@ -609,7 +644,9 @@ class DrawService
                 $previousBands[$vehicleId] = $band;
             }
 
-            $assigned = $this->assign($previousBands, $this->pastDeviations($participantIds), $this->usedNumbersInMonth($participantIds, $date));
+            // Domingo tardío (ya se sorteó el lunes): tampoco repite la franja que cada uno tuvo después
+            $nextBands = $lastDate !== null && $date < $lastDate ? $this->nextBands($participantIds, $date) : [];
+            $assigned = $this->assign($previousBands, $this->pastDeviations($participantIds), $this->usedNumbersInMonth($participantIds, $date), $nextBands);
 
             $draw = Draw::create([
                 'code' => Draw::newCode(),
@@ -726,18 +763,41 @@ class DrawService
      */
     public function previousBands(array $vehicleIds, string $date): array
     {
-        $latest = DB::table('draw_entries as e')
+        return $this->nearestBands($vehicleIds, $date, '<');
+    }
+
+    /**
+     * Franja del primer sorteo vigente posterior a $date en que participó cada
+     * vehículo (domingo tardío: el lunes ya sorteado).
+     *
+     * @param  array<int, int>  $vehicleIds
+     * @return array<int, string> vehicle_id => franja
+     */
+    public function nextBands(array $vehicleIds, string $date): array
+    {
+        return $this->nearestBands($vehicleIds, $date, '>');
+    }
+
+    /**
+     * Franja del sorteo vigente más cercano a $date (antes con '<', después con '>') de cada vehículo.
+     *
+     * @param  array<int, int>  $vehicleIds
+     * @return array<int, string>
+     */
+    private function nearestBands(array $vehicleIds, string $date, string $direction): array
+    {
+        $nearest = DB::table('draw_entries as e')
             ->join('draws as d', 'd.id', '=', 'e.draw_id')
             ->whereNull('d.annulled_at')
             ->whereNotNull('e.number')
             ->whereIn('e.vehicle_id', $vehicleIds)
-            ->where('d.date', '<', $date)
+            ->where('d.date', $direction === '<' ? '<' : '>', $date)
             ->groupBy('e.vehicle_id')
-            ->select('e.vehicle_id', DB::raw('MAX(d.date) as last_date'));
+            ->select('e.vehicle_id', DB::raw(($direction === '<' ? 'MAX' : 'MIN').'(d.date) as near_date'));
 
         return DB::table('draw_entries as e')
             ->join('draws as d', 'd.id', '=', 'e.draw_id')
-            ->joinSub($latest, 'l', fn ($j) => $j->on('l.vehicle_id', '=', 'e.vehicle_id')->on('l.last_date', '=', 'd.date'))
+            ->joinSub($nearest, 'l', fn ($j) => $j->on('l.vehicle_id', '=', 'e.vehicle_id')->on('l.near_date', '=', 'd.date'))
             ->whereNull('d.annulled_at')
             ->whereNotNull('e.number')
             ->pluck('e.band', 'e.vehicle_id')
@@ -746,8 +806,9 @@ class DrawService
     }
 
     /**
-     * Números que cada vehículo ya recibió en sorteos vigentes del mismo mes,
-     * antes de $date: no se le pueden repetir.
+     * Números que cada vehículo ya recibió en otros sorteos vigentes del mismo
+     * mes: no se le pueden repetir. Normalmente son los de antes de $date; en un
+     * domingo tardío también cuenta el lunes ya sorteado.
      *
      * @param  array<int, int>  $vehicleIds
      * @return array<int, array<int, int>> vehicle_id => números
@@ -760,7 +821,8 @@ class DrawService
             ->whereNull('d.annulled_at')
             ->whereNotNull('e.number')
             ->whereIn('e.vehicle_id', $vehicleIds)
-            ->whereBetween('d.date', [Carbon::parse($date)->startOfMonth()->toDateString(), Carbon::parse($date)->subDay()->toDateString()])
+            ->whereBetween('d.date', [Carbon::parse($date)->startOfMonth()->toDateString(), Carbon::parse($date)->endOfMonth()->toDateString()])
+            ->where('d.date', '!=', $date)
             ->get(['e.vehicle_id', 'e.number'])
             ->each(function ($row) use (&$used) {
                 $used[$row->vehicle_id][] = (int) $row->number;
@@ -786,7 +848,7 @@ class DrawService
             ->whereNotNull('e.number')
             ->where('d.id', '!=', $draw->id)
             ->whereNull('d.annulled_at')
-            ->whereBetween('d.date', [Carbon::parse($date)->startOfMonth()->toDateString(), Carbon::parse($date)->subDay()->toDateString()])
+            ->whereBetween('d.date', [Carbon::parse($date)->startOfMonth()->toDateString(), Carbon::parse($date)->endOfMonth()->toDateString()])
             ->orderBy('e.plate')
             ->distinct()
             ->pluck('e.plate')
