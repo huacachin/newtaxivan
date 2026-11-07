@@ -286,6 +286,23 @@ class DrawServiceTest extends TestCase
         $this->assertSame(['2026-04-04'], DrawService::drawableDates(null, Carbon::parse('2026-04-02'), ['2026-04-02', '2026-04-03']));
     }
 
+    public function test_suspension_takes_the_next_three_working_days_not_drawn_yet(): void
+    {
+        $friday = Carbon::parse('2026-11-06');
+
+        // Mañana sábado sin sortear: sábado, (sin domingo) lunes y martes
+        $this->assertSame(['2026-11-07', '2026-11-09', '2026-11-10'], DrawService::suspensionDates($friday, '2026-11-06', []));
+        $this->assertSame(['2026-11-07', '2026-11-09', '2026-11-10'], DrawService::suspensionDates($friday, '2026-11-05', []));
+        // El sábado ya se sorteó: pasa al lunes
+        $this->assertSame(['2026-11-09', '2026-11-10', '2026-11-11'], DrawService::suspensionDates($friday, '2026-11-07', []));
+        // Ya se sorteó el domingo opcional: igual desde el lunes
+        $this->assertSame(['2026-11-09', '2026-11-10', '2026-11-11'], DrawService::suspensionDates(Carbon::parse('2026-11-07'), '2026-11-08', []));
+        // Los feriados tampoco cuentan
+        $this->assertSame(['2026-11-07', '2026-11-10', '2026-11-11'], DrawService::suspensionDates($friday, '2026-11-06', ['2026-11-09']));
+        // Sin sorteos todavía
+        $this->assertSame(['2026-11-07', '2026-11-09', '2026-11-10'], DrawService::suspensionDates($friday, null, []));
+    }
+
     public function test_order_shows_only_the_drivers_first_name(): void
     {
         $this->assertSame('Juan', DrawService::firstName('Perez Lopez Juan Carlos'));

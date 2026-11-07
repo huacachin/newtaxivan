@@ -5,12 +5,15 @@ namespace App\Services;
 use App\Models\Draw;
 use App\Models\DrawBlock;
 use App\Models\DrawEntry;
+use App\Models\DrawSanction;
 use App\Models\Holiday;
 use App\Models\User;
 use App\Models\Vehicle;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Random\Randomizer;
 
@@ -131,6 +134,30 @@ class DrawService
     {
         return self::drawableDates($lastDrawDate, $today, $holidays)[0]
             ?? self::nextWorkingDay(Carbon::parse($lastDrawDate), $holidays)->toDateString();
+    }
+
+    /**
+     * Días de una suspensión por sanciones: los $count primeros días hábiles
+     * (lunes a sábado sin feriados) después de hoy que todavía no se sortearon.
+     * El domingo no cuenta: la placa suspendida igual puede entrar al sorteo
+     * opcional del domingo si la eligen.
+     *
+     * Viernes 06 sin sortear el sábado: Sáb 07, Lun 09, Mar 10. Si el sábado ya
+     * se sorteó: Lun 09, Mar 10, Mié 11.
+     *
+     * @param  array<int, string>  $holidays
+     * @return array<int, string> fechas Y-m-d
+     */
+    public static function suspensionDates(Carbon $today, ?string $lastDrawDate, array $holidays, int $count = DrawSanction::SUSPENSION_DAYS): array
+    {
+        $dates = [];
+        for ($day = self::nextWorkingDay($today, $holidays); count($dates) < $count; $day = self::nextWorkingDay($day, $holidays)) {
+            if ($lastDrawDate === null || $day->toDateString() > $lastDrawDate) {
+                $dates[] = $day->toDateString();
+            }
+        }
+
+        return $dates;
     }
 
     /**
@@ -610,6 +637,58 @@ class DrawService
             DrawEntry::insert($rows);
 
             return $draw;
+        }, 3);
+    }
+
+    /**
+     * Registra una sanción por placa (mismo motivo y foto). Cada vez que una
+     * placa junta DrawSanction::SANCTIONS_TO_SUSPEND sanciones sin suspensión,
+     * se suspende sola los días de suspensionDates() (un bloqueo de tipo
+     * suspensión, como cualquier otro: candado, lista e historial) y esas
+     * sanciones quedan ligadas a él; la cuenta vuelve a empezar.
+     *
+     * @param  array<int, int|string>  $vehicleIds
+     * @return array{sanctions: Collection<int, DrawSanction>, suspensions: Collection<int, DrawBlock>}
+     */
+    public function sanction(array $vehicleIds, string $reason, ?string $photoPath, User $user): array
+    {
+        return DB::transaction(function () use ($vehicleIds, $reason, $photoPath, $user) {
+            // FOR UPDATE: dos sanciones a la vez a la misma placa no generan dos suspensiones
+            $vehicles = Vehicle::whereIn('id', array_map('intval', $vehicleIds))->orderBy('plate')->lockForUpdate()->get(['id', 'plate']);
+
+            $lastDate = Draw::active()->max('date');
+            $today = Carbon::today();
+            $suspensionDates = self::suspensionDates($today, $lastDate ? Carbon::parse($lastDate)->toDateString() : null, self::holidaysAround($today));
+
+            $sanctions = new Collection;
+            $suspensions = new Collection;
+            foreach ($vehicles as $vehicle) {
+                $sanctions->push(DrawSanction::create([
+                    'vehicle_id' => $vehicle->id,
+                    'reason' => $reason,
+                    'photo_path' => $photoPath,
+                    'created_by' => $user->id,
+                ]));
+
+                $pending = DrawSanction::pending()->where('vehicle_id', $vehicle->id)->orderBy('id')->get();
+                if ($pending->count() < DrawSanction::SANCTIONS_TO_SUSPEND) {
+                    continue;
+                }
+                $grouped = $pending->take(DrawSanction::SANCTIONS_TO_SUSPEND);
+                $block = DrawBlock::create([
+                    'vehicle_id' => $vehicle->id,
+                    'kind' => DrawBlock::KIND_SUSPENSION,
+                    'reason' => Str::limit('Suspensión por '.$grouped->count().' sanciones: '.$grouped->pluck('reason')->implode(' / '), 252),
+                    'starts_on' => $suspensionDates[0],
+                    'ends_on' => end($suspensionDates),
+                    'dates' => $suspensionDates,
+                    'blocked_by' => $user->id,
+                ]);
+                $grouped->each(fn (DrawSanction $sanction) => $sanction->update(['draw_block_id' => $block->id]));
+                $suspensions->push($block->setRelation('vehicle', $vehicle));
+            }
+
+            return ['sanctions' => $sanctions, 'suspensions' => $suspensions];
         }, 3);
     }
 

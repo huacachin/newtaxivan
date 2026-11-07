@@ -17,6 +17,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  *  - month:      todo un mes (del día 1 al último)
  *  - range:      de starts_on a ends_on
  *  - dates:      solo los días de `dates` (starts_on/ends_on = el primero y el último)
+ *  - suspension: como dates, pero lo pone el sistema solo al juntarse 2
+ *                sanciones (DrawSanction): 3 días de sorteo sin domingos
  *
  * Dentro del periodo se pueden desbloquear días sueltos (exceptions), cada uno
  * con su motivo. Levantarlo completo guarda unblocked_at/unblocked_by y el
@@ -35,11 +37,20 @@ class DrawBlock extends Model
 
     public const KIND_DATES = 'dates';
 
+    /** Suspensión automática por sanciones acumuladas (no se elige en el formulario). */
+    public const KIND_SUSPENSION = 'suspension';
+
+    /** Tipos que se eligen en el formulario de "Bloquear", en ese orden. */
     public const KIND_LABELS = [
         self::KIND_MONTH => 'Todo el mes',
         self::KIND_RANGE => 'Rango de fechas',
         self::KIND_DATES => 'Días específicos',
         self::KIND_INDEFINITE => 'Hasta desbloquearla',
+    ];
+
+    /** Nombre de cada tipo en listas, historial y leyenda (incluye la suspensión por sanciones). */
+    public const KIND_NAMES = self::KIND_LABELS + [
+        self::KIND_SUSPENSION => 'Suspensión por sanciones',
     ];
 
     /** Color del motivo según el tipo, en la lista de Placas bloqueadas (sin rojo, que ya marca otras cosas). */
@@ -48,6 +59,7 @@ class DrawBlock extends Model
         self::KIND_RANGE => '#0e7490', // no verde: el verde es de los días desbloqueados
         self::KIND_DATES => '#7e22ce',
         self::KIND_INDEFINITE => '#b45309',
+        self::KIND_SUSPENSION => '#be185d',
     ];
 
     public const STATUS_ACTIVE = 'vigente';
@@ -112,6 +124,17 @@ class DrawBlock extends Model
             ->where(fn (Builder $w) => $w->whereNull('ends_on')->orWhere('ends_on', '>=', $from));
     }
 
+    /** "Rango de fechas", "Suspensión por sanciones"… */
+    public function kindName(): string
+    {
+        return self::KIND_NAMES[$this->kind] ?? (string) $this->kind;
+    }
+
+    public function kindColor(): string
+    {
+        return self::KIND_COLORS[$this->kind] ?? 'inherit';
+    }
+
     public function isIndefinite(): bool
     {
         return $this->kind === self::KIND_INDEFINITE;
@@ -147,7 +170,7 @@ class DrawBlock extends Model
         return match ($this->kind) {
             self::KIND_MONTH => 'Todo '.$this->starts_on->translatedFormat('F Y'),
             self::KIND_RANGE => 'Del '.$this->starts_on->format('d/m').' al '.$this->ends_on->format('d/m/Y'),
-            self::KIND_DATES => implode(', ', array_map(fn (string $date) => self::dayLabel($date), $this->dates ?? [])),
+            self::KIND_DATES, self::KIND_SUSPENSION => implode(', ', array_map(fn (string $date) => self::dayLabel($date), $this->dates ?? [])),
             default => 'Desde el '.($this->starts_on?->format('d/m/Y') ?? '—').', hasta desbloquearla',
         };
     }

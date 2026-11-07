@@ -6,6 +6,7 @@ use App\Models\Draw;
 use App\Models\DrawBlock;
 use App\Models\DrawBlockException;
 use App\Models\DrawEntry;
+use App\Models\DrawSanction;
 use App\Models\Holiday;
 use App\Models\Vehicle;
 use App\Services\DrawService;
@@ -17,6 +18,8 @@ use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Renderless;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use Livewire\WithFileUploads;
 use Random\Engine\Mt19937;
 use Random\Randomizer;
 
@@ -37,12 +40,18 @@ use Random\Randomizer;
  * en los candados se marcan días para desbloquearlos con un motivo. Cada placa
  * tiene su historial de sanciones (clic en la placa).
  *
+ * Sancionar placas (los mismos que bloquean): motivo y foto opcional. Al
+ * juntar 2 sanciones la placa se suspende sola 3 días de sorteo, sin contar
+ * domingos (DrawService::sanction).
+ *
  * Simular llena el mes en pantalla sin guardar nada: cada día participan al
  * azar entre simMin y simMax vehículos y al resto se le quita el check. Se
  * guarda solo la semilla, así cada render rehace la misma simulación.
  */
 class Index extends Component
 {
+    use WithFileUploads;
+
     public const MONTHS = [
         1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril', 5 => 'Mayo', 6 => 'Junio',
         7 => 'Julio', 8 => 'Agosto', 9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre',
@@ -77,6 +86,9 @@ class Index extends Component
 
     /** Domingo cuyo sorteo se está preparando (lista para elegir quiénes participan). */
     public ?string $sundayDate = null;
+
+    /** Foto de la sanción que se está registrando (opcional). */
+    public ?TemporaryUploadedFile $sanctionPhoto = null;
 
     public function mount(): void
     {
@@ -512,6 +524,66 @@ class Index extends Component
         return true;
     }
 
+    /* ---------- Sanciones ---------- */
+
+    /**
+     * Sanciona las placas marcadas con un mismo motivo y la foto (si se subió).
+     * La que junta 2 sanciones queda suspendida 3 días de sorteo y deja de
+     * estar marcada esos días. Devuelve true si se guardó.
+     *
+     * @param  array<int, int|string>  $vehicleIds
+     */
+    public function sanctionVehicles(array $vehicleIds, string $reason): bool
+    {
+        $this->authorizeBlocking();
+
+        $reason = $this->cleanReason($reason);
+        if ($reason === null) {
+            return false;
+        }
+
+        try {
+            $this->validate(
+                ['sanctionPhoto' => ['nullable', 'image', 'max:8192']],
+                ['sanctionPhoto.image' => 'La foto tiene que ser una imagen.', 'sanctionPhoto.max' => 'La foto pesa demasiado (máximo 8 MB).'],
+            );
+        } catch (ValidationException $e) {
+            $this->dispatch('errorAlert', ['message' => collect($e->errors())->flatten()->first()]);
+
+            return false;
+        }
+
+        $vehicles = Vehicle::active()->whereIn('id', array_map('intval', $vehicleIds))->pluck('id')->all();
+        if (! $vehicles) {
+            $this->dispatch('errorAlert', ['message' => 'Marca al menos una placa para sancionar.']);
+
+            return false;
+        }
+
+        $photoPath = $this->sanctionPhoto?->storePublicly('draw-sanctions', 'public');
+        ['sanctions' => $sanctions, 'suspensions' => $suspensions] = app(DrawService::class)->sanction($vehicles, $reason, $photoPath ?: null, auth()->user());
+        $this->reset('sanctionPhoto');
+
+        foreach ($suspensions as $block) {
+            $this->excludeFrom($block->vehicle_id, $block->dates);
+        }
+
+        $plates = Vehicle::whereIn('id', $sanctions->pluck('vehicle_id'))->orderBy('plate')->pluck('plate');
+        $message = 'Sancionadas ('.$plates->count().'): '.$plates->implode(', ').'.';
+        if ($suspensions->isNotEmpty()) {
+            $message .= ' Con 2 sanciones quedan suspendidas '.$suspensions->first()->periodLabel().': '
+                .$suspensions->pluck('vehicle.plate')->implode(', ').'.';
+        }
+        $this->dispatch('successAlert', ['message' => $message]);
+
+        return true;
+    }
+
+    public function removeSanctionPhoto(): void
+    {
+        $this->reset('sanctionPhoto');
+    }
+
     /* ---------- Feriados ---------- */
 
     public function openHolidays(): void
@@ -684,6 +756,7 @@ class Index extends Component
                 ? DrawService::activeVehicles($this->sundayDate)->with('driver:id,name')->get(['id', 'sort_order', 'plate', 'condition', 'driver_id'])
                 : collect(),
             ...$this->historyData(),
+            ...$this->sanctionData(),
             'canBlock' => $this->canBlock(),
             'annulledDraws' => $simulating ? collect() : Draw::whereNotNull('annulled_at')->whereBetween('date', [$from, $to])
                 ->with('drawnBy:id,name', 'annulledBy:id,name')->orderBy('annulled_at')->get(),
@@ -823,6 +896,30 @@ class Index extends Component
         return ['historyVehicle' => $vehicle, 'history' => $history];
     }
 
+    /**
+     * Datos del formulario "Sancionar placas": las placas, cuántas sanciones
+     * acumula cada una (sin suspensión todavía) y los días que tocaría una
+     * suspensión si se generara ahora.
+     *
+     * @return array{sanctionable: \Illuminate\Support\Collection<int, Vehicle>, pendingSanctions: \Illuminate\Support\Collection<int, int>, suspensionPreview: string}
+     */
+    protected function sanctionData(): array
+    {
+        if (! $this->canBlock()) {
+            return ['sanctionable' => collect(), 'pendingSanctions' => collect(), 'suspensionPreview' => ''];
+        }
+
+        $today = Carbon::today();
+        $lastDate = Draw::active()->max('date');
+        $dates = DrawService::suspensionDates($today, $lastDate ? Carbon::parse($lastDate)->toDateString() : null, DrawService::holidaysAround($today));
+
+        return [
+            'sanctionable' => DrawService::gridVehicles()->with('driver:id,name')->get(['id', 'sort_order', 'plate', 'driver_id']),
+            'pendingSanctions' => DrawSanction::pending()->selectRaw('vehicle_id, count(*) as total')->groupBy('vehicle_id')->pluck('total', 'vehicle_id')->map(fn ($n) => (int) $n),
+            'suspensionPreview' => implode(', ', array_map(fn (string $date) => DrawBlock::dayLabel($date), $dates)),
+        ];
+    }
+
     /** El motivo sin espacios de más, o null (con aviso) si no tiene de 3 a 255 caracteres. */
     private function cleanReason(string $reason): ?string
     {
@@ -950,6 +1047,18 @@ class Index extends Component
                 continue; // aún no se pintó ese día: al pintarse entran todos los habilitados
             }
             $this->included[$drawable] = array_values(array_unique(array_merge($current, array_map('strval', $vehicleIds))));
+        }
+    }
+
+    /**
+     * Desmarca a una placa en los días sorteables de $dates (al suspenderla ya no entra).
+     *
+     * @param  array<int, string>  $dates
+     */
+    private function excludeFrom(int $vehicleId, array $dates): void
+    {
+        foreach (array_intersect(array_keys($this->included), $dates) as $date) {
+            $this->included[$date] = array_values(array_diff($this->included[$date], [(string) $vehicleId, $vehicleId]));
         }
     }
 

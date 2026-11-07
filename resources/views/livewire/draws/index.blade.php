@@ -543,8 +543,15 @@
                         @if($canBlock)
                             <i class="ti ti-info-circle"></i> Para bloquear, usa <b>Seleccionar varios</b> en la tabla, marca las placas y pulsa <b>Bloquear</b>: todo el mes, un rango de fechas, días específicos o hasta desbloquearla.
                             Para que entre un día suelto (por ejemplo un sábado), haz clic en sus candados de la grilla, puedes marcar varios, y pulsa <b>Desbloquear esos días</b> con el motivo.
+                            <div class="d-flex flex-wrap align-items-center gap-2 mt-2">
+                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                        x-on:click="hideModal('blocksModal'); setTimeout(() => bootstrap.Modal.getOrCreateInstance(document.getElementById('sanctionModal')).show(), 350)">
+                                    <i class="ti ti-gavel"></i> Sancionar placas
+                                </button>
+                                <span class="text-muted">Con 2 sanciones la placa se suspende sola 3 días de sorteo (sin domingos).</span>
+                            </div>
                         @else
-                            Solo el director, el gerente, los administradores y los controladores pueden bloquear y desbloquear placas.
+                            Solo el director, el gerente, los administradores y los controladores pueden bloquear, desbloquear y sancionar placas.
                         @endif
                     </div>
 
@@ -567,7 +574,7 @@
                                     <td title="{{ $block->vehicle?->driver?->name }}">{{ \App\Services\DrawService::firstName($block->vehicle?->driver?->name) ?: '—' }}</td>
                                     <td class="dr-nowrap">{{ $block->created_at->format('d/m/Y H:i') }}</td>
                                     <td>{{ \App\Models\DrawBlock::userLabel($block->blockedBy) }}</td>
-                                    <td>{{ \App\Models\DrawBlock::KIND_LABELS[$block->kind] ?? $block->kind }}</td>
+                                    <td>{{ $block->kindName() }}</td>
                                     <td style="white-space: normal;">
                                         {{ $block->periodLabel() }}
                                         @if($block->exceptions->isNotEmpty())
@@ -576,7 +583,7 @@
                                             @endforeach
                                         @endif
                                     </td>
-                                    <td class="fw-semibold" style="white-space: normal; color: {{ \App\Models\DrawBlock::KIND_COLORS[$block->kind] ?? 'inherit' }};">{{ $block->reason }}</td>
+                                    <td class="fw-semibold" style="white-space: normal; color: {{ $block->kindColor() }};">{{ $block->reason }}</td>
                                     <td class="text-end dr-nowrap">
                                         @if($canBlock)
                                             <button type="button" class="btn btn-sm btn-outline-success py-0"
@@ -598,6 +605,7 @@
     </div>
 
     @include('draws._block-form')
+    @include('draws._sanction-form')
 
     {{-- Modal: historial de sanciones de una placa --}}
     <div class="modal fade" id="historyModal" tabindex="-1" aria-hidden="true" wire:ignore.self>

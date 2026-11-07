@@ -1,6 +1,6 @@
 {{-- Sorteos en el celular (Draws\Mobile): por día, sin grilla. Día pendiente = tarjetas con
      interruptor + "Sortear" fijo abajo; día sorteado = orden de salida y Compartir PDF.
-     Bloquear, desbloquear (placa o día) e historial usan las mismas acciones que la grilla. --}}
+     Bloquear, desbloquear (placa o día), sancionar e historial usan las mismas acciones que la grilla. --}}
 @push('styles')
     <style>
         .quick-access, .go-top { display: none !important; }
@@ -8,9 +8,13 @@
         .dm-top { display: flex; align-items: center; gap: 8px; margin: 4px 0 10px; }
         .dm-top h1 { font-size: 22px; font-weight: 800; margin: 0; flex: 1; color: #0f172a; }
         .dm-top .btn { border-radius: 12px; font-weight: 600; font-size: 14px !important; min-height: 40px; display: inline-flex; align-items: center; gap: 4px; }
-        .dm-chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 10px; scrollbar-width: none; }
+        /* Fila de días: si no entran se desliza con el dedo; los bordes se desvanecen para que se note */
+        .dm-chips { position: relative; display: flex; gap: 8px; overflow-x: auto; overflow-y: hidden; margin: 0 -12px; padding: 2px 12px 10px; scrollbar-width: none;
+            -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; touch-action: pan-x pan-y; scroll-snap-type: x proximity; scroll-padding: 0 12px;
+            -webkit-mask-image: linear-gradient(to right, transparent 0, #000 12px, #000 calc(100% - 22px), transparent 100%);
+            mask-image: linear-gradient(to right, transparent 0, #000 12px, #000 calc(100% - 22px), transparent 100%); }
         .dm-chips::-webkit-scrollbar { display: none; }
-        .dm-chip { flex: none; border: 2px solid #e2e8f0; background: #fff; border-radius: 14px; padding: 8px 12px; min-width: 86px; text-align: center; line-height: 1.15; }
+        .dm-chip { flex: none; scroll-snap-align: start; border: 2px solid #e2e8f0; background: #fff; border-radius: 14px; padding: 8px 12px; min-width: 86px; text-align: center; line-height: 1.15; }
         .dm-chip b { display: block; font-size: 15px; color: #0f172a; }
         .dm-chip small { font-size: 12px; font-weight: 600; }
         .dm-chip.is-done small { color: #16a34a; }
@@ -140,8 +144,8 @@
         @endif
     </div>
 
-    {{-- Días --}}
-    <div class="dm-chips">
+    {{-- Días: los últimos sorteados y los pendientes; al abrir se muestra el día que se está viendo --}}
+    <div class="dm-chips" x-init="$nextTick(() => { const a = $el.querySelector('.is-active'); if (a) { $el.scrollLeft = a.offsetLeft - $el.clientWidth + a.offsetWidth + 24 } })">
         @foreach($chips as $chip)
             <button type="button" wire:key="chip-{{ $chip['date'] }}" wire:click="selectDay('{{ $chip['date'] }}')"
                     @class(['dm-chip', 'is-'.$chip['state'], 'is-active' => $chip['date'] === $day])>
@@ -245,7 +249,7 @@
                             <span class="dm-who">
                                 <span class="dm-plate"><i class="ti ti-lock"></i> {{ $vehicle->plate }}</span>
                                 <span class="dm-driver">{{ $block->periodLabel() }} · {{ \App\Models\DrawBlock::userLabel($block->blockedBy) }}</span>
-                                <span class="dm-reason" style="color: {{ \App\Models\DrawBlock::KIND_COLORS[$block->kind] ?? 'inherit' }};">{{ $block->reason }}</span>
+                                <span class="dm-reason" style="color: {{ $block->kindColor() }};">{{ $block->reason }}</span>
                             </span>
                             @if($canBlock)
                                 <button type="button" class="btn btn-sm btn-outline-success dm-mini"
@@ -282,6 +286,10 @@
                                 x-on:click="hideModal('blocksModal'); setTimeout(() => bootstrap.Modal.getOrCreateInstance(document.getElementById('pickBlockModal')).show(), 350)">
                             <i class="ti ti-lock"></i> Bloquear placas
                         </button>
+                        <button type="button" class="btn btn-outline-danger w-100 mb-3 dm-big"
+                                x-on:click="hideModal('blocksModal'); setTimeout(() => bootstrap.Modal.getOrCreateInstance(document.getElementById('sanctionModal')).show(), 350)">
+                            <i class="ti ti-gavel"></i> Sancionar placas
+                        </button>
                     @endif
                     @include('draws._kind_legend')
                     @forelse($blocks as $block)
@@ -290,8 +298,8 @@
                                 <div class="flex-grow-1">
                                     <div class="dm-plate">{{ $block->vehicle?->plate ?? '—' }}
                                         <small class="text-muted fw-normal" style="font-size: 13px;">{{ \App\Services\DrawService::firstName($block->vehicle?->driver?->name) }}</small></div>
-                                    <div class="small text-muted">{{ \App\Models\DrawBlock::KIND_LABELS[$block->kind] ?? $block->kind }} · {{ $block->periodLabel() }}</div>
-                                    <div class="dm-reason" style="color: {{ \App\Models\DrawBlock::KIND_COLORS[$block->kind] ?? 'inherit' }};">{{ $block->reason }}</div>
+                                    <div class="small text-muted">{{ $block->kindName() }} · {{ $block->periodLabel() }}</div>
+                                    <div class="dm-reason" style="color: {{ $block->kindColor() }};">{{ $block->reason }}</div>
                                     <div class="small text-muted">{{ \App\Models\DrawBlock::userLabel($block->blockedBy) }} · {{ $block->created_at->format('d/m/Y H:i') }}</div>
                                     @foreach($block->exceptions as $exception)
                                         @include('draws._unblocked_day', ['exception' => $exception])
@@ -380,5 +388,6 @@
     </div>
 
     @include('draws._block-form')
+    @include('draws._sanction-form')
 </div>
 </div>

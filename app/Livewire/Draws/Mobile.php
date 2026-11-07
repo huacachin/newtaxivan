@@ -13,7 +13,7 @@ use Livewire\Attributes\Url;
 /**
  * Sorteos en el celular (lo manejan los controladores desde el teléfono): se
  * trabaja por día, sin la grilla del mes. Hereda de Index todas las acciones y
- * reglas (sortear, domingos, bloqueos, días desbloqueados, historial); aquí solo
+ * reglas (sortear, domingos, bloqueos, días desbloqueados, sanciones, historial); aquí solo
  * cambia qué se muestra:
  *  - Día pendiente: una tarjeta por placa con interruptor para elegir quién
  *    participa (el domingo todas empiezan apagadas) y "Sortear" fijo abajo.
@@ -22,6 +22,9 @@ use Livewire\Attributes\Url;
  */
 class Mobile extends Index
 {
+    /** Cuántos días ya sorteados salen arriba (si no entran, la fila se desliza). */
+    private const DRAWN_CHIPS = 4;
+
     /** Día que se está viendo (Y-m-d); va en la dirección (?dia=) para que al recargar no se pierda. */
     #[Url(as: 'dia')]
     public ?string $day = null;
@@ -67,6 +70,7 @@ class Mobile extends Index
             $draw = $this->day ? Draw::active()->whereDate('date', $this->day)->with('drawnBy:id,name,username')->first() : null;
         }
         $pending = ! $draw && $this->day && in_array($this->day, $drawable, true);
+        $sanctionData = $this->sanctionData();
 
         return view('livewire.draws.mobile', [
             'drawable' => $drawable,
@@ -82,22 +86,23 @@ class Mobile extends Index
             ...$this->blockedThatDay($pending),
             'blocks' => DrawBlock::active()->with('blockedBy:id,name,username', 'vehicle.driver:id,name', 'exceptions.createdBy:id,name,username')->get()
                 ->sortBy(fn (DrawBlock $b) => [$b->vehicle?->sort_order ?? PHP_INT_MAX, $b->vehicle?->plate])->values(),
-            'blockable' => $this->canBlock() ? DrawService::gridVehicles()->with('driver:id,name')->get(['id', 'sort_order', 'plate', 'driver_id']) : collect(),
             ...$this->historyData(),
+            ...$sanctionData,
+            'blockable' => $sanctionData['sanctionable'],
             'canBlock' => $this->canBlock(),
             'canSeeGrid' => auth()->user()->hasAnyRole('director', 'gerente', 'administrador'),
         ]);
     }
 
     /**
-     * Botones de días: los dos últimos sorteados, los que se pueden sortear y el que se está viendo.
+     * Botones de días: los últimos DRAWN_CHIPS sorteados, los que se pueden sortear y el que se está viendo.
      *
      * @param  array<int, string>  $drawable
      * @return array<int, array{date: string, label: string, state: string}> state: done|pending|sunday
      */
     private function dayChips(array $drawable): array
     {
-        $dates = Draw::active()->orderByDesc('date')->limit(2)->pluck('date')
+        $dates = Draw::active()->orderByDesc('date')->limit(self::DRAWN_CHIPS)->pluck('date')
             ->map(fn ($d) => Carbon::parse($d)->toDateString())
             ->merge($drawable)
             ->push($this->day)
