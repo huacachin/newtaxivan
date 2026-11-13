@@ -8,6 +8,15 @@
     <style>
         tr.row-retraso td, tr.row-retraso th,
         tr.row-deuda td, tr.row-deuda th { color: #cc0000 !important; font-weight: 600; }
+        /* Paga un mes de hace dos o más (en noviembre, septiembre o antes): amarillo Huacachin sobre
+           las CELDAS, para que la cebra y el hover de Bootstrap no lo tapen (como en Deuda mensual). */
+        .pay-list > tbody > tr.row-old-month > td {
+            background-color: #ffff00 !important;
+            --bs-table-bg-type: transparent; --bs-table-accent-bg: transparent; --bs-table-bg-state: transparent; box-shadow: none;
+        }
+        .list-card.list-card--old-month { background: #ffff00; border-left: 4px solid #eab308; }
+        .pay-old-legend { display: inline-block; width: 14px; height: 14px; border-radius: 3px; vertical-align: -2px; margin-right: 4px;
+            background: #ffff00; border: 1px solid #eab308; }
     </style>
     <!-- Header -->
     <div class="row">
@@ -209,7 +218,7 @@
                                     default   => 'list-chip',
                                 };
                             @endphp
-                            <article class="list-card">
+                            <article @class(['list-card', 'list-card--old-month' => $p->paysOldMonth()])>
                                 <header class="list-card__head">
                                     <div class="list-card__title-wrap">
                                         <span class="list-card__index">{{ $loop->iteration }}</span>
@@ -225,6 +234,9 @@
                                 <div class="list-card__chips">
                                     @if($p->type)<span class="{{ $typeClass }}">{{ $p->type }}</span>@endif
                                     @if($p->date_payment)<span class="list-chip list-chip--info">{{ $p->date_payment->format('d/m/Y') }}</span>@endif
+                                    @if($p->paysOldMonth())
+                                        <span class="list-chip list-chip--warn"><i class="ti ti-calendar-time"></i> Paga {{ \App\Services\DebtPaymentAllocator::monthLabel($p->date_payment->toDateString()) }}</span>
+                                    @endif
                                     @if($p->headquarter?->name)<span class="list-chip list-chip--muted">{{ $p->headquarter->name }}</span>@endif
                                 </div>
 
@@ -254,7 +266,7 @@
 
                     {{-- ════════ DESKTOP: tabla original ════════ --}}
                     <div class="table-responsive tableFixHead d-none d-md-block">
-                        <table class="table table-bordered table-striped table-hover">
+                        <table class="table table-bordered table-striped table-hover pay-list">
                             <thead class="text-center bg-primary">
                             <tr>
                                 <th></th>
@@ -274,7 +286,8 @@
 
                             <tbody>
                             @forelse($payments as $p)
-                                <tr @class(['row-retraso' => $p->type === 'RETRASO', 'row-deuda' => $p->type === 'DEUDA'])>
+                                <tr @class(['row-retraso' => $p->type === 'RETRASO', 'row-deuda' => $p->type === 'DEUDA', 'row-old-month' => $p->paysOldMonth()])
+                                    @if($p->paysOldMonth()) title="Paga {{ \App\Services\DebtPaymentAllocator::monthLabel($p->date_payment->toDateString()) }}: {{ $p->monthsBack() }} meses antes de su registro" @endif>
                                     <td width="50">
                                         @if($p->canBeEditedBy(auth()->user()))
                                         <a href="{{ route('payments.edit', $p->id) }}">
@@ -317,6 +330,12 @@
                             </tfoot>
                         </table>
                     </div>
+
+                    @if($payments->contains(fn ($p) => $p->paysOldMonth()))
+                        <div class="small text-muted mt-2">
+                            <span class="pay-old-legend"></span> Paga un mes de hace dos o más (ej.: registrado en noviembre, paga septiembre o antes; octubre no).
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>

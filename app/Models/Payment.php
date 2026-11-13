@@ -59,6 +59,29 @@ class Payment extends Model
         return false;
     }
 
+    /* ---------- Meses pasados ---------- */
+
+    /** Meses entre el mes que cubre (fecha de pago) y el mes en que se registró: 0 = el mismo mes. */
+    public function monthsBack(): int
+    {
+        if (! $this->date_register || ! $this->date_payment) {
+            return 0;
+        }
+
+        return ($this->date_register->year * 12 + $this->date_register->month)
+            - ($this->date_payment->year * 12 + $this->date_payment->month);
+    }
+
+    /**
+     * En amarillo en la lista de Pagos: paga un mes de hace dos o más
+     * (registrado en noviembre, paga septiembre o antes); el mes anterior no.
+     * Un pago DEUDA tiene como fecha de pago el fin del mes más antiguo que cubre.
+     */
+    public function paysOldMonth(): bool
+    {
+        return $this->monthsBack() >= 2;
+    }
+
     /* ---------- Scopes ---------- */
 
     /** Por rango usando date_register (modo "Caja") */
