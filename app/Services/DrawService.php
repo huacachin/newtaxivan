@@ -398,13 +398,14 @@ class DrawService
         // su bloqueo (menos los días desbloqueados)
         $vehicles = Vehicle::active()->with('driver:id,name')
             ->orderBy('sort_order')->orderBy('plate')
-            ->get(['id', 'plate', 'driver_id', 'not_working_since'])->keyBy('id');
+            ->get(['id', 'plate', 'driver_id', 'not_working_since', 'termination_date'])->keyBy('id');
         $blocks = DrawBlock::active()->overlapping($dates[0], end($dates))->with('exceptions')->get()->groupBy('vehicle_id');
 
         $eligible = [];
         foreach ($dates as $date) {
             $eligible[$date] = $vehicles
                 ->filter(fn (Vehicle $v) => self::entersDrawOn($v->not_working_since?->toDateString(), $date)
+                    && ($v->termination_date === null || $v->termination_date->toDateString() >= $date) // la baja es su último día
                     && ! ($blocks[$v->id] ?? collect())->contains(fn (DrawBlock $b) => $b->appliesOn($date)))
                 ->keys()->all();
         }
@@ -611,15 +612,17 @@ class DrawService
     /* ---------- Base de datos ---------- */
 
     /**
-     * Vehículos de la grilla: los activos, menos los NT en rojo
-     * (NOT_WORKING_DROP_DAYS o más sin trabajar a esa fecha). Los bloqueados
-     * siguen en la grilla, con candado los días que no entran.
+     * Vehículos de la grilla: los activos que trabajan ese día (su fecha de
+     * baja es su último día), menos los NT en rojo (NOT_WORKING_DROP_DAYS o
+     * más sin trabajar a esa fecha). Los bloqueados siguen en la grilla, con
+     * candado los días que no entran.
      */
     public static function gridVehicles(?string $date = null): Builder
     {
-        $cutoff = self::notWorkingCutoff($date ?? Carbon::today()->toDateString());
+        $date ??= Carbon::today()->toDateString();
+        $cutoff = self::notWorkingCutoff($date);
 
-        return Vehicle::active()
+        return Vehicle::active()->worksOn($date)
             ->where(fn ($q) => $q->whereNull('not_working_since')->orWhere('not_working_since', '>', $cutoff))
             ->orderBy('sort_order')
             ->orderBy('plate');
@@ -634,6 +637,42 @@ class DrawService
         $date ??= Carbon::today()->toDateString();
 
         return self::gridVehicles($date)->whereNotIn('id', DrawBlock::active()->onDate($date)->select('vehicle_id'));
+    }
+
+    /**
+     * Sorteos vigentes ya hechos para después de $lastDay en los que la placa
+     * tiene número: al darla de baja con ese último día igual sigue en ellos.
+     *
+     * @return array<int, array{date: string, number: int}>
+     */
+    public static function drawsAfter(int $vehicleId, string $lastDay): array
+    {
+        return DrawEntry::where('vehicle_id', $vehicleId)->whereNotNull('number')
+            ->whereHas('draw', fn (Builder $q) => $q->active()->where('date', '>', $lastDay))
+            ->with('draw:id,date')->get()
+            ->map(fn (DrawEntry $e) => ['date' => $e->draw->date->toDateString(), 'number' => (int) $e->number])
+            ->sortBy('date')->values()->all();
+    }
+
+    /**
+     * Aviso al dar de baja una placa que ya está en sorteos posteriores a su
+     * último día (drawsAfter), o null si no hay. Un sorteo hecho no cambia:
+     * hay que anularlo (desde el último) y volver a sortear.
+     *
+     * @param  array<int, array{date: string, number: int}>  $draws
+     */
+    public static function retiredInDrawsWarning(array $draws): ?string
+    {
+        if ($draws === []) {
+            return null;
+        }
+
+        $days = array_map(fn (array $d) => 'del '.DrawBlock::dayLabel($d['date']).' (nº '.$d['number'].')', $draws);
+        $list = count($days) > 1 ? implode(', ', array_slice($days, 0, -1)).' y '.end($days) : $days[0];
+
+        return count($draws) > 1
+            ? "Ya está en los sorteos {$list}. Si no va a trabajar, el director tiene que anularlos (empezando por el último) y volver a sortear."
+            : "Ya está en el sorteo {$list}. Si no va a trabajar, el director tiene que anularlo y volver a sortear.";
     }
 
     /** Un NT marcado en esta fecha o antes ya está en rojo el $date y no entra al sorteo. */

@@ -43,7 +43,7 @@ class ExpiringDropdown extends Component
                 ->where('status', 'active')
                 ->where(function ($w) use ($today) {
                     $w->whereNull('termination_date')
-                      ->orWhere('termination_date', '>', $today);
+                      ->orWhere('termination_date', '>=', $today); // la baja es su último día
                 })
                 ->get()
                 ->flatMap(fn ($v) => $v->expiringAlerts());

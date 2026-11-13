@@ -63,13 +63,10 @@ class Index extends Component
 
         $today = now()->toDateString();
 
+        // La fecha de baja es el último día que trabaja: ese día sigue en activos
         $query = Vehicle::query()
             ->when($status === 'active', function ($q) use ($today) {
-                $q->where('status', 'active')
-                    ->where(function ($w) use ($today) {
-                        $w->whereNull('termination_date')
-                            ->orWhere('termination_date', '>', $today);
-                    });
+                $q->where('status', 'active')->worksOn($today);
             })
             ->when($status === 'inactive', function ($q) use ($today) {
                 $q->where(function ($w) use ($today) {
@@ -77,7 +74,7 @@ class Index extends Component
                         ->orWhere(function ($sub) use ($today) {
                             $sub->where('status', 'active')
                                 ->whereNotNull('termination_date')
-                                ->where('termination_date', '<=', $today);
+                                ->where('termination_date', '<', $today);
                         });
                 });
             })

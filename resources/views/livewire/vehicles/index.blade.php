@@ -35,6 +35,13 @@
     </div>
     @endif
 
+    @if(session('vehicle_warning'))
+    <div class="alert alert-warning alert-dismissible fade show py-2 mb-2" role="alert">
+        <i class="ti ti-alert-triangle me-1"></i> {{ session('vehicle_warning') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+    @endif
+
     @if(session('vehicle_error'))
     <div class="alert alert-danger alert-dismissible fade show py-2 mb-2" role="alert">
         <i class="ti ti-alert-circle me-1"></i> {{ session('vehicle_error') }}

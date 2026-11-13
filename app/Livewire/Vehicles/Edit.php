@@ -9,6 +9,7 @@ use App\Models\Owner;
 use App\Models\Vehicle;
 use App\Models\VehicleImage;
 use App\Services\CostPerPlateGenerator;
+use App\Services\DrawService;
 use App\Services\SupportRecordRelinker;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -214,26 +215,27 @@ class Edit extends Component
         }
     }
 
-    public function questionDelete($id): void
-    {
-        $this->dispatch('questionDelete', ['id' => $id]);
-    }
-
-    #[On('register_destroy')]
-    public function delete(int $id): void
+    /** Eliminar, dar de baja y reactivar: los mismos roles que podían eliminar. */
+    private function authorizeStatusChange(): void
     {
         if (! auth()->user()?->hasAnyRole('director', 'gerente', 'administrador')) {
             abort(403);
         }
+    }
 
-        $vehicle = Vehicle::findOrFail($id);
-
-        // Verificar relaciones antes de borrar (cost_per_plates se borra en cascada)
+    /**
+     * Historial que impide borrar la placa ("12 salida(s)", "3 sorteo(s)"…).
+     * cost_per_plates y los bloqueos de Sorteos se borran en cascada.
+     *
+     * @return array<int, string>
+     */
+    private function historyRelations(Vehicle $vehicle): array
+    {
         $relations = [];
-        $departures = \DB::table('departures')->where('vehicle_id', $id)->count();
-        $payments = \DB::table('payments')->where('vehicle_id', $id)->count();
-        $debtDays = \DB::table('debt_days')->where('vehicle_id', $id)->count();
-        $draws = \DB::table('draw_entries')->where('vehicle_id', $id)->count();
+        $departures = DB::table('departures')->where('vehicle_id', $vehicle->id)->count();
+        $payments = DB::table('payments')->where('vehicle_id', $vehicle->id)->count();
+        $debtDays = DB::table('debt_days')->where('vehicle_id', $vehicle->id)->count();
+        $draws = DB::table('draw_entries')->where('vehicle_id', $vehicle->id)->count();
 
         if ($departures > 0) {
             $relations[] = "{$departures} salida(s)";
@@ -250,8 +252,32 @@ class Edit extends Component
             $relations[] = "{$draws} sorteo(s)";
         }
 
+        return $relations;
+    }
+
+    /** Sin historial se puede borrar; con historial se ofrece darla de baja. */
+    public function questionDelete($id): void
+    {
+        $vehicle = Vehicle::findOrFail($id);
+        if ($this->historyRelations($vehicle) !== []) {
+            $this->questionRetire($vehicle->id);
+
+            return;
+        }
+
+        $this->dispatch('questionDelete', ['id' => $vehicle->id, 'role' => 'vehículo', 'name' => $vehicle->plate]);
+    }
+
+    #[On('register_destroy')]
+    public function delete(int $id): void
+    {
+        $this->authorizeStatusChange();
+
+        $vehicle = Vehicle::findOrFail($id);
+        $relations = $this->historyRelations($vehicle);
+
         if (! empty($relations)) {
-            session()->flash('vehicle_error', "No se puede eliminar {$vehicle->plate} porque tiene: ".implode(', ', $relations));
+            session()->flash('vehicle_error', "No se puede eliminar {$vehicle->plate} porque tiene: ".implode(', ', $relations).'. Usa "Dar de baja".');
             $this->redirectRoute('settings.vehicles.index');
 
             return;
@@ -260,6 +286,126 @@ class Edit extends Component
         $vehicle->delete();
         session()->flash('vehicle_success', "Vehículo {$vehicle->plate} eliminado correctamente.");
         $this->redirectRoute('settings.vehicles.index');
+    }
+
+    /**
+     * Confirmación de "Dar de baja": la fecha de baja pasa a hoy, su último día
+     * de trabajo. Avisa si ya está en sorteos de después.
+     */
+    public function questionRetire(int $id): void
+    {
+        $this->authorizeStatusChange();
+
+        $vehicle = Vehicle::findOrFail($id);
+        $today = Carbon::today();
+
+        if ($vehicle->isRetired()) {
+            $this->dispatch('errorAlert', ['message' => "{$vehicle->plate} ya está de baja."]);
+
+            return;
+        }
+        if ($vehicle->termination_date?->isSameDay($today)) {
+            $this->dispatch('errorAlert', ['message' => "{$vehicle->plate} ya tiene fecha de baja hoy: hoy es su último día."]);
+
+            return;
+        }
+
+        $html = 'Su fecha de baja será <b>hoy '.$today->format('d/m/Y').'</b>: es su último día de trabajo. '
+            .'Desde mañana ya no entra a los sorteos y a medianoche pasa a inactiva.';
+        if ($vehicle->termination_date) {
+            $html .= '<br><small>Tenía la baja para el '.$vehicle->termination_date->format('d/m/Y').'; se adelanta a hoy.</small>';
+        }
+        $relations = $this->historyRelations($vehicle);
+        if ($relations) {
+            $html .= '<br><small class="text-muted">No se puede eliminar porque tiene historial: '.e(implode(', ', $relations)).'.</small>';
+        }
+        if ($warning = DrawService::retiredInDrawsWarning(DrawService::drawsAfter($vehicle->id, $today->toDateString()))) {
+            $html .= '<div class="text-danger mt-2">'.e($warning).'</div>';
+        }
+
+        $this->dispatch('questionRetire', ['id' => $vehicle->id, 'plate' => $vehicle->plate, 'html' => $html]);
+    }
+
+    #[On('register_retire')]
+    public function retire(int $id): void
+    {
+        $this->authorizeStatusChange();
+
+        $vehicle = Vehicle::findOrFail($id);
+        $today = Carbon::today()->toDateString();
+
+        if ($vehicle->isRetired()) {
+            session()->flash('vehicle_error', "{$vehicle->plate} ya estaba de baja.");
+            $this->redirectRoute('settings.vehicles.index');
+
+            return;
+        }
+
+        // Hoy todavía trabaja (salidas y pagos de hoy); vehicles:deactivate-ceased la pasa a inactiva a medianoche
+        $vehicle->update(['termination_date' => $today]);
+
+        session()->flash('vehicle_success', "Vehículo {$vehicle->plate} dado de baja: hoy es su último día y desde mañana ya no entra a los sorteos.");
+        if ($warning = DrawService::retiredInDrawsWarning(DrawService::drawsAfter($vehicle->id, $today))) {
+            session()->flash('vehicle_warning', "{$vehicle->plate}: {$warning}");
+        }
+        $this->redirectRoute('settings.vehicles.index');
+    }
+
+    public function questionReactivate(int $id): void
+    {
+        $this->authorizeStatusChange();
+
+        $vehicle = Vehicle::findOrFail($id);
+        $this->dispatch('questionActivate', ['id' => $vehicle->id, 'role' => 'vehículo', 'name' => $vehicle->plate]);
+    }
+
+    /**
+     * Reactivar: quita la fecha de baja y la vuelve a activar; recupera los
+     * registros que se fueron a apoyo mientras estuvo de baja y genera sus
+     * costos del mes (como al guardar el formulario).
+     */
+    #[On('register_activate')]
+    public function reactivate(int $id): void
+    {
+        $this->authorizeStatusChange();
+
+        $vehicle = Vehicle::findOrFail($id);
+        if ($vehicle->id === $this->vehicle->id && ($conflict = $this->driverConflict())) {
+            $this->dispatch('errorAlert', ['message' => "Su conductor ahora está en el vehículo {$conflict->plate}. Cambia el conductor, borra la fecha de baja y guarda."]);
+
+            return;
+        }
+
+        $relinker = app(SupportRecordRelinker::class);
+        $costGenerator = app(CostPerPlateGenerator::class);
+        $relinked = null;
+        $costs = null;
+
+        DB::transaction(function () use ($vehicle, $relinker, $costGenerator, &$relinked, &$costs) {
+            $vehicle->update(['termination_date' => null, 'status' => 'active']);
+            $vehicle->refresh();
+            $relinked = $relinker->relink($vehicle);
+            $costs = $costGenerator->generateForVehicle($vehicle);
+        });
+
+        session()->flash('vehicle_success', $this->withRelinkSummary("Vehículo {$vehicle->plate} reactivado.", $relinker, $relinked, $costs));
+        $this->redirectRoute('settings.vehicles.index');
+    }
+
+    /**
+     * @param  array{departures:int,payments:int,debt_days:int,debt_days_skipped:int}|null  $relinked
+     * @param  array{monthly:int,daily:int}|null  $costs
+     */
+    private function withRelinkSummary(string $message, SupportRecordRelinker $relinker, ?array $relinked, ?array $costs): string
+    {
+        if ($relinked && ($summary = $relinker->summaryMessage($relinked))) {
+            $message .= ' '.$summary;
+        }
+        if ($costs && ($costs['monthly'] > 0 || $costs['daily'] > 0)) {
+            $message .= ' Se generaron sus costos por placa del mes actual.';
+        }
+
+        return $message;
     }
 
     public function update()
@@ -314,6 +460,15 @@ class Edit extends Component
                 );
             }
 
+            // Si cambió la fecha de baja, el estado la sigue: activo hasta su último
+            // día (borrarla o moverla a hoy o después la reactiva), inactivo si ya pasó
+            $today = Carbon::today()->toDateString();
+            $newTermination = array_key_exists('termination_date', $payload) && $payload['termination_date'] ? Carbon::parse($payload['termination_date'])->toDateString() : null;
+            $terminationChanged = array_key_exists('termination_date', $payload) && $newTermination !== $this->vehicle->termination_date?->toDateString();
+            if ($terminationChanged) {
+                $payload['status'] = Vehicle::statusForTermination($newTermination, $today);
+            }
+
             $relinker = app(SupportRecordRelinker::class);
             $costGenerator = app(CostPerPlateGenerator::class);
             $relinked = null;
@@ -350,15 +505,11 @@ class Edit extends Component
                 }
             });
 
-            $message = 'Vehículo actualizado correctamente.';
-            if ($relinked && ($summary = $relinker->summaryMessage($relinked))) {
-                $message .= ' '.$summary;
+            session()->flash('vehicle_success', $this->withRelinkSummary('Vehículo actualizado correctamente.', $relinker, $relinked, $costs));
+            if ($terminationChanged && $newTermination !== null
+                && ($warning = DrawService::retiredInDrawsWarning(DrawService::drawsAfter($this->vehicle->id, $newTermination)))) {
+                session()->flash('vehicle_warning', "{$this->vehicle->plate}: {$warning}");
             }
-            if ($costs && ($costs['monthly'] > 0 || $costs['daily'] > 0)) {
-                $message .= ' Se generaron sus costos por placa del mes actual.';
-            }
-
-            session()->flash('vehicle_success', $message);
             $this->redirectRoute('settings.vehicles.index');
         } catch (\Illuminate\Validation\ValidationException $e) {
             throw $e;
@@ -401,6 +552,9 @@ class Edit extends Component
         return view('livewire.vehicles.edit', [
             // Historial de sanciones en Sorteos, para quien tiene acceso a Sorteos
             'drawHistory' => auth()->user()?->can('draws') ? DrawBlock::historyFor($this->vehicle->id) : null,
+            // Botones: Reactivar si ya está de baja; Dar de baja si tiene historial; si no, Eliminar
+            'retired' => $this->vehicle->isRetired(),
+            'hasHistory' => $this->historyRelations($this->vehicle) !== [],
         ]);
     }
 }

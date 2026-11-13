@@ -190,7 +190,7 @@ class Index extends Component
         return (int) Vehicle::query()
             ->where('status', 'active')
             ->where(function ($q) use ($today) {
-                $q->whereNull('termination_date')->orWhere('termination_date', '>', $today);
+                $q->whereNull('termination_date')->orWhere('termination_date', '>=', $today); // la baja es su último día
             })
             ->count();
     }
@@ -204,7 +204,7 @@ class Index extends Component
             ->select('id','plate','soat_date','technical_review','certificate_date','status','termination_date')
             ->where('status', 'active')
             ->where(function ($q) use ($today) {
-                $q->whereNull('termination_date')->orWhere('termination_date', '>', $today);
+                $q->whereNull('termination_date')->orWhere('termination_date', '>=', $today);
             })
             ->get()
             ->flatMap(fn ($v) => $v->expiringAlerts());

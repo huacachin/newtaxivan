@@ -669,7 +669,7 @@ class Index extends Component
 
         $days = DrawService::workingDaysOfMonth($this->year, $this->month);
 
-        $activeVehicles = DrawService::gridVehicles()->get(['id', 'sort_order', 'plate', 'condition', 'not_working_since']);
+        $activeVehicles = DrawService::gridVehicles()->get(['id', 'sort_order', 'plate', 'condition', 'not_working_since', 'termination_date']);
         $simulating = $this->simSeed !== null;
         $drawable = $simulating ? [] : $this->drawableDates();
         // Domingos: solo los sorteados o el que hoy se puede sortear (la simulación no los usa)
@@ -708,7 +708,7 @@ class Index extends Component
         // Vehículos con resultados este mes que hoy ya no entran (inactivos o NT en rojo), antes de las bloqueadas
         $formerIds = collect($cells)->flatMap(fn (array $day) => array_keys($day))->unique()->diff($activeVehicles->pluck('id'));
         $formerVehicles = Vehicle::whereIn('id', $formerIds)->orderBy('sort_order')->orderBy('plate')
-            ->get(['id', 'sort_order', 'plate', 'condition', 'not_working_since']);
+            ->get(['id', 'sort_order', 'plate', 'condition', 'not_working_since', 'termination_date']);
 
         $rows = [];
         foreach ([[$inPlaceVehicles, 'active'], [$formerVehicles, 'former'], [$bottomVehicles, 'blocked']] as [$vehicles, $kind]) {
@@ -728,6 +728,8 @@ class Index extends Component
                     'plate' => $vehicle->plate,
                     'condition' => $vehicle->condition,
                     'nt' => Vehicle::notWorkingBadge($vehicle->not_working_since),
+                    // Fecha de baja = último día que trabaja; después ya no entra al sorteo
+                    'lastDay' => $vehicle->termination_date?->toDateString(),
                     'active' => $kind === 'active',
                     'blocked' => $kind === 'blocked',
                     // Bloqueos vigentes de la placa (para el candado junto a la placa)

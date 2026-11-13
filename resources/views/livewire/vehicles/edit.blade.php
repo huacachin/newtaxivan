@@ -31,7 +31,16 @@
             <div class="mt-3 d-flex gap-2 justify-content-end">
                 <button type="button" class="btn btn-sm btn-primary" wire:click="update" wire:loading.attr="disabled"><span wire:loading wire:target="update" class="spinner-border spinner-border-sm"></span><span wire:loading.remove wire:target="update">Guardar</span></button>
                 @hasanyrole('director')
-                    <button type="button" class="btn btn-sm btn-danger" wire:click="questionDelete({{$vehicle->id}})">Eliminar</button>
+                    @if($retired)
+                        <button type="button" class="btn btn-sm btn-success" wire:click="questionReactivate({{ $vehicle->id }})"
+                                title="Quita la fecha de baja y la vuelve a activar"><i class="ti ti-player-play"></i> Reactivar</button>
+                    @elseif($hasHistory)
+                        <button type="button" class="btn btn-sm btn-danger" wire:click="questionRetire({{ $vehicle->id }})"
+                                title="Tiene historial, así que no se borra: hoy pasa a ser su último día"><i class="ti ti-user-off"></i> Dar de baja</button>
+                    @endif
+                    @if(! $hasHistory)
+                        <button type="button" class="btn btn-sm btn-danger" wire:click="questionDelete({{$vehicle->id}})">Eliminar</button>
+                    @endif
                 @endhasanyrole
                 <a href="{{ route('settings.vehicles.index') }}" class="btn btn-sm btn-secondary"><i class="ti ti-arrow-back-up"></i> Regresar</a>
             </div>

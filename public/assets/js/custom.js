@@ -358,6 +358,24 @@ function questionDelete(id, role, name) {
     });
 }
 
+// Dar de baja un vehiculo con historial (no se borra). El html lo arma el servidor ya escapado.
+function questionRetire(id, plate, html) {
+    Swal.fire({
+        title: 'Dar de baja ' + plate,
+        html: html,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#6c757d",
+        confirmButtonText: "Dar de baja",
+        cancelButtonText: "Cancelar"
+    }).then(function (result) {
+        if (result.isConfirmed) {
+            Livewire.dispatch('register_retire', {id: id});
+        }
+    });
+}
+
 function questionActivate(id, role, name) {
     var msg = (role && name)
         ? '¿Está seguro de activar al ' + role + ' <span style="color:green;font-weight:bold">' + name + '</span>?'
@@ -437,6 +455,11 @@ window.addEventListener('questionDelete', function (event) {
 window.addEventListener('questionActivate', function (event) {
     var data = event.detail[0];
     questionActivate(data['id'], data['role'] || '', data['name'] || '');
+});
+
+window.addEventListener('questionRetire', function (event) {
+    var data = event.detail[0];
+    questionRetire(data['id'], data['plate'] || '', data['html'] || '');
 });
 
 window.addEventListener('questionGenerate', function (event) {
