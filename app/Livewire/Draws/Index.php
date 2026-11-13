@@ -196,6 +196,13 @@ class Index extends Component
                 $html .= '<br>Bloqueadas, no entran ('.$blockedPlates->count().'): '.e($blockedPlates->implode(', '));
             }
         }
+        if ($this->isSundayTest($date)) {
+            // En prueba no se guarda nada: no hay días saltados ni lunes que cambie
+            $html .= '<br><b class="text-warning">PRUEBA: el sorteo de los domingos todavía no se guarda.</b>';
+            $this->dispatch('draw-confirm', date: $date, title: '¿Sortear el '.$this->dayLabel($date).'? (prueba)', html: $html);
+
+            return;
+        }
         // Días hábiles que se saltan (el domingo es opcional, no se avisa)
         $skipped = array_filter($drawable, fn (string $d) => $d < $date && ! Carbon::parse($d)->isSunday());
         if ($skipped) {
@@ -761,6 +768,7 @@ class Index extends Component
             'sundayVehicles' => ! $simulating && $this->sundayDate && in_array($this->sundayDate, $drawable, true)
                 ? DrawService::activeVehicles($this->sundayDate)->with('driver:id,name')->get(['id', 'sort_order', 'plate', 'condition', 'driver_id'])
                 : collect(),
+            'sundayTest' => DrawService::sundayMode() === DrawService::SUNDAYS_TEST,
             ...$this->historyData(),
             ...$this->sanctionData(),
             'canBlock' => $this->canBlock(),
@@ -859,15 +867,16 @@ class Index extends Component
         // Para el domingo tardío: el domingo sin sortear aunque ya esté sorteado el lunes
         $drawn = Draw::active()->where('date', '>=', $today->toDateString())->pluck('date')->map(fn ($d) => Carbon::parse($d)->toDateString())->all();
 
-        $dates = DrawService::drawableDates($lastDate ? Carbon::parse($lastDate)->toDateString() : null, $today, DrawService::holidaysAround($today), $drawn);
+        $holidays = DrawService::holidaysAround($today);
+        $dates = DrawService::drawableDates($lastDate ? Carbon::parse($lastDate)->toDateString() : null, $today, $holidays, $drawn);
 
-        // TEMPORAL (prueba del viernes 2026-11-13): ya se ve el domingo 15 para probar su
-        // sorteo hasta la confirmación. DrawService::run no lo deja sortear. Quitar.
-        if ($today->toDateString() === '2026-11-13' && ! in_array('2026-11-15', $dates, true)) {
-            $dates[] = '2026-11-15';
-        }
+        return DrawService::withSundayMode($dates, DrawService::sundayMode(), $today, $holidays, $drawn);
+    }
 
-        return $dates;
+    /** ¿$date es un domingo con el sorteo en prueba (se ve, pero no se sortea)? */
+    protected function isSundayTest(?string $date): bool
+    {
+        return $date !== null && Carbon::parse($date)->isSunday() && DrawService::sundayMode() === DrawService::SUNDAYS_TEST;
     }
 
     /**

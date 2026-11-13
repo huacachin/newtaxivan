@@ -78,6 +78,7 @@ class Mobile extends Index
             'draw' => $draw,
             'pending' => $pending,
             'isSunday' => $this->day && Carbon::parse($this->day)->isSunday(),
+            'sundayTest' => $this->isSundayTest($this->day),
             'dayTitle' => $this->day ? Draw::dayTitleFor($this->day) : null,
             'dayShort' => $this->day ? $this->dayLabel($this->day) : '',
             'items' => $draw ? DrawService::orderItems($draw->entries()->whereNotNull('number')->get(['number', 'plate', 'driver_name'])) : [],

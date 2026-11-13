@@ -370,4 +370,25 @@ class DrawServiceTest extends TestCase
         $this->assertSame('Viernes Santo', $holidays['2026-04-03']);
         $this->assertSame('Fiestas Patrias', $holidays['2026-07-28']);
     }
+
+    public function test_the_sunday_mode_hides_or_shows_the_sunday_to_test_it(): void
+    {
+        $friday = Carbon::parse('2026-11-13');
+
+        // Apagado: sin domingos aunque ya estén en la ventana (sábado)
+        $this->assertSame(['2026-11-14'], DrawService::withSundayMode(['2026-11-14'], DrawService::SUNDAYS_OFF, $friday, [], []));
+        $this->assertSame(['2026-11-16'], DrawService::withSundayMode(['2026-11-15', '2026-11-16'], DrawService::SUNDAYS_OFF, Carbon::parse('2026-11-14'), [], []));
+
+        // Normal: tal cual (el viernes todavía no se ve el domingo)
+        $this->assertSame(['2026-11-14'], DrawService::withSundayMode(['2026-11-14'], DrawService::SUNDAYS_ON, $friday, [], []));
+
+        // En prueba: el próximo domingo se ve cualquier día, una sola vez y en orden
+        $this->assertSame(['2026-11-14', '2026-11-15'], DrawService::withSundayMode(['2026-11-14'], DrawService::SUNDAYS_TEST, $friday, [], []));
+        $this->assertSame(['2026-11-17', '2026-11-22'], DrawService::withSundayMode(['2026-11-17'], DrawService::SUNDAYS_TEST, Carbon::parse('2026-11-16'), [], ['2026-11-16']));
+        $this->assertSame(['2026-11-15', '2026-11-16'], DrawService::withSundayMode(['2026-11-15', '2026-11-16'], DrawService::SUNDAYS_TEST, Carbon::parse('2026-11-15'), [], []));
+
+        // ...salvo que ya esté sorteado o sea feriado
+        $this->assertSame(['2026-11-16'], DrawService::withSundayMode(['2026-11-16'], DrawService::SUNDAYS_TEST, Carbon::parse('2026-11-15'), [], ['2026-11-15']));
+        $this->assertSame(['2026-11-14'], DrawService::withSundayMode(['2026-11-14'], DrawService::SUNDAYS_TEST, $friday, ['2026-11-15'], []));
+    }
 }

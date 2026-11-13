@@ -203,7 +203,7 @@
                 },
             }" x-on:change="recount()" x-on:dm-recount.window="recount()">
             <div class="dm-head">
-                <span @class(['dm-tag', 'dm-tag--sunday' => $isSunday, 'dm-tag--pending' => ! $isSunday])>{{ $isSunday ? 'Domingo · opcional' : '● Pendiente de sorteo' }}</span>
+                <span @class(['dm-tag', 'dm-tag--sunday' => $isSunday, 'dm-tag--pending' => ! $isSunday])>{{ $isSunday ? ($sundayTest ? 'Domingo · en prueba' : 'Domingo · opcional') : '● Pendiente de sorteo' }}</span>
                 <h2 class="mt-2">{{ $dayTitle }}</h2>
                 <p>{{ $isSunday ? 'Prende solo las placas que trabajan este domingo: solo ellas entran al sorteo.' : 'Apaga las placas que no salen. Las prendidas entran al sorteo.' }}</p>
             </div>

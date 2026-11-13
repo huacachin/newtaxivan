@@ -284,7 +284,7 @@
                                         $isOpen = ! $result && in_array($day['date'], $drawable, true);
                                     @endphp
                                     <th class="dr-day {{ $isOpen ? 'dr-day-open' : '' }} {{ $result ? 'dr-day-done' : '' }} {{ ($day['sunday'] ?? false) ? 'dr-day-sunday' : '' }}" wire:key="head-{{ $day['date'] }}"
-                                        @if($result) title="{{ $result['title'] }} · clic para abrir el PDF del orden de salida" @elseif($day['sunday'] ?? false) title="Domingo: sorteo opcional, solo con las placas que elijas" @endif>
+                                        @if($result) title="{{ $result['title'] }} · clic para abrir el PDF del orden de salida" @elseif($day['sunday'] ?? false) title="Domingo: sorteo opcional, solo con las placas que elijas{{ $sundayTest ? ' · EN PRUEBA: no se guarda' : '' }}" @endif>
                                         <div class="small">{{ $day['weekday'] }}</div>
                                         <div class="fw-bold">{{ $day['n'] }}</div>
                                         @if($result)

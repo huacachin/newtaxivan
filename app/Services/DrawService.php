@@ -46,6 +46,13 @@ class DrawService
     /** Costo de repetir la franja anterior: solo cuando no hay otra salida. */
     private const REPEAT_COST = 1_000_000;
 
+    /** Modos del sorteo de los domingos (config draws.sundays). */
+    public const SUNDAYS_OFF = 'off';
+
+    public const SUNDAYS_TEST = 'test';
+
+    public const SUNDAYS_ON = 'on';
+
     /** Días que se miran hacia adelante para hallar el siguiente día hábil. */
     private const HOLIDAY_LOOKAHEAD_DAYS = 20;
 
@@ -129,6 +136,47 @@ class DrawService
     public static function isDrawableSunday(Carbon $date, array $holidays): bool
     {
         return $date->isSunday() && ! in_array($date->toDateString(), $holidays, true);
+    }
+
+    /** Modo del sorteo de los domingos (config draws.sundays); si no es válido, apagado. */
+    public static function sundayMode(): string
+    {
+        $mode = config('draws.sundays');
+
+        return in_array($mode, [self::SUNDAYS_OFF, self::SUNDAYS_TEST, self::SUNDAYS_ON], true) ? $mode : self::SUNDAYS_OFF;
+    }
+
+    /**
+     * Días sorteables que se muestran en pantalla según el modo de los domingos:
+     *  - on:   tal cual los da drawableDates
+     *  - test: además el próximo domingo (hoy si es domingo), para probarlo
+     *          cualquier día hasta la confirmación; run no lo deja sortear
+     *  - off:  sin domingos
+     *
+     * @param  array<int, string>  $dates  de drawableDates
+     * @param  array<int, string>  $holidays
+     * @param  array<int, string>  $drawnDates  fechas Y-m-d con sorteo vigente
+     * @return array<int, string> fechas Y-m-d
+     */
+    public static function withSundayMode(array $dates, string $mode, Carbon $today, array $holidays, array $drawnDates): array
+    {
+        if ($mode === self::SUNDAYS_OFF) {
+            return array_values(array_filter($dates, fn (string $d) => ! Carbon::parse($d)->isSunday()));
+        }
+
+        if ($mode === self::SUNDAYS_TEST) {
+            $sunday = $today->copy()->startOfDay();
+            if (! $sunday->isSunday()) {
+                $sunday = $sunday->next(Carbon::SUNDAY);
+            }
+            $date = $sunday->toDateString();
+            if (self::isDrawableSunday($sunday, $holidays) && ! in_array($date, $dates, true) && ! in_array($date, $drawnDates, true)) {
+                $dates[] = $date;
+                sort($dates);
+            }
+        }
+
+        return $dates;
     }
 
     /**
@@ -621,6 +669,13 @@ class DrawService
     public function run(string $date, array $includedVehicleIds, User $user): Draw
     {
         $included = array_map('intval', $includedVehicleIds);
+
+        // Domingo en prueba o apagado: se llega hasta la confirmación, pero no se sortea
+        if (Carbon::parse($date)->isSunday() && self::sundayMode() !== self::SUNDAYS_ON) {
+            throw ValidationException::withMessages(['date' => self::sundayMode() === self::SUNDAYS_TEST
+                ? 'El sorteo de los domingos está en prueba: todavía no se sortea y no se guardó nada.'
+                : 'Los domingos no se sortean.']);
+        }
 
         return DB::transaction(function () use ($date, $included, $user) {
             // FOR UPDATE: dos sorteos simultáneos no calculan sobre el mismo historial
