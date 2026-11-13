@@ -6,7 +6,7 @@
     <style>
         .debt-alert {
             display: flex; align-items: flex-start; gap: 12px;
-            max-width: 820px; margin-bottom: 1rem; padding: 12px 14px;
+            max-width: 760px; margin-bottom: 1rem; padding: 12px 14px;
             border: 1px solid rgba(var(--warning), .55); border-left: 5px solid rgb(var(--warning));
             border-radius: 12px;
             background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);

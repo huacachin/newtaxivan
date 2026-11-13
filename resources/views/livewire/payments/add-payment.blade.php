@@ -41,50 +41,51 @@
                         </div>
                     @endif
 
-                    <div id="add-payment-form" class="row">
-                        <div class="col-md-auto col-sm-12">
-                            <div class="mb-3">
+                    {{-- Formulario en grilla: escritorio 4 columnas (Placa, Serie, Fechas / Tipo, Sucursal,
+                         Monto doble); celular de a pares y el Monto a todo el ancho. Debajo, a todo el
+                         ancho, el aviso de deuda o la elección del mes (Deuda). Los campos son fijos y
+                         solo su contenido es condicional, para que el morph de Livewire no los corra. --}}
+                    <style>
+                        .pay-add { max-width: 940px; }
+                        .pay-add__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 14px; }
+                        .pay-add__field { min-width: 0; }
+                        .pay-add__field .form-label { margin-bottom: 4px; }
+                        .pay-add__field--amount { grid-column: 1 / -1; }
+                        .pay-add__note { display: block; margin-top: 4px; font-size: 12px; line-height: 1.35; }
+                        .pay-add__debt { margin-top: 14px; }
+                        .pay-add__debt .debt-alert { margin-bottom: 0; }
+                        .pay-add__debt .debt-months { margin-top: 0; }
+                        .pay-add__actions { margin-top: 16px; }
+                        @media (min-width: 768px) {
+                            .pay-add__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+                            .pay-add__field--amount { grid-column: span 2; }
+                        }
+                    </style>
+
+                    <div id="add-payment-form" class="pay-add">
+                        <div class="pay-add__grid">
+                            <div class="pay-add__field">
                                 <label for="pay_plate" class="form-label">Placa</label>
                                 <input id="pay_plate" type="text" class="form-control form-control-sm input-uppercase" placeholder="ABC123"
                                        wire:model.live.debounce.300ms="plate"
                                        autocapitalize="characters"
                                        data-upper-plate>
-                                @error('plate') <span class="title-modules">{{ $message }}</span> @enderror
+                                @error('plate') <span class="title-modules pay-add__note">{{ $message }}</span> @enderror
                             </div>
-                        </div>
 
-                        {{-- Deuda pendiente con cualquier tipo: en el celular justo bajo la placa;
-                             en escritorio (order-md-last) debajo de los campos, antes de Agregar.
-                             El contenedor va SIEMPRE y solo su contenido es condicional: sin los
-                             marcadores de morph de Livewire (las vistas compiladas con view:cache no
-                             los traen) un @if aquí corría las columnas al redibujar y el select de
-                             Tipo quedaba como el de Sucursal ("DEUDA" en headquarter_id_form). --}}
-                        <div class="col-12 order-md-last" wire:key="debt-warning">
-                            @if($type_form !== 'DEUDA' && ($pending_debt ?? 0) > 0)
-                                @include('livewire.payments._debt-warning')
-                            @endif
-                        </div>
-
-                        <div class="col-md-auto">
-                            <div class="mb-3">
-                                <label class="form-label">Serie</label>
-                                <input type="text" class="form-control form-control-sm" wire:model.defer="serie">
-                                @error('serie') <span class="title-modules">{{ $message }}</span> @enderror
+                            <div class="pay-add__field">
+                                <label for="pay_serie" class="form-label">Serie</label>
+                                <input id="pay_serie" type="text" class="form-control form-control-sm" wire:model.defer="serie">
+                                @error('serie') <span class="title-modules pay-add__note">{{ $message }}</span> @enderror
                             </div>
-                        </div>
 
-
-
-                        <div class="col-md-auto">
-                            <div class="mb-3">
+                            <div class="pay-add__field">
                                 <label class="form-label">Fecha Registro</label>
                                 <input type="date" class="form-control form-control-sm" wire:model.live="date_register" readonly>
-                                @error('date_register') <span class="title-modules">{{ $message }}</span> @enderror
+                                @error('date_register') <span class="title-modules pay-add__note">{{ $message }}</span> @enderror
                             </div>
-                        </div>
 
-                        <div class="col-md-auto">
-                            <div class="mb-3">
+                            <div class="pay-add__field">
                                 <label class="form-label">Fecha Pago</label>
                                 <input type="date" class="form-control form-control-sm {{ $type_form !== 'RETRASO' ? 'input-readonly' : '' }}"
                                        wire:model.live="date_payment"
@@ -92,12 +93,10 @@
                                            readonly
                                        @endif
                                 >
-                                @error('date_payment') <span class="title-modules">{{ $message }}</span> @enderror
+                                @error('date_payment') <span class="title-modules pay-add__note">{{ $message }}</span> @enderror
                             </div>
-                        </div>
 
-                        <div class="col-md-auto">
-                            <div class="mb-3">
+                            <div class="pay-add__field">
                                 <label class="form-label">Tipo</label>
                                 <select class="form-select form-select-sm" wire:model.live="type_form">
                                     <option value="">Seleccionar</option>
@@ -105,11 +104,10 @@
                                     <option value="DEUDA">Deuda</option>
                                     <option value="RETRASO">Retraso</option>
                                 </select>
-                                @error('type_form') <span class="title-modules">{{ $message }}</span> @enderror
+                                @error('type_form') <span class="title-modules pay-add__note">{{ $message }}</span> @enderror
                             </div>
-                        </div>
-                        <div class="col-md-auto">
-                            <div class="mb-3">
+
+                            <div class="pay-add__field">
                                 <label class="form-label">Sucursal</label>
                                 <select class="form-select form-select-sm" wire:model.live="headquarter_id_form">
                                     <option value="">Seleccionar</option>
@@ -117,11 +115,10 @@
                                         <option value="{{ $hq->id }}">{{ $hq->name }}</option>
                                     @endforeach
                                 </select>
-                                @error('headquarter_id_form') <span class="title-modules">{{ $message }}</span> @enderror
+                                @error('headquarter_id_form') <span class="title-modules pay-add__note">{{ $message }}</span> @enderror
                             </div>
-                        </div>
-                        <div class="col-md-auto">
-                            <div class="mb-3">
+
+                            <div class="pay-add__field pay-add__field--amount">
                                 <label class="form-label">Monto (S/)</label>
                                 <div x-data="numericChips({
                                     storageKey: 'payments.amount',
@@ -144,40 +141,40 @@
                                         </div>
                                     @endif
                                 </div>
-                                @error('amount') <span class="title-modules">{{ $message }}</span> @enderror
-
-                                @if($type_form === 'DEUDA')
-                                    @include('livewire.payments._debt-months')
-                                @else
+                                @error('amount') <span class="title-modules pay-add__note">{{ $message }}</span> @enderror
+                                @if($type_form !== 'DEUDA')
                                     @if(!is_null($detected_cost))
-                                        <small class="text-muted">
-                                            Costo detectado: S/ {{ number_format($detected_cost, 2) }} — Fecha: {{ $date_register }}
-                                        </small>
+                                        <small class="text-muted pay-add__note">Costo detectado: S/ {{ number_format($detected_cost, 2) }} — Fecha: {{ $date_register }}</small>
                                     @else
-                                        <small class="text-warning">
-                                            No hay costo configurado para {{ $date_register }} y placa “{{ $plate }}”.
-                                        </small>
+                                        <small class="text-warning pay-add__note">No hay costo configurado para {{ $date_register }} y placa “{{ $plate }}”.</small>
                                     @endif
                                 @endif
                             </div>
                         </div>
 
-                        {{-- Geolocalización (oculto) --}}
-                        <div class="col-md-6 input-offscreen">
-                            <div class="mb-3">
-                                <label class="form-label visually-hidden">Latitud</label>
-                                <input id="pay_lat_add" type="text" class="form-control form-control-sm" wire:model.defer="latitude" readonly>
-                            </div>
+                        {{-- Deuda: con Pago o Retraso, el aviso; con Deuda, la elección del mes. El
+                             contenedor va SIEMPRE: sin los marcadores de morph de Livewire un @if entre
+                             campos los corría al redibujar (el select de Tipo quedaba como el de Sucursal). --}}
+                        <div class="pay-add__debt" wire:key="pay-debt">
+                            @if($type_form === 'DEUDA')
+                                @include('livewire.payments._debt-months')
+                            @elseif(($pending_debt ?? 0) > 0)
+                                @include('livewire.payments._debt-warning')
+                            @endif
                         </div>
-                        <div class="col-md-6 input-offscreen">
-                            <div class="mb-3">
-                                <label class="form-label visually-hidden">Longitud</label>
-                                <input id="pay_lng_add" type="text" class="form-control form-control-sm" wire:model.defer="longitude" readonly>
-                            </div>
+
+                        {{-- Geolocalización (oculto) --}}
+                        <div class="input-offscreen">
+                            <label class="form-label visually-hidden">Latitud</label>
+                            <input id="pay_lat_add" type="text" class="form-control form-control-sm" wire:model.defer="latitude" readonly>
+                        </div>
+                        <div class="input-offscreen">
+                            <label class="form-label visually-hidden">Longitud</label>
+                            <input id="pay_lng_add" type="text" class="form-control form-control-sm" wire:model.defer="longitude" readonly>
                         </div>
                     </div>
 
-                    <div class="d-flex gap-2">
+                    <div class="d-flex gap-2 pay-add__actions">
                         <button type="button" class="btn btn-sm btn-primary" wire:click="save" wire:loading.attr="disabled">
                             <span wire:loading wire:target="save" class="spinner-border spinner-border-sm"></span>
                             <span wire:loading.remove wire:target="save">Agregar</span>
