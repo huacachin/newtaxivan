@@ -714,7 +714,7 @@ document.addEventListener('alpine:init', function () {
         };
     });
 
-    // Pago DEUDA de un solo mes: lo que queda del mes elegido ($wire.debt_month_id)
+    // Pago DEUDA de un solo mes, el pendiente mas antiguo ($wire.debt_month_id): lo que queda
     // con el monto escrito ($wire.amount). Misma regla, en centimos, que
     // App\Services\DebtPaymentAllocator::forMonth. months = { id: { label, pending } }.
     window.Alpine.data('debtPreview', function (months) {
@@ -763,9 +763,11 @@ document.addEventListener('alpine:init', function () {
 
             hint: function () {
                 var m = this.month();
-                return m
-                    ? 'Puede pagar una parte o todo: máximo S/ ' + this.money(m.pending) + ' (lo que debe ' + m.label + '). Los otros meses van en pagos aparte.'
-                    : 'Un pago por mes: los otros meses van en pagos aparte.';
+                if (!m) return 'Un pago por mes, primero el más antiguo.';
+                var others = Object.keys(this.months).length > 1
+                    ? ' Los demás meses se habilitan cuando ' + m.label + ' quede pagado.'
+                    : '';
+                return 'Puede pagar una parte o todo: máximo S/ ' + this.money(m.pending) + ' (lo que debe ' + m.label + ').' + others;
             },
 
             excessText: function () {

@@ -41,7 +41,7 @@ class EditPayment extends Component
     /** @var list<array{id: int, date: string, label: string, pending: float}> Meses pendientes, del más antiguo */
     public array $debtMonths = [];
 
-    /** DEUDA: mes que paga (debt_days.id); un pago por mes */
+    /** DEUDA: mes que paga (debt_days.id): siempre el pendiente más antiguo; un pago por mes */
     public ?int $debt_month_id = null;
 
     // Chips de sugerencias para amount
@@ -179,8 +179,8 @@ class EditPayment extends Component
         $this->loadRowOrAbort();           // Carga el registro a editar
         $this->recalcPendingDebt();        // Calcula deuda visible
         if ($this->type_form === 'DEUDA') {
-            // El mes que ya paga este pago (o el más antiguo si no tiene detalle)
-            $this->debt_month_id = DebtPaymentAllocator::paidMonthId($this->paymentId) ?? ($this->debtMonths[0]['id'] ?? null);
+            // El pendiente más antiguo, contando lo que este pago ya descontó (normalmente es su mismo mes)
+            $this->debt_month_id = $this->debtMonths[0]['id'] ?? null;
         }
         $this->prefillAmountFromCost();    // Calcula costo si aplica
         $this->recomputeAmountSuggestions();
@@ -270,16 +270,14 @@ class EditPayment extends Component
     }
 
     /**
-     * DEUDA: mes que paga (el elegido si sigue pendiente; si no, el más antiguo),
+     * DEUDA: paga el mes pendiente más antiguo (los demás esperan a que termine),
      * monto sugerido = lo que debe ese mes y fecha de pago = fin de ese mes.
      */
     private function syncDebtFields(): void
     {
         $this->detected_cost = null;
         $this->recalcPendingDebt();
-        if (! $this->selectedDebtMonth()) {
-            $this->debt_month_id = $this->debtMonths[0]['id'] ?? null;
-        }
+        $this->debt_month_id = $this->debtMonths[0]['id'] ?? null;
         $this->fillFromDebtMonth();
     }
 
@@ -299,11 +297,10 @@ class EditPayment extends Component
         return collect($this->debtMonths)->firstWhere('id', $this->debt_month_id);
     }
 
-    /** Cambió el mes que paga: sugiere lo que debe ese mes */
+    /** El mes no se elige: siempre vuelve al pendiente más antiguo */
     public function updatedDebtMonthId(): void
     {
-        $this->recalcPendingDebt();
-        $this->fillFromDebtMonth();
+        $this->syncDebtFields();
     }
 
     /** Reglas de negocio (mismas que en Index) */

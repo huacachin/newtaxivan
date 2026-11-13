@@ -1,7 +1,8 @@
 {{-- Aviso: la placa tiene deuda de meses anteriores, con cualquier tipo de pago.
-     Con tipo Deuda no se muestra: debajo del monto se elige el mes (_debt-months).
-     Un pago es de un solo mes: tocar un mes lo cobra (AddPayment::payDebtMonth, tipo
-     Deuda con lo que debe ese mes); "Cobrar deuda" empieza por el más antiguo. --}}
+     Con tipo Deuda no se muestra: debajo sale el mes que paga (_debt-months).
+     Un pago es de un solo mes y siempre del más antiguo: los demás salen con candado
+     hasta que ese termine. Tocar el más antiguo o "Cobrar deuda" lo cobra
+     (AddPayment::collectDebt: tipo Deuda con lo que debe ese mes). --}}
 @once
     <style>
         .debt-alert {
@@ -35,6 +36,8 @@
         }
         .debt-alert__month:hover, .debt-alert__month:focus-visible { background: #fef3c7; border-color: rgb(var(--warning)); }
         .debt-alert__month b { font-weight: 700; }
+        .debt-alert__month.is-locked { cursor: default; opacity: .6; background: #fffdf5; border-style: dashed; }
+        .debt-alert__month.is-locked:hover { background: #fffdf5; border-color: rgba(var(--warning), .7); }
         .debt-alert__hint { margin-top: 8px; color: #92400e; font-size: 12px; }
         .debt-alert__action { align-self: center; font-weight: 600; white-space: nowrap; }
         @keyframes debt-alert-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
@@ -63,19 +66,25 @@
         <ul class="debt-alert__months">
             @foreach($debtMonths as $month)
                 <li wire:key="debt-alert-month-{{ $month['id'] }}">
-                    <button type="button" class="debt-alert__month" title="Cobrar {{ $month['label'] }}"
-                            wire:click="payDebtMonth({{ $month['id'] }})" wire:loading.attr="disabled">
-                        {{ $month['label'] }} <b>S/ {{ number_format($month['pending'], 2) }}</b>
-                    </button>
+                    @if($loop->first)
+                        <button type="button" class="debt-alert__month" title="Cobrar {{ $month['label'] }}"
+                                wire:click="collectDebt" wire:loading.attr="disabled">
+                            {{ $month['label'] }} <b>S/ {{ number_format($month['pending'], 2) }}</b>
+                        </button>
+                    @else
+                        <span class="debt-alert__month is-locked" title="Se paga cuando {{ $debtMonths[0]['label'] }} quede pagado">
+                            <i class="ti ti-lock"></i> {{ $month['label'] }} <b>S/ {{ number_format($month['pending'], 2) }}</b>
+                        </span>
+                    @endif
                 </li>
             @endforeach
         </ul>
 
-        <div class="debt-alert__hint">Se cobra con el tipo <b>Deuda</b>, <b>un pago por cada mes</b>. Toca el mes que paga.</div>
+        <div class="debt-alert__hint">Se cobra con el tipo <b>Deuda</b>, <b>un pago por mes y primero el más antiguo</b>{{ count($debtMonths) > 1 ? ': los demás se habilitan cuando '.$debtMonths[0]['label'].' quede pagado' : '' }}.</div>
     </div>
 
     <button type="button" class="btn btn-sm btn-warning debt-alert__action"
-            wire:click="payDebtMonth({{ $debtMonths[0]['id'] }})" wire:loading.attr="disabled">
-        <i class="ti ti-cash"></i> Cobrar deuda
+            wire:click="collectDebt" wire:loading.attr="disabled">
+        <i class="ti ti-cash"></i> Cobrar {{ $debtMonths[0]['label'] }}
     </button>
 </div>

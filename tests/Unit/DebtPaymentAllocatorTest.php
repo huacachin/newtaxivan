@@ -7,8 +7,9 @@ use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 /**
- * Un pago DEUDA es de un solo mes, el que se elige (cualquiera pendiente), y no
- * puede pasar lo que debe ese mes: dos meses son dos pagos (sin tocar la base).
+ * Un pago DEUDA es de un solo mes, el pendiente más antiguo (los demás esperan a
+ * que termine), y no puede pasar lo que debe ese mes: dos meses son dos pagos
+ * (sin tocar la base).
  */
 class DebtPaymentAllocatorTest extends TestCase
 {
@@ -36,30 +37,35 @@ class DebtPaymentAllocatorTest extends TestCase
         $this->fail('Se esperaba un error de validación.');
     }
 
-    public function test_a_payment_only_pays_the_chosen_month(): void
+    public function test_a_payment_only_pays_the_oldest_month(): void
     {
-        $parts = DebtPaymentAllocator::forMonth($this->cer399(), 3, 40);
+        $parts = DebtPaymentAllocator::forMonth($this->cer399(), 1, 35);
 
-        $this->assertSame([[3, 40.0, 0.0]], array_map(fn ($p) => [$p['id'], $p['amount'], $p['left']], $parts));
-        $this->assertSame('2026-08-31', DebtPaymentAllocator::coverDate($parts));
+        $this->assertSame([[1, 35.0, 0.0]], array_map(fn ($p) => [$p['id'], $p['amount'], $p['left']], $parts));
+        $this->assertSame('2026-06-30', DebtPaymentAllocator::coverDate($parts));
+
+        $partial = DebtPaymentAllocator::forMonth($this->cer399(), 1, 20); // libre: una parte del mes
+        $this->assertSame([[1, 20.0, 15.0]], array_map(fn ($p) => [$p['id'], $p['amount'], $p['left']], $partial));
     }
 
-    public function test_any_pending_month_can_be_paid_and_partially(): void
+    public function test_later_months_are_locked_until_the_oldest_is_paid(): void
     {
-        $october = DebtPaymentAllocator::forMonth($this->cer399(), 5, 100); // octubre antes que junio
-        $this->assertSame([[5, 100.0, 215.0]], array_map(fn ($p) => [$p['id'], $p['amount'], $p['left']], $october));
-        $this->assertSame('2026-10-31', DebtPaymentAllocator::coverDate($october));
+        $errors = $this->errorsOf(fn () => DebtPaymentAllocator::forMonth($this->cer399(), 3, 10)); // agosto con junio pendiente
 
-        $july = DebtPaymentAllocator::forMonth($this->cer399(), 2, 135);
-        $this->assertSame(0.0, $july[0]['left']);
+        $this->assertSame(['debt_month_id'], array_keys($errors));
+        $this->assertStringContainsString('Jun 2026 (debe S/ 35.00)', $errors['debt_month_id'][0]);
+
+        // Con junio pagado, julio pasa a ser el más antiguo
+        $july = DebtPaymentAllocator::forMonth(array_slice($this->cer399(), 1), 2, 135);
+        $this->assertSame([[2, 135.0, 0.0]], array_map(fn ($p) => [$p['id'], $p['amount'], $p['left']], $july));
     }
 
     public function test_the_amount_cannot_pass_what_the_month_owes(): void
     {
-        $errors = $this->errorsOf(fn () => DebtPaymentAllocator::forMonth($this->cer399(), 3, 60)); // ago debe 40
+        $errors = $this->errorsOf(fn () => DebtPaymentAllocator::forMonth($this->cer399(), 1, 40)); // jun debe 35
 
         $this->assertSame(['amount'], array_keys($errors));
-        $this->assertStringContainsString('Ago 2026 (S/ 40.00)', $errors['amount'][0]);
+        $this->assertStringContainsString('Jun 2026 (S/ 35.00)', $errors['amount'][0]);
         $this->assertStringContainsString('pagos aparte', $errors['amount'][0]);
     }
 
