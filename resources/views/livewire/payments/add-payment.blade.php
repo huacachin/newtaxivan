@@ -54,12 +54,16 @@
                         </div>
 
                         {{-- Deuda pendiente con cualquier tipo: en el celular justo bajo la placa;
-                             en escritorio (order-md-last) debajo de los campos, antes de Agregar. --}}
-                        @if($type_form !== 'DEUDA' && ($pending_debt ?? 0) > 0)
-                            <div class="col-12 order-md-last" wire:key="debt-warning">
+                             en escritorio (order-md-last) debajo de los campos, antes de Agregar.
+                             El contenedor va SIEMPRE y solo su contenido es condicional: sin los
+                             marcadores de morph de Livewire (las vistas compiladas con view:cache no
+                             los traen) un @if aquí corría las columnas al redibujar y el select de
+                             Tipo quedaba como el de Sucursal ("DEUDA" en headquarter_id_form). --}}
+                        <div class="col-12 order-md-last" wire:key="debt-warning">
+                            @if($type_form !== 'DEUDA' && ($pending_debt ?? 0) > 0)
                                 @include('livewire.payments._debt-warning')
-                            </div>
-                        @endif
+                            @endif
+                        </div>
 
                         <div class="col-md-auto">
                             <div class="mb-3">
