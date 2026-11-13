@@ -60,6 +60,10 @@
         .draws-module .dr-day-done { position: relative; cursor: pointer; }
         .draws-module .dr-day-done:hover { filter: brightness(1.12); }
         .draws-module .dr-day-done .dr-annul { position: relative; z-index: 2; }
+        /* Buscador de "Seleccionar varios" (las filas se ocultan con la regla que arma filterCss()) */
+        .draws-module .dr-selsearch { position: relative; flex: 0 1 260px; min-width: 180px; }
+        .draws-module .dr-selsearch .ti { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); color: #64748b; pointer-events: none; }
+        .draws-module .dr-selsearch input { padding-left: 28px; border-radius: 8px; background: #fff; }
 
     </style>
 @endpush
@@ -68,7 +72,24 @@
     selecting: false,
     toBlock: [],
     days: [],
-    stopSelecting() { this.selecting = false; this.toBlock = [] },
+    q: '',
+    startSelecting() { this.selecting = true; this.$nextTick(() => this.$refs.selSearch?.focus()) },
+    stopSelecting() { this.selecting = false; this.toBlock = []; this.q = '' },
+    words() { return this.selecting ? window.listSearchWords(this.q) : [] },
+    rowHits(tr) {
+        const text = tr?.dataset.search || '';
+        return this.words().every(w => text.includes(w))
+    },
+    visibleCount() { return [...document.querySelectorAll('.dr-table > tbody > tr[data-search]')].filter(tr => this.rowHits(tr)).length },
+    hiddenSelected() {
+        if (! this.words().length) { return 0 }
+        return this.toBlock.filter(id => ! this.rowHits(document.querySelector(`input[data-sel][value='${id}']`)?.closest('tr'))).length
+    },
+    filterCss() {
+        const words = this.words();
+        if (! words.length) { return '' }
+        return '.draws-module .dr-table > tbody > tr:not(' + words.map(w => `[data-search*='${CSS.escape(w)}']`).join('') + ') { display: none !important; }'
+    },
     platesOf(ids) {
         return ids.map(id => document.querySelector(`input[data-sel][value='${id}']`)?.dataset.plate).filter(Boolean).join(', ')
     },
@@ -76,7 +97,10 @@
         return this.toBlock.filter(id => document.querySelector(`input[data-sel][value='${id}']`)?.dataset.hasBlock === '1')
     },
     toggleAll(checked) {
-        this.toBlock = checked ? [...document.querySelectorAll('input[data-sel=block]')].map(c => c.value) : []
+        const shown = (selector) => [...document.querySelectorAll(selector)].filter(c => this.rowHits(c.closest('tr'))).map(c => c.value);
+        if (checked) { this.toBlock = [...new Set([...this.toBlock, ...shown('input[data-sel=block]')])]; return }
+        const off = shown('input[data-sel]');
+        this.toBlock = this.toBlock.filter(id => ! off.includes(id))
     },
     blockSelected() {
         if (! this.toBlock.length) { return }
@@ -223,7 +247,7 @@
                                 </button>
                             @endunless
                             @if($canBlock && ! $simulating)
-                                <button class="btn btn-sm" :class="selecting ? 'btn-primary' : 'btn-outline-primary'" x-on:click="selecting ? stopSelecting() : selecting = true"
+                                <button class="btn btn-sm" :class="selecting ? 'btn-primary' : 'btn-outline-primary'" x-on:click="selecting ? stopSelecting() : startSelecting()"
                                         title="Marcar varias placas en la tabla para bloquearlas o desbloquearlas">
                                     <i class="ti ti-checkbox"></i> <span x-text="selecting ? 'Terminar selección' : 'Seleccionar varios'">Seleccionar varios</span>
                                 </button>
@@ -264,6 +288,16 @@
                     @if($canBlock && ! $simulating)
                         <div class="dr-selbar" x-show="selecting" x-cloak>
                             <span><i class="ti ti-checkbox"></i> Marca las placas en la columna azul de la tabla.</span>
+                            <div class="dr-selsearch">
+                                <i class="ti ti-search"></i>
+                                <input type="search" class="form-control form-control-sm" placeholder="Buscar placa, COD o conductor"
+                                       x-model="q" x-ref="selSearch" x-on:keydown.escape.stop="q = ''">
+                            </div>
+                            <span class="small" x-show="words().length" x-cloak :class="visibleCount() ? 'text-muted' : 'text-danger fw-semibold'"
+                                  x-text="visibleCount() ? visibleCount() + ' coinciden' : 'Ninguna placa coincide con «' + q.trim() + '»'"></span>
+                            <span class="small text-primary fw-semibold" x-show="hiddenSelected()" x-cloak
+                                  title="Siguen marcadas aunque la búsqueda no las muestre"
+                                  x-text="hiddenSelected() + ' marcada(s) fuera de la búsqueda'"></span>
                             <button type="button" class="btn btn-sm btn-dark" :disabled="! toBlock.length" x-on:click="blockSelected()">
                                 <i class="ti ti-lock"></i> Bloquear (<span x-text="toBlock.length">0</span>)
                             </button>
@@ -273,6 +307,9 @@
                             </button>
                             <button type="button" class="btn btn-sm btn-light ms-auto" x-on:click="stopSelecting()">Cancelar</button>
                         </div>
+                        {{-- El filtro va como regla CSS fuera del morph de Livewire: las filas no llevan
+                             x-show y siguen actualizándose normal mientras hay una búsqueda escrita. --}}
+                        <div wire:ignore><style x-text="filterCss()"></style></div>
                         <div class="dr-selbar dr-daybar" x-show="days.length" x-cloak>
                             <span><i class="ti ti-calendar-event"></i> <b x-text="days.length">0</b> día(s) con candado marcados.</span>
                             <button type="button" class="btn btn-sm btn-success" x-on:click="unblockDaysSelected()">
@@ -343,7 +380,7 @@
                                 @php
                                     $blockTip = $row['blocks']->map(fn ($b) => $b->tooltipHtml())->implode('').'<small class="dr-tip-hint">Clic para ver el historial de sanciones</small>';
                                 @endphp
-                                <tr wire:key="row-{{ $row['id'] }}" @class(['dr-blocked' => $row['blocked']])>
+                                <tr wire:key="row-{{ $row['id'] }}" data-search="{{ $row['search'] }}" @class(['dr-blocked' => $row['blocked']])>
                                     <td class="dr-sel" x-show="selecting" x-cloak>
                                         @if($row['active'] || $row['blocked'])
                                             <input type="checkbox" class="form-check-input m-0" data-sel="{{ $row['blocked'] ? 'blocked' : 'block' }}" data-plate="{{ $row['plate'] }}"

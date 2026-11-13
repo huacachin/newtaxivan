@@ -575,6 +575,14 @@ window.numericLRU = (function () {
     return { get: get, record: record };
 })();
 
+// Palabras de un buscador de lista, en minusculas y sin tildes, igual que los
+// data-search que arma Blade con Str::lower(Str::ascii(...)). Cada palabra se
+// busca por separado: "abel huacachin" encuentra a "Peñaloza Huacachin Abel".
+window.listSearchWords = function (q) {
+    return String(q || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+        .split(/\s+/).filter(Boolean);
+};
+
 // =========================================================
 // Alpine factory: numericChips
 // Mezcla fuentes (contextual derivado, server-side via Livewire, LRU local)
@@ -756,15 +764,12 @@ document.addEventListener('alpine:init', function () {
     // Buscador sobre una lista ya pintada (p. ej. Placas bloqueadas en Sorteos):
     // cada fila lleva data-search con placa, COD y conductor en minusculas y sin
     // tildes (Str::lower(Str::ascii(...))), y x-show="hits($el.dataset.search)".
-    // Cada palabra se busca por separado: "abel huacachin" encuentra a
-    // "Peñaloza Huacachin Abel".
     window.Alpine.data('listSearch', function () {
         return {
             q: '',
 
             words: function () {
-                return String(this.q || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
-                    .split(/\s+/).filter(Boolean);
+                return window.listSearchWords(this.q);
             },
 
             hits: function (text) {
