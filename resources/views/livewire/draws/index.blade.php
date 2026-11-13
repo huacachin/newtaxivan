@@ -35,7 +35,7 @@
         .dr-tip { --bs-tooltip-max-width: 320px; }
         .dr-tip .tooltip-inner { text-align: left; }
         .dr-tip .dr-tip-block + .dr-tip-block { margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255, 255, 255, .25); }
-        .dr-tip .dr-tip-reason { margin: 2px 0; white-space: normal; }
+        .dr-tip .dr-tip-reason { display: block; margin-bottom: 2px; white-space: normal; }
         .dr-tip .dr-tip-hint { display: block; margin-top: 4px; opacity: .75; font-style: italic; }
         .draws-module .dr-locked.dr-day-sel { background: #dcfce7 !important; color: #166534; outline: 2px solid #16a34a; outline-offset: -2px; }
         /* Flotante abajo: si empujara la tabla, el siguiente clic caería en otra fila */

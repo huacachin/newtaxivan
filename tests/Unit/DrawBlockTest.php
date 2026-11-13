@@ -115,17 +115,16 @@ class DrawBlockTest extends TestCase
         $this->assertSame(DrawBlock::STATUS_ACTIVE, $indefinite->status());
     }
 
-    public function test_the_grid_tooltip_shows_the_period_and_escapes_the_reason(): void
+    public function test_the_grid_tooltip_shows_the_escaped_reason_without_the_period_days(): void
     {
-        $range = $this->block(['kind' => DrawBlock::KIND_RANGE, 'starts_on' => '2026-11-09', 'ends_on' => '2026-11-14', 'reason' => 'No pagó <script>alert(1)</script>']);
-        $suspension = $this->block(['kind' => DrawBlock::KIND_SUSPENSION, 'dates' => ['2026-11-07'], 'starts_on' => '2026-11-07', 'ends_on' => '2026-11-07', 'reason' => 'x']);
+        $dates = $this->block(['kind' => DrawBlock::KIND_DATES, 'dates' => ['2026-11-11', '2026-11-16'], 'starts_on' => '2026-11-11', 'ends_on' => '2026-11-16',
+            'reason' => 'No pagó <script>alert(1)</script>']);
 
-        $html = $range->tooltipHtml();
-        $this->assertStringContainsString('<b>Del 09/11 al 14/11/2026</b>', $html);
-        $this->assertStringContainsString('No pagó &lt;script&gt;alert(1)&lt;/script&gt;', $html);
+        $html = $dates->tooltipHtml();
+        $this->assertStringContainsString('<b class="dr-tip-reason">No pagó &lt;script&gt;alert(1)&lt;/script&gt;</b>', $html);
         $this->assertStringNotContainsString('<script>', $html);
+        $this->assertStringNotContainsString('11/11', $html); // los días del periodo confunden en la celda de un día
         $this->assertStringContainsString('Bloqueado por —', $html); // sin usuario cargado
-        $this->assertStringContainsString('<b>Suspensión por sanciones: Sáb 07/11</b>', $suspension->tooltipHtml());
     }
 
     public function test_a_block_is_served_when_its_period_ends_or_lifted_when_unblocked(): void
