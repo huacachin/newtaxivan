@@ -146,8 +146,8 @@ class DrawService
     /**
      * Días de una suspensión por sanciones: los $count primeros días hábiles
      * (lunes a sábado sin feriados) después de hoy que todavía no se sortearon.
-     * El domingo no cuenta: la placa suspendida igual puede entrar al sorteo
-     * opcional del domingo si la eligen.
+     * El domingo no cuenta como día de suspensión, pero si cae en medio la placa
+     * tampoco entra a ese sorteo (DrawBlock::coversDate).
      *
      * Viernes 06 sin sortear el sábado: Sáb 07, Lun 09, Mar 10. Si el sábado ya
      * se sorteó: Lun 09, Mar 10, Mié 11.

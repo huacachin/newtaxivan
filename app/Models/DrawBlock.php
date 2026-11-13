@@ -108,12 +108,12 @@ class DrawBlock extends Model
             ->where(fn (Builder $w) => $w->whereNull('ends_on')->orWhere('ends_on', '>=', Carbon::today()->toDateString()));
     }
 
-    /** Los que cubren $date (sin contar los días desbloqueados). */
+    /** Los que cubren $date (sin contar los días desbloqueados). Ver coversDate para el domingo. */
     public function scopeOnDate(Builder $q, string $date): Builder
     {
         return $q->where('starts_on', '<=', $date)
             ->where(fn (Builder $w) => $w->whereNull('ends_on')->orWhere('ends_on', '>=', $date))
-            ->where(fn (Builder $w) => $w->whereNull('dates')->orWhereJsonContains('dates', $date))
+            ->when(! Carbon::parse($date)->isSunday(), fn (Builder $d) => $d->where(fn (Builder $w) => $w->whereNull('dates')->orWhereJsonContains('dates', $date)))
             ->whereDoesntHave('exceptions', fn (Builder $e) => $e->where('date', $date));
     }
 
@@ -140,12 +140,18 @@ class DrawBlock extends Model
         return $this->kind === self::KIND_INDEFINITE;
     }
 
-    /** ¿$date cae en el periodo? (sin mirar días desbloqueados ni si está vigente) */
+    /**
+     * ¿$date cae en el periodo? (sin mirar días desbloqueados ni si está vigente)
+     *
+     * El domingo no se elige en "Días específicos" ni entra en la suspensión,
+     * pero si cae entre el primer y el último día del bloqueo también lo cubre:
+     * al sorteo del domingo solo entran las placas no bloqueadas.
+     */
     public function coversDate(string $date): bool
     {
         return (! $this->starts_on || $date >= $this->starts_on->toDateString())
             && (! $this->ends_on || $date <= $this->ends_on->toDateString())
-            && ($this->dates === null || in_array($date, $this->dates, true));
+            && ($this->dates === null || in_array($date, $this->dates, true) || Carbon::parse($date)->isSunday());
     }
 
     /**
