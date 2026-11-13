@@ -36,6 +36,13 @@
             padding: 10px 12px; margin: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
         .dm-card:has(input:checked) { border-color: #7dd3fc; background: #f0f9ff; }
         .dm-cod { flex: none; width: 34px; text-align: center; font-size: 13px; font-weight: 700; color: #64748b; }
+        /* Correlativo de la lista (grande) con el código debajo (chico) */
+        .dm-num { flex: none; width: 42px; display: flex; flex-direction: column; align-items: center; line-height: 1.1; }
+        .dm-n { font-size: 17px; font-weight: 800; color: #334155; }
+        .dm-num .dm-cod { width: auto; font-size: 11px; font-weight: 600; white-space: nowrap; }
+        .dm-stats { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .dm-stats span { background: #f1f5f9; color: #334155; border-radius: 10px; padding: 5px 12px; font-size: 14px; }
+        .dm-stats .is-on { background: #e0f2fe; color: #075985; }
         .dm-who { flex: 1 1 auto; min-width: 0; line-height: 1.2; }
         .dm-plate { display: block; font-size: 19px; font-weight: 800; letter-spacing: .5px; }
         .dm-driver { display: block; font-size: 13px; color: #64748b; }
@@ -206,6 +213,10 @@
                 <span @class(['dm-tag', 'dm-tag--sunday' => $isSunday, 'dm-tag--pending' => ! $isSunday])>{{ $isSunday ? ($sundayTest ? 'Domingo · en prueba' : 'Domingo · opcional') : '● Pendiente de sorteo' }}</span>
                 <h2 class="mt-2">{{ $dayTitle }}</h2>
                 <p>{{ $isSunday ? 'Prende solo las placas que trabajan este domingo: solo ellas entran al sorteo.' : 'Apaga las placas que no salen. Las prendidas entran al sorteo.' }}</p>
+                <div class="dm-stats">
+                    <span><b>{{ $vehicles->count() }}</b> pueden entrar</span>
+                    <span class="is-on"><b x-text="count">{{ count($included[$day] ?? []) }}</b> participan</span>
+                </div>
             </div>
 
             <div class="dm-tools">
@@ -220,7 +231,10 @@
                     <label class="dm-card" data-card wire:key="card-{{ $day }}-{{ $vehicle->id }}"
                            data-search="{{ \Illuminate\Support\Str::lower($vehicle->plate.' '.$vehicle->sort_order.' '.$vehicle->driver?->name) }}"
                            x-show="! q || $el.dataset.search.includes(q.toLowerCase())">
-                        <span class="dm-cod">{{ $vehicle->sort_order }}</span>
+                        <span class="dm-num" aria-label="Nº {{ $loop->iteration }}, código {{ $vehicle->sort_order }}">
+                            <span class="dm-n">{{ $loop->iteration }}</span>
+                            <span class="dm-cod">cod {{ $vehicle->sort_order }}</span>
+                        </span>
                         <span class="dm-who">
                             <span class="dm-plate">{{ $vehicle->plate }}</span>
                             <span class="dm-driver">
