@@ -16,6 +16,15 @@
         .draws-module .dr-sunday-list label { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-bottom: 1px solid #f1f5f9; cursor: pointer; margin: 0; }
         .draws-module .dr-sunday-list label:hover { background: #f8fafc; }
         .draws-module .dr-sunday-list .form-check-input { width: 1.2em; height: 1.2em; margin: 0; flex: none; }
+        .draws-module .dr-sunday-head { display: flex; align-items: center; gap: 10px; padding: 4px 10px; position: sticky; top: 0; z-index: 1;
+            background: #f8fafc; border-bottom: 1px solid #e2e8f0; font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; }
+        .draws-module .dr-sunday-check { width: 1.2em; flex: none; }
+        .draws-module .dr-sunday-n { width: 24px; flex: none; text-align: right; }
+        .draws-module .dr-sunday-cod { width: 34px; flex: none; }
+        .draws-module .dr-sunday-plate { min-width: 76px; flex: none; }
+        .draws-module .dr-sunday-stats { display: flex; flex-wrap: wrap; gap: 8px; }
+        .draws-module .dr-sunday-stats span { background: #f1f5f9; color: #334155; border-radius: 8px; padding: 4px 10px; font-size: 13px; }
+        .draws-module .dr-sunday-stats .is-picked { background: #fef3c7; color: #92400e; }
         .draws-module .dr-low { background: #dcfce7; color: #166534; font-weight: 600; }
         .draws-module .dr-mid { background: #fef3c7; color: #92400e; font-weight: 600; }
         .draws-module .dr-high { background: #fee2e2; color: #991b1b; font-weight: 600; }
@@ -661,8 +670,12 @@
                 <div class="modal-body">
                     <p class="small text-muted mb-2">
                         Marca las placas que <b>sí</b> trabajan este domingo: solo ellas entran al sorteo.
-                        Son las {{ $sundayVehicles->count() }} activas (sin las bloqueadas ni las NT en rojo).
+                        Salen las activas, sin las bloqueadas ni las NT en rojo.
                     </p>
+                    <div class="dr-sunday-stats mb-2">
+                        <span><b>{{ $sundayVehicles->count() }}</b> placa(s) pueden entrar</span>
+                        <span class="is-picked"><b x-text="selected.length">0</b> elegida(s)</span>
+                    </div>
                     <div class="d-flex gap-2 mb-2">
                         <input type="search" class="form-control form-control-sm" placeholder="Buscar placa o conductor" x-model="q">
                         <button type="button" class="btn btn-sm btn-outline-primary text-nowrap"
@@ -670,14 +683,25 @@
                         <button type="button" class="btn btn-sm btn-outline-secondary text-nowrap" x-on:click="selected = []">Quitar todas</button>
                     </div>
                     <div class="dr-sunday-list border rounded">
+                        @if($sundayVehicles->isNotEmpty())
+                            <div class="dr-sunday-head" aria-hidden="true">
+                                <span class="dr-sunday-check"></span>
+                                <span class="dr-sunday-n">#</span>
+                                <span class="dr-sunday-cod">Cod</span>
+                                <span class="dr-sunday-plate">Placa</span>
+                                <span>Conductor</span>
+                                <span class="ms-auto">Cond.</span>
+                            </div>
+                        @endif
                         @forelse($sundayVehicles as $vehicle)
                             @php $firstName = \App\Services\DrawService::firstName($vehicle->driver?->name); @endphp
                             <label data-sunday-row data-id="{{ $vehicle->id }}" wire:key="sunday-{{ $vehicle->id }}"
                                    data-search="{{ \Illuminate\Support\Str::lower($vehicle->plate.' '.$vehicle->sort_order.' '.$vehicle->driver?->name) }}"
                                    x-show="! q || $el.dataset.search.includes(q.toLowerCase())">
                                 <input type="checkbox" class="form-check-input" value="{{ $vehicle->id }}" x-model.number="selected">
-                                <span class="text-muted small" style="width: 34px;">{{ $vehicle->sort_order }}</span>
-                                <strong>{{ $vehicle->plate }}</strong>
+                                <span class="dr-sunday-n text-muted small">{{ $loop->iteration }}</span>
+                                <span class="dr-sunday-cod text-muted small">{{ $vehicle->sort_order }}</span>
+                                <strong class="dr-sunday-plate">{{ $vehicle->plate }}</strong>
                                 <span class="text-muted small">{{ $firstName }}</span>
                                 <span class="ms-auto small text-muted">{{ $vehicle->condition }}</span>
                             </label>
