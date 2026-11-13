@@ -135,11 +135,7 @@
                                 @error('amount') <span class="title-modules">{{ $message }}</span> @enderror
 
                                 @if($type_form === 'DEUDA')
-                                    @if(!is_null($pending_debt))
-                                        <small class="{{ $pending_debt > 0 ? 'text-muted' : 'text-warning' }}">
-                                            Deuda pendiente total: S/ {{ number_format($pending_debt, 2) }}
-                                        </small>
-                                    @endif
+                                    @include('livewire.payments._debt-months')
                                 @else
                                     @if(!is_null($detected_cost))
                                         <small class="text-muted">

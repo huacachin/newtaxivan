@@ -266,10 +266,12 @@
                                 <span class="list-card__index">{{ $loop->iteration }}</span>
                                 <span class="list-card__title">{{ $row['date'] }}</span>
                             </div>
-                            <button type="button" class="list-card__edit" style="background:rgba(220,38,38,0.10); color:#991b1b;"
-                                    wire:click="questionDelete({{ $row['id'] }})" aria-label="Eliminar">
-                                <i class="ti ti-trash"></i>
-                            </button>
+                            @unless($row['fromPayment'])
+                                <button type="button" class="list-card__edit" style="background:rgba(220,38,38,0.10); color:#991b1b;"
+                                        wire:click="questionDelete({{ $row['id'] }})" aria-label="Eliminar">
+                                    <i class="ti ti-trash"></i>
+                                </button>
+                            @endunless
                         </header>
 
                         @if(!empty($row['detail']))
@@ -336,9 +338,13 @@
                     @forelse($details as $row)
                         <tr>
                             <td>
-                                <button  class="btn btn-sm btn-danger" wire:click="questionDelete({{ $row['id'] }})">
-                                    Eliminar
-                                </button>
+                                @if($row['fromPayment'])
+                                    <span class="text-muted f-s-12" title="Se quita editando o eliminando el pago en Pagos"><i class="ti ti-receipt"></i> Pago</span>
+                                @else
+                                    <button  class="btn btn-sm btn-danger" wire:click="questionDelete({{ $row['id'] }})">
+                                        Eliminar
+                                    </button>
+                                @endif
                             </td>
                             <td>{{ $row['id'] }}</td>
                             <td>{{ $row['date'] }}</td>

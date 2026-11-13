@@ -6,6 +6,7 @@ use App\Models\CostPerPlateDay;
 use App\Models\Headquarter;
 use App\Models\Payment;
 use App\Models\Vehicle;
+use App\Services\DebtPaymentAllocator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -54,10 +55,6 @@ class Index extends Component
 
     // deuda total pendiente (todas las filas en debt_days de la placa)
     public ?float $pending_debt = null;
-
-    // ===== Config de deuda =====
-    private string $debtDaysDateColumn = 'date';      // fecha mensual en debt_days
-    private string $debtDaysAmortCol   = 'amortized'; // acumulador en debt_days
 
     // ===== Validaciones =====
     protected function rules(): array
@@ -292,100 +289,23 @@ class Index extends Component
         }
     }
 
-    /** Calcula deuda total pendiente (todas las filas debt_days de la placa) */
-    private function recalcPendingDebt(?string $refDate = null): void
+    /** Deuda pendiente de la placa: todos los meses (DebtPaymentAllocator) */
+    private function recalcPendingDebt(): void
     {
         $plate = $this->normPlate();
         if ($plate === '') { $this->pending_debt = null; return; }
 
-        // Si me pasan una fecha, uso su año/mes; si no, mes anterior al actual
-        if ($refDate) {
-            $y = (int)date('Y', strtotime($refDate));
-            $m = (int)date('m', strtotime($refDate));
-        } else {
-            $prev = now(config('app.timezone','America/Lima'))->copy()->startOfMonth()->subMonth();
-            $y = $prev->year; $m = $prev->month;
-        }
-
-        $vehicle = Vehicle::query()
-            ->whereRaw('REPLACE(UPPER(TRIM(plate)),"-","") = ?', [$this->plateNeedle()])
-            ->where('status', 'active')
-            ->first();
-
-        // Vehículo activo pero con fecha de cese vencida → no vincular
-        if ($vehicle && $vehicle->termination_date && $vehicle->termination_date < now(config('app.timezone', 'America/Lima'))->startOfDay()) {
-            $vehicle = null;
-        }
-
-        $q = DB::table('debt_days')
-            ->select('id','total','amortized','exonerated')
-            ->whereYear($this->debtDaysDateColumn, $y)
-            ->whereMonth($this->debtDaysDateColumn, $m);
-
-        if ($vehicle) $q->where('vehicle_id', $vehicle->id);
-        else $q->whereRaw('UPPER(TRIM(legacy_plate)) = ?', [$plate]);
-
-        $row = $q->first();
-        if (!$row) { $this->pending_debt = 0.0; return; }
-
-        $this->pending_debt = max(
-            (float)$row->total - (float)$row->amortized - (float)$row->exonerated,
-            0.0
-        );
+        $this->pending_debt = DebtPaymentAllocator::total(app(DebtPaymentAllocator::class)->pendingMonths($plate, $this->paymentId));
     }
 
-    /** Aplica amortización FIFO: del mes más antiguo al más reciente */
-    private function applyDebtAmortizations(?Vehicle $vehicle, string $normPlate, float $amount, int $paymentId): void
+    /** DEUDA: se descuenta del mes pendiente más antiguo al más reciente */
+    private function applyDebtAmortizations(int $paymentId, float $amount): void
     {
-        $tz        = config('app.timezone','America/Lima');
-        $prevStart = now($tz)->copy()->startOfMonth()->subMonth();
-        $prevEnd   = now($tz)->copy()->startOfMonth()->subSecond(); // último día del mes anterior
-
-        $q = DB::table('debt_days')
-            ->select('id','total','amortized','exonerated')
-            ->whereYear($this->debtDaysDateColumn, $prevStart->year)
-            ->whereMonth($this->debtDaysDateColumn, $prevStart->month);
-
-        if ($vehicle) {
-            $q->where('vehicle_id', $vehicle->id);
-        } else {
-            $q->whereRaw('UPPER(TRIM(legacy_plate)) = ?', [$normPlate]);
-        }
-
-        $row = $q->first();
-        if (!$row) {
-            throw ValidationException::withMessages([
-                'amount' => 'No existe deuda del mes anterior para esta placa.'
-            ]);
-        }
-
-        $pending = max((float)$row->total - (float)$row->amortized - (float)$row->exonerated, 0.0);
-        $use = min($amount, $pending);
-
-        if ($use <= 0.0001) {
-            throw ValidationException::withMessages([
-                'amount' => 'No hay deuda pendiente del mes anterior.'
-            ]);
-        }
-
-        // Sumar al acumulado mensual
-        $this->bumpDebtMonth((int)$row->id, (float)$use);
-
-        // Crear detalle (una sola fila porque es un único mes)
-        DB::table('debt_days_detail')->insert([
-            'debt_days_id' => (int)$row->id,
-            'exonerated'   => 0,
-            'amortized'    => (float)$use,
-            'detail'       => 'payment:'.$paymentId,
-            'user_id'      => Auth::id(),
-            'date'         => $prevEnd->toDateString(), // fecha dentro del mes anterior
-            'created_at'   => now(),
-            'updated_at'   => now(),
-        ]);
-
-        // si el monto > pending (no debería por la validación), queda remanente sin usar — ignoramos.
+        $allocator = app(DebtPaymentAllocator::class);
+        $parts = $allocator->plan($this->normPlate(), $amount);
+        $allocator->record($paymentId, $parts, $this->date_register ?: now(config('app.timezone', 'America/Lima'))->toDateString());
+        Payment::whereKey($paymentId)->update(['date_payment' => DebtPaymentAllocator::coverDate($parts)]);
     }
-
 
     /** Reglas de negocio comunes (ajustadas: DEUDA sin restricción de fecha) */
     private function validateBusinessCommon(): void
@@ -429,39 +349,23 @@ class Index extends Component
             }
         }
 
-        if ($this->type_form === 'DEUDA') {
-            // Asegura que la fecha esté en el mes anterior (tu regla actual)
-            $tz = config('app.timezone','America/Lima');
-            $now = now($tz);
-            $prevStart = $now->copy()->startOfMonth()->subMonth();
-            $prevEnd   = $now->copy()->startOfMonth()->subSecond();
-
-            if ($this->date_payment) {
-                $dp = \Carbon\Carbon::parse($this->date_payment, $tz)->startOfDay();
-                if (!($dp->betweenIncluded($prevStart, $prevEnd))) {
-                    throw ValidationException::withMessages([
-                        'date_payment' => 'Las amortizaciones DEUDA solo se registran para el mes anterior ('.$prevStart->format('Y-m').').',
-                    ]);
-                }
+        // RETRASO de un día que ya quedó en la deuda de su mes: se cobraría dos veces
+        if ($this->type_form === 'RETRASO' && $this->date_payment) {
+            $conflict = app(DebtPaymentAllocator::class)->closedDayConflict($this->normPlate(), $this->date_payment);
+            if ($conflict) {
+                throw ValidationException::withMessages(['date_payment' => $conflict]);
             }
+        }
 
-            // 👇 Que la deuda visible coincida con el mes de la fecha elegida
-            $this->recalcPendingDebt($this->date_payment);
+        // DEUDA: cualquier mes pendiente (se descuenta del más antiguo)
+        if ($this->type_form === 'DEUDA') {
+            $this->recalcPendingDebt();
             if (($this->pending_debt ?? 0) <= 0.0001) {
                 throw ValidationException::withMessages([
-                    'amount' => 'No hay deuda pendiente del mes anterior para esta placa.',
+                    'amount' => 'Esta placa no tiene deuda pendiente.',
                 ]);
             }
         }
-    }
-
-    /** Suma/resta en el acumulador `amortized` de debt_days */
-    private function bumpDebtMonth(int $debtDaysId, float $delta): void
-    {
-        DB::table('debt_days')->where('id', $debtDaysId)->update([
-            $this->debtDaysAmortCol => DB::raw($this->debtDaysAmortCol.' + '.($delta + 0.0)),
-            'updated_at'            => now(),
-        ]);
     }
 
     // ===== Livewire listeners =====
@@ -532,7 +436,7 @@ class Index extends Component
             $this->date_payment = $prevEnd->toDateString();
             $this->detected_cost = null;
 
-            $this->recalcPendingDebt($this->date_payment);
+            $this->recalcPendingDebt();
             $this->amount = $this->pending_debt !== null
                 ? number_format($this->pending_debt, 2, '.', '')
                 : '';
@@ -623,7 +527,7 @@ class Index extends Component
             ]);
 
             if ($this->type_form === 'DEUDA') {
-                $this->applyDebtAmortizations($vehicle, $this->normPlate(), (float)$this->amount, (int)$payment->id);
+                $this->applyDebtAmortizations((int)$payment->id, (float)$this->amount);
             }
         });
 
@@ -674,19 +578,8 @@ class Index extends Component
         }
 
         DB::transaction(function () use ($p, $vehicle) {
-            $oldType = $p->type;
-
-            // Revertir amortizaciones previas si eran DEUDA
-            if ($oldType === 'DEUDA') {
-                $olds = DB::table('debt_days_detail')
-                    ->where('detail', 'like', 'payment:'.$p->id.'%')
-                    ->get();
-
-                foreach ($olds as $od) {
-                    $this->bumpDebtMonth((int)$od->debt_days_id, -1 * (float)$od->amortized);
-                    DB::table('debt_days_detail')->where('id', $od->id)->delete();
-                }
-            }
+            // Devolver lo que descontó si era DEUDA
+            app(DebtPaymentAllocator::class)->revert((int) $p->id);
 
             // Actualizar pago
             $p->update([
@@ -706,7 +599,7 @@ class Index extends Component
 
             // Aplicar nuevas amortizaciones si ahora es DEUDA
             if ($this->type_form === 'DEUDA') {
-                $this->applyDebtAmortizations($vehicle, $this->normPlate(), (float)$this->amount, (int)$p->id);
+                $this->applyDebtAmortizations((int)$p->id, (float)$this->amount);
             }
         });
 
@@ -824,7 +717,7 @@ class Index extends Component
 
         if ($this->type_form === 'DEUDA') {
             // La deuda visible y el monto siguen al mes de la fecha elegida
-            $this->recalcPendingDebt($this->date_payment);
+            $this->recalcPendingDebt();
             $this->amount = $this->pending_debt !== null
                 ? number_format($this->pending_debt, 2, '.', '')
                 : '';

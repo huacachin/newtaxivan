@@ -5,6 +5,8 @@ namespace App\Livewire\Debts;
 use App\Models\DebtDay;
 use App\Models\DebtDayDetail;
 use App\Models\DebtDayDetailImage;
+use App\Models\Payment;
+use App\Services\DebtPaymentAllocator;
 use App\Traits\NormalizesDecimals;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -155,6 +157,14 @@ class MonthlyDetail extends Component
     #[On('register_destroy')]
     public function deleteDetail(int $id): void
     {
+        // Lo descontado por un pago DEUDA se quita editando o eliminando ese pago
+        $linked = DebtDayDetail::where('debt_days_id', $this->id)->whereKey($id)->value('detail');
+        if (DebtPaymentAllocator::paymentIdFrom($linked)) {
+            $this->dispatch('errorAlert', ['message' => 'Este descuento viene de un pago: para quitarlo, edita o elimina el pago en Pagos.']);
+
+            return;
+        }
+
         DB::transaction(function () use ($id) {
             $detail = DebtDayDetail::where('debt_days_id', $this->id)->findOrFail($id);
 
@@ -200,18 +210,23 @@ class MonthlyDetail extends Component
 
         $this->loadSuggestions();
 
+        // Descuentos de pagos DEUDA (detalle "payment:{id}"): se muestran con su serie
+        $paymentIds = $this->debtDay->details
+            ->map(fn ($d) => DebtPaymentAllocator::paymentIdFrom($d->detail))
+            ->filter()->unique()->values();
+        $payments = Payment::whereIn('id', $paymentIds)->get(['id', 'serie', 'date_register'])->keyBy('id');
+
         $this->details = $this->debtDay->details
             ->sortByDesc('date')
             ->values()
-            ->map(function ($d) {
-                $rawDetail = (string)($d->detail ?? '');
-                // Ocultar marcadores tecnicos tipo "payment:123"
-                $cleanDetail = str_starts_with($rawDetail, 'payment:') ? '' : $rawDetail;
+            ->map(function ($d) use ($payments) {
+                $paymentId = DebtPaymentAllocator::paymentIdFrom($d->detail);
 
                 return [
                     'id'         => $d->id,
                     'date'       => $d->date ? \Illuminate\Support\Carbon::parse($d->date)->format('d/m/Y') : '',
-                    'detail'     => $cleanDetail,
+                    'detail'     => $paymentId ? $this->paymentLabel($payments->get($paymentId), $paymentId) : (string) ($d->detail ?? ''),
+                    'fromPayment' => $paymentId !== null,
                     'exonerated' => number_format((float)$d->exonerated, 2),
                     'amortized'  => number_format((float)$d->amortized, 2),
                     'user'       => $d->user?->username ?? '—',
@@ -221,6 +236,17 @@ class MonthlyDetail extends Component
                     ])->all(),
                 ];
             })->all();
+    }
+
+    /** "Pago serie 071863 del 16/10/2026" para un descuento hecho desde Pagos. */
+    private function paymentLabel(?Payment $payment, int $paymentId): string
+    {
+        if (! $payment) {
+            return "Pago #{$paymentId} (ya no existe)";
+        }
+
+        return 'Pago'.($payment->serie ? ' serie '.$payment->serie : '')
+            .($payment->date_register ? ' del '.$payment->date_register->format('d/m/Y') : '');
     }
 
     /**

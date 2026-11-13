@@ -705,6 +705,53 @@ document.addEventListener('alpine:init', function () {
             }
         };
     });
+
+    // Pago DEUDA: cuanto recibe cada mes pendiente con el monto escrito, del mas
+    // antiguo al mas reciente. Misma regla (en centimos) que
+    // App\Services\DebtPaymentAllocator::allocate; el monto sale de $wire.amount.
+    window.Alpine.data('debtPreview', function (pendings) {
+        return {
+            pendings: pendings || [],
+
+            amount: function () {
+                var v = parseFloat(String(this.$wire.amount == null ? '' : this.$wire.amount).replace(',', '.'));
+                return isNaN(v) || v < 0 ? 0 : v;
+            },
+
+            parts: function () {
+                var rest = Math.round(this.amount() * 100);
+                return this.pendings.map(function (p) {
+                    var pending = Math.round(p * 100);
+                    var use = Math.max(0, Math.min(rest, pending));
+                    rest -= use;
+                    return { use: use / 100, left: (pending - use) / 100 };
+                });
+            },
+
+            cell: function (i) {
+                var part = this.parts()[i];
+                if (!part || part.use <= 0) return '—';
+                return part.left <= 0
+                    ? this.money(part.use) + ' ✓'
+                    : this.money(part.use) + ' (quedan ' + this.money(part.left) + ')';
+            },
+
+            rowClass: function (i) {
+                var part = this.parts()[i];
+                if (!part || part.use <= 0) return '';
+                return part.left <= 0 ? 'is-paid' : 'is-partial';
+            },
+
+            excess: function () {
+                var total = this.pendings.reduce(function (sum, p) { return sum + Math.round(p * 100); }, 0);
+                return Math.max(0, Math.round(this.amount() * 100) - total) / 100;
+            },
+
+            money: function (v) {
+                return Number(v).toFixed(2);
+            }
+        };
+    });
 });
 
 // ===== Historial de busqueda propio (datalist + localStorage) =====
