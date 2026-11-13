@@ -31,6 +31,12 @@
         .draws-module .dr-locked { background: #f1f5f9; color: #94a3b8; font-size: 11px; }
         .draws-module .dr-locked-open { cursor: pointer; color: #64748b; }
         .draws-module .dr-locked-open:hover { background: #e2e8f0; color: #1e293b; }
+        /* Tooltip de los bloqueos (se pinta en el body, fuera de .draws-module) */
+        .dr-tip { --bs-tooltip-max-width: 320px; }
+        .dr-tip .tooltip-inner { text-align: left; }
+        .dr-tip .dr-tip-block + .dr-tip-block { margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255, 255, 255, .25); }
+        .dr-tip .dr-tip-reason { margin: 2px 0; white-space: normal; }
+        .dr-tip .dr-tip-hint { display: block; margin-top: 4px; opacity: .75; font-style: italic; }
         .draws-module .dr-locked.dr-day-sel { background: #dcfce7 !important; color: #166534; outline: 2px solid #16a34a; outline-offset: -2px; }
         /* Flotante abajo: si empujara la tabla, el siguiente clic caería en otra fila */
         .draws-module .dr-daybar { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 1040; margin: 0;
@@ -326,7 +332,7 @@
                                     </tr>
                                 @endif
                                 @php
-                                    $blockTitle = $row['blocks']->map(fn ($b) => $b->periodLabel().': '.$b->reason.' ('.\App\Models\DrawBlock::userLabel($b->blockedBy).')')->implode(' · ');
+                                    $blockTip = $row['blocks']->map(fn ($b) => $b->tooltipHtml())->implode('').'<small class="dr-tip-hint">Clic para ver el historial de sanciones</small>';
                                 @endphp
                                 <tr wire:key="row-{{ $row['id'] }}" @class(['dr-blocked' => $row['blocked']])>
                                     <td class="dr-sel" x-show="selecting" x-cloak>
@@ -343,7 +349,7 @@
                                                title="{{ $row['everBlocked'] ? 'Tiene sanciones en su historial · ' : '' }}Ver historial de sanciones"><strong @class(['text-danger' => $row['everBlocked']])>{{ $row['plate'] }}</strong></a>
                                             @if($row['blocks']->isNotEmpty())
                                                 <span @class(['badge dr-lock', 'bg-secondary' => $row['blocked'], 'bg-light text-dark border' => ! $row['blocked']])
-                                                      wire:click="openHistory({{ $row['id'] }})" title="{{ $blockTitle }}"><i class="ti ti-lock"></i>@if($row['blocks']->count() > 1) {{ $row['blocks']->count() }}@endif</span>
+                                                      wire:click="openHistory({{ $row['id'] }})" x-on:click="window.bootstrap?.Tooltip.getInstance($el)?.hide()" data-bs-toggle="tooltip" data-bs-html="true" data-bs-custom-class="dr-tip" data-bs-title="{{ $blockTip }}"><i class="ti ti-lock"></i>@if($row['blocks']->count() > 1) {{ $row['blocks']->count() }}@endif</span>
                                             @endif
                                         @else
                                             <a href="#" class="dr-plate" wire:click.prevent="openHistory({{ $row['id'] }})" title="Ya no entra al sorteo (inactivo o NT en rojo). Ver historial de sanciones"><strong class="text-danger">{{ $row['plate'] }}</strong></a>
@@ -365,11 +371,11 @@
                                         @if(! $cell && $lock && $canBlock && ! $simulating && $date >= $firstOpen)
                                             <td class="text-center dr-locked dr-locked-open" data-day="{{ $dayKey }}" data-label="{{ $row['plate'] }} {{ \App\Models\DrawBlock::dayLabel($date) }}"
                                                 :class="days.includes('{{ $dayKey }}') && 'dr-day-sel'" x-on:click="toggleDay('{{ $dayKey }}')"
-                                                title="{{ $lock->periodLabel() }}: {{ $lock->reason }} · bloqueado por {{ \App\Models\DrawBlock::userLabel($lock->blockedBy) }} el {{ $lock->created_at->format('d/m/Y H:i') }} · clic para marcar este día y desbloquearlo">
+                                                data-bs-toggle="tooltip" data-bs-html="true" data-bs-custom-class="dr-tip" data-bs-title="{{ $lock->tooltipHtml().'<small class="dr-tip-hint">Clic para marcar este día y desbloquearlo</small>' }}">
                                                 <i class="ti" :class="days.includes('{{ $dayKey }}') ? 'ti-lock-open' : 'ti-lock'"></i>
                                             </td>
                                         @elseif(! $cell && $lock)
-                                            <td class="text-center dr-locked" title="{{ $lock->periodLabel() }}: {{ $lock->reason }} · bloqueado por {{ \App\Models\DrawBlock::userLabel($lock->blockedBy) }} el {{ $lock->created_at->format('d/m/Y H:i') }}"><i class="ti ti-lock"></i></td>
+                                            <td class="text-center dr-locked" data-bs-toggle="tooltip" data-bs-html="true" data-bs-custom-class="dr-tip" data-bs-title="{{ $lock->tooltipHtml() }}"><i class="ti ti-lock"></i></td>
                                         @elseif(isset($results[$date]))
                                             @if(! $cell)
                                                 <td></td>

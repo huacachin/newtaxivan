@@ -200,6 +200,20 @@ class DrawBlock extends Model
         return $user?->username ?: ($user?->name ?? '—');
     }
 
+    /**
+     * Contenido del tooltip de la grilla (HTML, con los textos escapados): el
+     * periodo (y si es suspensión por sanciones), el motivo y quién lo bloqueó.
+     * Necesita blockedBy cargado.
+     */
+    public function tooltipHtml(): string
+    {
+        $period = $this->kind === self::KIND_SUSPENSION ? $this->kindName().': '.$this->periodLabel() : $this->periodLabel();
+
+        return '<div class="dr-tip-block"><b>'.e($period).'</b>'
+            .'<div class="dr-tip-reason">'.e($this->reason).'</div>'
+            .'<small>Bloqueado por '.e(self::userLabel($this->blockedBy)).($this->created_at ? ' el '.$this->created_at->format('d/m/Y H:i') : '').'</small></div>';
+    }
+
     /** "Sáb 07/11" */
     public static function dayLabel(string $date): string
     {
