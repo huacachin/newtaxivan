@@ -859,7 +859,15 @@ class Index extends Component
         // Para el domingo tardío: el domingo sin sortear aunque ya esté sorteado el lunes
         $drawn = Draw::active()->where('date', '>=', $today->toDateString())->pluck('date')->map(fn ($d) => Carbon::parse($d)->toDateString())->all();
 
-        return DrawService::drawableDates($lastDate ? Carbon::parse($lastDate)->toDateString() : null, $today, DrawService::holidaysAround($today), $drawn);
+        $dates = DrawService::drawableDates($lastDate ? Carbon::parse($lastDate)->toDateString() : null, $today, DrawService::holidaysAround($today), $drawn);
+
+        // TEMPORAL (prueba del viernes 2026-11-13): ya se ve el domingo 15 para probar su
+        // sorteo hasta la confirmación. DrawService::run no lo deja sortear. Quitar.
+        if ($today->toDateString() === '2026-11-13' && ! in_array('2026-11-15', $dates, true)) {
+            $dates[] = '2026-11-15';
+        }
+
+        return $dates;
     }
 
     /**
