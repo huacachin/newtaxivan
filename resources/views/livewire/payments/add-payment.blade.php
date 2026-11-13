@@ -53,6 +53,14 @@
                             </div>
                         </div>
 
+                        {{-- Deuda pendiente con cualquier tipo: en el celular justo bajo la placa;
+                             en escritorio (order-md-last) debajo de los campos, antes de Agregar. --}}
+                        @if($type_form !== 'DEUDA' && ($pending_debt ?? 0) > 0)
+                            <div class="col-12 order-md-last" wire:key="debt-warning">
+                                @include('livewire.payments._debt-warning')
+                            </div>
+                        @endif
+
                         <div class="col-md-auto">
                             <div class="mb-3">
                                 <label class="form-label">Serie</label>
