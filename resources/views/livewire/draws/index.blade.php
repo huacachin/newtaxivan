@@ -546,7 +546,8 @@
     </div>
 
     {{-- Modal: placas bloqueadas --}}
-    <div class="modal fade" id="blocksModal" tabindex="-1" aria-hidden="true" wire:ignore.self>
+    <div class="modal fade" id="blocksModal" tabindex="-1" aria-hidden="true" wire:ignore.self
+         x-data="listSearch" x-on:hidden-bs-modal.dot="q = ''">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
             <div class="modal-content">
                 <div class="modal-header">
@@ -574,6 +575,11 @@
 
                     @include('draws._kind_legend')
 
+                    @if($blocks->isNotEmpty())
+                        <input type="search" class="form-control form-control-sm mb-2" style="max-width: 320px;"
+                               placeholder="Buscar placa, COD o conductor" x-model="q">
+                    @endif
+
                     <div class="table-responsive">
                         <table class="table table-sm table-bordered mb-0 small dr-list">
                             <thead>
@@ -581,7 +587,9 @@
                             </thead>
                             <tbody>
                             @forelse($blocks as $block)
-                                <tr wire:key="block-{{ $block->id }}">
+                                <tr wire:key="block-{{ $block->id }}"
+                                    data-search="{{ \Illuminate\Support\Str::lower(\Illuminate\Support\Str::ascii($block->vehicle?->plate.' '.$block->vehicle?->sort_order.' '.$block->vehicle?->driver?->name)) }}"
+                                    x-show="hits($el.dataset.search)">
                                     <td class="text-center">{{ $loop->iteration }}</td>
                                     <td class="text-center">{{ $block->vehicle?->sort_order ?? '—' }}</td>
                                     <td class="dr-nowrap">
@@ -613,6 +621,11 @@
                             @empty
                                 <tr><td colspan="10" class="text-center text-muted">No hay placas bloqueadas.</td></tr>
                             @endforelse
+                            @if($blocks->isNotEmpty())
+                                <tr x-show="! anyHit()" x-cloak>
+                                    <td colspan="10" class="text-center text-muted">Ninguna placa bloqueada coincide con «<span x-text="q.trim()"></span>».</td>
+                                </tr>
+                            @endif
                             </tbody>
                         </table>
                     </div>

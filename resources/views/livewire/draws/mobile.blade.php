@@ -287,7 +287,8 @@
     </div>
 
     {{-- Bloqueos vigentes (pantalla completa en el celular) --}}
-    <div class="modal fade" id="blocksModal" tabindex="-1" aria-hidden="true" wire:ignore.self>
+    <div class="modal fade" id="blocksModal" tabindex="-1" aria-hidden="true" wire:ignore.self
+         x-data="listSearch" x-on:hidden-bs-modal.dot="q = ''">
         <div class="modal-dialog modal-dialog-scrollable modal-fullscreen-sm-down">
             <div class="modal-content">
                 <div class="modal-header">
@@ -306,8 +307,15 @@
                         </button>
                     @endif
                     @include('draws._kind_legend')
+                    @if($blocks->isNotEmpty())
+                        <input type="search" class="form-control mb-2" style="font-size: 16px; min-height: 44px; border-radius: 12px;"
+                               placeholder="Buscar placa, COD o conductor" x-model="q">
+                        <div class="dm-empty" x-show="! anyHit()" x-cloak>Ninguna placa bloqueada coincide con «<span x-text="q.trim()"></span>».</div>
+                    @endif
                     @forelse($blocks as $block)
-                        <div class="dm-block" wire:key="mblock-{{ $block->id }}">
+                        <div class="dm-block" wire:key="mblock-{{ $block->id }}"
+                             data-search="{{ \Illuminate\Support\Str::lower(\Illuminate\Support\Str::ascii($block->vehicle?->plate.' '.$block->vehicle?->sort_order.' '.$block->vehicle?->driver?->name)) }}"
+                             x-show="hits($el.dataset.search)">
                             <div class="d-flex align-items-start gap-2">
                                 <div class="flex-grow-1">
                                     <div class="dm-plate">{{ $block->vehicle?->plate ?? '—' }}

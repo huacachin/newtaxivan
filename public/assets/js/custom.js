@@ -752,6 +752,34 @@ document.addEventListener('alpine:init', function () {
             }
         };
     });
+
+    // Buscador sobre una lista ya pintada (p. ej. Placas bloqueadas en Sorteos):
+    // cada fila lleva data-search con placa, COD y conductor en minusculas y sin
+    // tildes (Str::lower(Str::ascii(...))), y x-show="hits($el.dataset.search)".
+    // Cada palabra se busca por separado: "abel huacachin" encuentra a
+    // "Peñaloza Huacachin Abel".
+    window.Alpine.data('listSearch', function () {
+        return {
+            q: '',
+
+            words: function () {
+                return String(this.q || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+                    .split(/\s+/).filter(Boolean);
+            },
+
+            hits: function (text) {
+                var haystack = String(text || '');
+                return this.words().every(function (word) { return haystack.indexOf(word) !== -1; });
+            },
+
+            anyHit: function () {
+                var self = this;
+                return Array.prototype.some.call(this.$root.querySelectorAll('[data-search]'), function (row) {
+                    return self.hits(row.dataset.search);
+                });
+            }
+        };
+    });
 });
 
 // ===== Historial de busqueda propio (datalist + localStorage) =====
