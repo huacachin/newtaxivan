@@ -298,11 +298,12 @@ class Index extends Component
         $this->pending_debt = DebtPaymentAllocator::total(app(DebtPaymentAllocator::class)->pendingMonths($plate, $this->paymentId));
     }
 
-    /** DEUDA: se descuenta del mes pendiente más antiguo al más reciente */
+    /** DEUDA (modal sin elección de mes): un pago es de un solo mes, el pendiente más antiguo */
     private function applyDebtAmortizations(int $paymentId, float $amount): void
     {
         $allocator = app(DebtPaymentAllocator::class);
-        $parts = $allocator->plan($this->normPlate(), $amount);
+        $months = $allocator->pendingMonths($this->normPlate(), lock: true);
+        $parts = DebtPaymentAllocator::forMonth($months, $months[0]['id'] ?? null, $amount);
         $allocator->record($paymentId, $parts, $this->date_register ?: now(config('app.timezone', 'America/Lima'))->toDateString());
         Payment::whereKey($paymentId)->update(['date_payment' => DebtPaymentAllocator::coverDate($parts)]);
     }

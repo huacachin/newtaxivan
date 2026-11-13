@@ -12,10 +12,10 @@ use Illuminate\Validation\ValidationException;
 /**
  * Pagos tipo DEUDA contra la deuda mensual (debt_days).
  *
- * El pago se descuenta del mes pendiente más antiguo al más reciente, sin
- * importar en qué mes se pague. Cada parte queda como un detalle
- * "payment:{id}" del mes que la recibió: editar o eliminar el pago devuelve
- * exactamente lo que descontó.
+ * Un pago DEUDA es de UN solo mes, el que elige quien cobra (cualquier mes
+ * pendiente), y no puede pasar lo que debe ese mes: dos meses son dos pagos.
+ * Lo pagado queda como un detalle "payment:{id}" de ese mes: editar o
+ * eliminar el pago devuelve exactamente lo que descontó.
  */
 class DebtPaymentAllocator
 {
@@ -68,59 +68,63 @@ class DebtPaymentAllocator
     }
 
     /**
-     * Reparte el monto del mes más antiguo al más reciente.
+     * El pago de un solo mes: el mes tiene que tener deuda y el monto no puede
+     * pasar lo que debe. Devuelve una lista con esa única parte (la reciben
+     * record() y coverDate()).
      *
      * @param  list<array{id: int, date: string, label: string, pending: float}>  $months
      * @return list<array{id: int, date: string, label: string, pending: float, amount: float, left: float}>
+     *
+     * @throws ValidationException
      */
-    public static function allocate(array $months, float $amount): array
+    public static function forMonth(array $months, ?int $debtDayId, float $amount): array
     {
-        $rest = self::cents($amount);
-        $parts = [];
-
-        foreach ($months as $month) {
-            if ($rest <= 0) {
-                break;
-            }
-
-            $pending = self::cents($month['pending']);
-            $use = min($rest, $pending);
-            if ($use <= 0) {
-                continue;
-            }
-
-            $rest -= $use;
-            $parts[] = $month + ['amount' => self::fromCents($use), 'left' => self::fromCents($pending - $use)];
+        if (! $months) {
+            throw ValidationException::withMessages(['amount' => 'Esta placa no tiene deuda pendiente.']);
         }
 
-        return $parts;
+        $month = collect($months)->firstWhere('id', $debtDayId);
+        if (! $month) {
+            throw ValidationException::withMessages(['debt_month_id' => 'Elige el mes que paga.']);
+        }
+
+        $use = self::cents($amount);
+        $pending = self::cents($month['pending']);
+        if ($use <= 0) {
+            throw ValidationException::withMessages(['amount' => 'El monto debe ser mayor a 0.']);
+        }
+        if ($use > $pending) {
+            throw ValidationException::withMessages([
+                'amount' => 'El monto no puede pasar lo que debe '.$month['label'].' (S/ '.number_format(self::fromCents($pending), 2).'). Los otros meses van en pagos aparte.',
+            ]);
+        }
+
+        return [$month + ['amount' => self::fromCents($use), 'left' => self::fromCents($pending - $use)]];
     }
 
     /**
-     * Reparto validado del pago, con las filas bloqueadas hasta el fin de la
+     * Pago validado de un mes, con las filas bloqueadas hasta el fin de la
      * transacción. Debe llamarse dentro de DB::transaction().
      *
      * @return list<array{id: int, date: string, label: string, pending: float, amount: float, left: float}>
      *
      * @throws ValidationException
      */
-    public function plan(string $plate, float $amount): array
+    public function planMonth(string $plate, ?int $debtDayId, float $amount): array
     {
-        $months = $this->pendingMonths($plate, lock: true);
-        $total = self::total($months);
+        return self::forMonth($this->pendingMonths($plate, lock: true), $debtDayId, $amount);
+    }
 
-        if ($total <= 0) {
-            throw ValidationException::withMessages(['amount' => 'Esta placa no tiene deuda pendiente.']);
-        }
-        if (self::cents($amount) > self::cents($total)) {
-            throw ValidationException::withMessages(['amount' => 'El monto no puede exceder la deuda pendiente (S/ '.number_format($total, 2).').']);
-        }
+    /** Mes que cubre un pago DEUDA ya registrado (el primero de sus detalles). */
+    public static function paidMonthId(int $paymentId): ?int
+    {
+        $id = DB::table('debt_days_detail')->where('detail', self::marker($paymentId))->orderBy('id')->value('debt_days_id');
 
-        return self::allocate($months, $amount);
+        return $id === null ? null : (int) $id;
     }
 
     /**
-     * Descuenta cada parte de su mes y deja el detalle "payment:{id}".
+     * Descuenta lo pagado de su mes y deja el detalle "payment:{id}".
      *
      * @param  list<array{id: int, amount: float}>  $parts
      */
@@ -180,8 +184,8 @@ class DebtPaymentAllocator
     }
 
     /**
-     * Fecha de pago de un pago DEUDA: fin del mes más antiguo que cubre
-     * (como antes, indica de qué deuda es; el reparto completo está en los detalles).
+     * Fecha de pago de un pago DEUDA: fin del mes que paga (indica de qué
+     * deuda es; lo descontado está en su detalle).
      *
      * @param  list<array{date: string}>  $parts
      */

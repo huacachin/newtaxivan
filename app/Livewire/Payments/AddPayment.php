@@ -38,6 +38,9 @@ class AddPayment extends Component
     /** @var list<array{id: int, date: string, label: string, pending: float}> Meses pendientes, del más antiguo */
     public array $debtMonths = [];
 
+    /** DEUDA: mes que paga (debt_days.id); un pago por mes */
+    public ?int $debt_month_id = null;
+
     // Chips de sugerencias para el campo amount
     public array $amountSuggestions = [];
 
@@ -72,17 +75,17 @@ class AddPayment extends Component
             };
         }
 
-        // DEUDA: no puede pagar más que lo pendiente
+        // DEUDA: un solo mes, y no más de lo que debe ese mes
         if ($this->type_form === 'DEUDA') {
+            $rules['debt_month_id'] = ['required', 'integer'];
             $rules['amount'][] = function ($attr, $val, $fail) {
-                $pend = (float)($this->pending_debt ?? 0);
-                $valf = (float)$val;
-                if ($pend <= 0.0) {
+                if (($this->pending_debt ?? 0) <= 0.0) {
                     $fail('Esta placa no tiene deuda pendiente.');
                     return;
                 }
-                if ($valf - $pend > 0.0001) {
-                    $fail('El monto no puede exceder la deuda pendiente (S/ '.number_format($pend,2).').');
+                $month = $this->selectedDebtMonth();
+                if ($month && (float) $val - $month['pending'] > 0.0001) {
+                    $fail('El monto no puede pasar lo que debe '.$month['label'].' (S/ '.number_format($month['pending'], 2).'). Los otros meses van en pagos aparte.');
                 }
             };
         }
@@ -103,6 +106,7 @@ class AddPayment extends Component
             'amount.required'              => 'El monto es obligatorio.',
             'amount.numeric'               => 'El monto debe ser numérico.',
             'amount.gt'                    => 'El monto debe ser mayor a 0.',
+            'debt_month_id.required'       => 'Elige el mes que paga.',
         ];
     }
 
@@ -236,17 +240,49 @@ class AddPayment extends Component
         $this->pending_debt = DebtPaymentAllocator::total($this->debtMonths);
     }
 
-    /** DEUDA: monto sugerido = todo lo pendiente; fecha de pago = fin del mes más antiguo */
+    /**
+     * DEUDA: mes que paga (el elegido si sigue pendiente; si no, el más antiguo),
+     * monto sugerido = lo que debe ese mes y fecha de pago = fin de ese mes.
+     */
     private function syncDebtFields(): void
     {
         $this->detected_cost = null;
         $this->recalcPendingDebt();
-        $this->date_payment = $this->debtMonths
-            ? DebtPaymentAllocator::coverDate($this->debtMonths)
+        if (! $this->selectedDebtMonth()) {
+            $this->debt_month_id = $this->debtMonths[0]['id'] ?? null;
+        }
+        $this->fillFromDebtMonth();
+    }
+
+    /** Monto y fecha de pago del mes elegido */
+    private function fillFromDebtMonth(): void
+    {
+        $month = $this->selectedDebtMonth();
+        $this->date_payment = $month
+            ? DebtPaymentAllocator::coverDate([$month])
             : now(config('app.timezone', 'America/Lima'))->toDateString();
-        $this->amount = $this->pending_debt !== null
-            ? number_format($this->pending_debt, 2, '.', '')
-            : '';
+        $this->amount = $month ? number_format($month['pending'], 2, '.', '') : '';
+    }
+
+    /** @return array{id: int, date: string, label: string, pending: float}|null */
+    private function selectedDebtMonth(): ?array
+    {
+        return collect($this->debtMonths)->firstWhere('id', $this->debt_month_id);
+    }
+
+    /** Cambió el mes que paga: sugiere lo que debe ese mes */
+    public function updatedDebtMonthId(): void
+    {
+        $this->recalcPendingDebt();
+        $this->fillFromDebtMonth();
+    }
+
+    /** Desde el aviso de deuda: cobrar ese mes (pasa a tipo Deuda) */
+    public function payDebtMonth(int $debtDayId): void
+    {
+        $this->type_form = 'DEUDA';
+        $this->debt_month_id = $debtDayId;
+        $this->syncDebtFields();
     }
 
     /** Reglas de negocio (idénticas) */
@@ -296,12 +332,17 @@ class AddPayment extends Component
             }
         }
 
-        // DEUDA: cualquier mes pendiente (se descuenta del más antiguo)
+        // DEUDA: un mes pendiente, el que se eligió
         if ($this->type_form === 'DEUDA') {
             $this->recalcPendingDebt();
             if (($this->pending_debt ?? 0) <= 0.0001) {
                 throw ValidationException::withMessages([
                     'amount' => 'Esta placa no tiene deuda pendiente.',
+                ]);
+            }
+            if (! $this->selectedDebtMonth()) {
+                throw ValidationException::withMessages([
+                    'debt_month_id' => 'Elige el mes que paga.',
                 ]);
             }
         }
@@ -404,6 +445,7 @@ class AddPayment extends Component
         $this->detected_cost = null;
         $this->pending_debt = null;
         $this->debtMonths = [];
+        $this->debt_month_id = null;
 
         $this->resetErrorBag();
         $this->resetValidation();
@@ -477,8 +519,8 @@ class AddPayment extends Component
             $allocator = app(DebtPaymentAllocator::class);
             $parts = [];
             if ($this->type_form === 'DEUDA') {
-                // Reparto con las filas bloqueadas: del mes más antiguo al más reciente
-                $parts = $allocator->plan($this->normPlate(), (float) $this->amount);
+                // Un solo mes, con las filas bloqueadas
+                $parts = $allocator->planMonth($this->normPlate(), $this->debt_month_id, (float) $this->amount);
                 $this->date_payment = DebtPaymentAllocator::coverDate($parts);
             }
 

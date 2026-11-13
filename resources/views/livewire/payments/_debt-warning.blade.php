@@ -1,7 +1,7 @@
 {{-- Aviso: la placa tiene deuda de meses anteriores, con cualquier tipo de pago.
-     Con tipo Deuda no se muestra: debajo del monto ya sale el detalle por mes
-     (_debt-months). "Cobrar deuda" pasa el tipo a Deuda, que llena el monto con
-     todo lo pendiente (AddPayment::syncDebtFields). --}}
+     Con tipo Deuda no se muestra: debajo del monto se elige el mes (_debt-months).
+     Un pago es de un solo mes: tocar un mes lo cobra (AddPayment::payDebtMonth, tipo
+     Deuda con lo que debe ese mes); "Cobrar deuda" empieza por el más antiguo. --}}
 @once
     <style>
         .debt-alert {
@@ -30,8 +30,10 @@
         .debt-alert__month {
             display: inline-flex; align-items: baseline; gap: 6px; padding: 3px 10px;
             border: 1px solid rgba(var(--warning), .7); border-radius: 999px;
-            background: #fff; color: #78350f; font-size: 12px; white-space: nowrap;
+            background: #fff; color: #78350f; font: inherit; font-size: 12px; white-space: nowrap; cursor: pointer;
+            transition: background-color .15s, border-color .15s;
         }
+        .debt-alert__month:hover, .debt-alert__month:focus-visible { background: #fef3c7; border-color: rgb(var(--warning)); }
         .debt-alert__month b { font-weight: 700; }
         .debt-alert__hint { margin-top: 8px; color: #92400e; font-size: 12px; }
         .debt-alert__action { align-self: center; font-weight: 600; white-space: nowrap; }
@@ -60,15 +62,20 @@
 
         <ul class="debt-alert__months">
             @foreach($debtMonths as $month)
-                <li class="debt-alert__month">{{ $month['label'] }} <b>S/ {{ number_format($month['pending'], 2) }}</b></li>
+                <li wire:key="debt-alert-month-{{ $month['id'] }}">
+                    <button type="button" class="debt-alert__month" title="Cobrar {{ $month['label'] }}"
+                            wire:click="payDebtMonth({{ $month['id'] }})" wire:loading.attr="disabled">
+                        {{ $month['label'] }} <b>S/ {{ number_format($month['pending'], 2) }}</b>
+                    </button>
+                </li>
             @endforeach
         </ul>
 
-        <div class="debt-alert__hint">Se cobra con el tipo <b>Deuda</b> y se descuenta primero del mes más antiguo.</div>
+        <div class="debt-alert__hint">Se cobra con el tipo <b>Deuda</b>, <b>un pago por cada mes</b>. Toca el mes que paga.</div>
     </div>
 
     <button type="button" class="btn btn-sm btn-warning debt-alert__action"
-            wire:click="$set('type_form', 'DEUDA')" wire:loading.attr="disabled">
+            wire:click="payDebtMonth({{ $debtMonths[0]['id'] }})" wire:loading.attr="disabled">
         <i class="ti ti-cash"></i> Cobrar deuda
     </button>
 </div>

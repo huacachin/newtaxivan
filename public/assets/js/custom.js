@@ -714,45 +714,63 @@ document.addEventListener('alpine:init', function () {
         };
     });
 
-    // Pago DEUDA: cuanto recibe cada mes pendiente con el monto escrito, del mas
-    // antiguo al mas reciente. Misma regla (en centimos) que
-    // App\Services\DebtPaymentAllocator::allocate; el monto sale de $wire.amount.
-    window.Alpine.data('debtPreview', function (pendings) {
+    // Pago DEUDA de un solo mes: lo que queda del mes elegido ($wire.debt_month_id)
+    // con el monto escrito ($wire.amount). Misma regla, en centimos, que
+    // App\Services\DebtPaymentAllocator::forMonth. months = { id: { label, pending } }.
+    window.Alpine.data('debtPreview', function (months) {
+        var cents = function (v) { return Math.round(Number(v) * 100); };
+
         return {
-            pendings: pendings || [],
+            months: months || {},
 
             amount: function () {
                 var v = parseFloat(String(this.$wire.amount == null ? '' : this.$wire.amount).replace(',', '.'));
                 return isNaN(v) || v < 0 ? 0 : v;
             },
 
-            parts: function () {
-                var rest = Math.round(this.amount() * 100);
-                return this.pendings.map(function (p) {
-                    var pending = Math.round(p * 100);
-                    var use = Math.max(0, Math.min(rest, pending));
-                    rest -= use;
-                    return { use: use / 100, left: (pending - use) / 100 };
-                });
+            month: function () {
+                var id = this.$wire.debt_month_id;
+                return id == null || id === '' ? null : (this.months[String(id)] || null);
             },
 
-            cell: function (i) {
-                var part = this.parts()[i];
-                if (!part || part.use <= 0) return '—';
-                return part.left <= 0
-                    ? this.money(part.use) + ' ✓'
-                    : this.money(part.use) + ' (quedan ' + this.money(part.left) + ')';
+            isSelected: function (id) {
+                return String(this.$wire.debt_month_id) === String(id);
             },
 
-            rowClass: function (i) {
-                var part = this.parts()[i];
-                if (!part || part.use <= 0) return '';
-                return part.left <= 0 ? 'is-paid' : 'is-partial';
+            left: function () {
+                var m = this.month();
+                return m ? Math.max(0, cents(m.pending) - cents(this.amount())) / 100 : 0;
             },
 
             excess: function () {
-                var total = this.pendings.reduce(function (sum, p) { return sum + Math.round(p * 100); }, 0);
-                return Math.max(0, Math.round(this.amount() * 100) - total) / 100;
+                var m = this.month();
+                return m ? Math.max(0, cents(this.amount()) - cents(m.pending)) / 100 : 0;
+            },
+
+            result: function () {
+                var m = this.month();
+                if (!m) return 'Elige el mes que paga.';
+                if (this.excess() > 0 || this.amount() <= 0) return '';
+                return this.left() <= 0
+                    ? m.label + ' queda pagado ✓'
+                    : m.label + ': quedan S/ ' + this.money(this.left());
+            },
+
+            resultClass: function () {
+                if (!this.month() || this.excess() > 0) return '';
+                return this.left() <= 0 ? 'is-paid' : 'is-partial';
+            },
+
+            hint: function () {
+                var m = this.month();
+                return m
+                    ? 'Puede pagar una parte o todo: máximo S/ ' + this.money(m.pending) + ' (lo que debe ' + m.label + '). Los otros meses van en pagos aparte.'
+                    : 'Un pago por mes: los otros meses van en pagos aparte.';
+            },
+
+            excessText: function () {
+                var m = this.month();
+                return m ? 'Pasa lo que debe ' + m.label + ' en S/ ' + this.money(this.excess()) + ': los otros meses van en pagos aparte.' : '';
             },
 
             money: function (v) {
