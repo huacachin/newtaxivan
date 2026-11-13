@@ -182,7 +182,16 @@
 
                     {{-- ════════ DESKTOP: tabla original ════════ --}}
                     <div class="table-responsive d-none d-md-block">
-                        <table class="table table-bordered table-striped table-hover">
+                        <style>
+                            /* Con deuda en PEND: amarillo Huacachin (#ffff00, el de Morosos en prestamoh) sobre las
+                               CELDAS. La cebra y el hover de Bootstrap pintan el <td> con un box-shadow interior que
+                               tapaba o teñía el fondo del <tr>; se apagan aquí. */
+                            .deuda-mensual > tbody > tr.fila-pendiente > td {
+                                background-color: #ffff00 !important;
+                                --bs-table-bg-type: transparent; --bs-table-accent-bg: transparent; --bs-table-bg-state: transparent; box-shadow: none;
+                            }
+                        </style>
+                        <table class="table table-bordered table-striped table-hover deuda-mensual">
                             <thead class="bg-primary">
                             <tr>
                                 <th></th>
@@ -204,7 +213,7 @@
                             <tbody>
                             {{-- filas --}}
                             @forelse($rows as $r)
-                                <tr wire:key="row-{{ $r['item'] }}">
+                                <tr wire:key="row-{{ $r['item'] }}" @class(['fila-pendiente' => round((float) ($r['pending'] ?? 0), 2) > 0])>
                                     <td>
                                         @hasanyrole('director|gerente|administrador')
                                         @if(($r['total'] ?? 0) > 0)
