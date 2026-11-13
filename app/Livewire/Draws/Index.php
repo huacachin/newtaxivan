@@ -728,8 +728,8 @@ class Index extends Component
                     'plate' => $vehicle->plate,
                     'condition' => $vehicle->condition,
                     'nt' => Vehicle::notWorkingBadge($vehicle->not_working_since),
-                    // Fecha de baja = último día que trabaja; después ya no entra al sorteo
-                    'lastDay' => $vehicle->termination_date?->toDateString(),
+                    // Desde su fecha de baja (ese día incluido) ya no entra al sorteo
+                    'retiredFrom' => $vehicle->termination_date?->toDateString(),
                     'active' => $kind === 'active',
                     'blocked' => $kind === 'blocked',
                     // Bloqueos vigentes de la placa (para el candado junto a la placa)

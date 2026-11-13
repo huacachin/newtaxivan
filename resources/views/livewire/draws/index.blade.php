@@ -409,8 +409,8 @@
                                                 <input type="checkbox" class="form-check-input m-0" wire:model="included.{{ $date }}" value="{{ $row['id'] }}"
                                                        title="Desmarca para que no participe el {{ $drawableLabels[$date] }}">
                                             </td>
-                                        @elseif($row['active'] && $row['lastDay'] && $date > $row['lastDay'] && in_array($date, $drawable, true))
-                                            <td class="text-center text-muted" title="Dada de baja: su último día es el {{ \App\Models\DrawBlock::dayLabel($row['lastDay']) }}"><i class="ti ti-user-off"></i></td>
+                                        @elseif($row['active'] && $row['retiredFrom'] && $date >= $row['retiredFrom'] && in_array($date, $drawable, true))
+                                            <td class="text-center text-muted" title="De baja desde el {{ \App\Models\DrawBlock::dayLabel($row['retiredFrom']) }}"><i class="ti ti-user-off"></i></td>
                                         @else
                                             <td></td>
                                         @endif

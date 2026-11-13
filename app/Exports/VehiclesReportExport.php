@@ -39,7 +39,7 @@ class VehiclesReportExport implements
                 $q->where('status', 'active')
                   ->where(function ($w) use ($today) {
                       $w->whereNull('termination_date')
-                        ->orWhere('termination_date', '>=', $today); // la baja es su último día
+                        ->orWhere('termination_date', '>', $today);
                   });
             })
             ->when($status === 'inactive', function ($q) use ($today) {
@@ -48,7 +48,7 @@ class VehiclesReportExport implements
                       ->orWhere(function ($sub) use ($today) {
                           $sub->where('status', 'active')
                               ->whereNotNull('termination_date')
-                              ->where('termination_date', '<', $today);
+                              ->where('termination_date', '<=', $today);
                       });
                 });
             })

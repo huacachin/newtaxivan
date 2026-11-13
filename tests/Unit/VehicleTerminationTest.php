@@ -8,8 +8,8 @@ use Carbon\Carbon;
 use Tests\TestCase;
 
 /**
- * Fecha de baja = último día que trabaja: ese día sigue activo y desde el
- * siguiente queda de baja (sin tocar la base).
+ * Desde su fecha de baja (ese día incluido) el vehículo ya no está activo:
+ * poner la baja hoy lo da de baja en el acto (sin tocar la base).
  */
 class VehicleTerminationTest extends TestCase
 {
@@ -19,22 +19,23 @@ class VehicleTerminationTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_the_status_follows_the_termination_date_as_the_last_working_day(): void
+    public function test_a_termination_date_of_today_deactivates_right_away(): void
     {
         $this->assertSame('active', Vehicle::statusForTermination(null, '2026-11-13'));
-        $this->assertSame('active', Vehicle::statusForTermination('2026-11-13', '2026-11-13')); // hoy es su último día
-        $this->assertSame('active', Vehicle::statusForTermination('2026-11-20', '2026-11-13')); // baja programada
+        $this->assertSame('inactive', Vehicle::statusForTermination('2026-11-13', '2026-11-13')); // baja hoy: en el acto
         $this->assertSame('inactive', Vehicle::statusForTermination('2026-11-12', '2026-11-13'));
+        $this->assertSame('active', Vehicle::statusForTermination('2026-11-20', '2026-11-13')); // baja programada: activo hasta el 19
+        $this->assertSame('inactive', Vehicle::statusForTermination('2026-11-20', '2026-11-20'));
     }
 
-    public function test_a_vehicle_is_retired_when_inactive_or_after_its_last_day(): void
+    public function test_a_vehicle_is_retired_when_inactive_or_from_its_termination_date(): void
     {
         Carbon::setTestNow('2026-11-13 10:00');
 
         $this->assertFalse((new Vehicle(['status' => 'active']))->isRetired());
-        $this->assertFalse((new Vehicle(['status' => 'active', 'termination_date' => '2026-11-13']))->isRetired());
         $this->assertFalse((new Vehicle(['status' => 'active', 'termination_date' => '2026-11-20']))->isRetired());
-        $this->assertTrue((new Vehicle(['status' => 'active', 'termination_date' => '2026-11-12']))->isRetired()); // antes de la tarea nocturna
+        $this->assertTrue((new Vehicle(['status' => 'active', 'termination_date' => '2026-11-13']))->isRetired()); // aunque falte guardar el estado
+        $this->assertTrue((new Vehicle(['status' => 'active', 'termination_date' => '2026-11-12']))->isRetired());
         $this->assertTrue((new Vehicle(['status' => 'inactive']))->isRetired());
     }
 

@@ -98,29 +98,30 @@ class Vehicle extends Model
     }
 
     /**
-     * Trabaja el $date: la fecha de baja es su último día de trabajo, así que
-     * entra si no tiene baja o si la baja es ese día o después.
+     * Sigue activo el $date: sin fecha de baja o con la baja después de ese día.
+     * Desde su fecha de baja (ese mismo día incluido) ya no trabaja.
      */
     public function scopeWorksOn($q, string $date)
     {
-        return $q->where(fn ($w) => $w->whereNull('termination_date')->orWhere('termination_date', '>=', $date));
+        return $q->where(fn ($w) => $w->whereNull('termination_date')->orWhere('termination_date', '>', $date));
     }
 
     /**
      * Estado que le corresponde según su fecha de baja ($today y la baja en Y-m-d):
-     * sigue activo su último día y pasa a inactivo desde el día siguiente
-     * (como vehicles:deactivate-ceased).
+     * inactivo desde su fecha de baja, el mismo día (poner la baja hoy la da de
+     * baja en el acto); con una baja futura sigue activo hasta el día anterior
+     * y vehicles:deactivate-ceased la inactiva ese día a las 00:05.
      */
     public static function statusForTermination(?string $terminationDate, string $today): string
     {
-        return $terminationDate !== null && $terminationDate < $today ? 'inactive' : 'active';
+        return $terminationDate !== null && $terminationDate <= $today ? 'inactive' : 'active';
     }
 
-    /** ¿Ya está de baja? Inactivo o con su último día ya pasado. */
+    /** ¿Ya está de baja? Inactivo o con su fecha de baja hoy o antes. */
     public function isRetired(): bool
     {
         return $this->status !== 'active'
-            || ($this->termination_date !== null && $this->termination_date->toDateString() < Carbon::today()->toDateString());
+            || ($this->termination_date !== null && $this->termination_date->toDateString() <= Carbon::today()->toDateString());
     }
 
     public function scopeByCondition($q, ?string $cond)

@@ -36,7 +36,7 @@
                                 title="Quita la fecha de baja y la vuelve a activar"><i class="ti ti-player-play"></i> Reactivar</button>
                     @elseif($hasHistory)
                         <button type="button" class="btn btn-sm btn-danger" wire:click="questionRetire({{ $vehicle->id }})"
-                                title="Tiene historial, así que no se borra: hoy pasa a ser su último día"><i class="ti ti-user-off"></i> Dar de baja</button>
+                                title="Tiene historial, así que no se borra: queda inactiva en el acto con fecha de baja hoy"><i class="ti ti-user-off"></i> Dar de baja</button>
                     @endif
                     @if(! $hasHistory)
                         <button type="button" class="btn btn-sm btn-danger" wire:click="questionDelete({{$vehicle->id}})">Eliminar</button>

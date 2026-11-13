@@ -289,8 +289,19 @@ class Edit extends Component
     }
 
     /**
-     * Confirmación de "Dar de baja": la fecha de baja pasa a hoy, su último día
-     * de trabajo. Avisa si ya está en sorteos de después.
+     * Fecha de baja que queda al dar de baja: hoy, o la que ya tenía si era
+     * de hoy o antes (Y-m-d).
+     */
+    private function retireDate(Vehicle $vehicle, string $today): string
+    {
+        $current = $vehicle->termination_date?->toDateString();
+
+        return $current !== null && $current <= $today ? $current : $today;
+    }
+
+    /**
+     * Confirmación de "Dar de baja": la fecha de baja pasa a hoy y queda
+     * inactiva en el acto. Avisa si ya está en sorteos de hoy en adelante.
      */
     public function questionRetire(int $id): void
     {
@@ -299,27 +310,24 @@ class Edit extends Component
         $vehicle = Vehicle::findOrFail($id);
         $today = Carbon::today();
 
-        if ($vehicle->isRetired()) {
+        if ($vehicle->status !== 'active') {
             $this->dispatch('errorAlert', ['message' => "{$vehicle->plate} ya está de baja."]);
 
             return;
         }
-        if ($vehicle->termination_date?->isSameDay($today)) {
-            $this->dispatch('errorAlert', ['message' => "{$vehicle->plate} ya tiene fecha de baja hoy: hoy es su último día."]);
 
-            return;
-        }
-
-        $html = 'Su fecha de baja será <b>hoy '.$today->format('d/m/Y').'</b>: es su último día de trabajo. '
-            .'Desde mañana ya no entra a los sorteos y a medianoche pasa a inactiva.';
-        if ($vehicle->termination_date) {
+        $html = 'Queda <b>inactiva en este momento</b>, con fecha de baja <b>hoy '.$today->format('d/m/Y').'</b>: '
+            .'sale de los activos y ya no entra a ningún sorteo que falte hacer.';
+        if ($vehicle->termination_date && $vehicle->termination_date->toDateString() > $today->toDateString()) {
             $html .= '<br><small>Tenía la baja para el '.$vehicle->termination_date->format('d/m/Y').'; se adelanta a hoy.</small>';
         }
+        $html .= '<br><small>Lo que se registre de esta placa desde ahora irá como apoyo.</small>';
         $relations = $this->historyRelations($vehicle);
         if ($relations) {
             $html .= '<br><small class="text-muted">No se puede eliminar porque tiene historial: '.e(implode(', ', $relations)).'.</small>';
         }
-        if ($warning = DrawService::retiredInDrawsWarning(DrawService::drawsAfter($vehicle->id, $today->toDateString()))) {
+        $from = $this->retireDate($vehicle, $today->toDateString());
+        if ($warning = DrawService::retiredInDrawsWarning(DrawService::drawsFrom($vehicle->id, $from))) {
             $html .= '<div class="text-danger mt-2">'.e($warning).'</div>';
         }
 
@@ -332,20 +340,20 @@ class Edit extends Component
         $this->authorizeStatusChange();
 
         $vehicle = Vehicle::findOrFail($id);
-        $today = Carbon::today()->toDateString();
 
-        if ($vehicle->isRetired()) {
+        if ($vehicle->status !== 'active') {
             session()->flash('vehicle_error', "{$vehicle->plate} ya estaba de baja.");
             $this->redirectRoute('settings.vehicles.index');
 
             return;
         }
 
-        // Hoy todavía trabaja (salidas y pagos de hoy); vehicles:deactivate-ceased la pasa a inactiva a medianoche
-        $vehicle->update(['termination_date' => $today]);
+        // Dar de baja es en el acto: fecha de baja hoy e inactiva ya (no espera a la tarea nocturna)
+        $from = $this->retireDate($vehicle, Carbon::today()->toDateString());
+        $vehicle->update(['termination_date' => $from, 'status' => 'inactive']);
 
-        session()->flash('vehicle_success', "Vehículo {$vehicle->plate} dado de baja: hoy es su último día y desde mañana ya no entra a los sorteos.");
-        if ($warning = DrawService::retiredInDrawsWarning(DrawService::drawsAfter($vehicle->id, $today))) {
+        session()->flash('vehicle_success', "Vehículo {$vehicle->plate} dado de baja: ya está inactivo y no entra a ningún sorteo que falte hacer.");
+        if ($warning = DrawService::retiredInDrawsWarning(DrawService::drawsFrom($vehicle->id, $from))) {
             session()->flash('vehicle_warning', "{$vehicle->plate}: {$warning}");
         }
         $this->redirectRoute('settings.vehicles.index');
@@ -460,13 +468,15 @@ class Edit extends Component
                 );
             }
 
-            // Si cambió la fecha de baja, el estado la sigue: activo hasta su último
-            // día (borrarla o moverla a hoy o después la reactiva), inactivo si ya pasó
+            // El estado sigue a la fecha de baja: con baja hoy o antes queda inactivo
+            // en el acto (aunque la fecha no haya cambiado); borrarla o moverla al
+            // futuro la reactiva
             $today = Carbon::today()->toDateString();
             $newTermination = array_key_exists('termination_date', $payload) && $payload['termination_date'] ? Carbon::parse($payload['termination_date'])->toDateString() : null;
             $terminationChanged = array_key_exists('termination_date', $payload) && $newTermination !== $this->vehicle->termination_date?->toDateString();
-            if ($terminationChanged) {
-                $payload['status'] = Vehicle::statusForTermination($newTermination, $today);
+            $newStatus = Vehicle::statusForTermination($newTermination, $today);
+            if ($terminationChanged || (array_key_exists('termination_date', $payload) && $newStatus === 'inactive')) {
+                $payload['status'] = $newStatus;
             }
 
             $relinker = app(SupportRecordRelinker::class);
@@ -507,7 +517,7 @@ class Edit extends Component
 
             session()->flash('vehicle_success', $this->withRelinkSummary('Vehículo actualizado correctamente.', $relinker, $relinked, $costs));
             if ($terminationChanged && $newTermination !== null
-                && ($warning = DrawService::retiredInDrawsWarning(DrawService::drawsAfter($this->vehicle->id, $newTermination)))) {
+                && ($warning = DrawService::retiredInDrawsWarning(DrawService::drawsFrom($this->vehicle->id, $newTermination)))) {
                 session()->flash('vehicle_warning', "{$this->vehicle->plate}: {$warning}");
             }
             $this->redirectRoute('settings.vehicles.index');

@@ -192,6 +192,11 @@ class Create extends Component
                 'headquarters' => $this->headquarter,
                 'entry_date' => $this->entry_date,
                 'termination_date' => $this->termination_date,
+                // Con fecha de baja hoy o antes nace inactivo (Vehicle::statusForTermination)
+                'status' => Vehicle::statusForTermination(
+                    $this->termination_date ? Carbon::parse($this->termination_date)->toDateString() : null,
+                    Carbon::today()->toDateString()
+                ),
                 'class' => $this->class,
                 'brand' => $this->brand,
                 'year' => $this->year,

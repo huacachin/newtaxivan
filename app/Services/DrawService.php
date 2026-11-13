@@ -405,7 +405,7 @@ class DrawService
         foreach ($dates as $date) {
             $eligible[$date] = $vehicles
                 ->filter(fn (Vehicle $v) => self::entersDrawOn($v->not_working_since?->toDateString(), $date)
-                    && ($v->termination_date === null || $v->termination_date->toDateString() >= $date) // la baja es su último día
+                    && ($v->termination_date === null || $v->termination_date->toDateString() > $date) // desde su baja ya no entra
                     && ! ($blocks[$v->id] ?? collect())->contains(fn (DrawBlock $b) => $b->appliesOn($date)))
                 ->keys()->all();
         }
@@ -612,8 +612,8 @@ class DrawService
     /* ---------- Base de datos ---------- */
 
     /**
-     * Vehículos de la grilla: los activos que trabajan ese día (su fecha de
-     * baja es su último día), menos los NT en rojo (NOT_WORKING_DROP_DAYS o
+     * Vehículos de la grilla: los activos que trabajan ese día (sin baja o con
+     * la baja después), menos los NT en rojo (NOT_WORKING_DROP_DAYS o
      * más sin trabajar a esa fecha). Los bloqueados siguen en la grilla, con
      * candado los días que no entran.
      */
@@ -640,23 +640,23 @@ class DrawService
     }
 
     /**
-     * Sorteos vigentes ya hechos para después de $lastDay en los que la placa
-     * tiene número: al darla de baja con ese último día igual sigue en ellos.
+     * Sorteos vigentes ya hechos para su fecha de baja ($from) o después en
+     * los que la placa tiene número: al darla de baja igual sigue en ellos.
      *
      * @return array<int, array{date: string, number: int}>
      */
-    public static function drawsAfter(int $vehicleId, string $lastDay): array
+    public static function drawsFrom(int $vehicleId, string $from): array
     {
         return DrawEntry::where('vehicle_id', $vehicleId)->whereNotNull('number')
-            ->whereHas('draw', fn (Builder $q) => $q->active()->where('date', '>', $lastDay))
+            ->whereHas('draw', fn (Builder $q) => $q->active()->where('date', '>=', $from))
             ->with('draw:id,date')->get()
             ->map(fn (DrawEntry $e) => ['date' => $e->draw->date->toDateString(), 'number' => (int) $e->number])
             ->sortBy('date')->values()->all();
     }
 
     /**
-     * Aviso al dar de baja una placa que ya está en sorteos posteriores a su
-     * último día (drawsAfter), o null si no hay. Un sorteo hecho no cambia:
+     * Aviso al dar de baja una placa que ya está en sorteos desde su fecha de
+     * baja (drawsFrom), o null si no hay. Un sorteo hecho no cambia:
      * hay que anularlo (desde el último) y volver a sortear.
      *
      * @param  array<int, array{date: string, number: int}>  $draws
