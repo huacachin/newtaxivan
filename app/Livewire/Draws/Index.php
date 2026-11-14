@@ -673,7 +673,7 @@ class Index extends Component
             ->get(['id', 'sort_order', 'plate', 'condition', 'not_working_since', 'termination_date', 'driver_id']);
         $simulating = $this->simSeed !== null;
         $drawable = $simulating ? [] : $this->drawableDates();
-        // Domingos: solo los sorteados o el que hoy se puede sortear (la simulación no los usa)
+        // Domingos: todos los del mes, sorteados o no (la simulación no los usa)
         if (! $simulating) {
             $days = $this->withSundays($days, $drawable, $from, $to);
         }
@@ -1109,8 +1109,8 @@ class Index extends Component
     }
 
     /**
-     * Columnas de la grilla: los días hábiles del mes más los domingos que se
-     * sortearon o que hoy se pueden sortear (los demás domingos no se muestran).
+     * Columnas de la grilla: los días hábiles del mes más todos sus domingos, aunque
+     * no se hayan sorteado (DrawService::calendarDays).
      *
      * @param  array<int, array{date: string, n: int, weekday: string}>  $days
      * @param  array<int, string>  $drawable
@@ -1118,19 +1118,12 @@ class Index extends Component
      */
     private function withSundays(array $days, array $drawable, string $from, string $to): array
     {
-        $sundays = collect(Draw::active()->whereBetween('date', [$from, $to])->pluck('date'))
+        $keep = collect(Draw::active()->whereBetween('date', [$from, $to])->pluck('date'))
             ->map(fn ($d) => Carbon::parse($d)->toDateString())
-            ->merge(array_filter($drawable, fn (string $d) => $d >= $from && $d <= $to))
-            ->filter(fn (string $d) => Carbon::parse($d)->isSunday())
-            ->unique();
+            ->merge($drawable)
+            ->all();
 
-        foreach ($sundays as $date) {
-            $day = Carbon::parse($date);
-            $days[] = ['date' => $date, 'n' => $day->day, 'weekday' => DrawService::weekdayLabel($day), 'sunday' => true];
-        }
-        usort($days, fn (array $a, array $b) => strcmp($a['date'], $b['date']));
-
-        return $days;
+        return DrawService::calendarDays($days, $from, $to, Holiday::datesBetween($from, $to), $keep);
     }
 
     /** "Sáb 31/10" */

@@ -58,4 +58,22 @@ class DrawSundayModeTest extends TestCase
         $this->expectExceptionMessage('llegó al sorteo');
         $this->runSunday();
     }
+
+    public function test_the_calendar_shows_every_sunday_of_the_month_even_without_a_draw(): void
+    {
+        $working = [
+            ['date' => '2026-11-07', 'n' => 7, 'weekday' => 'Sáb'],
+            ['date' => '2026-11-09', 'n' => 9, 'weekday' => 'Lun'],
+        ];
+
+        $days = DrawService::calendarDays($working, '2026-11-01', '2026-11-30', ['2026-11-01']);
+
+        $this->assertSame(['2026-11-07', '2026-11-08', '2026-11-09', '2026-11-15', '2026-11-22', '2026-11-29'], array_column($days, 'date'));
+        $this->assertSame(['n' => 8, 'weekday' => 'Dom', 'sunday' => true], array_diff_key($days[1], ['date' => 1]));
+        $this->assertArrayNotHasKey('sunday', $days[0]);
+
+        // Un domingo feriado no sale, salvo que ya tenga sorteo
+        $kept = DrawService::calendarDays([], '2026-11-01', '2026-11-08', ['2026-11-01'], ['2026-11-01']);
+        $this->assertSame(['2026-11-01', '2026-11-08'], array_column($kept, 'date'));
+    }
 }

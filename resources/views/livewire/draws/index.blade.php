@@ -488,7 +488,7 @@
                             <span><i class="ti ti-lock"></i> bloqueada: todos los días (abajo) o solo algunos días de la semana (candado en esos días)</span>
                             <span><span class="dr-swatch" style="outline: 2px solid #dc2626; outline-offset: -2px;"></span>número repetido en el mes</span>
                         </div>
-                        <div>Cada vehículo rota bajo → medio → alto → bajo, nunca repite franja dos sorteos seguidos ni un número dentro del mes. Solo días de lunes a sábado sin feriados. Los NT en rojo ({{ \App\Models\Vehicle::NOT_WORKING_DROP_DAYS }}+ días sin trabajar) no entran al sorteo.</div>
+                        <div>Cada vehículo rota bajo → medio → alto → bajo, nunca repite franja dos sorteos seguidos ni un número dentro del mes. Se sortea de lunes a sábado sin feriados; el domingo es opcional, solo con las placas que se elijan. Los NT en rojo ({{ \App\Models\Vehicle::NOT_WORKING_DROP_DAYS }}+ días sin trabajar) no entran al sorteo.</div>
                         @if($monthHolidays->isNotEmpty())
                             <div>Feriados del mes:
                                 {{ $monthHolidays->map(fn ($h) => $h->date->format('d/m').' '.$h->description)->implode(' · ') }}

@@ -236,6 +236,29 @@ class DrawService
         return $days;
     }
 
+    /**
+     * Columnas del calendario: los días hábiles más todos los domingos del mes que
+     * no son feriado, se hayan sorteado o no, y los domingos ya sorteados o que se
+     * pueden sortear aunque sean feriado (que no desaparezcan).
+     *
+     * @param  array<int, array{date: string, n: int, weekday: string}>  $workingDays  de workingDaysOfMonth
+     * @param  array<int, string>  $holidays
+     * @param  array<int, string>  $keepSundays  fechas Y-m-d sorteadas o sorteables
+     * @return array<int, array{date: string, n: int, weekday: string, sunday?: bool}>
+     */
+    public static function calendarDays(array $workingDays, string $from, string $to, array $holidays, array $keepSundays = []): array
+    {
+        $days = $workingDays;
+        for ($d = Carbon::parse($from)->startOfDay(), $end = Carbon::parse($to)->startOfDay(); $d->lte($end); $d->addDay()) {
+            if ($d->isSunday() && (self::isDrawableSunday($d, $holidays) || in_array($d->toDateString(), $keepSundays, true))) {
+                $days[] = ['date' => $d->toDateString(), 'n' => $d->day, 'weekday' => self::weekdayLabel($d), 'sunday' => true];
+            }
+        }
+        usort($days, fn (array $a, array $b) => strcmp($a['date'], $b['date']));
+
+        return $days;
+    }
+
     public static function weekdayLabel(Carbon $date): string
     {
         return self::WEEKDAY_LABELS[$date->dayOfWeek];
