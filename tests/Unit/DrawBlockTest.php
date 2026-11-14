@@ -80,25 +80,38 @@ class DrawBlockTest extends TestCase
         $this->assertSame('Mié 04/11, Sáb 07/11, Jue 12/11', $dates->periodLabel());
     }
 
-    public function test_a_dates_block_covers_the_sundays_inside_its_period_unless_unblocked(): void
+    public function test_a_dates_block_covers_a_sunday_only_between_a_blocked_saturday_and_monday(): void
     {
-        // Lunes a viernes del 10 al 20/11 (los domingos no se eligen en el formulario)
-        $dates = $this->block(['kind' => DrawBlock::KIND_DATES, 'dates' => ['2026-11-10', '2026-11-13', '2026-11-16', '2026-11-20'],
-            'starts_on' => '2026-11-10', 'ends_on' => '2026-11-20'], ['2026-11-15']);
+        // BCM016 "Veedor": días sueltos del 11/11 al 01/12 (sáb 14 libre, lun 16 bloqueado; sáb 21 bloqueado, lun 23 libre)
+        $veedor = $this->block(['kind' => DrawBlock::KIND_DATES, 'starts_on' => '2026-11-11', 'ends_on' => '2026-12-01',
+            'dates' => ['2026-11-11', '2026-11-12', '2026-11-16', '2026-11-17', '2026-11-20', '2026-11-21', '2026-11-25', '2026-11-26', '2026-11-30', '2026-12-01']]);
 
-        $this->assertFalse($dates->appliesOn('2026-11-14'));  // sábado no marcado: entra
-        $this->assertFalse($dates->appliesOn('2026-11-08')); // domingo antes del periodo
-        $this->assertTrue($dates->coversDate('2026-11-15'));  // domingo en medio: bloqueado...
-        $this->assertFalse($dates->appliesOn('2026-11-15')); // ...salvo que lo desbloqueen ese día
-        $this->assertFalse($dates->appliesOn('2026-11-22')); // domingo después del periodo
+        $this->assertTrue($veedor->appliesOn('2026-11-16'));
+        $this->assertFalse($veedor->appliesOn('2026-11-15')); // sábado libre: el domingo también
+        $this->assertFalse($veedor->appliesOn('2026-11-22')); // lunes libre: el domingo también
+        $this->assertFalse($veedor->appliesOn('2026-11-29'));
 
+        // Sábado y lunes bloqueados: el domingo de en medio también, salvo que lo desbloqueen ese día
         $aroundSunday = $this->block(['kind' => DrawBlock::KIND_DATES, 'dates' => ['2026-11-14', '2026-11-16'],
             'starts_on' => '2026-11-14', 'ends_on' => '2026-11-16']);
         $this->assertTrue($aroundSunday->appliesOn('2026-11-15'));
+        $unblocked = $this->block(['kind' => DrawBlock::KIND_DATES, 'dates' => ['2026-11-14', '2026-11-16'],
+            'starts_on' => '2026-11-14', 'ends_on' => '2026-11-16'], ['2026-11-15']);
+        $this->assertTrue($unblocked->coversDate('2026-11-15'));
+        $this->assertFalse($unblocked->appliesOn('2026-11-15'));
 
         $saturdayOnly = $this->block(['kind' => DrawBlock::KIND_DATES, 'dates' => ['2026-11-14'],
             'starts_on' => '2026-11-14', 'ends_on' => '2026-11-14']);
         $this->assertFalse($saturdayOnly->appliesOn('2026-11-15')); // el domingo ya no está en el periodo
+    }
+
+    public function test_a_range_covers_every_sunday_of_its_period(): void
+    {
+        $range = $this->block(['kind' => DrawBlock::KIND_RANGE, 'starts_on' => '2026-11-09', 'ends_on' => '2026-11-28']);
+
+        $this->assertTrue($range->appliesOn('2026-11-15'));
+        $this->assertTrue($range->appliesOn('2026-11-22'));
+        $this->assertFalse($range->appliesOn('2026-11-29'));
     }
 
     public function test_an_indefinite_block_applies_every_day_until_lifted(): void

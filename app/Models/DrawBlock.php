@@ -113,7 +113,9 @@ class DrawBlock extends Model
     {
         return $q->where('starts_on', '<=', $date)
             ->where(fn (Builder $w) => $w->whereNull('ends_on')->orWhere('ends_on', '>=', $date))
-            ->when(! Carbon::parse($date)->isSunday(), fn (Builder $d) => $d->where(fn (Builder $w) => $w->whereNull('dates')->orWhereJsonContains('dates', $date)))
+            ->where(fn (Builder $w) => $w->whereNull('dates')->orWhere(fn (Builder $d) => Carbon::parse($date)->isSunday()
+                ? $d->whereJsonContains('dates', Carbon::parse($date)->subDay()->toDateString())->whereJsonContains('dates', Carbon::parse($date)->addDay()->toDateString())
+                : $d->whereJsonContains('dates', $date)))
             ->whereDoesntHave('exceptions', fn (Builder $e) => $e->where('date', $date));
     }
 
@@ -143,15 +145,29 @@ class DrawBlock extends Model
     /**
      * ¿$date cae en el periodo? (sin mirar días desbloqueados ni si está vigente)
      *
-     * El domingo no se elige en "Días específicos" ni entra en la suspensión,
-     * pero si cae entre el primer y el último día del bloqueo también lo cubre:
-     * al sorteo del domingo solo entran las placas no bloqueadas.
+     * El domingo no se elige en "Días específicos" ni entra en la suspensión:
+     * esos bloqueos lo cubren solo si bloquean el sábado anterior Y el lunes
+     * siguiente (p. ej. una suspensión sáb-lun-mar). Con días sueltos (Veedor:
+     * mié, jue, lun...) el domingo queda libre. Los de periodo continuo (rango,
+     * mes, hasta desbloquear) cubren todos los domingos de su periodo.
      */
     public function coversDate(string $date): bool
     {
-        return (! $this->starts_on || $date >= $this->starts_on->toDateString())
-            && (! $this->ends_on || $date <= $this->ends_on->toDateString())
-            && ($this->dates === null || in_array($date, $this->dates, true) || Carbon::parse($date)->isSunday());
+        if ($this->starts_on && $date < $this->starts_on->toDateString()) {
+            return false;
+        }
+        if ($this->ends_on && $date > $this->ends_on->toDateString()) {
+            return false;
+        }
+        if ($this->dates === null) {
+            return true;
+        }
+
+        $day = Carbon::parse($date);
+
+        return $day->isSunday()
+            ? in_array($day->copy()->subDay()->toDateString(), $this->dates, true) && in_array($day->copy()->addDay()->toDateString(), $this->dates, true)
+            : in_array($date, $this->dates, true);
     }
 
     /**
