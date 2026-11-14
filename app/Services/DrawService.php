@@ -12,6 +12,7 @@ use App\Models\Vehicle;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -30,6 +31,10 @@ use Random\Randomizer;
  *     posible, eligiendo a quienes menos desvíos acumulan.
  * Las reglas 1 y 2 solo se rompen si no hay forma de cumplirlas, y queda
  * registrado igual.
+ *
+ * El domingo es un sorteo aparte (opcional, con las placas que se elijan):
+ * lleva su propia rotación y sus propios números del mes, comparándose solo
+ * con otros domingos, y no cuenta para los de lunes a sábado (seriesEntries).
  *
  * El reparto es una asignación de costo mínimo vehículo -> número (método
  * húngaro, N x N): cada prioridad pesa mucho más que la siguiente. Vehículos
@@ -55,6 +60,9 @@ class DrawService
 
     /** Días que se miran hacia adelante para hallar el siguiente día hábil. */
     private const HOLIDAY_LOOKAHEAD_DAYS = 20;
+
+    /** Hasta cuántos días adelante se buscan días libres para una suspensión. */
+    private const SUSPENSION_LOOKAHEAD_DAYS = 90;
 
     private const WEEKDAY_LABELS = [1 => 'Lun', 2 => 'Mar', 3 => 'Mié', 4 => 'Jue', 5 => 'Vie', 6 => 'Sáb', 0 => 'Dom'];
 
@@ -100,8 +108,8 @@ class DrawService
      * sortea, se salta como cualquier día pasado. Un domingo feriado no.
      *
      * Con $drawnDates (los días ya sorteados), ese domingo se puede sortear
-     * aunque ya se haya sorteado el lunes (domingo tardío): el lunes no cambia
-     * y en el domingo nadie repite la franja del sábado ni la del lunes (run).
+     * aunque ya se haya sorteado el lunes (domingo tardío): como el domingo es
+     * un sorteo aparte, ni el lunes ni el domingo cambian por eso.
      * Sin $drawnDates (bloqueos, firstOpenDate) solo cuentan los posteriores al último sorteo.
      *
      * @param  array<int, string>  $holidays
@@ -193,22 +201,36 @@ class DrawService
 
     /**
      * Días de una suspensión por sanciones: los $count primeros días hábiles
-     * (lunes a sábado sin feriados) después de hoy que todavía no se sortearon.
-     * El domingo no cuenta como día de suspensión, pero si cae en medio la placa
-     * tampoco entra a ese sorteo (DrawBlock::coversDate).
+     * (lunes a sábado sin feriados) después de hoy que todavía no se sortearon
+     * y en los que la placa no está ya bloqueada ($alreadyBlocked): así la
+     * suspensión se suma a sus bloqueos y a otras suspensiones en vez de
+     * cumplirse a la vez. El domingo no cuenta como día de suspensión
+     * (DrawBlock::coversDate dice cuándo queda bloqueado).
      *
      * Viernes 06 sin sortear el sábado: Sáb 07, Lun 09, Mar 10. Si el sábado ya
-     * se sorteó: Lun 09, Mar 10, Mié 11.
+     * se sorteó: Lun 09, Mar 10, Mié 11. Si el lunes y el martes ya estaba
+     * bloqueada: Sáb 07, Mié 11, Jue 12.
+     *
+     * Si no hay $count días libres en SUSPENSION_LOOKAHEAD_DAYS (bloqueada
+     * hasta que la desbloqueen), no hay dónde sumarla: van los días de
+     * siempre y se cumple junto con su bloqueo.
      *
      * @param  array<int, string>  $holidays
+     * @param  (\Closure(string): bool)|null  $alreadyBlocked  ¿la placa ya está bloqueada ese día (Y-m-d)?
      * @return array<int, string> fechas Y-m-d
      */
-    public static function suspensionDates(Carbon $today, ?string $lastDrawDate, array $holidays, int $count = DrawSanction::SUSPENSION_DAYS): array
+    public static function suspensionDates(Carbon $today, ?string $lastDrawDate, array $holidays, int $count = DrawSanction::SUSPENSION_DAYS, ?\Closure $alreadyBlocked = null): array
     {
+        $limit = $today->copy()->addDays(self::SUSPENSION_LOOKAHEAD_DAYS)->toDateString();
+
         $dates = [];
         for ($day = self::nextWorkingDay($today, $holidays); count($dates) < $count; $day = self::nextWorkingDay($day, $holidays)) {
-            if ($lastDrawDate === null || $day->toDateString() > $lastDrawDate) {
-                $dates[] = $day->toDateString();
+            $date = $day->toDateString();
+            if ($alreadyBlocked !== null && $date > $limit) {
+                return self::suspensionDates($today, $lastDrawDate, $holidays, $count);
+            }
+            if (($lastDrawDate === null || $date > $lastDrawDate) && ! ($alreadyBlocked !== null && $alreadyBlocked($date))) {
+                $dates[] = $date;
             }
         }
 
@@ -310,7 +332,7 @@ class DrawService
      * @param  array<int, array<int, int>>  $usedNumbers  vehicle_id => números que ya recibió este mes (no se repiten)
      * @return array<int, array{number: int, band: string, previous_band: string|null, deviated: bool, number_repeated: bool}>
      */
-    public function assign(array $previousBands, array $pastDeviations = [], array $usedNumbers = [], array $nextBands = []): array
+    public function assign(array $previousBands, array $pastDeviations = [], array $usedNumbers = []): array
     {
         $total = count($previousBands);
         if ($total === 0) {
@@ -331,7 +353,7 @@ class DrawService
         foreach ($vehicleIds as $i => $vehicleId) {
             $used = array_flip($usedNumbers[$vehicleId] ?? []);
             foreach ($numbers as $j => $number) {
-                $cost[$i][$j] = $this->bandCost($previousBands[$vehicleId], $bandOf[$number], $pastDeviations[$vehicleId] ?? 0, $nextBands[$vehicleId] ?? null)
+                $cost[$i][$j] = $this->bandCost($previousBands[$vehicleId], $bandOf[$number], $pastDeviations[$vehicleId] ?? 0)
                     + (isset($used[$number]) ? self::NUMBER_REPEAT_COST : 0);
             }
         }
@@ -341,7 +363,7 @@ class DrawService
             $vehicleId = $vehicleIds[$i];
             $number = $numbers[$j];
             $previous = $previousBands[$vehicleId];
-            $target = self::targetBand($previous, $nextBands[$vehicleId] ?? null);
+            $target = self::targetBand($previous);
             $result[$vehicleId] = [
                 'number' => $number,
                 'band' => $bandOf[$number],
@@ -531,39 +553,23 @@ class DrawService
         return (array_slice($words, $index) ?: array_slice($words, -1))[0] ?? '';
     }
 
-    private function bandCost(?string $previous, string $band, int $pastDeviations, ?string $next = null): int
+    private function bandCost(?string $previous, string $band, int $pastDeviations): int
     {
-        if ($band === $previous || ($next !== null && $band === $next)) {
+        if ($band === $previous) {
             return self::REPEAT_COST;
         }
-        $target = self::targetBand($previous, $next);
+        $target = self::targetBand($previous);
 
         return $target === null || $band === $target ? 0 : self::DEVIATE_COST + $pastDeviations;
     }
 
     /**
      * Franja que le toca a un vehículo: la siguiente del ciclo a la que tuvo
-     * antes. En un domingo tardío también se conoce la del sorteo de después
-     * ($next): le toca la que no es ninguna de las dos, o la anterior en el
-     * ciclo a $next si no tenía sorteo previo. Null = cualquiera.
+     * en su sorteo anterior. Null (nunca participó) = cualquiera.
      */
-    public static function targetBand(?string $previous, ?string $next = null): ?string
+    public static function targetBand(?string $previous): ?string
     {
-        if ($previous !== null && $next !== null && $previous !== $next) {
-            return array_values(array_diff(DrawEntry::BANDS, [$previous, $next]))[0];
-        }
-        if ($previous !== null) {
-            return DrawEntry::nextBand($previous);
-        }
-        if ($next !== null) {
-            foreach (DrawEntry::BANDS as $band) {
-                if (DrawEntry::nextBand($band) === $next) {
-                    return $band;
-                }
-            }
-        }
-
-        return null;
+        return $previous !== null ? DrawEntry::nextBand($previous) : null;
     }
 
     /**
@@ -761,9 +767,8 @@ class DrawService
                 $previousBands[$vehicleId] = $band;
             }
 
-            // Domingo tardío (ya se sorteó el lunes): tampoco repite la franja que cada uno tuvo después
-            $nextBands = $lastDate !== null && $date < $lastDate ? $this->nextBands($participantIds, $date) : [];
-            $assigned = $this->assign($previousBands, $this->pastDeviations($participantIds), $this->usedNumbersInMonth($participantIds, $date), $nextBands);
+            // Franjas, desvíos y números del mes salen de la misma serie que $date (el domingo va aparte)
+            $assigned = $this->assign($previousBands, $this->pastDeviations($participantIds, $date), $this->usedNumbersInMonth($participantIds, $date));
 
             $draw = Draw::create([
                 'code' => Draw::newCode(),
@@ -811,8 +816,9 @@ class DrawService
             $vehicles = Vehicle::whereIn('id', array_map('intval', $vehicleIds))->orderBy('plate')->lockForUpdate()->get(['id', 'plate']);
 
             $lastDate = Draw::active()->max('date');
+            $lastDate = $lastDate ? Carbon::parse($lastDate)->toDateString() : null;
             $today = Carbon::today();
-            $suspensionDates = self::suspensionDates($today, $lastDate ? Carbon::parse($lastDate)->toDateString() : null, self::holidaysAround($today));
+            $holidays = Holiday::datesBetween($today->toDateString(), $today->copy()->addDays(self::SUSPENSION_LOOKAHEAD_DAYS + self::HOLIDAY_LOOKAHEAD_DAYS)->toDateString());
 
             $sanctions = new Collection;
             $suspensions = new Collection;
@@ -829,6 +835,10 @@ class DrawService
                     continue;
                 }
                 $grouped = $pending->take(DrawSanction::SANCTIONS_TO_SUSPEND);
+                // Sus días libres: los que ya tiene bloqueados (o suspendidos) no cuentan, la suspensión se suma
+                $blocks = DrawBlock::active()->where('vehicle_id', $vehicle->id)->with('exceptions')->get();
+                $suspensionDates = self::suspensionDates($today, $lastDate, $holidays,
+                    alreadyBlocked: fn (string $date) => $blocks->contains(fn (DrawBlock $b) => $b->appliesOn($date)));
                 $block = DrawBlock::create([
                     'vehicle_id' => $vehicle->id,
                     'kind' => DrawBlock::KIND_SUSPENSION,
@@ -873,59 +883,51 @@ class DrawService
     }
 
     /**
-     * Franja del último sorteo vigente anterior a $date en que participó cada vehículo.
+     * Franja del último sorteo vigente anterior a $date, de su misma serie
+     * (seriesEntries), en que participó cada vehículo.
      *
      * @param  array<int, int>  $vehicleIds
      * @return array<int, string> vehicle_id => franja
      */
     public function previousBands(array $vehicleIds, string $date): array
     {
-        return $this->nearestBands($vehicleIds, $date, '<');
-    }
-
-    /**
-     * Franja del primer sorteo vigente posterior a $date en que participó cada
-     * vehículo (domingo tardío: el lunes ya sorteado).
-     *
-     * @param  array<int, int>  $vehicleIds
-     * @return array<int, string> vehicle_id => franja
-     */
-    public function nextBands(array $vehicleIds, string $date): array
-    {
-        return $this->nearestBands($vehicleIds, $date, '>');
-    }
-
-    /**
-     * Franja del sorteo vigente más cercano a $date (antes con '<', después con '>') de cada vehículo.
-     *
-     * @param  array<int, int>  $vehicleIds
-     * @return array<int, string>
-     */
-    private function nearestBands(array $vehicleIds, string $date, string $direction): array
-    {
-        $nearest = DB::table('draw_entries as e')
-            ->join('draws as d', 'd.id', '=', 'e.draw_id')
-            ->whereNull('d.annulled_at')
-            ->whereNotNull('e.number')
+        $last = $this->seriesEntries($date)
             ->whereIn('e.vehicle_id', $vehicleIds)
-            ->where('d.date', $direction === '<' ? '<' : '>', $date)
+            ->where('d.date', '<', $date)
             ->groupBy('e.vehicle_id')
-            ->select('e.vehicle_id', DB::raw(($direction === '<' ? 'MAX' : 'MIN').'(d.date) as near_date'));
+            ->select('e.vehicle_id', DB::raw('MAX(d.date) as last_date'));
 
-        return DB::table('draw_entries as e')
-            ->join('draws as d', 'd.id', '=', 'e.draw_id')
-            ->joinSub($nearest, 'l', fn ($j) => $j->on('l.vehicle_id', '=', 'e.vehicle_id')->on('l.near_date', '=', 'd.date'))
-            ->whereNull('d.annulled_at')
-            ->whereNotNull('e.number')
+        return $this->seriesEntries($date)
+            ->joinSub($last, 'l', fn ($j) => $j->on('l.vehicle_id', '=', 'e.vehicle_id')->on('l.last_date', '=', 'd.date'))
             ->pluck('e.band', 'e.vehicle_id')
             ->map(fn ($band) => (string) $band)
             ->all();
     }
 
     /**
+     * Números entregados en sorteos vigentes de la misma serie que $date. Hay
+     * dos series que no se mezclan: lunes a sábado y domingos. El domingo es un
+     * sorteo aparte con pocas placas; si contara, casi nadie seguiría su ciclo
+     * ni podría evitar repetir número, y jugar el domingo adelantaría el ciclo.
+     */
+    private function seriesEntries(string $date): QueryBuilder
+    {
+        return DB::table('draw_entries as e')
+            ->join('draws as d', 'd.id', '=', 'e.draw_id')
+            ->whereNull('d.annulled_at')
+            ->whereNotNull('e.number')
+            ->whereRaw(self::seriesSql($date)); // DAYOFWEEK de MySQL: 1 = domingo
+    }
+
+    /** Condición SQL sobre d.date: domingos si $date es domingo; si no, lunes a sábado. */
+    private static function seriesSql(string $date): string
+    {
+        return 'DAYOFWEEK(d.date) '.(Carbon::parse($date)->isSunday() ? '=' : '<>').' 1';
+    }
+
+    /**
      * Números que cada vehículo ya recibió en otros sorteos vigentes del mismo
-     * mes: no se le pueden repetir. Normalmente son los de antes de $date; en un
-     * domingo tardío también cuenta el lunes ya sorteado.
+     * mes y de la misma serie (seriesEntries): no se le pueden repetir.
      *
      * @param  array<int, int>  $vehicleIds
      * @return array<int, array<int, int>> vehicle_id => números
@@ -933,10 +935,7 @@ class DrawService
     public function usedNumbersInMonth(array $vehicleIds, string $date): array
     {
         $used = [];
-        DB::table('draw_entries as e')
-            ->join('draws as d', 'd.id', '=', 'e.draw_id')
-            ->whereNull('d.annulled_at')
-            ->whereNotNull('e.number')
+        $this->seriesEntries($date)
             ->whereIn('e.vehicle_id', $vehicleIds)
             ->whereBetween('d.date', [Carbon::parse($date)->startOfMonth()->toDateString(), Carbon::parse($date)->endOfMonth()->toDateString()])
             ->where('d.date', '!=', $date)
@@ -950,7 +949,7 @@ class DrawService
 
     /**
      * Placas que en este sorteo repitieron un número que ya habían tenido en
-     * el mes (fuerza mayor: pocos participantes).
+     * el mes, en su misma serie (fuerza mayor: pocos participantes).
      *
      * @return array<int, string>
      */
@@ -965,6 +964,7 @@ class DrawService
             ->whereNotNull('e.number')
             ->where('d.id', '!=', $draw->id)
             ->whereNull('d.annulled_at')
+            ->whereRaw(self::seriesSql($date))
             ->whereBetween('d.date', [Carbon::parse($date)->startOfMonth()->toDateString(), Carbon::parse($date)->endOfMonth()->toDateString()])
             ->orderBy('e.plate')
             ->distinct()
@@ -973,16 +973,14 @@ class DrawService
     }
 
     /**
-     * Desvíos acumulados de cada vehículo en sorteos vigentes.
+     * Desvíos acumulados de cada vehículo en sorteos vigentes de la misma serie que $date.
      *
      * @param  array<int, int>  $vehicleIds
      * @return array<int, int>
      */
-    public function pastDeviations(array $vehicleIds): array
+    public function pastDeviations(array $vehicleIds, string $date): array
     {
-        return DB::table('draw_entries as e')
-            ->join('draws as d', 'd.id', '=', 'e.draw_id')
-            ->whereNull('d.annulled_at')
+        return $this->seriesEntries($date)
             ->where('e.deviated', true)
             ->whereIn('e.vehicle_id', $vehicleIds)
             ->groupBy('e.vehicle_id')

@@ -56,10 +56,11 @@
                 <div class="modal-body">
                     <div class="alert alert-warning small py-2 mb-3">
                         <i class="ti ti-alert-triangle"></i> La placa que junte <b>2 sanciones</b> se suspende sola <b>3 días de sorteo</b>,
-                        desde el próximo día sin sortear y sin contar domingos (el domingo puede entrar si la eligen).
+                        desde el próximo día sin sortear y sin contar domingos ni feriados.
                         @if($suspensionPreview)
                             Si se suspende ahora: <b>{{ $suspensionPreview }}</b>.
                         @endif
+                        Si alguno de esos días ya está bloqueada, la suspensión pasa a sus siguientes días libres: se suma, no se cumple a la vez.
                     </div>
 
                     <div class="ds-step">1. ¿Qué placas? <span class="text-muted fw-normal small" x-show="picked.length" x-text="'(' + picked.length + ' marcadas)'"></span></div>

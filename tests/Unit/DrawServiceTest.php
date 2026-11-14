@@ -306,25 +306,12 @@ class DrawServiceTest extends TestCase
         $this->assertSame(['2026-11-08', '2026-11-09'], DrawService::drawableDates('2026-11-07', $saturday, [], ['2026-11-07']));
     }
 
-    public function test_a_late_sunday_repeats_neither_the_saturday_nor_the_monday_band(): void
+    public function test_the_target_band_is_the_next_one_in_the_cycle(): void
     {
-        // 9 placas: venían de bajo/medio/alto el sábado y el lunes ya les tocó la siguiente
-        $previous = $this->previousBands([self::LOW => 3, self::MID => 3, self::HIGH => 3]);
-        $next = array_map(fn (string $band) => DrawEntry::nextBand($band), $previous);
-
-        $result = $this->service()->assign($previous, [], [], $next);
-
-        $this->assertValidDraw($result, 9);
-        foreach ($result as $vehicleId => $entry) {
-            $this->assertNotSame($previous[$vehicleId], $entry['band'], 'No repite la del sábado');
-            $this->assertNotSame($next[$vehicleId], $entry['band'], 'No repite la del lunes');
-        }
-        $this->assertSame(0, $this->countDeviations($result));
-
-        $this->assertSame(self::HIGH, DrawService::targetBand(self::LOW, self::MID));
         $this->assertSame(self::MID, DrawService::targetBand(self::LOW));
-        $this->assertSame(self::LOW, DrawService::targetBand(null, self::MID));
-        $this->assertNull(DrawService::targetBand(null));
+        $this->assertSame(self::HIGH, DrawService::targetBand(self::MID));
+        $this->assertSame(self::LOW, DrawService::targetBand(self::HIGH));
+        $this->assertNull(DrawService::targetBand(null)); // nunca participó: cualquiera
     }
 
     public function test_suspension_takes_the_next_three_working_days_not_drawn_yet(): void
@@ -342,6 +329,28 @@ class DrawServiceTest extends TestCase
         $this->assertSame(['2026-11-07', '2026-11-10', '2026-11-11'], DrawService::suspensionDates($friday, '2026-11-06', ['2026-11-09']));
         // Sin sorteos todavía
         $this->assertSame(['2026-11-07', '2026-11-09', '2026-11-10'], DrawService::suspensionDates($friday, null, []));
+    }
+
+    public function test_a_suspension_adds_up_to_the_days_the_plate_is_already_blocked(): void
+    {
+        $friday = Carbon::parse('2026-11-06');
+        $blockedOn = fn (array $dates) => fn (string $date) => in_array($date, $dates, true);
+
+        // Ya bloqueada lunes y martes: la suspensión toma sus siguientes días libres
+        $this->assertSame(['2026-11-07', '2026-11-11', '2026-11-12'],
+            DrawService::suspensionDates($friday, '2026-11-06', [], alreadyBlocked: $blockedOn(['2026-11-09', '2026-11-10'])));
+        // Ya suspendida sáb, lun y mar (4 sanciones seguidas): la segunda va después de la primera
+        $this->assertSame(['2026-11-11', '2026-11-12', '2026-11-13'],
+            DrawService::suspensionDates($friday, '2026-11-06', [], alreadyBlocked: $blockedOn(['2026-11-07', '2026-11-09', '2026-11-10'])));
+        // Bloqueada todo noviembre: se cumple al terminar el bloqueo (1 de diciembre en adelante)
+        $this->assertSame(['2026-12-01', '2026-12-02', '2026-12-03'],
+            DrawService::suspensionDates($friday, '2026-11-06', [], alreadyBlocked: fn (string $date) => $date <= '2026-11-30'));
+        // Sin bloqueos, igual que siempre
+        $this->assertSame(['2026-11-07', '2026-11-09', '2026-11-10'],
+            DrawService::suspensionDates($friday, '2026-11-06', [], alreadyBlocked: fn (string $date) => false));
+        // Bloqueada hasta que la desbloqueen: no hay dónde sumarla, van los días de siempre
+        $this->assertSame(['2026-11-07', '2026-11-09', '2026-11-10'],
+            DrawService::suspensionDates($friday, '2026-11-06', [], alreadyBlocked: fn (string $date) => true));
     }
 
     public function test_order_shows_only_the_drivers_first_name(): void

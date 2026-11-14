@@ -186,7 +186,8 @@ class Index extends Component
         $html = 'Participan <b>'.$participants->count().'</b> vehículo(s), números del 1 al '.$participants->count().'.';
         if (Carbon::parse($date)->isSunday()) {
             // Domingo: entran solo los elegidos en la lista; se nombran ellos, no los que faltan
-            $html .= '<br>Solo ellos: <b>'.e($participants->sortBy('plate')->pluck('plate')->implode(', ')).'</b>';
+            $html .= '<br>Solo ellos: <b>'.e($participants->sortBy('plate')->pluck('plate')->implode(', ')).'</b>'
+                .'<br><small>El domingo es un sorteo aparte: no cambia la rotación ni los números de lunes a sábado.</small>';
         } else {
             if ($excluded->isNotEmpty()) {
                 $html .= '<br>Sin participar ('.$excluded->count().'): <b>'.e($excluded->pluck('plate')->implode(', ')).'</b>';
@@ -207,11 +208,6 @@ class Index extends Component
         $skipped = array_filter($drawable, fn (string $d) => $d < $date && ! Carbon::parse($d)->isSunday());
         if ($skipped) {
             $html .= '<br><span class="text-danger">El '.e(implode(' y el ', array_map(fn (string $d) => $this->dayLabel($d), $skipped))).' quedará sin sorteo.</span>';
-        }
-        // Domingo tardío: el lunes ya está sorteado y no cambia
-        $lastDate = Draw::active()->max('date');
-        if ($lastDate && $date < Carbon::parse($lastDate)->toDateString()) {
-            $html .= '<br><small>El '.e($this->dayLabel(Carbon::parse($lastDate)->toDateString())).' ya está sorteado y no cambia; nadie repite la franja que tuvo el día anterior ni la de ese día.</small>';
         }
         $html .= '<br><small class="text-muted">Una vez sorteado no se puede repetir; solo el director puede anularlo.</small>';
 
@@ -584,8 +580,9 @@ class Index extends Component
         $plates = Vehicle::whereIn('id', $sanctions->pluck('vehicle_id'))->orderBy('plate')->pluck('plate');
         $message = 'Sancionadas ('.$plates->count().'): '.$plates->implode(', ').'.';
         if ($suspensions->isNotEmpty()) {
-            $message .= ' Con 2 sanciones quedan suspendidas '.$suspensions->first()->periodLabel().': '
-                .$suspensions->pluck('vehicle.plate')->implode(', ').'.';
+            // Cada placa con sus días: si ya tenía días bloqueados, la suspensión va en los siguientes libres
+            $message .= ' Con 2 sanciones quedan suspendidas: '.$suspensions->groupBy(fn (DrawBlock $block) => $block->periodLabel())
+                ->map(fn ($group, string $days) => $group->pluck('vehicle.plate')->implode(', ').' ('.$days.')')->implode('; ').'.';
         }
         $this->dispatch('successAlert', ['message' => $message]);
 
@@ -712,16 +709,22 @@ class Index extends Component
         $formerVehicles = Vehicle::whereIn('id', $formerIds)->with('driver:id,name')->orderBy('sort_order')->orderBy('plate')
             ->get(['id', 'sort_order', 'plate', 'condition', 'not_working_since', 'termination_date', 'driver_id']);
 
+        $sundayDates = array_flip(array_column(array_filter($days, fn (array $day) => $day['sunday'] ?? false), 'date'));
         $rows = [];
         foreach ([[$inPlaceVehicles, 'active'], [$formerVehicles, 'former'], [$bottomVehicles, 'blocked']] as [$vehicles, $kind]) {
             foreach ($vehicles as $vehicle) {
+                // El domingo es un sorteo aparte: no suma a B/M/A y sus números se comparan solo entre domingos
                 $counts = array_fill_keys(DrawEntry::BANDS, 0);
-                $numbers = [];
-                foreach ($cells as $day) {
+                $numbers = ['week' => [], 'sunday' => []];
+                foreach ($cells as $date => $day) {
                     $band = $day[$vehicle->id]->band ?? null;
-                    if ($band !== null) {
+                    if ($band === null) {
+                        continue;
+                    }
+                    $series = isset($sundayDates[$date]) ? 'sunday' : 'week';
+                    $numbers[$series][] = $day[$vehicle->id]->number;
+                    if ($series === 'week') {
                         $counts[$band]++;
-                        $numbers[] = $day[$vehicle->id]->number;
                     }
                 }
                 $rows[] = [
@@ -740,8 +743,8 @@ class Index extends Component
                     'blocks' => $kind === 'former' ? collect() : ($blocksByVehicle[$vehicle->id] ?? collect()),
                     'everBlocked' => isset($everBlocked[$vehicle->id]),
                     'counts' => $counts,
-                    // Números que esta placa recibió más de una vez en el mes (no debería pasar)
-                    'repeatedNumbers' => array_keys(array_filter(array_count_values($numbers), fn (int $times) => $times > 1)),
+                    // Números que esta placa recibió más de una vez en el mes, por serie (no debería pasar)
+                    'repeatedNumbers' => array_map(fn (array $series) => array_keys(array_filter(array_count_values($series), fn (int $times) => $times > 1)), $numbers),
                 ];
             }
         }
