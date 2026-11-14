@@ -698,11 +698,12 @@ class Index extends Component
         $everBlocked = DrawBlock::distinct()->pluck('vehicle_id')->flip();
         $lockedDays = $this->blockedDaysOfMonth(array_column($days, 'date'), $from, $to);
 
-        // Abajo de todo van las que no entran a ningún sorteo que queda del mes;
-        // las demás se quedan en su lugar con candado los días que no entran
+        // Abajo de todo van solo las bloqueadas TODOS los días del mes (domingos incluidos);
+        // con un solo día libre, ya sorteado o por sortear, se quedan arriba con candado
+        // los días que no entran
         $firstOpen = $this->firstOpenDate();
-        $openDates = array_values(array_filter(array_column($days, 'date'), fn (string $d) => $d >= $firstOpen));
-        $isBottom = fn (Vehicle $v) => $openDates && collect($openDates)->every(fn (string $d) => isset($lockedDays[$v->id][$d]));
+        $monthDates = array_column($days, 'date');
+        $isBottom = fn (Vehicle $v) => $monthDates && collect($monthDates)->every(fn (string $d) => isset($lockedDays[$v->id][$d]));
         $bottomVehicles = $activeVehicles->filter($isBottom)->values();
         $inPlaceVehicles = $activeVehicles->reject($isBottom)->values();
 

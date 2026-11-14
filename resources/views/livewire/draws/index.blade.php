@@ -374,7 +374,7 @@
                             @forelse($rows as $i => $row)
                                 @if($row['blocked'] && ! ($rows[$i - 1]['blocked'] ?? false))
                                     <tr class="dr-blocked-sep" wire:key="blocked-sep">
-                                        <td colspan="{{ count($days) + 8 }}"><i class="ti ti-lock"></i> BLOQUEADAS EL RESTO DEL MES ({{ $bottomCount }}): no entran a ningún sorteo que queda de {{ \Illuminate\Support\Str::lower($monthName) }}@if($canBlock && ! $simulating). Clic en un candado para desbloquear ese día.@endif</td>
+                                        <td colspan="{{ count($days) + 8 }}"><i class="ti ti-lock"></i> BLOQUEADAS TODO EL MES ({{ $bottomCount }}): no entran a ningún sorteo de {{ \Illuminate\Support\Str::lower($monthName) }}@if($canBlock && ! $simulating). Clic en un candado para desbloquear ese día.@endif</td>
                                     </tr>
                                 @endif
                                 @php
