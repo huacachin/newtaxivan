@@ -255,6 +255,9 @@
 
             @if($blockedVehicles->isNotEmpty())
                 <div class="dm-section"><i class="ti ti-lock"></i> No entran este día por bloqueo ({{ $blockedVehicles->count() }})</div>
+                @if($canBlock && ! $canUnblockAll)
+                    <div class="small text-muted mb-2">Solo puedes desbloquear los bloqueos puestos hoy; los de días anteriores los quita el director, el gerente o el administrador.</div>
+                @endif
                 <div class="dm-list">
                     @foreach($blockedVehicles as $vehicle)
                         @php $block = $dayBlocks[$vehicle->id]; @endphp
@@ -265,7 +268,7 @@
                                 <span class="dm-driver">{{ $block->periodLabel() }} · {{ \App\Models\DrawBlock::userLabel($block->blockedBy) }}</span>
                                 <span class="dm-reason" style="color: {{ $block->kindColor() }};">{{ $block->reason }}</span>
                             </span>
-                            @if($canBlock)
+                            @if($canBlock && isset($dayLiftable[$vehicle->id]))
                                 <button type="button" class="btn btn-sm btn-outline-success dm-mini"
                                         x-on:click="askReason('Desbloquear {{ $vehicle->plate }}', 'Solo el {{ \Illuminate\Support\Str::lower($dayTitle) }}: ese día entra al sorteo.', (reason) => $wire.unblockDays(['{{ $vehicle->id }}|{{ $day }}'], reason))">
                                     <i class="ti ti-lock-open"></i> Este día
@@ -331,7 +334,7 @@
                             <div class="d-flex gap-2 mt-2">
                                 <button type="button" class="btn btn-sm btn-outline-secondary dm-mini flex-fill" style="min-height: 40px;"
                                         x-on:click="hideModal('blocksModal'); $wire.openHistory({{ $block->vehicle_id }})"><i class="ti ti-history"></i> Historial</button>
-                                @if($canBlock)
+                                @if($canBlock && $block->canBeLiftedBy(auth()->user()))
                                     <button type="button" class="btn btn-sm btn-outline-success dm-mini flex-fill" style="min-height: 40px;"
                                             x-on:click="hideModal('blocksModal'); askReason('Desbloquear ' + @js($block->vehicle?->plate ?? ''), @js($block->periodLabel().' · vuelve a entrar desde el próximo sorteo.'), (reason) => $wire.unblockVehicle({{ $block->id }}, reason))">
                                         <i class="ti ti-lock-open"></i> Desbloquear

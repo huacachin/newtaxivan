@@ -12,6 +12,7 @@ use App\Models\Vehicle;
 use App\Services\DrawService;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -51,6 +52,9 @@ use Random\Randomizer;
 class Index extends Component
 {
     use WithFileUploads;
+
+    /** Aviso cuando el controlador intenta quitar un bloqueo de un día anterior. */
+    private const LIFT_ONLY_TODAY = 'El controlador solo puede desbloquear bloqueos puestos hoy; los de días anteriores los quita el director, el gerente o el administrador.';
 
     public const MONTHS = [
         1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril', 5 => 'Mayo', 6 => 'Junio',
@@ -420,7 +424,9 @@ class Index extends Component
     /**
      * Desbloquea días sueltos (clic en los candados de la grilla): ese día la
      * placa sí entra al sorteo aunque su bloqueo lo cubra. Solo días que
-     * todavía no se sortearon; el motivo queda en su historial.
+     * todavía no se sortearon; el motivo queda en su historial. El
+     * controlador solo desbloquea días de bloqueos puestos hoy: si alguno de
+     * los que cubren el día es anterior, ese día se queda bloqueado.
      *
      * @param  array<int, string>  $cells  "vehicleId|Y-m-d"
      */
@@ -442,36 +448,47 @@ class Index extends Component
             ->unique(fn (array $p) => $p[0].'|'.$p[1])
             ->sortBy(fn (array $p) => $p[1])->values();
 
-        $unblocked = DB::transaction(function () use ($pairs, $reason) {
-            $done = [];
-            foreach ($pairs as [$vehicleId, $date]) {
-                $blocks = DrawBlock::active()->where('vehicle_id', $vehicleId)->onDate($date)->get();
+        $toUnblock = [];
+        $denied = [];
+        foreach ($pairs as [$vehicleId, $date]) {
+            $blocks = DrawBlock::active()->where('vehicle_id', $vehicleId)->onDate($date)->get();
+            if ($blocks->isEmpty()) {
+                continue;
+            }
+            if ($blocks->contains(fn (DrawBlock $block) => ! $block->canBeLiftedBy(auth()->user()))) {
+                $denied[] = [$vehicleId, $date];
+
+                continue;
+            }
+            $toUnblock[] = [$vehicleId, $date, $blocks];
+        }
+
+        DB::transaction(function () use ($toUnblock, $reason) {
+            foreach ($toUnblock as [, $date, $blocks]) {
                 foreach ($blocks as $block) {
                     DrawBlockException::firstOrCreate(
                         ['draw_block_id' => $block->id, 'date' => $date],
                         ['reason' => $reason, 'created_by' => auth()->id()],
                     );
                 }
-                if ($blocks->isNotEmpty()) {
-                    $done[] = [$vehicleId, $date];
-                }
             }
-
-            return $done;
         });
 
-        if (! $unblocked) {
-            $this->dispatch('errorAlert', ['message' => 'Marca días con candado que todavía no se hayan sorteado.']);
+        $plates = Vehicle::whereIn('id', array_merge(array_column($toUnblock, 0), array_column($denied, 0)))->pluck('plate', 'id');
+        $label = fn (array $pairs) => implode(', ', array_map(fn (array $p) => $plates[$p[0]].' '.DrawBlock::dayLabel($p[1]), $pairs));
+        $deniedNote = $denied ? self::LIFT_ONLY_TODAY.' Siguen bloqueados: '.$label($denied).'.' : '';
+
+        if (! $toUnblock) {
+            $this->dispatch('errorAlert', ['message' => $deniedNote ?: 'Marca días con candado que todavía no se hayan sorteado.']);
 
             return false;
         }
 
-        foreach ($unblocked as [$vehicleId, $date]) {
+        foreach ($toUnblock as [$vehicleId, $date]) {
             $this->includeAgain([$vehicleId], $date);
         }
-        $plates = Vehicle::whereIn('id', array_column($unblocked, 0))->pluck('plate', 'id');
-        $this->dispatch('successAlert', ['message' => 'Desbloqueados '.count($unblocked).' día(s): '
-            .implode(', ', array_map(fn (array $p) => $plates[$p[0]].' '.DrawBlock::dayLabel($p[1]), $unblocked))]);
+        $this->dispatch('successAlert', ['message' => 'Desbloqueados '.count($toUnblock).' día(s): '.$label($toUnblock)
+            .($deniedNote ? '. '.$deniedNote : '')]);
 
         return true;
     }
@@ -487,7 +504,8 @@ class Index extends Component
 
     /**
      * Quita todos los bloqueos vigentes de las placas marcadas en la tabla,
-     * con el motivo (queda en su historial). Devuelve true si se guardó.
+     * con el motivo (queda en su historial). El controlador solo quita los
+     * puestos hoy; los anteriores siguen. Devuelve true si se guardó.
      *
      * @param  array<int, int|string>  $vehicleIds
      */
@@ -507,15 +525,24 @@ class Index extends Component
             return false;
         }
 
-        DB::transaction(fn () => $blocks->each(fn (DrawBlock $block) => $this->lift($block, $reason)));
-        $this->includeAgain($blocks->pluck('vehicle_id')->unique()->all());
+        [$liftable, $denied] = $blocks->partition(fn (DrawBlock $block) => $block->canBeLiftedBy(auth()->user()));
+        $deniedNote = $denied->isNotEmpty() ? self::LIFT_ONLY_TODAY.' Siguen bloqueadas: '.$denied->pluck('vehicle.plate')->unique()->implode(', ').'.' : '';
+        if ($liftable->isEmpty()) {
+            $this->dispatch('errorAlert', ['message' => $deniedNote]);
 
-        $this->dispatch('successAlert', ['message' => 'Desbloqueadas: '.$blocks->pluck('vehicle.plate')->unique()->implode(', ')]);
+            return false;
+        }
+
+        DB::transaction(fn () => $liftable->each(fn (DrawBlock $block) => $this->lift($block, $reason)));
+        $this->includeAgain($liftable->pluck('vehicle_id')->unique()->all());
+
+        $this->dispatch('successAlert', ['message' => 'Desbloqueadas: '.$liftable->pluck('vehicle.plate')->unique()->implode(', ')
+            .($deniedNote ? '. '.$deniedNote : '')]);
 
         return true;
     }
 
-    /** Levanta un bloqueo de la lista de Bloqueos, con el motivo. */
+    /** Levanta un bloqueo de la lista de Bloqueos, con el motivo (el controlador, solo si se puso hoy). */
     public function unblockVehicle(int $blockId, string $reason): bool
     {
         $this->authorizeBlocking();
@@ -526,6 +553,11 @@ class Index extends Component
         }
 
         $block = DrawBlock::active()->with('vehicle:id,plate')->findOrFail($blockId);
+        if (! $block->canBeLiftedBy(auth()->user())) {
+            $this->dispatch('errorAlert', ['message' => self::LIFT_ONLY_TODAY]);
+
+            return false;
+        }
         $this->lift($block, $reason);
         $this->includeAgain([$block->vehicle_id]);
         $this->dispatch('successAlert', ['message' => 'Desbloqueada: '.$block->vehicle?->plate]);
@@ -694,6 +726,7 @@ class Index extends Component
         // Placas que alguna vez tuvieron un bloqueo (aunque ya se cumplió o se levantó): van en rojo
         $everBlocked = DrawBlock::distinct()->pluck('vehicle_id')->flip();
         $lockedDays = $this->blockedDaysOfMonth(array_column($days, 'date'), $from, $to);
+        $frozenDays = $this->daysNotLiftable($blocks, array_column($days, 'date'));
 
         // Abajo de todo van solo las bloqueadas TODOS los días del mes (domingos incluidos);
         // con un solo día libre, ya sorteado o por sortear, se quedan arriba con candado
@@ -727,6 +760,7 @@ class Index extends Component
                         $counts[$band]++;
                     }
                 }
+                $rowBlocks = $kind === 'former' ? collect() : ($blocksByVehicle[$vehicle->id] ?? collect());
                 $rows[] = [
                     'id' => $vehicle->id,
                     'cod' => $vehicle->sort_order,
@@ -740,7 +774,9 @@ class Index extends Component
                     'active' => $kind === 'active',
                     'blocked' => $kind === 'blocked',
                     // Bloqueos vigentes de la placa (para el candado junto a la placa)
-                    'blocks' => $kind === 'former' ? collect() : ($blocksByVehicle[$vehicle->id] ?? collect()),
+                    'blocks' => $rowBlocks,
+                    // ¿Tiene alguno que este usuario pueda quitar? (el controlador, solo los puestos hoy)
+                    'canLift' => $rowBlocks->contains(fn (DrawBlock $block) => $block->canBeLiftedBy(auth()->user())),
                     'everBlocked' => isset($everBlocked[$vehicle->id]),
                     'counts' => $counts,
                     // Números que esta placa recibió más de una vez en el mes, por serie (no debería pasar)
@@ -773,6 +809,8 @@ class Index extends Component
             'yearHolidays' => Holiday::whereYear('date', $this->year)->orderBy('date')->get(),
             'blocks' => $blocks,
             'lockedDays' => $lockedDays,
+            'frozenDays' => $frozenDays,
+            'canUnblockAll' => $this->canUnblockAll(),
             // Lista del domingo que se está preparando: las placas que pueden entrar ese día
             'sundayVehicles' => ! $simulating && $this->sundayDate && in_array($this->sundayDate, $drawable, true)
                 ? DrawService::activeVehicles($this->sundayDate)->with('driver:id,name')->get(['id', 'sort_order', 'plate', 'condition', 'driver_id'])
@@ -912,6 +950,32 @@ class Index extends Component
         }
 
         return $locked;
+    }
+
+    /**
+     * Días con candado que este usuario no puede desbloquear: los que cubre
+     * algún bloqueo vigente que no puede quitar (al controlador, los puestos
+     * antes de hoy).
+     *
+     * @param  Collection<int, DrawBlock>  $blocks  vigentes, con sus días desbloqueados cargados
+     * @param  array<int, string>  $dates
+     * @return array<int, array<string, true>> vehicle_id => [Y-m-d => true]
+     */
+    private function daysNotLiftable(Collection $blocks, array $dates): array
+    {
+        $frozen = [];
+        foreach ($blocks as $block) {
+            if ($block->canBeLiftedBy(auth()->user())) {
+                continue;
+            }
+            foreach ($dates as $date) {
+                if ($block->appliesOn($date)) {
+                    $frozen[$block->vehicle_id][$date] = true;
+                }
+            }
+        }
+
+        return $frozen;
     }
 
     /**
@@ -1143,10 +1207,16 @@ class Index extends Component
         abort_unless(auth()->user()?->can('draws'), 403);
     }
 
-    /** Bloquear y desbloquear placas: director, gerente, administrador y controlador (los controladores manejan Sorteos desde el celular). */
+    /** Bloquear, sancionar y desbloquear placas: director, gerente, administrador y controlador (los controladores manejan Sorteos desde el celular; desbloquean solo lo puesto hoy, ver canBeLiftedBy). */
     protected function canBlock(): bool
     {
         return (bool) auth()->user()?->hasAnyRole('director', 'gerente', 'administrador', 'controlador');
+    }
+
+    /** Quitar cualquier bloqueo: director, gerente y administrador (el controlador, solo los puestos hoy). */
+    protected function canUnblockAll(): bool
+    {
+        return (bool) auth()->user()?->hasAnyRole(DrawBlock::LIFT_ANY_ROLES);
     }
 
     private function authorizeBlocking(): void

@@ -91,6 +91,7 @@ class Mobile extends Index
             ...$sanctionData,
             'blockable' => $sanctionData['sanctionable'],
             'canBlock' => $this->canBlock(),
+            'canUnblockAll' => $this->canUnblockAll(),
             'canSeeGrid' => auth()->user()->hasAnyRole('director', 'gerente', 'administrador'),
         ]);
     }
@@ -121,22 +122,27 @@ class Mobile extends Index
     }
 
     /**
-     * Placas de la grilla que no entran el día pendiente por un bloqueo, con el bloqueo que las cubre.
+     * Placas de la grilla que no entran el día pendiente por un bloqueo, con el bloqueo que las cubre
+     * y cuáles puede desbloquear este usuario ese día (el controlador, solo si todos sus bloqueos de ese día se pusieron hoy).
      *
-     * @return array{blockedVehicles: Collection, dayBlocks: Collection}
+     * @return array{blockedVehicles: Collection, dayBlocks: Collection, dayLiftable: array<int, true>}
      */
     private function blockedThatDay(bool $pending): array
     {
         if (! $pending) {
-            return ['blockedVehicles' => collect(), 'dayBlocks' => collect()];
+            return ['blockedVehicles' => collect(), 'dayBlocks' => collect(), 'dayLiftable' => []];
         }
 
-        $dayBlocks = DrawBlock::active()->onDate($this->day)->with('blockedBy:id,name,username')->get()->keyBy('vehicle_id');
+        $blocks = DrawBlock::active()->onDate($this->day)->with('blockedBy:id,name,username')->get();
+        $dayBlocks = $blocks->keyBy('vehicle_id');
 
         return [
             'blockedVehicles' => DrawService::gridVehicles($this->day)->whereIn('id', $dayBlocks->keys())
                 ->with('driver:id,name')->get(['id', 'sort_order', 'plate', 'condition', 'driver_id']),
             'dayBlocks' => $dayBlocks,
+            'dayLiftable' => $blocks->groupBy('vehicle_id')
+                ->filter(fn (Collection $vehicleBlocks) => $vehicleBlocks->every(fn (DrawBlock $block) => $block->canBeLiftedBy(auth()->user())))
+                ->map(fn () => true)->all(),
         ];
     }
 

@@ -384,7 +384,7 @@
                                     <td class="dr-sel" x-show="selecting" x-cloak>
                                         @if($row['active'] || $row['blocked'])
                                             <input type="checkbox" class="form-check-input m-0" data-sel="{{ $row['blocked'] ? 'blocked' : 'block' }}" data-plate="{{ $row['plate'] }}"
-                                                   data-has-block="{{ $row['blocks']->isNotEmpty() ? 1 : 0 }}" value="{{ $row['id'] }}" x-model="toBlock" title="Marcar para bloquear o desbloquear">
+                                                   data-has-block="{{ $row['canLift'] ? 1 : 0 }}" value="{{ $row['id'] }}" x-model="toBlock" title="Marcar para bloquear o desbloquear">
                                         @endif
                                     </td>
                                     <td>{{ $i + 1 }}</td>
@@ -414,7 +414,7 @@
                                             $lock = $lockedDays[$row['id']][$date] ?? null;
                                             $dayKey = $row['id'].'|'.$date;
                                         @endphp
-                                        @if(! $cell && $lock && $canBlock && ! $simulating && $date >= $firstOpen)
+                                        @if(! $cell && $lock && $canBlock && ! $simulating && $date >= $firstOpen && ! isset($frozenDays[$row['id']][$date]))
                                             <td class="text-center dr-locked dr-locked-open" data-day="{{ $dayKey }}" data-label="{{ $row['plate'] }} {{ \App\Models\DrawBlock::dayLabel($date) }}"
                                                 :class="days.includes('{{ $dayKey }}') && 'dr-day-sel'" x-on:click="toggleDay('{{ $dayKey }}')"
                                                 data-bs-toggle="tooltip" data-bs-html="true" data-bs-custom-class="dr-tip" data-bs-title="{{ $lock->tooltipHtml().'<small class="dr-tip-hint">Clic para marcar este día y desbloquearlo</small>' }}">
@@ -598,6 +598,9 @@
                         @if($canBlock)
                             <i class="ti ti-info-circle"></i> Para bloquear, usa <b>Seleccionar varios</b> en la tabla, marca las placas y pulsa <b>Bloquear</b>: todo el mes, un rango de fechas, días específicos o hasta desbloquearla.
                             Para que entre un día suelto (por ejemplo un sábado), haz clic en sus candados de la grilla, puedes marcar varios, y pulsa <b>Desbloquear esos días</b> con el motivo.
+                            @unless($canUnblockAll)
+                                <div class="mt-1"><i class="ti ti-alert-circle"></i> Como controlador solo puedes desbloquear los bloqueos puestos hoy; los de días anteriores los quita el director, el gerente o el administrador.</div>
+                            @endunless
                             <div class="d-flex flex-wrap align-items-center gap-2 mt-2">
                                 <button type="button" class="btn btn-sm btn-outline-danger"
                                         x-on:click="hideModal('blocksModal'); setTimeout(() => bootstrap.Modal.getOrCreateInstance(document.getElementById('sanctionModal')).show(), 350)">
@@ -606,7 +609,7 @@
                                 <span class="text-muted">Con 2 sanciones la placa se suspende sola 3 días de sorteo (sin domingos).</span>
                             </div>
                         @else
-                            Solo el director, el gerente, los administradores y los controladores pueden bloquear, desbloquear y sancionar placas.
+                            Solo el director, el gerente, los administradores y los controladores pueden bloquear y sancionar placas. Desbloquear: el director, el gerente y los administradores (los controladores, solo los bloqueos puestos hoy).
                         @endif
                     </div>
 
@@ -647,7 +650,7 @@
                                     </td>
                                     <td class="fw-semibold" style="white-space: normal; color: {{ $block->kindColor() }};">{{ $block->reason }}</td>
                                     <td class="text-end dr-nowrap">
-                                        @if($canBlock)
+                                        @if($canBlock && $block->canBeLiftedBy(auth()->user()))
                                             <button type="button" class="btn btn-sm btn-outline-success py-0"
                                                     x-on:click="hideModal('blocksModal'); askReason('Desbloquear ' + @js($block->vehicle?->plate ?? ''), @js($block->periodLabel().' · vuelve a entrar desde el próximo sorteo.'), (reason) => $wire.unblockVehicle({{ $block->id }}, reason))">
                                                 <i class="ti ti-lock-open"></i> Desbloquear

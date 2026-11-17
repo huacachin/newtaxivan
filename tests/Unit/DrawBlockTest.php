@@ -4,7 +4,10 @@ namespace Tests\Unit;
 
 use App\Models\DrawBlock;
 use App\Models\DrawBlockException;
+use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Arr;
+use Mockery;
 use Tests\TestCase;
 
 /**
@@ -152,5 +155,54 @@ class DrawBlockTest extends TestCase
 
         $range->unblocked_at = '2026-11-10 09:00';
         $this->assertSame(DrawBlock::STATUS_LIFTED, $range->status());
+    }
+
+    /** Usuario con un solo rol, sin tocar la base (Spatie consultaría model_has_roles). */
+    private function userWithRole(?string $role): User
+    {
+        $user = Mockery::mock(User::class)->makePartial();
+        $user->shouldReceive('hasAnyRole')->andReturnUsing(fn (...$roles) => in_array($role, Arr::flatten($roles), true));
+        $user->shouldReceive('hasRole')->andReturnUsing(fn ($roles) => in_array($role, Arr::wrap($roles), true));
+
+        return $user;
+    }
+
+    private function blockPlacedAt(string $createdAt): DrawBlock
+    {
+        $block = $this->block(['kind' => DrawBlock::KIND_INDEFINITE, 'starts_on' => '2026-11-10']);
+        $block->created_at = Carbon::parse($createdAt);
+
+        return $block;
+    }
+
+    public function test_the_director_the_manager_and_the_administrator_lift_any_block(): void
+    {
+        Carbon::setTestNow('2026-11-17 10:00');
+        $old = $this->blockPlacedAt('2026-11-02 09:00');
+
+        foreach (['director', 'gerente', 'administrador'] as $role) {
+            $this->assertTrue($old->canBeLiftedBy($this->userWithRole($role)), $role);
+        }
+    }
+
+    public function test_the_controller_only_lifts_blocks_placed_today(): void
+    {
+        Carbon::setTestNow('2026-11-17 18:30');
+        $controller = $this->userWithRole('controlador');
+
+        $this->assertTrue($this->blockPlacedAt('2026-11-17 00:05')->canBeLiftedBy($controller));
+        $this->assertTrue($this->blockPlacedAt('2026-11-17 18:00')->canBeLiftedBy($controller));
+        $this->assertFalse($this->blockPlacedAt('2026-11-16 23:59')->canBeLiftedBy($controller));
+        $this->assertFalse($this->blockPlacedAt('2026-11-02 09:00')->canBeLiftedBy($controller));
+    }
+
+    public function test_nobody_else_lifts_a_block(): void
+    {
+        Carbon::setTestNow('2026-11-17 10:00');
+        $today = $this->blockPlacedAt('2026-11-17 08:00');
+
+        $this->assertFalse($today->canBeLiftedBy($this->userWithRole('cajero')));
+        $this->assertFalse($today->canBeLiftedBy($this->userWithRole(null)));
+        $this->assertFalse($today->canBeLiftedBy(null));
     }
 }
