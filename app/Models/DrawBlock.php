@@ -62,7 +62,7 @@ class DrawBlock extends Model
         self::KIND_SUSPENSION => '#be185d',
     ];
 
-    /** Quitan cualquier bloqueo (completo o días sueltos); el controlador solo los puestos hoy (canBeLiftedBy). */
+    /** Quitan cualquier bloqueo (completo o días sueltos); el controlador solo los que puso él mismo hoy (canBeLiftedBy). */
     public const LIFT_ANY_ROLES = ['director', 'gerente', 'administrador'];
 
     public const STATUS_ACTIVE = 'vigente';
@@ -203,7 +203,8 @@ class DrawBlock extends Model
     /**
      * ¿$user puede quitar este bloqueo, completo o por días sueltos? El
      * director, el gerente y el administrador, cualquiera; el controlador solo
-     * los que se registraron hoy (para corregir un error del mismo día).
+     * los que registró él mismo hoy (para corregir un error suyo del mismo
+     * día): los de otro controlador los ve, pero no los quita.
      */
     public function canBeLiftedBy(?User $user): bool
     {
@@ -214,7 +215,10 @@ class DrawBlock extends Model
             return true;
         }
 
-        return $user->hasRole('controlador') && (bool) $this->created_at?->isToday();
+        return $user->hasRole('controlador')
+            && $this->blocked_by !== null
+            && (int) $this->blocked_by === (int) $user->getKey()
+            && (bool) $this->created_at?->isToday();
     }
 
     /** Vigente, cumplida (ya terminó su periodo) o levantada (la desbloquearon). */

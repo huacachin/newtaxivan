@@ -123,7 +123,7 @@ class Mobile extends Index
 
     /**
      * Placas de la grilla que no entran el día pendiente por un bloqueo, con el bloqueo que las cubre
-     * y cuáles puede desbloquear este usuario ese día (el controlador, solo si todos sus bloqueos de ese día se pusieron hoy).
+     * y cuáles puede desbloquear este usuario ese día (el controlador, solo si todos los bloqueos de ese día los puso él mismo hoy).
      *
      * @return array{blockedVehicles: Collection, dayBlocks: Collection, dayLiftable: array<int, true>}
      */

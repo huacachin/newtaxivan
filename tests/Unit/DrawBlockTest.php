@@ -158,18 +158,20 @@ class DrawBlockTest extends TestCase
     }
 
     /** Usuario con un solo rol, sin tocar la base (Spatie consultaría model_has_roles). */
-    private function userWithRole(?string $role): User
+    private function userWithRole(?string $role, int $id = 7): User
     {
         $user = Mockery::mock(User::class)->makePartial();
+        $user->id = $id;
         $user->shouldReceive('hasAnyRole')->andReturnUsing(fn (...$roles) => in_array($role, Arr::flatten($roles), true));
         $user->shouldReceive('hasRole')->andReturnUsing(fn ($roles) => in_array($role, Arr::wrap($roles), true));
 
         return $user;
     }
 
-    private function blockPlacedAt(string $createdAt): DrawBlock
+    private function blockPlacedAt(string $createdAt, ?int $blockedBy = 7): DrawBlock
     {
         $block = $this->block(['kind' => DrawBlock::KIND_INDEFINITE, 'starts_on' => '2026-11-10']);
+        $block->blocked_by = $blockedBy;
         $block->created_at = Carbon::parse($createdAt);
 
         return $block;
@@ -185,7 +187,7 @@ class DrawBlockTest extends TestCase
         }
     }
 
-    public function test_the_controller_only_lifts_blocks_placed_today(): void
+    public function test_the_controller_only_lifts_his_own_blocks_placed_today(): void
     {
         Carbon::setTestNow('2026-11-17 18:30');
         $controller = $this->userWithRole('controlador');
@@ -194,6 +196,20 @@ class DrawBlockTest extends TestCase
         $this->assertTrue($this->blockPlacedAt('2026-11-17 18:00')->canBeLiftedBy($controller));
         $this->assertFalse($this->blockPlacedAt('2026-11-16 23:59')->canBeLiftedBy($controller));
         $this->assertFalse($this->blockPlacedAt('2026-11-02 09:00')->canBeLiftedBy($controller));
+    }
+
+    public function test_the_controller_does_not_lift_a_block_placed_by_someone_else(): void
+    {
+        // Elmer veía el botón Desbloquear en los bloqueos que Luis puso ese mismo día
+        Carbon::setTestNow('2026-11-20 18:00');
+        $elmer = $this->userWithRole('controlador', 3);
+        $luis = $this->userWithRole('controlador', 5);
+        $placedByLuis = $this->blockPlacedAt('2026-11-20 09:59', 5);
+
+        $this->assertFalse($placedByLuis->canBeLiftedBy($elmer));
+        $this->assertTrue($placedByLuis->canBeLiftedBy($luis));
+        $this->assertFalse($this->blockPlacedAt('2026-11-20 09:59', null)->canBeLiftedBy($elmer)); // sin autor registrado
+        $this->assertTrue($placedByLuis->canBeLiftedBy($this->userWithRole('administrador', 9)));
     }
 
     public function test_nobody_else_lifts_a_block(): void

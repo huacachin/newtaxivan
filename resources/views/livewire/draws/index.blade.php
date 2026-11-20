@@ -599,7 +599,7 @@
                             <i class="ti ti-info-circle"></i> Para bloquear, usa <b>Seleccionar varios</b> en la tabla, marca las placas y pulsa <b>Bloquear</b>: todo el mes, un rango de fechas, días específicos o hasta desbloquearla.
                             Para que entre un día suelto (por ejemplo un sábado), haz clic en sus candados de la grilla, puedes marcar varios, y pulsa <b>Desbloquear esos días</b> con el motivo.
                             @unless($canUnblockAll)
-                                <div class="mt-1"><i class="ti ti-alert-circle"></i> Como controlador solo puedes desbloquear los bloqueos puestos hoy; los de días anteriores los quita el director, el gerente o el administrador.</div>
+                                <div class="mt-1"><i class="ti ti-alert-circle"></i> Como controlador solo puedes desbloquear los bloqueos que pusiste tú hoy; los demás los quita el director, el gerente o el administrador.</div>
                             @endunless
                             <div class="d-flex flex-wrap align-items-center gap-2 mt-2">
                                 <button type="button" class="btn btn-sm btn-outline-danger"
@@ -609,7 +609,7 @@
                                 <span class="text-muted">Con 2 sanciones la placa se suspende sola 3 días de sorteo (sin domingos).</span>
                             </div>
                         @else
-                            Solo el director, el gerente, los administradores y los controladores pueden bloquear y sancionar placas. Desbloquear: el director, el gerente y los administradores (los controladores, solo los bloqueos puestos hoy).
+                            Solo el director, el gerente, los administradores y los controladores pueden bloquear y sancionar placas. Desbloquear: el director, el gerente y los administradores (los controladores, solo los bloqueos que pusieron ellos mismos hoy).
                         @endif
                     </div>
 

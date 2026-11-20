@@ -256,7 +256,7 @@
             @if($blockedVehicles->isNotEmpty())
                 <div class="dm-section"><i class="ti ti-lock"></i> No entran este día por bloqueo ({{ $blockedVehicles->count() }})</div>
                 @if($canBlock && ! $canUnblockAll)
-                    <div class="small text-muted mb-2">Solo puedes desbloquear los bloqueos puestos hoy; los de días anteriores los quita el director, el gerente o el administrador.</div>
+                    <div class="small text-muted mb-2">Solo puedes desbloquear los bloqueos que pusiste tú hoy; los demás los quita el director, el gerente o el administrador.</div>
                 @endif
                 <div class="dm-list">
                     @foreach($blockedVehicles as $vehicle)

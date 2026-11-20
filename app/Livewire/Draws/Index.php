@@ -53,8 +53,8 @@ class Index extends Component
 {
     use WithFileUploads;
 
-    /** Aviso cuando el controlador intenta quitar un bloqueo de un día anterior. */
-    private const LIFT_ONLY_TODAY = 'El controlador solo puede desbloquear bloqueos puestos hoy; los de días anteriores los quita el director, el gerente o el administrador.';
+    /** Aviso cuando el controlador intenta quitar un bloqueo que no puso él hoy. */
+    private const LIFT_ONLY_TODAY = 'El controlador solo puede desbloquear los bloqueos que puso él mismo hoy; los demás los quita el director, el gerente o el administrador.';
 
     public const MONTHS = [
         1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril', 5 => 'Mayo', 6 => 'Junio',
@@ -425,8 +425,9 @@ class Index extends Component
      * Desbloquea días sueltos (clic en los candados de la grilla): ese día la
      * placa sí entra al sorteo aunque su bloqueo lo cubra. Solo días que
      * todavía no se sortearon; el motivo queda en su historial. El
-     * controlador solo desbloquea días de bloqueos puestos hoy: si alguno de
-     * los que cubren el día es anterior, ese día se queda bloqueado.
+     * controlador solo desbloquea días de bloqueos que puso él mismo hoy: si
+     * alguno de los que cubren el día es anterior o de otro usuario, ese día
+     * se queda bloqueado.
      *
      * @param  array<int, string>  $cells  "vehicleId|Y-m-d"
      */
@@ -505,7 +506,7 @@ class Index extends Component
     /**
      * Quita todos los bloqueos vigentes de las placas marcadas en la tabla,
      * con el motivo (queda en su historial). El controlador solo quita los
-     * puestos hoy; los anteriores siguen. Devuelve true si se guardó.
+     * que puso él mismo hoy; los demás siguen. Devuelve true si se guardó.
      *
      * @param  array<int, int|string>  $vehicleIds
      */
@@ -775,7 +776,7 @@ class Index extends Component
                     'blocked' => $kind === 'blocked',
                     // Bloqueos vigentes de la placa (para el candado junto a la placa)
                     'blocks' => $rowBlocks,
-                    // ¿Tiene alguno que este usuario pueda quitar? (el controlador, solo los puestos hoy)
+                    // ¿Tiene alguno que este usuario pueda quitar? (el controlador, solo los que puso él hoy)
                     'canLift' => $rowBlocks->contains(fn (DrawBlock $block) => $block->canBeLiftedBy(auth()->user())),
                     'everBlocked' => isset($everBlocked[$vehicle->id]),
                     'counts' => $counts,
@@ -1207,13 +1208,13 @@ class Index extends Component
         abort_unless(auth()->user()?->can('draws'), 403);
     }
 
-    /** Bloquear, sancionar y desbloquear placas: director, gerente, administrador y controlador (los controladores manejan Sorteos desde el celular; desbloquean solo lo puesto hoy, ver canBeLiftedBy). */
+    /** Bloquear, sancionar y desbloquear placas: director, gerente, administrador y controlador (los controladores manejan Sorteos desde el celular; desbloquean solo lo que pusieron ellos mismos hoy, ver canBeLiftedBy). */
     protected function canBlock(): bool
     {
         return (bool) auth()->user()?->hasAnyRole('director', 'gerente', 'administrador', 'controlador');
     }
 
-    /** Quitar cualquier bloqueo: director, gerente y administrador (el controlador, solo los puestos hoy). */
+    /** Quitar cualquier bloqueo: director, gerente y administrador (el controlador, solo los que puso él hoy). */
     protected function canUnblockAll(): bool
     {
         return (bool) auth()->user()?->hasAnyRole(DrawBlock::LIFT_ANY_ROLES);
