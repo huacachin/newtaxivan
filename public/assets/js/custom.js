@@ -857,3 +857,74 @@ document.addEventListener('alpine:init', function () {
     document.addEventListener('DOMContentLoaded', initSearchHistory);
     document.addEventListener('livewire:navigated', initSearchHistory);
 })();
+
+// ===== Select2 sobre selects de Livewire (formulario de vehiculo) =====
+// Uso: clase "select2-tags" (busca o deja escribir un valor nuevo) o
+// "select2-simple" (solo busca) en un <select wire:model>, dentro de un
+// envoltorio <div wire:ignore wire:key="...valor..."> para que el morph de
+// Livewire no desarme el cuadro y se rehaga cuando el servidor cambia el valor.
+// La pagina tiene que cargar select2.min.js; donde no esta, esto no hace nada.
+(function () {
+    var SELECTOR = 'select.select2-simple, select.select2-tags';
+
+    function initSelect2() {
+        var $ = window.jQuery;
+        if (!$ || !$.fn.select2) return;
+
+        $(SELECTOR).each(function () {
+            if ($(this).hasClass('select2-hidden-accessible')) return; // ya montado
+
+            var withTags = $(this).hasClass('select2-tags');
+            // Select2 usa la opcion con value="" como su placeholder: sin uno
+            // definido la deja en blanco aunque este seleccionada.
+            var empty = this.querySelector('option[value=""]');
+            var hint = $(this).data('placeholder') || (empty && empty.textContent.trim()) || '';
+
+            $(this).select2({
+                width: '100%',
+                language: { noResults: function () { return 'Sin resultados'; } },
+                tags: withTags,
+                placeholder: hint,
+                // La x para dejarlo vacio solo donde existe la opcion vacia
+                allowClear: !!empty,
+                // Letra de la lista igual a la del campo compacto (_select.scss)
+                dropdownCssClass: $(this).hasClass('form-select-sm') ? 'select2-dropdown--sm' : ''
+            }).on('select2:select.livewire select2:unselect.livewire select2:clear.livewire', function () {
+                // wire:model escucha los eventos nativos, no los de Select2
+                this.dispatchEvent(new Event('input', { bubbles: true }));
+                this.dispatchEvent(new Event('change', { bubbles: true }));
+            }).on('select2:open.livewire', function () {
+                var field = document.querySelector('.select2-container--open .select2-search__field');
+                if (!field) return;
+                // jQuery 3.6+ con Select2: el buscador no recibe foco al abrir,
+                // y sin foco escribir de inmediato no filtra.
+                field.focus();
+                field.setAttribute('placeholder', withTags ? 'Busca o escribe...' : 'Busca...');
+            });
+        });
+
+        // Si Livewire cambio el valor desde el servidor, Select2 no se entera
+        // solo. Se redibuja en la vuelta siguiente, cuando wire:model ya puso el
+        // valor en el <select>. 'change.select2' solo redibuja el cuadro: no
+        // dispara el change nativo, asi que no va al servidor ni hace bucle.
+        setTimeout(function () {
+            $(SELECTOR).filter('.select2-hidden-accessible').trigger('change.select2');
+        }, 0);
+    }
+
+    document.addEventListener('DOMContentLoaded', initSelect2);
+    document.addEventListener('livewire:initialized', function () {
+        initSelect2();
+
+        // Una vez por respuesta (no por elemento), al terminar el morph
+        var pending = false;
+        Livewire.hook('morphed', function () {
+            if (pending) return;
+            pending = true;
+            queueMicrotask(function () {
+                pending = false;
+                initSelect2();
+            });
+        });
+    });
+})();

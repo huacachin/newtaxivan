@@ -11,6 +11,7 @@ use App\Models\VehicleImage;
 use App\Services\CostPerPlateGenerator;
 use App\Services\DrawService;
 use App\Services\SupportRecordRelinker;
+use App\Services\VehicleCatalogs;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -134,13 +135,13 @@ class Edit extends Component
             'entry_date' => 'nullable|date',
             'termination_date' => 'nullable|date',
             'headquarter' => 'nullable|string|max:255',
-            'class' => 'nullable|string|max:255',
-            'brand' => 'nullable|string|max:255',
+            'class' => 'nullable|string|max:50',
+            'brand' => 'nullable|string|max:100',
             'year' => 'nullable|integer',
-            'model' => 'nullable|string|max:255',
-            'bodywork' => 'nullable|string|max:255',
-            'color' => 'nullable|string|max:255',
-            'type' => 'nullable|string|max:255',
+            'model' => 'nullable|string|max:100',
+            'bodywork' => 'nullable|string|max:100',
+            'color' => 'nullable|string|max:50',
+            'type' => 'nullable|string|max:50',
             'affiliated_company' => 'nullable|string|max:255',
             'condition' => 'required|string|min:1|max:255',
             'owner_id' => 'nullable|exists:owners,id',
@@ -154,7 +155,7 @@ class Edit extends Component
                     }
                 },
             ],
-            'fuel' => 'nullable|string|max:255',
+            'fuel' => 'nullable|string|max:50',
             'soat_date' => 'nullable|date',
             'technical_review' => 'nullable|date',
             'certificate_date' => 'nullable|date',
@@ -494,6 +495,9 @@ class Edit extends Component
                 $relinked = $relinker->relink($vehicle);
                 $costs = $costGenerator->generateForVehicle($vehicle);
 
+                // Lo escrito nuevo en los selects sale la próxima vez
+                VehicleCatalogs::rememberFrom($payload);
+
                 if (! empty($this->deleted_image_ids)) {
                     $imagesToDelete = VehicleImage::where('vehicle_id', $this->vehicle->id)
                         ->whereIn('id', $this->deleted_image_ids)
@@ -560,6 +564,7 @@ class Edit extends Component
     public function render()
     {
         return view('livewire.vehicles.edit', [
+            'catalogOptions' => VehicleCatalogs::forValues($this->only(VehicleCatalogs::TYPES)),
             // Historial de sanciones en Sorteos, para quien tiene acceso a Sorteos
             'drawHistory' => auth()->user()?->can('draws') ? DrawBlock::historyFor($this->vehicle->id) : null,
             // Botones: Reactivar si ya está de baja; Dar de baja si tiene historial; si no, Eliminar

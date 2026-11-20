@@ -7,6 +7,7 @@ use App\Models\Driver;
 use App\Models\Headquarter;
 use App\Models\Owner;
 use App\Models\Vehicle;
+use App\Services\VehicleCatalogs;
 use Livewire\Component;
 
 /**
@@ -52,6 +53,7 @@ class AuditSnapshot extends Component
     public $color, $type, $affiliated_company, $condition;
     public $owner_id, $driver_id, $fuel, $soat_date, $technical_review, $certificate_date;
     public $detail, $sort_order, $seats = 0, $passengers = 0;
+    public bool $not_working = false;
 
     // Drivers
     public $name, $document_number, $document_expiration_date, $birthdate;
@@ -146,6 +148,7 @@ class AuditSnapshot extends Component
         $this->sort_order         = $d['sort_order']         ?? null;
         $this->seats              = $d['seats']              ?? 0;
         $this->passengers         = $d['passengers']         ?? 0;
+        $this->not_working        = !empty($d['not_working_since']);
 
         // FK lists + placeholders ELIMINADO #ID si la FK no existe
         $this->listOwners       = $this->buildList(Owner::class, $this->owner_id);
@@ -319,6 +322,12 @@ class AuditSnapshot extends Component
 
     public function render()
     {
-        return view('livewire.audit-snapshot');
+        return view('livewire.audit-snapshot', [
+            // El form de vehiculo pinta sus selects de catalogo con esto (el valor
+            // del registro eliminado se conserva aunque ya no este en la lista)
+            'catalogOptions' => $this->moduleLabel === 'Vehículos'
+                ? VehicleCatalogs::forValues($this->only(VehicleCatalogs::TYPES))
+                : [],
+        ]);
     }
 }

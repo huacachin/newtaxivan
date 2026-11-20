@@ -8,7 +8,18 @@
     {{-- Placa --}}
     <div class="col-6 col-md-2">
         <label for="plate" class="form-label {{ $isEdit ? 'text-muted' : '' }}">Placa</label>
-        <input id="plate" type="text" class="form-control form-control-sm" placeholder="Ingresar placa" wire:model="plate" autocomplete="off" @if($isEdit) disabled @endif>
+        @if($isEdit)
+            <input id="plate" type="text" class="form-control form-control-sm" placeholder="Ingresar placa" wire:model="plate" autocomplete="off" disabled>
+        @else
+            {{-- La lupa consulta la placa en Factiliza y llena marca, modelo y color --}}
+            <div class="input-group input-group-sm">
+                <input id="plate" type="text" class="form-control form-control-sm text-uppercase" placeholder="Ingresar placa" wire:model="plate" wire:keydown.enter="lookupPlate" autocomplete="off">
+                <button type="button" class="btn btn-search" wire:click="lookupPlate" wire:loading.attr="disabled" wire:target="lookupPlate" title="Buscar datos de la placa">
+                    <span wire:loading.remove wire:target="lookupPlate"><i class="ti ti-search"></i></span>
+                    <span wire:loading wire:target="lookupPlate" class="spinner-border spinner-border-sm"></span>
+                </button>
+            </div>
+        @endif
         @error('plate') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
@@ -61,30 +72,10 @@
     </div>
 
     {{-- Categoría --}}
-    <div class="col-6 col-md-2">
-        <label for="class" class="form-label">Categoría</label>
-        <select id="class" class="form-select form-select-sm" wire:model="class">
-            <option value="">Seleccione</option>
-            <option value="M1">M1</option>
-            <option value="M1-C3">M1-C3</option>
-            <option value="M2">M2</option>
-            <option value="MICROBUS">MICROBUS</option>
-            <option value="M3.C3">M3.C3</option>
-            <option value="M3.C1 OMNIBUS">M3.C1 OMNIBUS</option>
-            <option value="M3-C3">M3-C3</option>
-            <option value="M2-C3">M2-C3</option>
-        </select>
-        @error('class') <span class="title-modules">{{ $message }}</span> @enderror
-    </div>
+    @include('livewire.vehicles._catalog-select', ['field' => 'class', 'label' => 'Categoría', 'value' => $class])
 
     {{-- Marca --}}
-    <div class="col-6 col-md-2">
-        <label for="brand" class="form-label">Marca</label>
-        <select id="brand" class="form-select form-select-sm" wire:model="brand">
-            <option value="">Seleccione</option><option value="Changan">Changan</option><option value="Changhe">Changhe</option><option value="Chevrolet">Chevrolet</option><option value="County ">County </option><option value="DFSK">DFSK</option><option value="Faw">Faw</option><option value="Hyunday">Hyunday</option><option value="Jac">Jac</option><option value="Mercedes Benz">Mercedes Benz</option><option value="Mitsubishi">Mitsubishi</option><option value="Nissan">Nissan</option><option value="Scama">Scama</option><option value="Suzuki">Suzuki</option><option value="Toyota">Toyota</option><option value="Volkswagen">Volkswagen</option>
-        </select>
-        @error('brand') <span class="title-modules">{{ $message }}</span> @enderror
-    </div>
+    @include('livewire.vehicles._catalog-select', ['field' => 'brand', 'label' => 'Marca', 'value' => $brand])
 
     {{-- Año --}}
     <div class="col-6 col-md-2">
@@ -94,64 +85,16 @@
     </div>
 
     {{-- Modelo --}}
-    <div class="col-6 col-md-2">
-        <label for="model" class="form-label">Modelo</label>
-        <input id="model" type="text" class="form-control form-control-sm" placeholder="Ingresar modelo" wire:model="model">
-        @error('model') <span class="title-modules">{{ $message }}</span> @enderror
-    </div>
+    @include('livewire.vehicles._catalog-select', ['field' => 'model', 'label' => 'Modelo', 'value' => $model])
 
     {{-- Carrocería --}}
-    <div class="col-6 col-md-2">
-        <label for="bodywork" class="form-label">Carrocería</label>
-        <select id="bodywork" class="form-select form-select-sm" wire:model="bodywork">
-            <option value="">Seleccione</option>
-            <option value="MULTIPROPOSITO">MULTIPROPOSITO</option>
-            <option value="MICROBUS">MICROBUS</option>
-            <option value="Minibus">Minibus</option>
-        </select>
-        @error('bodywork') <span class="title-modules">{{ $message }}</span> @enderror
-    </div>
+    @include('livewire.vehicles._catalog-select', ['field' => 'bodywork', 'label' => 'Carrocería', 'value' => $bodywork])
 
     {{-- Color --}}
-    <div class="col-6 col-md-2">
-        <label for="color" class="form-label">Color</label>
-        <select id="color" class="form-select form-select-sm" wire:model="color">
-            <option value="">Seleccionar</option>
-            <option value="Azul">Azul</option>
-            <option value="Azul Acero">Azul Acero</option>
-            <option value="Azul Oscuro">Azul Oscuro</option>
-            <option value="Beige">Beige</option>
-            <option value="Blanco">Blanco</option>
-            <option value="Blanco Perla">Blanco Perla</option>
-            <option value="Dorado">Dorado</option>
-            <option value="Gris">Gris</option>
-            <option value="Gris Oscuro">Gris Oscuro</option>
-            <option value="Marron">Marron</option>
-            <option value="Moca Arabe">Moca Arabe</option>
-            <option value="Negro">Negro</option>
-            <option value="Negro Atemporal">Negro Atemporal</option>
-            <option value="Oceanico">Oceanico</option>
-            <option value="Plata">Plata</option>
-            <option value="Plata Diamond">Plata Diamond</option>
-            <option value="Plata Metalizado">Plata Metalizado</option>
-            <option value="Plomo">Plomo</option>
-        </select>
-        @error('color') <span class="title-modules">{{ $message }}</span> @enderror
-    </div>
+    @include('livewire.vehicles._catalog-select', ['field' => 'color', 'label' => 'Color', 'value' => $color])
 
     {{-- Modalidad --}}
-    <div class="col-6 col-md-2">
-        <label for="type" class="form-label">Modalidad</label>
-        <select id="type" class="form-select form-select-sm" wire:model="type">
-            <option value="">Seleccionar</option>
-            <option value="Particular">Particular</option>
-            <option value="Taxi Ejecutivo">Taxi Ejecutivo</option>
-            <option value="Taxi Independiente">Taxi Independiente</option>
-            <option value="Transporte Personal">Transporte Personal</option>
-            <option value="Transporte Turismo">Transporte Turismo</option>
-        </select>
-        @error('type') <span class="title-modules">{{ $message }}</span> @enderror
-    </div>
+    @include('livewire.vehicles._catalog-select', ['field' => 'type', 'label' => 'Modalidad', 'value' => $type])
 
     {{-- Condición --}}
     <div class="col-6 col-md-2">
@@ -178,24 +121,30 @@
     {{-- Propietario --}}
     <div class="col-6 col-md-3">
         <label for="owner_id" class="form-label">Propietario</label>
-        <select id="owner_id" class="form-select form-select-sm" wire:model="owner_id">
-            <option value="">Seleccionar</option>
-            @foreach($listOwners as $owner)
-                <option value="{{ $owner->id }}">{{ $loop->iteration }}.- {{ $owner->name }}</option>
-            @endforeach
-        </select>
+        {{-- Con buscador (Select2); mismo envoltorio que _catalog-select --}}
+        <div wire:ignore wire:key="vsel-owner-{{ $owner_id }}">
+            <select id="owner_id" class="form-select form-select-sm select2-simple" wire:model="owner_id" data-placeholder="Seleccionar">
+                <option value=""></option>
+                @foreach($listOwners as $owner)
+                    <option value="{{ $owner->id }}">{{ $loop->iteration }}.- {{ $owner->name }}</option>
+                @endforeach
+            </select>
+        </div>
         @error('owner_id') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
     {{-- Conductor --}}
     <div class="col-6 col-md-3">
         <label for="driver_id" class="form-label">Conductor</label>
-        <select id="driver_id" class="form-select form-select-sm" wire:model.live="driver_id" @if($not_working) disabled @endif>
-            <option value="">Seleccionar</option>
-            @foreach($listDrivers as $driver)
-                <option value="{{ $driver->id }}">{{$loop->iteration}}.- {{ $driver->name }}</option>
-            @endforeach
-        </select>
+        {{-- La clave incluye "No trabaja" para que el disabled llegue al cuadro de Select2 --}}
+        <div wire:ignore wire:key="vsel-driver-{{ $driver_id }}-{{ $not_working ? 'off' : 'on' }}">
+            <select id="driver_id" class="form-select form-select-sm select2-simple" wire:model.live="driver_id" data-placeholder="Seleccionar" @if($not_working) disabled @endif>
+                <option value=""></option>
+                @foreach($listDrivers as $driver)
+                    <option value="{{ $driver->id }}">{{$loop->iteration}}.- {{ $driver->name }}</option>
+                @endforeach
+            </select>
+        </div>
         @error('driver_id') <span class="title-modules">{{ $message }}</span> @enderror
     </div>
 
@@ -210,17 +159,7 @@
     </div>
 
     {{-- Combustible --}}
-    <div class="col-6 col-md-2">
-        <label for="fuel" class="form-label">Combustible</label>
-        <select id="fuel" class="form-select form-select-sm" wire:model="fuel">
-            <option value="">Seleccionar</option>
-            <option value="D2">D2</option>
-            <option value="GAS">GAS</option>
-        </select>
-        @error('fuel') <span class="title-modules">{{ $message }}</span> @enderror
-    </div>
-
-
+    @include('livewire.vehicles._catalog-select', ['field' => 'fuel', 'label' => 'Combustible', 'value' => $fuel])
 
     <div class="col-6 col-md-1">
         <label for="seats" class="form-label">Asientos</label>

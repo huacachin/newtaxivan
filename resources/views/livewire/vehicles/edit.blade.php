@@ -3,6 +3,9 @@
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.14.1/themes/base/jquery-ui.css">
     <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
     <script src="https://code.jquery.com/ui/1.14.1/jquery-ui.js"></script>
+    {{-- Select2 para los selects con buscador del formulario (lo monta initSelect2 en custom.js) --}}
+    <link rel="stylesheet" href="{{ asset('assets/vendor/select/select2.min.css') }}">
+    <script src="{{ asset('assets/vendor/select/select2.min.js') }}"></script>
 @endpush
 <div class="container-fluid">
     <div class="row">

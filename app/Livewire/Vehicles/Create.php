@@ -8,7 +8,9 @@ use App\Models\Owner;
 use App\Models\Vehicle;
 use App\Models\VehicleImage;
 use App\Services\CostPerPlateGenerator;
+use App\Services\Factiliza;
 use App\Services\SupportRecordRelinker;
+use App\Services\VehicleCatalogs;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
@@ -76,6 +78,14 @@ class Create extends Component
 
     public $listHeadquarters;
 
+    /**
+     * Campos que llenó la consulta de placa (se pintan distinto para que se
+     * revisen antes de guardar).
+     *
+     * @var list<string>
+     */
+    public array $autoFilled = [];
+
     public function rules()
     {
         return [
@@ -83,13 +93,13 @@ class Create extends Component
             'entry_date' => 'nullable|date',
             'termination_date' => 'nullable|date',
             'headquarter' => 'nullable|string|max:255',
-            'class' => 'nullable|string|max:255',
-            'brand' => 'nullable|string|max:255',
+            'class' => 'nullable|string|max:50',
+            'brand' => 'nullable|string|max:100',
             'year' => 'nullable|integer',
-            'model' => 'nullable|string|max:255',
-            'bodywork' => 'nullable|string|max:255',
-            'color' => 'nullable|string|max:255',
-            'type' => 'nullable|string|max:255',
+            'model' => 'nullable|string|max:100',
+            'bodywork' => 'nullable|string|max:100',
+            'color' => 'nullable|string|max:50',
+            'type' => 'nullable|string|max:50',
             'affiliated_company' => 'nullable|string|max:255',
             'condition' => 'required|string|min:1|max:255',
             'owner_id' => 'nullable|exists:owners,id',
@@ -103,7 +113,7 @@ class Create extends Component
                     }
                 },
             ],
-            'fuel' => 'nullable|string|max:255',
+            'fuel' => 'nullable|string|max:50',
             'soat_date' => 'nullable|date',
             'technical_review' => 'nullable|date',
             'certificate_date' => 'nullable|date',
@@ -126,6 +136,52 @@ class Create extends Component
             ->whereRaw("LOWER(TRIM(status)) = 'active'")
             ->orderBy('sort_order')
             ->first();
+    }
+
+    /**
+     * Consulta la placa en Factiliza y llena marca, modelo y color. La placa
+     * ya registrada se avisa sin gastar la consulta.
+     */
+    public function lookupPlate(Factiliza $api): void
+    {
+        $this->autoFilled = [];
+        $this->resetErrorBag('plate');
+
+        $plate = strtoupper(trim((string) $this->plate));
+        if ($plate === '') {
+            $this->addError('plate', 'Escribe la placa que quieres consultar.');
+
+            return;
+        }
+
+        $registered = Vehicle::whereRaw("REPLACE(REPLACE(UPPER(plate), '-', ''), ' ', '') = ?", [preg_replace('/[^A-Z0-9]/', '', $plate)])->first();
+        if ($registered) {
+            $this->addError('plate', "La placa {$registered->plate} ya está registrada (COD {$registered->sort_order}).");
+
+            return;
+        }
+
+        $result = $api->plate($plate);
+        if (! $result['ok']) {
+            $this->dispatch('errorAlert', ['message' => $result['error'].' Puedes completar los datos a mano.']);
+
+            return;
+        }
+
+        foreach ($result['data'] as $field => $value) {
+            if ($value !== '') {
+                $this->{$field} = VehicleCatalogs::canonical($field, $value);
+                $this->autoFilled[] = $field;
+            }
+        }
+
+        if ($this->autoFilled === []) {
+            $this->dispatch('errorAlert', ['message' => "La consulta de la placa {$plate} no trajo marca, modelo ni color. Completa los datos a mano."]);
+
+            return;
+        }
+
+        $this->dispatch('successAlert', ['message' => "Datos de la placa {$plate} cargados. Verifica antes de guardar."]);
     }
 
     public function updatedNotWorking()
@@ -240,6 +296,9 @@ class Create extends Component
 
                 // Costos del mes en curso (la generación mensual ya corrió sin él)
                 $costs = $costGenerator->generateForVehicle($vehicle);
+
+                // Lo escrito nuevo en los selects sale la próxima vez
+                VehicleCatalogs::rememberFrom($payload);
             });
 
             $message = 'Vehículo creado correctamente.';
@@ -263,7 +322,7 @@ class Create extends Component
     public function clean()
     {
 
-        $this->reset(['plate', 'headquarter', 'entry_date', 'termination_date', 'class', 'brand', 'year', 'model', 'bodywork', 'color', 'type', 'affiliated_company', 'condition', 'owner_id', 'driver_id', 'not_working', 'fuel', 'soat_date', 'technical_review', 'certificate_date', 'detail', 'sort_order', 'seats', 'passengers', 'new_images', 'image_files']);
+        $this->reset(['plate', 'headquarter', 'entry_date', 'termination_date', 'class', 'brand', 'year', 'model', 'bodywork', 'color', 'type', 'affiliated_company', 'condition', 'owner_id', 'driver_id', 'not_working', 'fuel', 'soat_date', 'technical_review', 'certificate_date', 'detail', 'sort_order', 'seats', 'passengers', 'new_images', 'image_files', 'autoFilled']);
 
         $this->mount();
     }
@@ -283,6 +342,8 @@ class Create extends Component
 
     public function render()
     {
-        return view('livewire.vehicles.create');
+        return view('livewire.vehicles.create', [
+            'catalogOptions' => VehicleCatalogs::forValues($this->only(VehicleCatalogs::TYPES)),
+        ]);
     }
 }

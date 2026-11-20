@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    // Factiliza: consulta de placa en el alta de vehículo (mismo token que prestamoh).
+    // El token va SIEMPRE en .env, nunca en el repo.
+    'factiliza' => [
+        'token' => env('FACTILIZA_TOKEN'),
+        'base' => env('FACTILIZA_BASE', 'https://api.factiliza.com/v1'),
+    ],
+
 ];
