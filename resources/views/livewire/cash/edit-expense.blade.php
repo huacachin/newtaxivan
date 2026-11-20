@@ -11,7 +11,8 @@
     }
     .dropzone-area:hover, .dropzone-active { border-color: #2874A6; background: #e3f2fd; }
     .dropzone-label { display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 8px; cursor: pointer; color: #607d8b; }
-    .img-thumb-clickable { height: 360px; width: 200px; object-fit: contain; background: #f5f5f5; cursor: pointer; border-radius: 6px; border: 1px solid #ddd; }
+    /* La miniatura toma la forma de la imagen (sin marco fijo): una horizontal ya no deja franjas arriba y abajo */
+    .img-thumb-clickable { height: auto; width: auto; max-height: 360px; max-width: 100%; cursor: pointer; border-radius: 6px; border: 1px solid #ddd; }
     .img-thumb-clickable:hover { opacity: .85; }
     .img-thumb-deleted { opacity: .35; filter: grayscale(80%); }
 </style>
