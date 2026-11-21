@@ -17,6 +17,15 @@ class Vehicle extends Model
     /** Días "No trabaja" tras los que el badge NT pasa a rojo: se sugiere la baja y ya no entra a Sorteos. */
     public const NOT_WORKING_DROP_DAYS = 60;
 
+    /**
+     * Columnas opcionales de número o fecha: vacías se guardan como NULL. La
+     * base no acepta '' en ellas (ver App\Traits\ConvertsBlankToNull).
+     */
+    public const BLANK_AS_NULL = [
+        'owner_id', 'driver_id', 'year', 'seats', 'passengers',
+        'entry_date', 'termination_date', 'soat_date', 'certificate_date', 'technical_review',
+    ];
+
     protected $fillable = [
         'sort_order',
         'plate',

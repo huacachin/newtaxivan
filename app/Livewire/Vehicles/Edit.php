@@ -12,6 +12,7 @@ use App\Services\CostPerPlateGenerator;
 use App\Services\DrawService;
 use App\Services\SupportRecordRelinker;
 use App\Services\VehicleCatalogs;
+use App\Traits\ConvertsBlankToNull;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -21,6 +22,7 @@ use Livewire\WithFileUploads;
 
 class Edit extends Component
 {
+    use ConvertsBlankToNull;
     use WithFileUploads;
 
     public Vehicle $vehicle;
@@ -423,6 +425,8 @@ class Edit extends Component
             if ($this->termination_date === '0000-00-00' || $this->termination_date === '') {
                 $this->termination_date = null;
             }
+            // Un campo vaciado (p. ej. el conductor quitado con la x) llega como ''
+            $this->blankToNullProps(Vehicle::BLANK_AS_NULL);
 
             $this->validate();
 
